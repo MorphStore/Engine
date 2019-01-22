@@ -5,13 +5,14 @@
  * @todo TODOS?
  */
 
+#define DEBUG_MALLOC
 #include "../../../include/core/memory/mm_glob.h"
 
 #include <cstdio>
 int main( void ) {
    for( int i = 0; i < 53; ++i ) {
       void * result = malloc( 1024 );
-      fprintf(stderr, "Allocated: %p\n", result );
+      fprintf(stderr, "Main: Allocated: %p\n", result );
    }
    return 0;
 }
