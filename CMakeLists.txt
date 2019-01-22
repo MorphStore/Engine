@@ -1,7 +1,9 @@
-cmake_minimum_required( VERSION 3.10 )
-project( morphstore )
+cmake_minimum_required( VERSION 3.13 )
+project( MorphStore )
 
-add_subdirectory( doc )
-add_subdirectory( include )
-add_subdirectory( src )
+set( CMAKE_CXX_STANDARD 14 )
+
+include_directories( include )
+
 add_subdirectory( test )
+
