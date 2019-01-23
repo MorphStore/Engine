@@ -15,51 +15,29 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
+
 /**
- * @file storage_container.h
+ * @file storage_container_uncompressed.h
  * @brief Brief description
  * @author Johannes Pietrzyk
  * @todo TODOS?
  */
 
-#include "storage_helper.h"
+#ifndef MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_UNCOMPRESSED_H
+#define MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_UNCOMPRESSED_H
 
-#ifndef MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_H
-#define MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_H
+#include "storage_container.h"
+#include "storage_helper.h"
 
 
 namespace morphstore { namespace storage {
 
 template< typename T >
-class abstract_storage_container {
-   public:
-      abstract_storage_container( storage_container_meta_data< T > && p_MetaData, T const * const p_Data ):
-         m_MetaData{ std::move( p_MetaData ) },
-         m_Data{ p_Data }{ }
-      abstract_storage_container( abstract_storage_container & const ) = delete;
-      abstract_storage_container( abstract_storage_container && ) = delete;
-      abstract_storage_container & operator= ( abstract_storage_container & const ) = delete;
-      abstract_storage_container & operator= ( abstract_storage_container && ) = delete;
+class storage_container_uncompressed : public abstract_storage_container {
 
-      virtual ~abstract_storage_container( ) {
-         free( m_Data );
-      }
-   protected:
-      T const * const m_Data;
-      storage_container_meta_data m_MetaData;
-
-   public:
-      inline T const * data( void ) const {
-         return m_Data;
-      }
-      inline size_t count_values( void ) const {
-         return m_MetaData.m_CountLogicalValues;
-      }
-      inline size_t size_byte( void ) const {
-         return m_MetaData.m_SizeByte;
-      }
 };
 
 
-} }
-#endif //MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_H
+}}
+
+#endif //MORPHSTORE_CORE_STORAGE_STORAGE_CONTAINER_UNCOMPRESSED_H
