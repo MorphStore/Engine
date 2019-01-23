@@ -1,8 +1,15 @@
 /**
  * @file mm_glob.h
- * @brief Brief description
+ * @brief Overrides for global memory access functions.
+ *
+ * @details Replaces malloc, free, new, new[], delete, delete[]. If the preprocessor variable DEBUG_MALLOC is set,
+ * malloc and free will print the caller file, line and function to stderr. Malloc and free inits the hooks defined in
+ * mm_hooks.h at first if they are not initialized yet. Afterwards the allocate is called on the thread_local
+ * query_memory_manager. Free does the same as malloc but instead calling allocate, deallocate is called.
+ *
  * @author Johannes Pietrzyk
- * @todo TODOS?
+ *
+ * @todo Get rid of repeatedly checking the hook pointer ( stdlib_malloc_ptr ).
  */
 
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
