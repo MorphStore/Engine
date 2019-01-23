@@ -78,6 +78,17 @@ class general_memory_manager : public abstract_memory_manager {
             handle = m_MemoryBinHandler.find_next( p_Caller, m_MemoryBinHandler.remove_bin( handle ) );
          }
       }
+      void * allocate_persist( size_t p_AllocSize ) {
+         void * tmp = stdlib_malloc( p_AllocSize );
+         if( tmp != nullptr ) {
+            m_MemoryBinHandler.append_bin( this, tmp, p_AllocSize );
+            return tmp;
+         } else {
+            fprintf( stderr, "GMM[alloc]: Could not persist-allocate %zu Bytes.\n", p_AllocSize );
+            handle_error( );
+            return nullptr;
+         }
+      }
 
    private:
       memory_bin_handler m_MemoryBinHandler;

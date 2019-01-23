@@ -1,8 +1,9 @@
 /**
  * @file memory_manager.h
- * @brief Brief description
+ * @brief Defines the memory managment interface ( abstract_memory_manager )
+ *
  * @author Johannes Pietrzyk
- * @todo TODOS?
+ * @todo Overthink handle_error( )
  */
 
 #ifndef MORPHSTORE_CORE_MEMORY_MM_H
@@ -13,10 +14,6 @@
 
 
 #include <cstdlib>
-
-#ifndef QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE
-#define QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 1_GB
-#endif
 
 
 namespace morphstore { namespace memory {
