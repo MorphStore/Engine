@@ -39,9 +39,9 @@ namespace morphstore { namespace memory {
 class abstract_memory_manager {
    public:
       virtual void * allocate( size_t ) = 0;
-      virtual void * allocate( abstract_memory_manager *, size_t ) = 0;
-      virtual void deallocate( abstract_memory_manager *, void * ) = 0;
-      virtual void deallocate( void * ) = 0;
+      virtual void * allocate( abstract_memory_manager * const, size_t ) = 0;
+      virtual void deallocate( abstract_memory_manager * const, void * const ) = 0;
+      virtual void deallocate( void * const ) = 0;
       virtual void handle_error( ) = 0;
 };
 

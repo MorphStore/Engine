@@ -65,7 +65,7 @@ class general_memory_manager : public abstract_memory_manager {
          //LOG: THIS SHOULD NOT BE CALLED!
          return nullptr;
       }
-      void * allocate( abstract_memory_manager * p_Caller, size_t p_AllocSize ) override {
+      void * allocate( abstract_memory_manager * const p_Caller, size_t p_AllocSize ) override {
          void * tmp = stdlib_malloc( p_AllocSize );
          if( tmp != nullptr ) {
             m_MemoryBinHandler.append_bin( p_Caller, tmp, p_AllocSize );
@@ -77,11 +77,11 @@ class general_memory_manager : public abstract_memory_manager {
          }
       }
 
-      void deallocate( PPUNUSED abstract_memory_manager * p_Caller, PPUNUSED void * ) override {
+      void deallocate( PPUNUSED abstract_memory_manager * const p_Caller, PPUNUSED void * const ) override {
          // NOP
       }
 
-      void deallocate( PPUNUSED void * )  override {
+      void deallocate( PPUNUSED void * const )  override {
          // NOP
       }
 
@@ -89,7 +89,7 @@ class general_memory_manager : public abstract_memory_manager {
          //@todo IMPLEMENT
          exit( 1 );
       }
-      void destroy( abstract_memory_manager * p_Caller ) {
+      void destroy( abstract_memory_manager * const p_Caller ) {
          auto handle = m_MemoryBinHandler.find_first( p_Caller );
          while( handle != nullptr ) {
             stdlib_free( handle->m_BasePtr );
@@ -158,16 +158,16 @@ class query_memory_manager : public abstract_memory_manager {
          return tmp;
       }
 
-      void * allocate( PPUNUSED abstract_memory_manager * p_Caller, PPUNUSED size_t p_AllocSize ) override {
+      void * allocate( PPUNUSED abstract_memory_manager * const p_Caller, PPUNUSED size_t p_AllocSize ) override {
          //LOG: THIS SHOULD NOT BE CALLED!
          return nullptr;
       }
 
-      void deallocate( PPUNUSED abstract_memory_manager * p_Caller, PPUNUSED void * ) override {
+      void deallocate( PPUNUSED abstract_memory_manager * const, PPUNUSED void * const ) override {
          // NOP
       }
 
-      void deallocate( PPUNUSED void * ) override {
+      void deallocate( PPUNUSED void * const ) override {
          // NOP
       }
 

@@ -161,12 +161,12 @@ class memory_bin_handler {
                   m_NextHandle->m_PrevHandle = nullptr;
             }
          }
-         inline memory_bin_handle * next( ) {
+         inline memory_bin_handle * next( ) const {
             return m_NextHandle;
          }
       };
    public:
-      memory_bin_handler( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte ) :
+      memory_bin_handler( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_SizeByte ) :
          m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
@@ -194,7 +194,7 @@ class memory_bin_handler {
 
    public:
 
-      inline void append_bin( abstract_memory_manager * p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
+      inline void append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
             tmp->init( p_MemoryManager, p_BasePtr, p_BinSize, m_BinHandleStructTail, nullptr );
@@ -209,7 +209,7 @@ class memory_bin_handler {
             p_MemoryManager->handle_error( );
          }
       }
-      inline memory_bin_handle * remove_bin( memory_bin_handle * handle ) {
+      inline memory_bin_handle * remove_bin( memory_bin_handle * const handle ) {
          memory_bin_handle * next = handle->m_NextHandle;
          handle->remove();
          if( handle == m_BinHandleStructRoot )
@@ -220,7 +220,7 @@ class memory_bin_handler {
          return next;
       }
 
-      inline memory_bin_handle * find_first( abstract_memory_manager * p_MemoryManager ) {
+      inline memory_bin_handle * find_first( abstract_memory_manager * const p_MemoryManager ) const {
          memory_bin_handle * handle = m_BinHandleStructRoot;
          while( handle != nullptr ) {
             if( handle->m_MemoryManager == p_MemoryManager )
@@ -230,7 +230,7 @@ class memory_bin_handler {
          return handle;
       }
 
-      inline memory_bin_handle * find_next( abstract_memory_manager * p_MemoryManager, memory_bin_handle * p_CurrentHandle ) {
+      inline memory_bin_handle * find_next( abstract_memory_manager * const p_MemoryManager, memory_bin_handle * p_CurrentHandle ) const {
          memory_bin_handle * handle = p_CurrentHandle;
          while( handle != nullptr ) {
             if( handle->m_MemoryManager == p_MemoryManager )
@@ -240,10 +240,10 @@ class memory_bin_handler {
          return nullptr;
       }
 
-      inline memory_bin_handle * get_root( void ) {
+      inline memory_bin_handle * get_root( void ) const {
          return m_BinHandleStructRoot;
       }
-      inline memory_bin_handle * get_tail( void ) {
+      inline memory_bin_handle * get_tail( void ) const {
          return m_BinHandleStructTail;
       }
 };
