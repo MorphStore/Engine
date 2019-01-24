@@ -36,10 +36,10 @@ namespace morphstore { namespace logging {
 class formatter {
    public:
       struct levels_colors {
-         std::string m_LogLevelName;
-         std::string m_ColorText;
+         char const * m_LogLevelName;
+         char const * m_ColorText;
          levels_colors( void ) : m_LogLevelName{""}, m_ColorText{""}{ }
-         levels_colors( std::string p_LogLevelName, std::string p_ColorText ):
+         levels_colors( char const * p_LogLevelName, char const * p_ColorText ):
             m_LogLevelName{ p_LogLevelName },
             m_ColorText{ p_ColorText }{ }
          levels_colors( levels_colors const & ) = default;
@@ -47,19 +47,19 @@ class formatter {
          levels_colors & operator=( levels_colors const & ) = default;
          levels_colors & operator=( levels_colors && ) = default;
 
-         std::string name() const {
+         char const * name() const {
             return m_LogLevelName;
          }
-         std::string color() const {
+         char const * color() const {
             return m_ColorText;
          }
       };
    protected:
-      std::string m_LineStartText;
-      std::string m_LineEndText;
-      std::string m_EntryBeginText;
-      std::string m_EntryEndText;
-      std::string m_ColorDefaultText;
+      char const *  m_LineStartText;
+      char const * m_LineEndText;
+      char const * m_EntryBeginText;
+      char const * m_EntryEndText;
+      char const * m_ColorDefaultText;
 
       std::array< levels_colors, MORPHSTORE_VAR_LOG_LEVEL_COUNT > m_LevelsAndColors;
    public:
@@ -76,41 +76,45 @@ class formatter {
          m_EntryEndText{ p_EntryEndText },
          m_ColorDefaultText{ p_ColorDefaultText },
          m_LevelsAndColors{ p_LevelsAndColors }{ }
-      std::string head( int p_LogLevel ) const {
-         return m_LineStartText +
-                m_EntryBeginText +
-                m_LevelsAndColors[ p_LogLevel ].color( ) +
-                m_LevelsAndColors[ p_LogLevel ].name( ) +
-                m_ColorDefaultText +
-                m_EntryEndText;
+      const char * tag_text( int p_LogLevel ) const {
+         return m_LevelsAndColors[ p_LogLevel ].m_LogLevelName;
       }
-      std::string entry_begin_tag( ) const {
+      const char * tag_color( int p_LogLevel ) const {
+         return m_LevelsAndColors[ p_LogLevel ].m_ColorText;
+      }
+      const char * head( void ) const {
+         return m_LineStartText;
+      }
+      char const * tail( ) const {
+         return m_LineEndText;
+      }
+      const char * color_default( void ) const {
+         return m_ColorDefaultText;
+      }
+      const char * entry_start( void ) const {
          return m_EntryBeginText;
       }
-      std::string entry_end_tag( ) const {
+      const char * entry_end( void ) const {
          return m_EntryEndText;
       }
 
-      std::string tail( ) const {
-         return m_LineEndText;
-      }
 
 };
 class shell_formatter : public formatter {
    public:
       shell_formatter( void ) :
          formatter{
-            "#",
+            "",
             "\n",
             "",
             " ",
             "\033[0m",
             {
-               levels_colors( "[Debug]", "\033[1;34m" ),
-               levels_colors( "[Info ]", "\033[1;32m" ),
-               levels_colors( "[Warn ]", "\033[1;33m" ),
-               levels_colors( "[Error]", "\033[1;35m" ),
-               levels_colors( "[WTF  ]", "\033[1;31m" )
+               levels_colors( "[Debug]: ", "\033[1;34m" ),
+               levels_colors( "[Info ]: ", "\033[1;32m" ),
+               levels_colors( "[Warn ]: ", "\033[1;33m" ),
+               levels_colors( "[Error]: ", "\033[1;31m" ),
+               levels_colors( "[WTF  ]: ", "\033[1;35m" )
             }
          }{ }
 };
@@ -135,14 +139,17 @@ class logger {
       void log_message_line( Args &&... args ) {
          using isoHelper = int[];
          ( void ) isoHelper{
-            0, ( void( get_out( ) << get_formatter( ).entry_begin_tag( )
+            0, ( void( get_out( ) << get_formatter( ).entry_start()
                            << std::forward< Args >( args )
-                           << get_formatter( ).entry_end_tag( )), 0 ) ...
+                           << get_formatter( ).entry_end( )), 0 ) ...
          };
       }
 
       void head( int p_LogLevel ) {
-         get_out( ) << get_formatter( ).head( p_LogLevel );
+         get_out( )  << get_formatter( ).head()
+                     << get_formatter( ).tag_color( p_LogLevel )
+                     << get_formatter( ).tag_text( p_LogLevel )
+                     << get_formatter( ).color_default( );
       }
 
       void tail( void ) {
@@ -170,7 +177,7 @@ class shell_logger : public logger {
 
 
 
-#ifdef OTHER_LOG_STUFF
+#ifdef MORPHSTORE_NO_SHELL_LOGGER
 //...
 #else
 shell_logger log_instance;

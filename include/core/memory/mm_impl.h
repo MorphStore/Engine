@@ -63,7 +63,7 @@ class general_memory_manager : public abstract_memory_manager {
    public:
 
       void * allocate( PPUNUSED size_t p_AllocSize ) override {
-         //LOG: THIS SHOULD NOT BE CALLED!
+         warn( "General Memory Manager - allocate(): Called allocate() without abstract_memory_manager directly on the GMM. This should not happed!" );
          return nullptr;
       }
       void * allocate( abstract_memory_manager * const p_Caller, size_t p_AllocSize ) override {
@@ -72,7 +72,7 @@ class general_memory_manager : public abstract_memory_manager {
             m_MemoryBinHandler.append_bin( p_Caller, tmp, p_AllocSize );
             return tmp;
          } else {
-            fprintf( stderr, "GMM[alloc]: Could not allocate %zu Bytes.\n", p_AllocSize );
+            wtf( "General Memory Manager - allocate(): Could not allocate ", p_AllocSize, " Bytes." );
             handle_error( );
             return nullptr;
          }
@@ -103,7 +103,7 @@ class general_memory_manager : public abstract_memory_manager {
             m_MemoryBinHandler.append_bin( this, tmp, p_AllocSize );
             return tmp;
          } else {
-            fprintf( stderr, "GMM[alloc]: Could not persist-allocate %zu Bytes.\n", p_AllocSize );
+            wtf( "General Memory Manager - allocate_persist: Could not allocate ", p_AllocSize, " Bytes." );
             handle_error( );
             return nullptr;
          }
@@ -135,7 +135,7 @@ class query_memory_manager : public abstract_memory_manager {
             m_CurrentPtr = tmp;
             m_SpaceLeft = p_InitSpaceSize;
          } else {
-            fprintf( stderr, "QMM[ctor]: Could not allocate %zu Bytes.\n", p_InitSpaceSize );
+            wtf( "Query Memory Manager - ctor(): Could not allocate ", p_InitSpaceSize, " Bytes." );
             m_GeneralMemoryManager.handle_error( );
          }
       }
@@ -153,14 +153,14 @@ class query_memory_manager : public abstract_memory_manager {
             m_CurrentPtr = static_cast< char * >( m_CurrentPtr ) + p_AllocSize;
             m_SpaceLeft -= p_AllocSize;
          } else {
-            fprintf( stderr, "QMM[alloc]: Could not allocate %zu Bytes.\n", p_AllocSize );
+            wtf( "Query Memory Manager - allocate(): Could not allocate ", p_AllocSize, " Bytes." );
             m_GeneralMemoryManager.handle_error( );
          }
          return tmp;
       }
 
       void * allocate( PPUNUSED abstract_memory_manager * const p_Caller, PPUNUSED size_t p_AllocSize ) override {
-         //LOG: THIS SHOULD NOT BE CALLED!
+         warn( "Query Memory Manager - allocate(): Called allocate() with abstract_memory_manager. This is not intended to happen!" );
          return nullptr;
       }
 
@@ -173,7 +173,7 @@ class query_memory_manager : public abstract_memory_manager {
       }
 
       void handle_error( void ) override {
-         //LOG: THIS SHOULD NOT BE CALLED!
+         warn( "Query Memory Manager - handle_error(): This is not intended to happen!" );
       }
 
 

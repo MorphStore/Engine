@@ -27,6 +27,7 @@
 #define MORPHSTORE_CORE_MEMORY_MM_HOOKS_H
 
 #include "../utils/types.h"
+#include "../utils/logger.h"
 
 #include <dlfcn.h>
 #include <cstdio>
@@ -49,11 +50,11 @@ static bool init_mem_hooks( void ) {
 #ifdef DEBUG_MALLOC
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
-   fprintf( stderr, "%s - Line %d ( %s ): Kernel Malloc( %zu Byte ). %p\n", file, line, func, p_AllocSize, result );
+   debug( file, " - Line ", line, " ( ", func, " ): Kernel Malloc( ", p_AllocSize, " Bytes ) ");
    return result;
 }
 void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *func ) __THROW {
-   fprintf( stderr, "%s - Line %d ( %s ): Kernel Free( %p )\n", file, line, func, p_Ptr );
+   debug( file, " - Line ", line, " ( ", func, " ): Kernel Free( ", p_Ptr, " ) ");
    morphstore::memory::stdlib_free_ptr( p_Ptr );
 }
 #  define stdlib_malloc( X ) debug_stdlib_malloc( X, __FILE__, __LINE__, __FUNCTION__ )

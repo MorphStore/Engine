@@ -33,6 +33,8 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 
+#ifndef MORPHSTORE_NO_SELFMANAGED_MEMORY
+
 #ifndef __THROW
 #  define __THROW
 #endif
@@ -98,7 +100,6 @@ extern "C" {
     */
    void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
       debug( file, " - Line ", line, " ( ", func, " ): MM Malloc( ", p_AllocSize, " Bytes ) ");
-//      fprintf( stderr, "[DEBUG]: %s - Line %d ( %s ): MM Malloc( %zu Byte )\n", file, line, func, p_AllocSize );
       if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
          init_mem_hooks( );
       }
@@ -118,7 +119,7 @@ extern "C" {
     * @param p_FreePtr Pointer to allocated memory which should be freed.
     */
    void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
-      fprintf( stderr, "[DEBUG]: %s - Line %d ( %s ): MM Free( %p )\n", file, line, func, p_FreePtr );
+      debug( file, " - Line ", line, " ( ", func, " ): MM Free( ", p_FreePtr, " ) ");
       if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
          init_mem_hooks( );
       }
@@ -219,4 +220,6 @@ void operator delete[]( void* p_FreePtr, PPUNUSED size_t p_DeallocSize ) noexcep
    free( p_FreePtr );
 }
 
+
+#endif
 #endif //MORPHSTORE_CORE_MEMORY_MM_GLOB_H
