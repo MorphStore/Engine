@@ -126,7 +126,17 @@ extern "C" {
 #  define free( X ) debug_free( X, __FILE__, __LINE__, __FUNCTION__ )
 #endif
 
-
+/**
+ * @brief Wrapper for glibc implementation of thread_atexit
+ * @param func
+ * @param obj
+ * @param dso_symbol
+ * @return
+ */
+//int __cxa_thread_atexit( void ( * func )( ), void * obj, void * dso_symbol ) {
+//   int __cxa_thread_atexit_impl( void ( * )( ), void *, void * );
+//   return __cxa_thread_atexit_impl( func, obj, dso_symbol );
+//}
 
 }
 

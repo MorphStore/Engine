@@ -48,8 +48,9 @@ static bool init_mem_hooks( void ) {
 
 #ifdef DEBUG_MALLOC
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
-   fprintf( stderr, "%s - Line %d ( %s ): Kernel Malloc( %zu Byte )\n", file, line, func, p_AllocSize );
-   return morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
+   void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
+   fprintf( stderr, "%s - Line %d ( %s ): Kernel Malloc( %zu Byte ). %p\n", file, line, func, p_AllocSize, result );
+   return result;
 }
 void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *func ) __THROW {
    fprintf( stderr, "%s - Line %d ( %s ): Kernel Free( %p )\n", file, line, func, p_Ptr );
