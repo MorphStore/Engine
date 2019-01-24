@@ -6,4 +6,4 @@ target_compile_options( memory_test PRIVATE
                         -pedantic
                         -fstack-protector-all
                         $<$<CONFIG:DEBUG>:-DDEBUG> )
-target_link_options( memory_test PRIVATE "LINKER:-ldl" )
+target_link_libraries( memory_test PRIVATE "-ldl" )
