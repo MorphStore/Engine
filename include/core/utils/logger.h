@@ -25,11 +25,14 @@
 #ifndef MORPHSTORE_CORE_UTILS_LOGGER_H
 #define MORPHSTORE_CORE_UTILS_LOGGER_H
 
+#include "cmake_template.h"
+
 #include <string>
 #include <array>
 #include <iostream>
 
-#define MORPHSTORE_VAR_LOG_LEVEL_COUNT 5
+
+#define VAR_MORPHSTORE_LOG_LEVEL_COUNT 5
 
 namespace morphstore { namespace logging {
 
@@ -61,7 +64,7 @@ class formatter {
       char const * m_EntryEndText;
       char const * m_ColorDefaultText;
 
-      std::array< levels_colors, MORPHSTORE_VAR_LOG_LEVEL_COUNT > m_LevelsAndColors;
+      std::array< levels_colors, VAR_MORPHSTORE_LOG_LEVEL_COUNT > m_LevelsAndColors;
    public:
       formatter(
          char const * p_LineStartText,
@@ -69,7 +72,7 @@ class formatter {
          char const * p_EntryBeginText,
          char const * p_EntryEndText,
          char const * p_ColorDefaultText,
-         std::array< levels_colors, MORPHSTORE_VAR_LOG_LEVEL_COUNT >&& p_LevelsAndColors ) :
+         std::array< levels_colors, VAR_MORPHSTORE_LOG_LEVEL_COUNT >&& p_LevelsAndColors ) :
          m_LineStartText{ p_LineStartText },
          m_LineEndText{ p_LineEndText },
          m_EntryBeginText{ p_EntryBeginText },
@@ -161,7 +164,12 @@ class shell_logger : public logger {
    private:
       shell_formatter m_Formatter;
    protected:
-      void log_header( void ) override {}
+      void log_header( void ) override {
+         get_out()   << "Project [ProjectName] started.\n"
+                     << "Build Specs: \n"
+                     << "Branch: " << VAR_MORPHSTORE_GIT_BRANCH << "\n"
+                     << "Commit: " << VAR_MORPHSTORE_GIT_HASH << "\n";
+      }
       void log_footer( void ) override {}
       std::ostream & get_out( void ) override {
          return std::cout;
@@ -169,6 +177,10 @@ class shell_logger : public logger {
 
       inline formatter const & get_formatter( void ) const override {
          return m_Formatter;
+      }
+   public:
+      shell_logger( void )  {
+         log_header();
       }
 };
 
