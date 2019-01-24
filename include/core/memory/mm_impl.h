@@ -30,6 +30,7 @@
 #include "../utils/preprocessor.h"
 #include "mm_hooks.h"
 #include "mm_helper.h"
+#include "../utils/logger.h"
 
 #include <cstdlib>
 #include <cstdio>

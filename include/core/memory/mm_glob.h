@@ -41,6 +41,7 @@
 #include "mm_hooks.h"
 #include "../utils/types.h"
 #include "mm_impl.h"
+#include "../utils/logger.h"
 #include <cstdio>
 
 extern "C" {
@@ -96,7 +97,8 @@ extern "C" {
     * @return Pointer to allocated memory.
     */
    void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
-      fprintf( stderr, "[DEBUG]: %s - Line %d ( %s ): MM Malloc( %zu Byte )\n", file, line, func, p_AllocSize );
+      debug( file, " - Line ", line, " ( ", func, " ): MM Malloc( ", p_AllocSize, " Bytes ) ");
+//      fprintf( stderr, "[DEBUG]: %s - Line %d ( %s ): MM Malloc( %zu Byte )\n", file, line, func, p_AllocSize );
       if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
          init_mem_hooks( );
       }
