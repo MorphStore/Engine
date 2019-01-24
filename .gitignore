@@ -2,3 +2,4 @@ build/
 bin/
 .idea/
 cmake-build-debug/
+debug/
