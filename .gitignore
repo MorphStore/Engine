@@ -4,3 +4,4 @@ bin/
 cmake-build-debug/
 debug/
 release/
+build_clion/

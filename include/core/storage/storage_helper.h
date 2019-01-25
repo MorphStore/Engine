@@ -37,13 +37,13 @@ struct storage_container_meta_data {
    size_t const m_CountLogicalValues;
    size_t const m_SizeByte;
 
-   meta_data( size_t p_CountLogicalValues, size_t p_SizeByte ) :
+   storage_container_meta_data( size_t p_CountLogicalValues, size_t p_SizeByte ) :
       m_CountLogicalValues{ p_CountLogicalValues },
       m_SizeByte{ p_SizeByte }{ }
-   meta_data( meta_data const & ) = delete;
-   meta_data( meta_data && ) = default;
-   meta_data & operator=( meta_data const & ) = delete;
-   meta_data & operator=( meta_data && ) = default;
+   storage_container_meta_data( storage_container_meta_data const & ) = delete;
+   storage_container_meta_data( storage_container_meta_data && ) = default;
+   storage_container_meta_data & operator=( storage_container_meta_data const & ) = delete;
+   storage_container_meta_data & operator=( storage_container_meta_data && ) = default;
 };
 
 
