@@ -128,25 +128,54 @@ class memory_bin_handler {
             m_BasePtr{ p_BasePtr },
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ nullptr },
-            m_NextHandle{ nullptr }{ }
+            m_NextHandle{ nullptr }{
+            debug(
+               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
+               ", Data =", p_BasePtr,
+               ", Size =", p_SizeByte,
+               ") this =", this
+            );
+         }
          memory_bin_handle( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle ) :
             m_MemoryManager{ p_MemoryManager },
             m_BasePtr{ p_BasePtr },
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ p_PrevHandle },
-            m_NextHandle{ nullptr }{ }
+            m_NextHandle{ nullptr }{
+            debug(
+               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
+               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
+               ", PrevHandle =", p_PrevHandle,
+               ") this =", this
+            );
+         }
          memory_bin_handle( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle ) :
             m_MemoryManager{ p_MemoryManager },
             m_BasePtr{ p_BasePtr },
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ p_PrevHandle },
-            m_NextHandle{ p_NextHandle }{ }
+            m_NextHandle{ p_NextHandle }{
+            debug(
+               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
+               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
+               ", PrevHandle =", p_PrevHandle,
+               ", NextHandle =", p_NextHandle,
+               ") this =", this
+            );
+         }
          inline void init(  abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle  ) {
             m_MemoryManager = p_MemoryManager;
             m_BasePtr = p_BasePtr;
             m_SizeByte = p_SizeByte;
             m_PrevHandle = p_PrevHandle;
             m_NextHandle = p_NextHandle;
+            debug(
+               "Memory Bin Handle - init( Owner =", p_MemoryManager,
+               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
+               ", PrevHandle =", p_PrevHandle,
+               ", NextHandle =", p_NextHandle,
+               ") this =", this
+            );
          }
          void remove( void ) {
             if( m_PrevHandle != nullptr ) {
@@ -177,16 +206,32 @@ class memory_bin_handler {
             wtf( "Memory Bin Handler - ctor(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
+         debug(
+            "Memory Bin Handler - ctor( Associated with", p_MemoryManager,
+            ", Data =", p_BasePtr,
+            ", Size =", p_SizeByte,
+            ") this =", this
+         );
       }
-      memory_bin_handler( void ) : m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{ }
+      memory_bin_handler( void ) : m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{
+         debug(
+            "Memory Bin Handler - ctor( Associated with", 0,
+            ", Data = 0",
+            ", Size = 0",
+            ") this =", this
+         );
+      }
       ~memory_bin_handler( void ){
+         debug( "Memory Bin Handler - dtor( )" );
          memory_bin_handle * handle = m_BinHandleStructRoot;
          memory_bin_handle * next_handle = nullptr;
          while( handle != nullptr ) {
             next_handle = handle->m_NextHandle;
+            debug( "Memory Bin Handler - dtor( ). Freeing", handle );
             stdlib_free( static_cast< void * >( handle ) );
             handle = next_handle;
          }
+
       }
    private:
       memory_bin_handle * m_BinHandleStructRoot;
@@ -195,19 +240,35 @@ class memory_bin_handler {
    public:
 
       inline void append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
+         debug(
+            "Memory Bin Handler - append_bin( Associated with", p_MemoryManager,
+            ", Data =", p_BasePtr,
+            ", Size =", p_BinSize,
+            ")"
+         );
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
             tmp->init( p_MemoryManager, p_BasePtr, p_BinSize, m_BinHandleStructTail, nullptr );
-            if( m_BinHandleStructTail == nullptr ) {
-               m_BinHandleStructRoot = m_BinHandleStructTail = tmp;
-            } else {
-               m_BinHandleStructTail->m_NextHandle = tmp;
+            if( m_BinHandleStructRoot == nullptr ) {
+               m_BinHandleStructRoot = tmp;
                m_BinHandleStructTail = tmp;
+//            if( m_BinHandleStructTail == nullptr ) {
+//               m_BinHandleStructRoot = m_BinHandleStructTail = tmp;
+//            } else {
+//               m_BinHandleStructTail->m_NextHandle = tmp;
+//               m_BinHandleStructTail = tmp;
             }
          } else {
             wtf( "Memory Bin Handler - append_bin(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
+         debug(
+            "Memory Bin Handler - append_bin( ) -",
+            "Prev Handle =", tmp->m_PrevHandle,
+            "Next Handle =", tmp->m_NextHandle,
+            "Appended. Root =", m_BinHandleStructRoot, "Tail =", m_BinHandleStructTail
+         );
+
       }
       inline memory_bin_handle * remove_bin( memory_bin_handle * const handle ) {
          memory_bin_handle * next = handle->m_NextHandle;

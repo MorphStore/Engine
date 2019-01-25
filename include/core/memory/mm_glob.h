@@ -99,7 +99,7 @@ extern "C" {
     * @return Pointer to allocated memory.
     */
    void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
-      debug( file, " - Line ", line, " ( ", func, " ): MM Malloc( ", p_AllocSize, " Bytes ) ");
+      debug( "Managed Malloc:", p_AllocSize, "Bytes (", file, " - Line ", line, " ( ", func, " )");
       if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
          init_mem_hooks( );
       }

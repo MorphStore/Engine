@@ -56,14 +56,20 @@ class general_memory_manager : public abstract_memory_manager {
       general_memory_manager( general_memory_manager const & ) = delete;
       general_memory_manager & operator=( general_memory_manager const & ) = delete;
       ~general_memory_manager( void ) {
+         debug( "General Memory Manager - dtor( )" );
          auto * handle = m_MemoryBinHandler.get_root( );
          while( handle != nullptr ) {
+            debug( "General Memory Manager - dtor( ). Freeing handle", handle," with Pointer to", handle->m_BasePtr );
             stdlib_free( handle->m_BasePtr );
-            handle->next();
+            handle = handle->next();
          }
       }
    private:
-      general_memory_manager( void ) = default;
+      general_memory_manager( void ) {
+         debug(
+            "General Memory Manager - ctor( ). this =", this
+         );
+      }
 
    public:
 
@@ -103,6 +109,9 @@ class general_memory_manager : public abstract_memory_manager {
          }
       }
       void * allocate_persist( size_t p_AllocSize ) {
+         if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
+            init_mem_hooks( );
+         }
          void * tmp = stdlib_malloc( p_AllocSize );
          if( tmp != nullptr ) {
             m_MemoryBinHandler.append_bin( this, tmp, p_AllocSize );
@@ -140,9 +149,15 @@ class query_memory_manager : public abstract_memory_manager {
             m_CurrentPtr = tmp;
             m_SpaceLeft = p_InitSpaceSize;
          } else {
-            wtf( "Query Memory Manager - ctor(): Could not allocate ", p_InitSpaceSize, " Bytes." );
+            wtf( "Query Memory Manager - ctor( size_t ): Could not allocate ", p_InitSpaceSize, " Bytes." );
             m_GeneralMemoryManager.handle_error( );
          }
+         debug(
+            "Query Memory Manager - ctor( size =", p_InitSpaceSize, ").",
+            "Head ptr =", m_CurrentPtr,
+            "Space left =", m_SpaceLeft,
+            "this =", this
+         );
       }
 
    public:
@@ -158,23 +173,23 @@ class query_memory_manager : public abstract_memory_manager {
             m_CurrentPtr = static_cast< char * >( m_CurrentPtr ) + p_AllocSize;
             m_SpaceLeft -= p_AllocSize;
          } else {
-            wtf( "Query Memory Manager - allocate(): Could not allocate ", p_AllocSize, " Bytes." );
+            wtf( "Query Memory Manager - allocate( size_t ): Could not allocate ", p_AllocSize, " Bytes." );
             m_GeneralMemoryManager.handle_error( );
          }
          return tmp;
       }
 
       void * allocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED size_t p_AllocSize ) override {
-         warn( "Query Memory Manager - allocate(): Called allocate() with abstract_memory_manager. This is not intended to happen!" );
+         warn( "Query Memory Manager - allocate( abstract_memory_manager * const, size_t ): Call to this function is not intended!" );
          return nullptr;
       }
 
       void deallocate( MSV_PPUNUSED abstract_memory_manager * const, MSV_PPUNUSED void * const ) override {
-         // NOP
+         warn( "Query Memory Manager - deallocate( abstract_memory_manager * const, void * const ): Call to this function is not intended!" );
       }
 
       void deallocate( MSV_PPUNUSED void * const ) override {
-         // NOP
+         warn( "Query Memory Manager - deallocate( void * const ): Call to this function is not intended!" );
       }
 
       void handle_error( void ) override {

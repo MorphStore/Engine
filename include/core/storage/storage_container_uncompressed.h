@@ -28,13 +28,18 @@
 
 #include "storage_container.h"
 #include "storage_helper.h"
+#include "../utils/logger.h"
 
 
 namespace morphstore { namespace storage {
 
 template< typename T >
-class storage_container_uncompressed : public abstract_storage_container {
-
+class storage_container_uncompressed : public abstract_storage_container< T > {
+   public:
+      storage_container_uncompressed( storage_container_meta_data< T > && p_MetaData, T const * const p_Data ):
+         abstract_storage_container< T >{ std::move( p_MetaData ), p_Data } {
+         debug( "Uncompressed Storage Container - ctor( storage_container_meta_data &&, Data =", p_Data, ")" );
+      }
 };
 
 
