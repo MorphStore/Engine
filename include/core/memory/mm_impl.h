@@ -26,6 +26,11 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_IMPL_H
 #define MORPHSTORE_CORE_MEMORY_MM_IMPL_H
 
+#ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
+#  error "mm_impl.h has to be included AFTER mm_glob.h"
+#endif
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+
 #include "../utils/types.h"
 #include "../utils/preprocessor.h"
 #include "mm_hooks.h"
@@ -49,7 +54,7 @@ class general_memory_manager : public abstract_memory_manager {
          return instance;
       }
       general_memory_manager( general_memory_manager const & ) = delete;
-      void operator=( general_memory_manager const & ) = delete;
+      general_memory_manager & operator=( general_memory_manager const & ) = delete;
       ~general_memory_manager( void ) {
          auto * handle = m_MemoryBinHandler.get_root( );
          while( handle != nullptr ) {
@@ -78,7 +83,7 @@ class general_memory_manager : public abstract_memory_manager {
          }
       }
 
-      void deallocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED void * const ) override {
+      void deallocate( MSV_PPUNUSED abstract_memory_manager * const, MSV_PPUNUSED void * const ) override {
          // NOP
       }
 
@@ -103,7 +108,7 @@ class general_memory_manager : public abstract_memory_manager {
             m_MemoryBinHandler.append_bin( this, tmp, p_AllocSize );
             return tmp;
          } else {
-            wtf( "General Memory Manager - allocate_persist: Could not allocate ", p_AllocSize, " Bytes." );
+            wtf( "General Memory Manager - allocate_persist(): Could not allocate ", p_AllocSize, " Bytes." );
             handle_error( );
             return nullptr;
          }
@@ -186,4 +191,6 @@ class query_memory_manager : public abstract_memory_manager {
 };
 
 } }
+
+#endif
 #endif //MORPHSTORE_CORE_MEMORY_MM_IMPL_H

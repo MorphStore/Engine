@@ -31,23 +31,23 @@
  */
 
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
-#define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
+#  define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 
-#ifndef MSV_NO_SELFMANAGED_MEMORY
+#  ifndef MSV_NO_SELFMANAGED_MEMORY
 
-#ifndef __THROW
-#  define __THROW
-#endif
+#     ifndef __THROW
+#        define __THROW
+#     endif
 
-#include "mm.h"
-#include "mm_hooks.h"
-#include "../utils/types.h"
-#include "mm_impl.h"
-#include "../utils/logger.h"
-#include <cstdio>
+#     include "mm.h"
+#     include "mm_hooks.h"
+#     include "../utils/types.h"
+#     include "mm_impl.h"
+#     include "../utils/logger.h"
+#     include <cstdio>
 
 extern "C" {
-#ifndef MSV_DEBUG_MALLOC
+#     if !defined( MSV_DEBUG_MALLOC ) || defined( MSV_NO_LOG )
    /**
     * @brief Global replacement for malloc from cstdlib.
     *
@@ -82,7 +82,7 @@ extern "C" {
       }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
-#else
+#     elif defined( MSV_DEBUG_MALLOC )
    /**
     * @brief Global helper function for debugging calls to malloc.
     *
@@ -125,10 +125,9 @@ extern "C" {
       }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
-#  define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
-#  define free( X ) debug_free( X, __FILE__, __LINE__, __FUNCTION__ )
-#endif
-
+#        define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
+#        define free( X ) debug_free( X, __FILE__, __LINE__, __FUNCTION__ )
+#     endif
 /**
  * @brief Wrapper for glibc implementation of thread_atexit
  * @param func
@@ -221,5 +220,5 @@ void operator delete[]( void* p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noe
 }
 
 
-#endif
+#  endif
 #endif //MORPHSTORE_CORE_MEMORY_MM_GLOB_H

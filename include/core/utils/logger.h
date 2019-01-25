@@ -214,6 +214,8 @@ shell_logger log_instance;
 #  ifdef DEBUG
 #     define debug(...) morphstore::logging::log_instance.log( 0, __VA_ARGS__ )
 #     define info(...) morphstore::logging::log_instance.log( 1, __VA_ARGS__ )
+#  elif defined( MSV_DEBUG_MALLOC )
+#     define debug(...) morphstore::logging::log_instance.log( 0, __VA_ARGS__ )
 #  else
 #     define debug(...)
 #     define info(...)

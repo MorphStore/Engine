@@ -26,6 +26,11 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_HOOKS_H
 #define MORPHSTORE_CORE_MEMORY_MM_HOOKS_H
 
+#ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
+#  error "mm_hooks.h has to be included AFTER mm_glob.h"
+#endif
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+
 #include "../utils/types.h"
 #include "../utils/logger.h"
 
@@ -47,7 +52,7 @@ static bool init_mem_hooks( void ) {
    return true;
 }
 
-#ifdef MSV_DEBUG_MALLOC
+#if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
    debug( file, " - Line ", line, " ( ", func, " ): Kernel Malloc( ", p_AllocSize, " Bytes ) ");
@@ -64,4 +69,5 @@ void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *fu
 #  define stdlib_free( X ) stdlib_free_ptr( X )
 #endif
 
+#endif // !define(MSV_NO_SELFMANAGED_MEMORY)
 #endif //MORPHSTORE_CORE_MEMORY_MM_HOOKS_H

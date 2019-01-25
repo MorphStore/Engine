@@ -174,7 +174,7 @@ class memory_bin_handler {
             m_BinHandleStructRoot = tmp;
             m_BinHandleStructTail = tmp;
          } else {
-            fprintf( stderr, "MBH[ctor]: Could not allocate %zu Bytes.\n", sizeof( memory_bin_handle ) );
+            wtf( "Memory Bin Handler - ctor(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
       }
@@ -205,7 +205,7 @@ class memory_bin_handler {
                m_BinHandleStructTail = tmp;
             }
          } else {
-            fprintf( stderr, "MBH[apnd_bin]: Could not allocate %zu Bytes.\n", sizeof( memory_bin_handle ) );
+            wtf( "Memory Bin Handler - append_bin(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
       }
