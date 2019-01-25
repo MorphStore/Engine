@@ -17,10 +17,14 @@
 
 
 /**
- * @file memory_manager.h
+ * @file mm.h
  * @brief Defines the memory managment interface ( abstract_memory_manager )
  *
+ * @details Declares the pure virtual class abstract_memory_manager.
+ *
+ *
  * @author Johannes Pietrzyk
+ *
  * @todo Overthink handle_error( )
  */
 

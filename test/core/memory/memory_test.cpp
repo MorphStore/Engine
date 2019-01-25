@@ -23,8 +23,6 @@
  * @todo TODOS?
  */
 
-//#define MORPHSTORE_NO_SELFMANAGED_MEMORY
-#define DEBUG_MALLOC
 #include "../../../include/core/memory/mm_glob.h"
 
 
@@ -37,6 +35,7 @@ int main( void ) {
       void * result = malloc( 1024 );
       fprintf(stderr, "Main: Allocated: %p\n", result );
    }*/
+
    std::vector< int > test;
    for( int i = 0; i < 20; ++i ) {
       test.push_back( i );

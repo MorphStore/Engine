@@ -35,8 +35,8 @@
 #include <cstdlib>
 #include <cstdio>
 
-#ifndef QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE
-#define QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_MB
+#ifndef MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE
+#define MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_MB
 #endif
 
 
@@ -62,7 +62,7 @@ class general_memory_manager : public abstract_memory_manager {
 
    public:
 
-      void * allocate( PPUNUSED size_t p_AllocSize ) override {
+      void * allocate( MSV_PPUNUSED size_t p_AllocSize ) override {
          warn( "General Memory Manager - allocate(): Called allocate() without abstract_memory_manager directly on the GMM. This should not happed!" );
          return nullptr;
       }
@@ -78,11 +78,11 @@ class general_memory_manager : public abstract_memory_manager {
          }
       }
 
-      void deallocate( PPUNUSED abstract_memory_manager * const p_Caller, PPUNUSED void * const ) override {
+      void deallocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED void * const ) override {
          // NOP
       }
 
-      void deallocate( PPUNUSED void * const )  override {
+      void deallocate( MSV_PPUNUSED void * const )  override {
          // NOP
       }
 
@@ -159,16 +159,16 @@ class query_memory_manager : public abstract_memory_manager {
          return tmp;
       }
 
-      void * allocate( PPUNUSED abstract_memory_manager * const p_Caller, PPUNUSED size_t p_AllocSize ) override {
+      void * allocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED size_t p_AllocSize ) override {
          warn( "Query Memory Manager - allocate(): Called allocate() with abstract_memory_manager. This is not intended to happen!" );
          return nullptr;
       }
 
-      void deallocate( PPUNUSED abstract_memory_manager * const, PPUNUSED void * const ) override {
+      void deallocate( MSV_PPUNUSED abstract_memory_manager * const, MSV_PPUNUSED void * const ) override {
          // NOP
       }
 
-      void deallocate( PPUNUSED void * const ) override {
+      void deallocate( MSV_PPUNUSED void * const ) override {
          // NOP
       }
 
@@ -181,7 +181,7 @@ class query_memory_manager : public abstract_memory_manager {
       general_memory_manager & m_GeneralMemoryManager;
       void * m_CurrentPtr;
       size_t m_SpaceLeft;
-      mm_expand_strategy_chunk_based< QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE > expander;
+      mm_expand_strategy_chunk_based< MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE > expander;
 
 };
 

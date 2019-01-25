@@ -26,8 +26,8 @@
 #ifndef MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 #define MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 
-#ifndef PPUNUSED
-#define PPUNUSED __attribute__((unused))
+#ifndef MSV_PPUNUSED
+#define MSV_PPUNUSED __attribute__((unused))
 #endif
 
 

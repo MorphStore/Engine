@@ -32,7 +32,13 @@
 #include <iostream>
 
 
-#define VAR_MORPHSTORE_LOG_LEVEL_COUNT 5
+#define MSV_LOG_LEVEL_COUNT 5
+#ifndef MSV_GIT_BRANCH
+#  define MSV_GIT_BRANCH
+#endif
+#ifndef MSV_GIT_HASH
+#  define MSV_GIT_HASH
+#endif
 
 namespace morphstore { namespace logging {
 
@@ -64,7 +70,7 @@ class formatter {
       char const * m_EntryEndText;
       char const * m_ColorDefaultText;
 
-      std::array< levels_colors, VAR_MORPHSTORE_LOG_LEVEL_COUNT > m_LevelsAndColors;
+      std::array< levels_colors, MSV_LOG_LEVEL_COUNT > m_LevelsAndColors;
    public:
       formatter(
          char const * p_LineStartText,
@@ -72,7 +78,7 @@ class formatter {
          char const * p_EntryBeginText,
          char const * p_EntryEndText,
          char const * p_ColorDefaultText,
-         std::array< levels_colors, VAR_MORPHSTORE_LOG_LEVEL_COUNT >&& p_LevelsAndColors ) :
+         std::array< levels_colors, MSV_LOG_LEVEL_COUNT >&& p_LevelsAndColors ) :
          m_LineStartText{ p_LineStartText },
          m_LineEndText{ p_LineEndText },
          m_EntryBeginText{ p_EntryBeginText },
@@ -167,8 +173,8 @@ class shell_logger : public logger {
       void log_header( void ) override {
          get_out()   << "Project [ProjectName] started.\n"
                      << "Build Specs: \n"
-                     << "Branch: " << VAR_MORPHSTORE_GIT_BRANCH << "\n"
-                     << "Commit: " << VAR_MORPHSTORE_GIT_HASH << "\n";
+                     << "Branch: " << MSV_GIT_BRANCH << "\n"
+                     << "Commit: " << MSV_GIT_HASH << "\n";
       }
       void log_footer( void ) override {}
       std::ostream & get_out( void ) override {
@@ -189,7 +195,7 @@ class shell_logger : public logger {
 
 
 
-#ifdef MORPHSTORE_NO_SHELL_LOGGER
+#ifdef MSV_NO_SHELL_LOGGER
 //...
 #else
 shell_logger log_instance;
@@ -198,7 +204,7 @@ shell_logger log_instance;
 }}
 
 
-#ifdef NOLOG
+#ifdef MSV_NO_LOG
 #  define debug(...)
 #  define info(...)
 #  define warn(...)

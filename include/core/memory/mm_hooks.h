@@ -47,7 +47,7 @@ static bool init_mem_hooks( void ) {
    return true;
 }
 
-#ifdef DEBUG_MALLOC
+#ifdef MSV_DEBUG_MALLOC
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
    debug( file, " - Line ", line, " ( ", func, " ): Kernel Malloc( ", p_AllocSize, " Bytes ) ");

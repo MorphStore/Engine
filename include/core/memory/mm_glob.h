@@ -33,7 +33,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 
-#ifndef MORPHSTORE_NO_SELFMANAGED_MEMORY
+#ifndef MSV_NO_SELFMANAGED_MEMORY
 
 #ifndef __THROW
 #  define __THROW
@@ -47,7 +47,7 @@
 #include <cstdio>
 
 extern "C" {
-#ifndef DEBUG_MALLOC
+#ifndef MSV_DEBUG_MALLOC
    /**
     * @brief Global replacement for malloc from cstdlib.
     *
@@ -190,7 +190,7 @@ void operator delete( void * p_FreePtr ) noexcept {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  * @param p_DeallocSize Unused (see details)
  */
-void operator delete( void * p_FreePtr, PPUNUSED size_t p_DeallocSize ) noexcept {
+void operator delete( void * p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
    free( p_FreePtr );
 }
 
@@ -216,7 +216,7 @@ void operator delete[]( void* p_FreePtr ) noexcept {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  * @param p_DeallocSize Unused (see details)
  */
-void operator delete[]( void* p_FreePtr, PPUNUSED size_t p_DeallocSize ) noexcept {
+void operator delete[]( void* p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
    free( p_FreePtr );
 }
 
