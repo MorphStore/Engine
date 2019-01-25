@@ -31,6 +31,10 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_H
 #define MORPHSTORE_CORE_MEMORY_MM_H
 
+#ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
+#  error "mm.h has to be included AFTER mm_glob.h"
+#endif
+#ifndef MSV_NO_SELFMANAGED_MEMORY
 
 #include "../utils/types.h"
 
@@ -51,5 +55,6 @@ class abstract_memory_manager {
 
 
 } }
+#endif
 
 #endif //MORPHSTORE_CORE_MEMORY_MM_H

@@ -33,13 +33,15 @@ namespace morphstore { namespace storage {
 template< typename T >
 struct storage_container_meta_data {
    using data_type = T;
-   constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
+   static constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
    size_t const m_CountLogicalValues;
    size_t const m_SizeByte;
 
    storage_container_meta_data( size_t p_CountLogicalValues, size_t p_SizeByte ) :
       m_CountLogicalValues{ p_CountLogicalValues },
-      m_SizeByte{ p_SizeByte }{ }
+      m_SizeByte{ p_SizeByte }{
+      debug( "Storage Container Meta Data - ctor( |Logical Values| =", p_CountLogicalValues, ", |Data| =", p_SizeByte, "Byte)" );
+   }
    storage_container_meta_data( storage_container_meta_data const & ) = delete;
    storage_container_meta_data( storage_container_meta_data && ) = default;
    storage_container_meta_data & operator=( storage_container_meta_data const & ) = delete;

@@ -35,18 +35,22 @@ class abstract_storage_container {
    public:
       abstract_storage_container( storage_container_meta_data< T > && p_MetaData, T const * const p_Data ):
          m_MetaData{ std::move( p_MetaData ) },
-         m_Data{ p_Data }{ }
-      abstract_storage_container( abstract_storage_container & const ) = delete;
+         m_Data{ p_Data }{
+         debug( "Abstract Storage Container - ctor( storage_container_meta_data &&, Data =", p_Data, ")" );
+      }
+      abstract_storage_container( abstract_storage_container const & ) = delete;
       abstract_storage_container( abstract_storage_container && ) = delete;
-      abstract_storage_container & operator= ( abstract_storage_container & const ) = delete;
+      abstract_storage_container & operator= ( abstract_storage_container const & ) = delete;
       abstract_storage_container & operator= ( abstract_storage_container && ) = delete;
 
       virtual ~abstract_storage_container( ) {
-         free( m_Data );
+//         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
+//         free( const_cast< void * >( static_cast< void const * const >( m_Data ) ) );
       }
    protected:
+      storage_container_meta_data< T > m_MetaData;
       T const * const m_Data;
-      storage_container_meta_data m_MetaData;
+
 
    public:
       inline T const * data( void ) const {
