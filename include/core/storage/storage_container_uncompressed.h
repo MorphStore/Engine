@@ -36,9 +36,9 @@ namespace morphstore { namespace storage {
 template< typename T >
 class storage_container_uncompressed : public abstract_storage_container< T > {
    public:
-      storage_container_uncompressed( storage_container_meta_data< T > && p_MetaData, T const * const p_Data ):
-         abstract_storage_container< T >{ std::move( p_MetaData ), p_Data } {
-         debug( "Uncompressed Storage Container - ctor( storage_container_meta_data &&, Data =", p_Data, ")" );
+      storage_container_uncompressed( storage_persistence_type p_PersistenceType, size_t p_CountLogicalValues, size_t p_SizeByte ):
+         abstract_storage_container< T >{ p_PersistenceType, p_CountLogicalValues, p_SizeByte } {
+         trace( "Uncompressed Storage Container - ctor" );
       }
 };
 

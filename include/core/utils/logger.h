@@ -32,7 +32,7 @@
 #include <iostream>
 
 
-#define MSV_LOG_LEVEL_COUNT 5
+#define MSV_LOG_LEVEL_COUNT 6
 #ifndef MSV_GIT_BRANCH
 #  define MSV_GIT_BRANCH
 #endif
@@ -119,6 +119,7 @@ class shell_formatter : public formatter {
             " ",
             "\033[0m",
             {
+               levels_colors( "[Trace]: ", "\033[0m" ),
                levels_colors( "[Debug]: ", "\033[1;34m" ),
                levels_colors( "[Info ]: ", "\033[1;32m" ),
                levels_colors( "[Warn ]: ", "\033[1;33m" ),
@@ -205,6 +206,7 @@ shell_logger log_instance;
 
 
 #ifdef MSV_NO_LOG
+#  define trace(...)
 #  define debug(...)
 #  define info(...)
 #  define warn(...)
@@ -212,17 +214,18 @@ shell_logger log_instance;
 #  define wtf(...)
 #else
 #  ifdef DEBUG
-#     define debug(...) morphstore::logging::log_instance.log( 0, __VA_ARGS__ )
-#     define info(...) morphstore::logging::log_instance.log( 1, __VA_ARGS__ )
+#     define trace(...) morphstore::logging::log_instance.log( 0, __VA_ARGS__ )
+#     define debug(...) morphstore::logging::log_instance.log( 1, __VA_ARGS__ )
+#     define info(...) morphstore::logging::log_instance.log( 2, __VA_ARGS__ )
 #  elif defined( MSV_DEBUG_MALLOC )
 #     define debug(...) morphstore::logging::log_instance.log( 0, __VA_ARGS__ )
 #  else
 #     define debug(...)
 #     define info(...)
 #endif
-#  define warn(...) morphstore::logging::log_instance.log( 2, __VA_ARGS__ )
-#  define error(...) morphstore::logging::log_instance.log( 3, __VA_ARGS__ )
-#  define wtf(...) morphstore::logging::log_instance.log( 4, __VA_ARGS__ )
+#  define warn(...) morphstore::logging::log_instance.log( 3, __VA_ARGS__ )
+#  define error(...) morphstore::logging::log_instance.log( 4, __VA_ARGS__ )
+#  define wtf(...) morphstore::logging::log_instance.log( 5, __VA_ARGS__ )
 #endif
 
 

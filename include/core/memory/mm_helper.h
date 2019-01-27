@@ -129,7 +129,7 @@ class memory_bin_handler {
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ nullptr },
             m_NextHandle{ nullptr }{
-            debug(
+            trace(
                "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
                ", Data =", p_BasePtr,
                ", Size =", p_SizeByte,
@@ -142,7 +142,7 @@ class memory_bin_handler {
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ p_PrevHandle },
             m_NextHandle{ nullptr }{
-            debug(
+            trace(
                "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
                ", Data =", p_BasePtr, ", Size =", p_SizeByte,
                ", PrevHandle =", p_PrevHandle,
@@ -155,7 +155,7 @@ class memory_bin_handler {
             m_SizeByte{ p_SizeByte },
             m_PrevHandle{ p_PrevHandle },
             m_NextHandle{ p_NextHandle }{
-            debug(
+            trace(
                "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
                ", Data =", p_BasePtr, ", Size =", p_SizeByte,
                ", PrevHandle =", p_PrevHandle,
@@ -169,7 +169,7 @@ class memory_bin_handler {
             m_SizeByte = p_SizeByte;
             m_PrevHandle = p_PrevHandle;
             m_NextHandle = p_NextHandle;
-            debug(
+            trace(
                "Memory Bin Handle - init( Owner =", p_MemoryManager,
                ", Data =", p_BasePtr, ", Size =", p_SizeByte,
                ", PrevHandle =", p_PrevHandle,
@@ -206,7 +206,7 @@ class memory_bin_handler {
             wtf( "Memory Bin Handler - ctor(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
-         debug(
+         trace(
             "Memory Bin Handler - ctor( Associated with", p_MemoryManager,
             ", Data =", p_BasePtr,
             ", Size =", p_SizeByte,
@@ -214,7 +214,7 @@ class memory_bin_handler {
          );
       }
       memory_bin_handler( void ) : m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{
-         debug(
+         trace(
             "Memory Bin Handler - ctor( Associated with", 0,
             ", Data = 0",
             ", Size = 0",
@@ -222,12 +222,12 @@ class memory_bin_handler {
          );
       }
       ~memory_bin_handler( void ){
-         debug( "Memory Bin Handler - dtor( )" );
+         trace( "Memory Bin Handler - dtor( )" );
          memory_bin_handle * handle = m_BinHandleStructRoot;
          memory_bin_handle * next_handle = nullptr;
          while( handle != nullptr ) {
             next_handle = handle->m_NextHandle;
-            debug( "Memory Bin Handler - dtor( ). Freeing", handle );
+            trace( "Memory Bin Handler - dtor( ). Freeing", handle );
             stdlib_free( static_cast< void * >( handle ) );
             handle = next_handle;
          }
@@ -240,7 +240,7 @@ class memory_bin_handler {
    public:
 
       inline void append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
-         debug(
+         trace(
             "Memory Bin Handler - append_bin( Associated with", p_MemoryManager,
             ", Data =", p_BasePtr,
             ", Size =", p_BinSize,
@@ -262,7 +262,7 @@ class memory_bin_handler {
             wtf( "Memory Bin Handler - append_bin(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
-         debug(
+         trace(
             "Memory Bin Handler - append_bin( ) -",
             "Prev Handle =", tmp->m_PrevHandle,
             "Next Handle =", tmp->m_NextHandle,

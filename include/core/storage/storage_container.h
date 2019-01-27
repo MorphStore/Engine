@@ -30,14 +30,33 @@
 
 namespace morphstore { namespace storage {
 
+enum class storage_persistence_type {
+   PERPETUAL,
+   EPHEMERAL
+};
+
 template< typename T >
 class abstract_storage_container {
    public:
-      abstract_storage_container( storage_container_meta_data< T > && p_MetaData, T const * const p_Data ):
-         m_MetaData{ std::move( p_MetaData ) },
-         m_Data{ p_Data }{
-         debug( "Abstract Storage Container - ctor( storage_container_meta_data &&, Data =", p_Data, ")" );
-      }
+
+
+      abstract_storage_container(
+         storage_persistence_type p_PersistenceType,
+         size_t p_CountLogicalValues,
+         size_t p_SizeByte
+         ) :
+         m_MetaData{ p_CountLogicalValues, p_SizeByte },
+         m_Data{
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+            ( p_PersistenceType == storage_persistence_type::PERPETUAL ) ?
+            static_cast< T * >( morphstore::memory::general_memory_manager::get_instance().allocate_persist( p_SizeByte ) ) :
+            static_cast< T * >( malloc( p_SizeByte ) )
+#else
+            static_cast< T * >( malloc( p_SizeByte ) );
+#endif
+         } { }
+
+
       abstract_storage_container( abstract_storage_container const & ) = delete;
       abstract_storage_container( abstract_storage_container && ) = delete;
       abstract_storage_container & operator= ( abstract_storage_container const & ) = delete;
@@ -49,7 +68,7 @@ class abstract_storage_container {
       }
    protected:
       storage_container_meta_data< T > m_MetaData;
-      T const * const m_Data;
+      T const * m_Data;
 
 
    public:

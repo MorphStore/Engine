@@ -56,17 +56,17 @@ class general_memory_manager : public abstract_memory_manager {
       general_memory_manager( general_memory_manager const & ) = delete;
       general_memory_manager & operator=( general_memory_manager const & ) = delete;
       ~general_memory_manager( void ) {
-         debug( "General Memory Manager - dtor( )" );
+         trace( "General Memory Manager - dtor( )" );
          auto * handle = m_MemoryBinHandler.get_root( );
          while( handle != nullptr ) {
-            debug( "General Memory Manager - dtor( ). Freeing handle", handle," with Pointer to", handle->m_BasePtr );
+            trace( "General Memory Manager - dtor( ). Freeing handle", handle," with Pointer to", handle->m_BasePtr );
             stdlib_free( handle->m_BasePtr );
             handle = handle->next();
          }
       }
    private:
       general_memory_manager( void ) {
-         debug(
+         trace(
             "General Memory Manager - ctor( ). this =", this
          );
       }
@@ -121,6 +121,7 @@ class general_memory_manager : public abstract_memory_manager {
             handle_error( );
             return nullptr;
          }
+
       }
 
    private:
@@ -152,7 +153,7 @@ class query_memory_manager : public abstract_memory_manager {
             wtf( "Query Memory Manager - ctor( size_t ): Could not allocate ", p_InitSpaceSize, " Bytes." );
             m_GeneralMemoryManager.handle_error( );
          }
-         debug(
+         trace(
             "Query Memory Manager - ctor( size =", p_InitSpaceSize, ").",
             "Head ptr =", m_CurrentPtr,
             "Space left =", m_SpaceLeft,
