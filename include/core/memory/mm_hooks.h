@@ -29,6 +29,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #  error "mm_hooks.h has to be included AFTER mm_glob.h"
 #endif
+
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 
 #include "../utils/types.h"
@@ -44,15 +45,19 @@ namespace morphstore { namespace memory {
 } }
 
 static bool init_mem_hooks( void ) {
+   trace( "[] - Initializing hooks." );
    morphstore::memory::stdlib_malloc_ptr = ( void *( * )( size_t )) dlsym(RTLD_NEXT, "malloc" );
    morphstore::memory::stdlib_realloc_ptr = ( void *( * )( void *, size_t )) dlsym(RTLD_NEXT, "realloc" );
    morphstore::memory::stdlib_free_ptr = ( void ( * )( void* )) dlsym(RTLD_NEXT, "free" );
-   if ( !morphstore::memory::stdlib_malloc_ptr || !morphstore::memory::stdlib_free_ptr || !morphstore::memory::stdlib_realloc_ptr )
+   if ( !morphstore::memory::stdlib_malloc_ptr || !morphstore::memory::stdlib_free_ptr || !morphstore::memory::stdlib_realloc_ptr ) {
+      trace( "[] - Could not initialize hooks." );
       return false;
+   }
+   trace( "[] - Hooks initialized.");
    return true;
 }
 
-#if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
+#  if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
    info( "Kernel Malloc:", result, "Size =", p_AllocSize, "Bytes [", file, "- Line", line, "(", func, ") ]");
@@ -62,12 +67,12 @@ void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *fu
    info( "Kernel Free  :", p_Ptr, "[", file, "- Line", line, "(", func, ") ]");
    morphstore::memory::stdlib_free_ptr( p_Ptr );
 }
-#  define stdlib_malloc( X ) debug_stdlib_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
-#  define stdlib_free( X ) debug_stdlib_free( X, __FILE__, __LINE__, __FUNCTION__ )
-#else
-#  define stdlib_malloc( X ) stdlib_malloc_ptr( X )
-#  define stdlib_free( X ) stdlib_free_ptr( X )
-#endif
+#     define stdlib_malloc( X ) debug_stdlib_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
+#     define stdlib_free( X ) debug_stdlib_free( X, __FILE__, __LINE__, __FUNCTION__ )
+#  else
+#     define stdlib_malloc( X ) stdlib_malloc_ptr( X )
+#     define stdlib_free( X ) stdlib_free_ptr( X )
+#  endif
 
 #endif // !define(MSV_NO_SELFMANAGED_MEMORY)
 #endif //MORPHSTORE_CORE_MEMORY_MM_HOOKS_H

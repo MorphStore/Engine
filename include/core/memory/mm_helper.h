@@ -119,50 +119,12 @@ class memory_bin_handler {
          memory_bin_handle * m_PrevHandle;
          memory_bin_handle * m_NextHandle;
 
+         memory_bin_handle( void ) = delete;
          memory_bin_handle( memory_bin_handle const &  ) = delete;
          memory_bin_handle( memory_bin_handle && ) = delete;
          memory_bin_handle & operator=( memory_bin_handle const & ) = default;
          memory_bin_handle & operator=( memory_bin_handle && ) = default;
-         memory_bin_handle( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte ) :
-            m_MemoryManager{ p_MemoryManager },
-            m_BasePtr{ p_BasePtr },
-            m_SizeByte{ p_SizeByte },
-            m_PrevHandle{ nullptr },
-            m_NextHandle{ nullptr }{
-            trace(
-               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
-               ", Data =", p_BasePtr,
-               ", Size =", p_SizeByte,
-               ") this =", this
-            );
-         }
-         memory_bin_handle( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle ) :
-            m_MemoryManager{ p_MemoryManager },
-            m_BasePtr{ p_BasePtr },
-            m_SizeByte{ p_SizeByte },
-            m_PrevHandle{ p_PrevHandle },
-            m_NextHandle{ nullptr }{
-            trace(
-               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
-               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
-               ", PrevHandle =", p_PrevHandle,
-               ") this =", this
-            );
-         }
-         memory_bin_handle( abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle ) :
-            m_MemoryManager{ p_MemoryManager },
-            m_BasePtr{ p_BasePtr },
-            m_SizeByte{ p_SizeByte },
-            m_PrevHandle{ p_PrevHandle },
-            m_NextHandle{ p_NextHandle }{
-            trace(
-               "Memory Bin Handle - ctor( Owner =", p_MemoryManager,
-               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
-               ", PrevHandle =", p_PrevHandle,
-               ", NextHandle =", p_NextHandle,
-               ") this =", this
-            );
-         }
+
          inline void init(  abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle  ) {
             m_MemoryManager = p_MemoryManager;
             m_BasePtr = p_BasePtr;
@@ -170,14 +132,16 @@ class memory_bin_handler {
             m_PrevHandle = p_PrevHandle;
             m_NextHandle = p_NextHandle;
             trace(
-               "Memory Bin Handle - init( Owner =", p_MemoryManager,
-               ", Data =", p_BasePtr, ", Size =", p_SizeByte,
-               ", PrevHandle =", p_PrevHandle,
-               ", NextHandle =", p_NextHandle,
-               ") this =", this
-            );
+               "[Memory Bin Handle] - IN.  ( Owner = ", p_MemoryManager,
+               ", Data = ", p_BasePtr, ", Size = ", p_SizeByte,
+               ", PrevHandle = ", p_PrevHandle,
+               ", NextHandle = ", p_NextHandle,
+               " )." );
+            trace( "[Memory Bin Handle] - OUT. ( void )" );
          }
-         void remove( void ) {
+         void prepare_to_remove( void ) {
+            trace( "[Memory Bin Handle] - IN. ( void ). this = ", this, "." );
+
             if( m_PrevHandle != nullptr ) {
                if( m_NextHandle != nullptr ) {
                   m_PrevHandle->m_NextHandle = m_NextHandle;
@@ -193,44 +157,49 @@ class memory_bin_handler {
          inline memory_bin_handle * next( ) const {
             return m_NextHandle;
          }
+         inline memory_bin_handle * prev( ) const {
+            return m_PrevHandle;
+         }
       };
    public:
-      memory_bin_handler( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_SizeByte ) :
-         m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{
+      explicit memory_bin_handler( abstract_memory_manager * const p_MemoryManager ) {
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, " )." );
+         if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
+            trace( "[Memory Bin Handler] - Initialize memory hooks." );
+            if( ! init_mem_hooks( ) ) {
+               wtf( "[Memory Bin Handler] - Could not initialize memory hooks" );
+               p_MemoryManager->handle_error( );
+            }
+         }
+         trace( "[Memory Bin Handler] - Create new Memory Bin handle." );
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
-            tmp->init( p_MemoryManager, p_BasePtr, p_SizeByte, nullptr, nullptr );
+            trace( "[Memory Bin Handler] - Initialize Bin Handle." );
+            tmp->init( p_MemoryManager, nullptr, 0, nullptr, nullptr );
+            trace( "[Memory Bin Handler] - Assign newly created handle ", tmp, " as root and tail." );
             m_BinHandleStructRoot = tmp;
             m_BinHandleStructTail = tmp;
          } else {
-            wtf( "Memory Bin Handler - ctor(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
+            wtf( "[Memory Bin Handler] - Could not create a Memory Bin Handle." );
             p_MemoryManager->handle_error( );
          }
          trace(
-            "Memory Bin Handler - ctor( Associated with", p_MemoryManager,
-            ", Data =", p_BasePtr,
-            ", Size =", p_SizeByte,
-            ") this =", this
+            "[Memory Bin Handler] - Root = ", m_BinHandleStructRoot, ". Tail = ", m_BinHandleStructTail, "."
          );
+         trace( "[Memory Bin Handler] - OUT. ( this = ", this, " )" );
       }
-      memory_bin_handler( void ) : m_BinHandleStructRoot{ nullptr }, m_BinHandleStructTail{ nullptr }{
-         trace(
-            "Memory Bin Handler - ctor( Associated with", 0,
-            ", Data = 0",
-            ", Size = 0",
-            ") this =", this
-         );
-      }
+
       ~memory_bin_handler( void ){
-         trace( "Memory Bin Handler - dtor( )" );
-         memory_bin_handle * handle = m_BinHandleStructRoot;
-         memory_bin_handle * next_handle = nullptr;
+         trace( "[Memory Bin Handler] - IN. ( void )." );
+         memory_bin_handle * handle = m_BinHandleStructTail;
+         memory_bin_handle * prev_handle = nullptr;
          while( handle != nullptr ) {
-            next_handle = handle->m_NextHandle;
-            trace( "Memory Bin Handler - dtor( ). Freeing", handle );
+            prev_handle = handle->m_PrevHandle;
+            trace( "[Memory Bin Handler] - Freeing Handle ( ", handle, " )." );
             stdlib_free( static_cast< void * >( handle ) );
-            handle = next_handle;
+            handle = prev_handle;
          }
+         trace( "[Memory Bin Handler] - OUT. ( void ) " );
 
       }
    private:
@@ -241,38 +210,34 @@ class memory_bin_handler {
 
       inline void append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
          trace(
-            "Memory Bin Handler - append_bin( Associated with", p_MemoryManager,
-            ", Data =", p_BasePtr,
-            ", Size =", p_BinSize,
-            ")"
-         );
+            "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager,
+            ". Memory = ", p_BasePtr,
+            ". Size = ", p_BinSize, " )."
+            );
+         trace( "[Memory Bin Handler] - Create new Memory Bin handle." );
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
+            trace( "[Memory Bin Handler] - Initialize Bin Handle." );
             tmp->init( p_MemoryManager, p_BasePtr, p_BinSize, m_BinHandleStructTail, nullptr );
-            if( m_BinHandleStructRoot == nullptr ) {
-               m_BinHandleStructRoot = tmp;
-               m_BinHandleStructTail = tmp;
-//            if( m_BinHandleStructTail == nullptr ) {
-//               m_BinHandleStructRoot = m_BinHandleStructTail = tmp;
-//            } else {
-//               m_BinHandleStructTail->m_NextHandle = tmp;
-//               m_BinHandleStructTail = tmp;
-            }
+            trace(
+               "[Memory Bin Handler] - Assign newly created handle ", tmp, " as new tail. Reset pointer from old tail."
+               );
+            m_BinHandleStructTail->m_NextHandle = tmp;
+            m_BinHandleStructTail = tmp;
          } else {
-            wtf( "Memory Bin Handler - append_bin(): Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
+            wtf( "[Memory Bin Handler] - Could not allocate ", sizeof( memory_bin_handle ), " Bytes for a handle." );
             p_MemoryManager->handle_error( );
          }
          trace(
-            "Memory Bin Handler - append_bin( ) -",
-            "Prev Handle =", tmp->m_PrevHandle,
-            "Next Handle =", tmp->m_NextHandle,
-            "Appended. Root =", m_BinHandleStructRoot, "Tail =", m_BinHandleStructTail
-         );
-
+            "[Memory Bin Handler] - Root = ", m_BinHandleStructRoot, ". Tail = ", m_BinHandleStructTail, "."
+            );
+         trace( "[Memory Bin Handler] - OUT. ( void ).");
       }
+
       inline memory_bin_handle * remove_bin( memory_bin_handle * const handle ) {
+         if( handle == )
          memory_bin_handle * next = handle->m_NextHandle;
-         handle->remove();
+         handle->prepare_to_remove( );
          if( handle == m_BinHandleStructRoot )
             m_BinHandleStructRoot = handle->m_NextHandle;
          if( handle == m_BinHandleStructTail )
@@ -281,31 +246,38 @@ class memory_bin_handler {
          return next;
       }
 
-      inline memory_bin_handle * find_first( abstract_memory_manager * const p_MemoryManager ) const {
-         memory_bin_handle * handle = m_BinHandleStructRoot;
-         while( handle != nullptr ) {
-            if( handle->m_MemoryManager == p_MemoryManager )
-               return handle;
-            handle = handle->m_NextHandle;
-         }
-         return handle;
+      inline memory_bin_handle * get_tail( void ) const {
+         return m_BinHandleStructTail;
       }
 
-      inline memory_bin_handle * find_next( abstract_memory_manager * const p_MemoryManager, memory_bin_handle * p_CurrentHandle ) const {
-         memory_bin_handle * handle = p_CurrentHandle;
-         while( handle != nullptr ) {
-            if( handle->m_MemoryManager == p_MemoryManager )
+      inline memory_bin_handle * find_last( abstract_memory_manager * const p_MemoryManager ) const {
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, " )." );
+         memory_bin_handle * handle = m_BinHandleStructTail;
+         while( handle != m_BinHandleStructRoot ) {
+            if( handle->m_MemoryManager == p_MemoryManager ) {
+               trace( "[Memory Bin Handler] - OUT. ( ", handle, " )." );
                return handle;
-            handle = handle->m_NextHandle;
+            }
+            handle = handle->m_PrevHandle;
          }
+         trace( "[Memory Bin Handler] - OUT. No handle found. ( nullptr )." );
          return nullptr;
       }
 
-      inline memory_bin_handle * get_root( void ) const {
-         return m_BinHandleStructRoot;
-      }
-      inline memory_bin_handle * get_tail( void ) const {
-         return m_BinHandleStructTail;
+      inline memory_bin_handle * find_prev(
+         abstract_memory_manager * const p_MemoryManager,
+         memory_bin_handle * const p_Current ) const {
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         memory_bin_handle * handle = p_Current;
+         while( handle != m_BinHandleStructRoot ) {
+            if( handle->m_MemoryManager == p_MemoryManager ) {
+               trace( "[Memory Bin Handler] - OUT. ( ", handle, " )." );
+               return handle;
+            }
+            handle = handle->m_PrevHandle;
+         }
+         trace( "[Memory Bin Handler] - OUT. No handle found. ( nullptr )." );
+         return nullptr;
       }
 };
 

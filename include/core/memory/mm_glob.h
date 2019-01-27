@@ -33,7 +33,56 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #  define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 
-#  ifndef MSV_NO_SELFMANAGED_MEMORY
+#include "../utils/preprocessor.h"
+#include "../utils/types.h"
+#include "../utils/logger.h"
+
+
+
+#  ifdef MSV_NO_SELFMANAGED_MEMORY
+#     ifdef MSV_DEBUG_MALLOC
+#        ifndef __THROW
+#           define __THROW
+#        endif
+   void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
+      void * result = malloc( p_AllocSize );
+      trace( "Kernel Malloc: ", result, " ( ", p_AllocSize, " Bytes ) [ ", file, " - Line ", line, " ( ", func, " ) ]" );
+      return result;
+   }
+   void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
+      trace( "Kernel Free: ", p_FreePtr, " [ ", file, " - Line ", line, " ( ", func, " ) ]");
+      free( p_FreePtr );
+   }
+#        define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __func__ )
+#        define free( X ) debug_free( X, __FILE__, __LINE__, __func__ )
+
+   /** replacing the new and delete operator seems to be a bit tricky. All we can do is overloading them.
+    * By overloading we can not change the signature of the call to get an appropriate file string and a corresponding
+    * line.
+    * Nevertheless we are not alone with this goal. Have a look into this blog:
+    * https://blogs.msdn.microsoft.com/calvin_hsia/2009/01/19/overload-operator-new-to-detect-memory-leaks/
+    * @todo: Implement and test this.
+    */
+   void * operator new( size_t p_AllocSize ) {
+      return malloc( p_AllocSize );
+   }
+   void* operator new[]( size_t p_AllocSize ) {
+      return malloc( p_AllocSize );
+   }
+   void operator delete( void * p_FreePtr ) noexcept {
+      free( p_FreePtr );
+   }
+   void operator delete( void * p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
+      free( p_FreePtr );
+   }
+   void operator delete[]( void* p_FreePtr ) noexcept {
+      free( p_FreePtr );
+   }
+   void operator delete[]( void* p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
+      free( p_FreePtr );
+   }
+#     endif
+#  else  // ! MSV_NO_SELFMANAGED_MEMORY
 
 #     ifndef __THROW
 #        define __THROW
@@ -41,9 +90,7 @@
 
 #     include "mm.h"
 #     include "mm_hooks.h"
-#     include "../utils/types.h"
 #     include "mm_impl.h"
-#     include "../utils/logger.h"
 #     include <cstdio>
 
 extern "C" {
@@ -60,9 +107,9 @@ extern "C" {
     * @return Pointer to allocated memory.
     */
    void * malloc( size_t p_AllocSize ) __THROW {
-      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
-         init_mem_hooks( );
-      }
+//      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
+//         init_mem_hooks( );
+//      }
       return morphstore::memory::query_memory_manager::get_instance( ).allocate( p_AllocSize );
    }
 
@@ -77,9 +124,9 @@ extern "C" {
     * @param p_FreePtr Pointer to allocated memory which should be freed.
     */
    void free( void *p_FreePtr ) __THROW {
-      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
-         init_mem_hooks( );
-      }
+//      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
+//         init_mem_hooks( );
+//      }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
 #     elif defined( MSV_DEBUG_MALLOC )
@@ -100,9 +147,9 @@ extern "C" {
     */
    void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
       debug( "Managed Malloc:", p_AllocSize, "Bytes (", file, " - Line ", line, " ( ", func, " )");
-      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
-         init_mem_hooks( );
-      }
+//      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
+//         init_mem_hooks( );
+//      }
       return morphstore::memory::query_memory_manager::get_instance( ).allocate( p_AllocSize );
    }
    /**
@@ -120,9 +167,9 @@ extern "C" {
     */
    void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
       debug( file, " - Line ", line, " ( ", func, " ): MM Free( ", p_FreePtr, " ) ");
-      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
-         init_mem_hooks( );
-      }
+//      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
+//         init_mem_hooks( );
+//      }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
 #        define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
@@ -221,4 +268,9 @@ void operator delete[]( void* p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noe
 
 
 #  endif
+
+
+
+
+
 #endif //MORPHSTORE_CORE_MEMORY_MM_GLOB_H
