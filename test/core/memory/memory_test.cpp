@@ -36,9 +36,7 @@ int main( void ) {
       void * result = malloc( 1024 );
       fprintf(stderr, "Main: Allocated: %p\n", result );
    }*/
-#ifdef MSV_DEBUG_MALLOC
-   fprintf( stderr, "HALLO WELT\n" );
-#endif
+
 
    std::vector< int > test;
    for( int i = 0; i < 20; ++i ) {
