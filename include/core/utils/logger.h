@@ -254,7 +254,6 @@ class html_logger : public logger {
             << "Branch: " << MSV_GIT_BRANCH << "\n"
             << "Commit: " << MSV_GIT_HASH << "\n"
             << "<table>\n";
-
       }
       void log_footer( void ) override {
          get_out( )
@@ -268,8 +267,10 @@ class html_logger : public logger {
          return m_Formatter;
       }
    public:
-      html_logger( void )  {
-         log_header( );
+
+      static html_logger & get_instance( void ) {
+         static thread_local html_logger html_logger_instance;
+         return html_logger_instance;
       }
       ~html_logger( ) {
          log_footer( );
