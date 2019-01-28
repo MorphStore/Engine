@@ -49,7 +49,7 @@ class column {
 #ifndef MSV_NO_SELFMANAGED_MEMORY
             ( p_PersistenceType == storage_persistence_type::PERPETUAL ) ?
             static_cast< T * >(
-               morphstore::memory::general_memory_manager::get_instance().allocate_persist( p_SizeAllocatedByte )
+               morphstore::memory::general_memory_manager::get_instance().allocate( p_SizeAllocatedByte )
                ) :
             static_cast< T * >( malloc( p_SizeAllocatedByte ) )
 #else

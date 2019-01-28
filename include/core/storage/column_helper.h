@@ -34,8 +34,8 @@ template< typename T >
 struct storage_container_meta_data {
    using data_type = T;
    static constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
-   size_t const m_CountLogicalValues;
-   size_t const m_SizeUsedByte;
+   size_t m_CountLogicalValues;
+   size_t m_SizeUsedByte;
    size_t const m_SizeAllocByte;
 
    storage_container_meta_data( size_t p_CountLogicalValues, size_t p_SizeUsedByte, size_t p_SizeAllocByte ) :
