@@ -32,11 +32,11 @@
 
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 
-#include "../utils/types.h"
-#include "../utils/logger.h"
+#  include "../utils/types.h"
+#  include "../utils/logger.h"
 
-#include <dlfcn.h>
-#include <cstdio>
+#  include <dlfcn.h>
+#  include <cstdio>
 
 namespace morphstore { namespace memory {
    static void *(*stdlib_malloc_ptr)( size_t ) = nullptr;
@@ -57,7 +57,7 @@ static bool init_mem_hooks( void ) {
    return true;
 }
 
-#  if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
+#  ifdef MSV_DEBUG_MALLOC
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
    info( "Kernel Malloc:", result, "Size =", p_AllocSize, "Bytes [", file, "- Line", line, "(", func, ") ]");

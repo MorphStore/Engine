@@ -39,6 +39,7 @@
 
 
 
+
 #  ifdef MSV_NO_SELFMANAGED_MEMORY
 #     ifdef MSV_DEBUG_MALLOC
 #        ifndef __THROW
@@ -93,8 +94,9 @@
 #     include "mm_impl.h"
 #     include <cstdio>
 
+
 extern "C" {
-#     if !defined( MSV_DEBUG_MALLOC ) || defined( MSV_NO_LOG )
+#     ifndef MSV_DEBUG_MALLOC
    /**
     * @brief Global replacement for malloc from cstdlib.
     *
@@ -107,9 +109,6 @@ extern "C" {
     * @return Pointer to allocated memory.
     */
    void * malloc( size_t p_AllocSize ) __THROW {
-//      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
-//         init_mem_hooks( );
-//      }
       return morphstore::memory::query_memory_manager::get_instance( ).allocate( p_AllocSize );
    }
 
@@ -124,12 +123,9 @@ extern "C" {
     * @param p_FreePtr Pointer to allocated memory which should be freed.
     */
    void free( void *p_FreePtr ) __THROW {
-//      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
-//         init_mem_hooks( );
-//      }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
-#     elif defined( MSV_DEBUG_MALLOC )
+#     else
    /**
     * @brief Global helper function for debugging calls to malloc.
     *
@@ -147,9 +143,6 @@ extern "C" {
     */
    void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
       debug( "Managed Malloc:", p_AllocSize, "Bytes (", file, " - Line ", line, " ( ", func, " )");
-//      if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
-//         init_mem_hooks( );
-//      }
       return morphstore::memory::query_memory_manager::get_instance( ).allocate( p_AllocSize );
    }
    /**
@@ -167,9 +160,6 @@ extern "C" {
     */
    void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
       debug( file, " - Line ", line, " ( ", func, " ): MM Free( ", p_FreePtr, " ) ");
-//      if ( morphstore::memory::stdlib_free_ptr == nullptr ) {
-//         init_mem_hooks( );
-//      }
       morphstore::memory::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
    }
 #        define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )

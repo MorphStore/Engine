@@ -198,6 +198,9 @@ class logger {
 class shell_logger : public logger {
    private:
       shell_formatter m_Formatter;
+      shell_logger( void )  {
+         log_header();
+      }
    protected:
       void log_header( void ) override {
          get_out()   << "Project [ProjectName] started.\n"
@@ -206,6 +209,7 @@ class shell_logger : public logger {
                      << "Commit: " << MSV_GIT_HASH << "\n";
       }
       void log_footer( void ) override {}
+
       std::ostream & get_out( void ) override {
          return std::cout;
       }
@@ -214,14 +218,19 @@ class shell_logger : public logger {
          return m_Formatter;
       }
    public:
-      shell_logger( void )  {
-         log_header();
+      static shell_logger & get_instance( void ) {
+         static thread_local shell_logger shell_logger_instance;
+         return shell_logger_instance;
       }
+
 };
 
 class html_logger : public logger {
    private:
       html_formatter m_Formatter;
+      html_logger( void )  {
+//         log_header( );
+      }
    protected:
       void log_header( void ) override {
          get_out( )
@@ -246,7 +255,6 @@ class html_logger : public logger {
             << "Branch: " << MSV_GIT_BRANCH << "\n"
             << "Commit: " << MSV_GIT_HASH << "\n"
             << "<table>\n";
-
       }
       void log_footer( void ) override {
          get_out( )
@@ -260,26 +268,16 @@ class html_logger : public logger {
          return m_Formatter;
       }
    public:
-      html_logger( void )  {
-         log_header( );
+
+      static html_logger & get_instance( void ) {
+         static thread_local html_logger html_logger_instance;
+         return html_logger_instance;
       }
       ~html_logger( ) {
          log_footer( );
       }
 };
 
-
-
-
-
-
-#ifdef MSV_NO_SHELL_LOGGER
-//html logger is assumed
-
-#else
-//html_logger log_instance;
-shell_logger log_instance;
-#endif
 
 }}
 
@@ -293,18 +291,21 @@ shell_logger log_instance;
 #  define wtf(...)
 #else
 #  ifdef DEBUG
-#     define trace(...) morphstore::logging::log_instance.log( 0, __FUNCTION__, __VA_ARGS__ )
-#     define debug(...) morphstore::logging::log_instance.log( 1, __FUNCTION__, __VA_ARGS__ )
-#     define info(...) morphstore::logging::log_instance.log( 2, __FUNCTION__, __VA_ARGS__ )
-#  elif defined( MSV_DEBUG_MALLOC )
-#     define debug(...) morphstore::logging::log_instance.log( 0, __FUNCTION__, __VA_ARGS__ )
-#  else
-#     define debug(...)
+#     define trace(...) morphstore::logging::shell_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
+#     define debug(...) morphstore::logging::shell_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
+#     define info(...) morphstore::logging::shell_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
+#  else  //RELEASE
+#     ifdef MSV_DEBUG_MALLOC
+#        define debug(...) morphstore::logging::shell_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
+#     else
+#        define debug(...)
+#     endif
+#     define trace(...)
 #     define info(...)
-#endif
-#  define warn(...) morphstore::logging::log_instance.log( 3, __FUNCTION__, __VA_ARGS__ )
-#  define error(...) morphstore::logging::log_instance.log( 4, __FUNCTION__, __VA_ARGS__ )
-#  define wtf(...) morphstore::logging::log_instance.log( 5, __FUNCTION__, __VA_ARGS__ )
+#  endif
+#  define warn(...) morphstore::logging::shell_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
+#  define error(...) morphstore::logging::shell_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
+#  define wtf(...) morphstore::logging::shell_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
 #endif
 
 
