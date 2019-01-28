@@ -41,7 +41,7 @@
 #include <cstdio>
 
 #ifndef MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE
-#define MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_MB
+#define MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_B//128_MB
 #endif
 
 
@@ -108,6 +108,10 @@ class general_memory_manager : public abstract_memory_manager {
       }
       void * allocate( abstract_memory_manager * const p_Caller, size_t p_AllocSize ) override {
          trace( "[General Memory Manager] - IN.  ( Caller = ", p_Caller, ". AllocSize = ", p_AllocSize, " )." );
+         if( !instanceof< general_memory_manager >( p_Caller ) ) {
+            wtf( "[General Memory Manager] - Can not be called with static general memory manager as caller.");
+            handle_error();
+         }
          void * tmp = stdlib_malloc( p_AllocSize );
          debug( "[General Memory Manager] - Allocated ", p_AllocSize, " Bytes ( @ position: ", tmp, " ).");
          if( tmp != nullptr ) {
@@ -138,13 +142,31 @@ class general_memory_manager : public abstract_memory_manager {
       }
       void destroy( abstract_memory_manager * const p_Caller ) {
          trace( "[General Memory Manager] - IN.  ( Caller = ", p_Caller, " )." );
+         if( !instanceof< general_memory_manager >( p_Caller ) ) {
+            wtf( "[General Memory Manager] - Can not be called with static general memory manager as caller.");
+            handle_error();
+         }
          auto handle = m_EphimeralMemoryBinHandler.find_last( p_Caller );
-         while( handle != nullptr ) {
-            trace( "[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). " );
-            handle =
-               m_EphimeralMemoryBinHandler.find_prev(
-                  p_Caller,
-                  m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other( p_Caller, handle ) );
+         if( handle == m_EphimeralMemoryBinHandler.get_tail( ) ) {
+            while (handle != nullptr) {
+               trace("[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). ");
+               auto tmpHandle =
+                  m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle);
+               m_EphimeralMemoryBinHandler.set_tail(tmpHandle);
+               handle =
+                  m_EphimeralMemoryBinHandler.find_prev(
+                     p_Caller,
+                     tmpHandle);
+            }
+         } else {
+            while (handle != nullptr) {
+               trace("[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). ");
+               handle =
+                  m_EphimeralMemoryBinHandler.find_prev(
+                     p_Caller,
+                     m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle )
+                  );
+            }
          }
          trace( "[General Memory Manager] - OUT. ( void )." );
       }

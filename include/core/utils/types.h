@@ -46,6 +46,11 @@ constexpr std::size_t operator""_GB( unsigned long long v ) {
    return ( 1024 * 1024 * 1024 * v );
 }
 
+template< typename B, typename T >
+inline bool instanceof( T const * p_Ptr ) {
+   return dynamic_cast< B const * >( p_Ptr ) != nullptr;
+}
+
 
 }
 #endif //MORPHSTORE_CORE_UTILS_TYPES_H

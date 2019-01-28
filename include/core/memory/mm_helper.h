@@ -219,7 +219,9 @@ class memory_bin_handler {
       inline memory_bin_handle * get_tail( void ) const {
          return m_BinHandleStructTail;
       }
-
+      inline void set_tail( memory_bin_handle * const handle ) {
+         m_BinHandleStructTail = handle;
+      }
       inline memory_bin_handle * find_last( abstract_memory_manager * const p_MemoryManager ) const {
          trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, " )." );
          memory_bin_handle * handle = m_BinHandleStructTail;
