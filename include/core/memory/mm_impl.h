@@ -138,14 +138,15 @@ class general_memory_manager : public abstract_memory_manager {
       }
       void destroy( abstract_memory_manager * const p_Caller ) {
          trace( "[General Memory Manager] - IN.  ( Caller = ", p_Caller, " )." );
-         auto handle = m_EphimeralMemoryBinHandler.find_first( p_Caller );
+         auto handle = m_EphimeralMemoryBinHandler.find_last( p_Caller );
          while( handle != nullptr ) {
             trace( "[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). " );
-            stdlib_free( handle->m_BasePtr );
-            handle = m_EphimeralMemoryBinHandler.find_next( p_Caller, m_EphimeralMemoryBinHandler.remove_bin( handle ) );
+            handle =
+               m_EphimeralMemoryBinHandler.find_prev(
+                  p_Caller,
+                  m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other( p_Caller, handle ) );
          }
          trace( "[General Memory Manager] - OUT. ( void )." );
-
       }
 
    private:

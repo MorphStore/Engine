@@ -139,24 +139,6 @@ class memory_bin_handler {
                " )." );
             trace( "[Memory Bin Handle] - OUT. ( void )" );
          }
-         void prepare_to_remove( void ) {
-            trace( "[Memory Bin Handle] - IN. ( void ). this = ", this, "." );
-
-            if( m_PrevHandle != nullptr ) {
-               if( m_NextHandle != nullptr ) {
-                  m_PrevHandle->m_NextHandle = m_NextHandle;
-                  m_NextHandle->m_PrevHandle = m_PrevHandle;
-               } else {
-                  m_PrevHandle->m_NextHandle = nullptr;
-               }
-            } else {
-               if( m_NextHandle != nullptr )
-                  m_NextHandle->m_PrevHandle = nullptr;
-            }
-         }
-         inline memory_bin_handle * next( ) const {
-            return m_NextHandle;
-         }
          inline memory_bin_handle * prev( ) const {
             return m_PrevHandle;
          }
@@ -234,18 +216,6 @@ class memory_bin_handler {
          trace( "[Memory Bin Handler] - OUT. ( void ).");
       }
 
-      inline memory_bin_handle * remove_bin( memory_bin_handle * const handle ) {
-         if( handle == )
-         memory_bin_handle * next = handle->m_NextHandle;
-         handle->prepare_to_remove( );
-         if( handle == m_BinHandleStructRoot )
-            m_BinHandleStructRoot = handle->m_NextHandle;
-         if( handle == m_BinHandleStructTail )
-            m_BinHandleStructTail = handle->m_PrevHandle;
-         stdlib_free( static_cast< void * >( handle ) );
-         return next;
-      }
-
       inline memory_bin_handle * get_tail( void ) const {
          return m_BinHandleStructTail;
       }
@@ -278,6 +248,28 @@ class memory_bin_handler {
          }
          trace( "[Memory Bin Handler] - OUT. No handle found. ( nullptr )." );
          return nullptr;
+      }
+
+      inline memory_bin_handle * find_and_remove_reverse_until_first_other(
+         abstract_memory_manager * const p_MemoryManager,
+         memory_bin_handle * p_Current
+         ) {
+
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         memory_bin_handle * nextHandle = p_Current->m_NextHandle;
+         memory_bin_handle * handle = p_Current;
+         memory_bin_handle * prevHandle;
+         // we assume, that find_reverse_first_not is NOT called with p_MemoryManager == General_memory_manager
+         // thus this loop terminates at least when it comes to root.
+         while( handle->m_MemoryManager == p_MemoryManager ) {
+            stdlib_free( static_cast< void * >( handle->m_BasePtr ) );
+            prevHandle = handle->m_PrevHandle;
+            stdlib_free( static_cast< void * >( handle ) );
+            handle = prevHandle;
+         }
+         handle->m_NextHandle = nextHandle;
+         trace( "[Memory Bin Handler] - OUT. ( Handle not associated with ", p_MemoryManager, ": ", handle, " )." );
+         return handle;
       }
 };
 
