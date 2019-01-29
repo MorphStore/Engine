@@ -17,38 +17,48 @@
 
 
 /**
- * @file storage_helper.h
+ * @file column_helper.h
  * @brief Brief description
  * @author Johannes Pietrzyk
+ * @author Patrick Damme
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_STORAGE_STORAGE_HELPER_H
-#define MORPHSTORE_CORE_STORAGE_STORAGE_HELPER_H
+#ifndef MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H
+#define MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H
 
 #include "../utils/types.h"
 
 namespace morphstore { namespace storage {
 
-template< typename T >
-struct storage_container_meta_data {
-   using data_type = T;
-   static constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
-   size_t const m_CountLogicalValues;
-   size_t const m_SizeByte;
+struct column_meta_data {
+   size_t m_CountLogicalValues;
+   size_t m_SizeUsedByte;
+   // TODO make this const again
+   size_t /*const*/ m_SizeAllocByte;
 
-   storage_container_meta_data( size_t p_CountLogicalValues, size_t p_SizeByte ) :
+   column_meta_data( size_t p_CountLogicalValues, size_t p_SizeUsedByte, size_t p_SizeAllocByte ) :
       m_CountLogicalValues{ p_CountLogicalValues },
-      m_SizeByte{ p_SizeByte }{
-      debug( "Storage Container Meta Data - ctor( |Logical Values| =", p_CountLogicalValues, ", |Data| =", p_SizeByte, "Byte)" );
+      m_SizeUsedByte{ p_SizeUsedByte },
+      m_SizeAllocByte{ p_SizeAllocByte }{
+      trace(
+         "Column Meta Data - ctor( |Logical Values| =", p_CountLogicalValues,
+         ", |Data| =", p_SizeUsedByte, "Byte",
+         ", Allocated Size = ", p_SizeAllocByte, " Bytes ).");
    }
-   storage_container_meta_data( storage_container_meta_data const & ) = delete;
-   storage_container_meta_data( storage_container_meta_data && ) = default;
-   storage_container_meta_data & operator=( storage_container_meta_data const & ) = delete;
-   storage_container_meta_data & operator=( storage_container_meta_data && ) = default;
+      
+   column_meta_data( column_meta_data const & ) = delete;
+   column_meta_data( column_meta_data && ) = default;
+   column_meta_data & operator=( column_meta_data const & ) = delete;
+   column_meta_data & operator=( column_meta_data && that) {
+       m_CountLogicalValues = that.m_CountLogicalValues;
+       m_SizeUsedByte = that.m_SizeUsedByte;
+       m_SizeAllocByte = that.m_SizeAllocByte;
+       return *this;
+   }
 };
 
 
 } }
 
-#endif //MORPHSTORE_CORE_STORAGE_STORAGE_HELPER_H
+#endif //MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H

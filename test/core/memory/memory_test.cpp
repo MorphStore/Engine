@@ -36,16 +36,16 @@ int main( void ) {
       void * result = malloc( 1024 );
       fprintf(stderr, "Main: Allocated: %p\n", result );
    }*/
-#ifdef MSV_DEBUG_MALLOC
-   fprintf( stderr, "HALLO WELT\n" );
-#endif
+
 
    std::vector< int > test;
+   int * a = (int*)malloc( 400 );
    for( int i = 0; i < 20; ++i ) {
       test.push_back( i );
    }
    for( int i = 0; i < 100; ++i ) {
       std::cout << test[ i ] << ";";
+      a[ i ] = i;
    }
    std::cout << "\n";
    return 0;
