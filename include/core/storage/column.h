@@ -58,7 +58,7 @@ class column {
       }
       
    private:
-      storage_container_meta_data< T > m_MetaData;
+      column_meta_data< T > m_MetaData;
       T const * m_Data;
       
       column(
