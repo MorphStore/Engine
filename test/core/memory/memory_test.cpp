@@ -35,7 +35,11 @@ int main( void ) {
       fprintf(stderr, "Main: Allocated: %p\n", result );
    }*/
 
-
+#ifdef MSV_DEBUG_MALLOC
+   fprintf( stderr, "SET\n" );
+#else
+   fprintf( stderr, "NOT SET\n");
+#endif
    std::vector< int > test;
    int * a = (int*)malloc( 400 );
    for( int i = 0; i < 20; ++i ) {
