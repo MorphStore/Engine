@@ -31,10 +31,7 @@
 
 namespace morphstore { namespace storage {
 
-template< typename T >
 struct column_meta_data {
-   using data_type = T;
-   static constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
    size_t m_CountLogicalValues;
    size_t m_SizeUsedByte;
    // TODO make this const again
@@ -50,9 +47,9 @@ struct column_meta_data {
          ", Allocated Size = ", p_SizeAllocByte, " Bytes ).");
    }
       
-   column_meta_data( column_meta_data< T > const & ) = delete;
-   column_meta_data( column_meta_data< T > && ) = default;
-   column_meta_data & operator=( column_meta_data< T > const & ) = delete;
+   column_meta_data( column_meta_data const & ) = delete;
+   column_meta_data( column_meta_data && ) = default;
+   column_meta_data & operator=( column_meta_data const & ) = delete;
    column_meta_data & operator=( column_meta_data && that) {
        m_CountLogicalValues = that.m_CountLogicalValues;
        m_SizeUsedByte = that.m_SizeUsedByte;

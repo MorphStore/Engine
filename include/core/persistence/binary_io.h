@@ -36,11 +36,10 @@
 
 namespace morphstore { namespace persistence {
    
-template< typename T >
 class binary_io {
     public:
         
-        static const storage::column< T > * load( const std::string & p_Filename ) {
+        static const storage::column * load( const std::string & p_Filename ) {
             using namespace std;
             using namespace storage;
 
@@ -55,7 +54,7 @@ class binary_io {
                 if( !ifs.good( ) )
                     throw runtime_error("could not read the column meta data");
 
-                column< T > * col = column< T >::createPerpetualColumn( sizeByte );
+                column * col = column::createPerpetualColumn( sizeByte );
 
                 ifs.read( reinterpret_cast< char * >( col->data( ) ), sizeByte );
                 if( !ifs.good( ) )
@@ -70,7 +69,7 @@ class binary_io {
                 throw runtime_error("could not open the file for reading");
         }
 
-        static void store( const storage::column< T > * p_Column, const std::string & p_FileName ) {
+        static void store( const storage::column * p_Column, const std::string & p_FileName ) {
             using namespace std;
 
             ofstream ofs( p_FileName, ios::out | ios::binary );

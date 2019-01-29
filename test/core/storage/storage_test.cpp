@@ -14,17 +14,15 @@
 #include <vector>
 #include <iostream>
 
-#define uintX_t uint64_t
-
-void fillColumn( morphstore::storage::column< uintX_t > * p_Col, size_t p_CountValues ) {
-    uintX_t * const data = p_Col->data( );
+void fillColumn( morphstore::storage::column * p_Col, size_t p_CountValues ) {
+    uint64_t * const data = reinterpret_cast< uint64_t * >( p_Col->data( ) );
     for( unsigned i = 0; i < p_CountValues; i++ )
         data[ i ] = i;
     p_Col->count_values( p_CountValues );
-    p_Col->size_used_byte( p_CountValues * sizeof( uintX_t ) );
+    p_Col->size_used_byte( p_CountValues * sizeof( uint64_t ) );
 }
 
-void printColumn( const morphstore::storage::column< uintX_t > * p_Col ) {
+void printColumn( const morphstore::storage::column * p_Col ) {
     using namespace std;
     
     const size_t countValues = p_Col->count_values( );
@@ -32,7 +30,7 @@ void printColumn( const morphstore::storage::column< uintX_t > * p_Col ) {
         static_cast< size_t >( 10 ),
         countValues / 2
     );
-    const uintX_t * const data = p_Col->data( );
+    const uint64_t * const data = reinterpret_cast< const uint64_t * >( p_Col->data( ) );
     for( unsigned i = 0; i < countValuesPrint; i++ )
         cout << data[ i ] << ',';
     cout << " ... ";
@@ -46,15 +44,15 @@ int main( void ) {
     using namespace morphstore::storage;
     
     const size_t countValues = 100 * 1000 * 1000;
-    const size_t sizeAllocateByte = countValues * sizeof( uintX_t );
+    const size_t sizeAllocateByte = countValues * sizeof( uint64_t );
     
     cout << "Testing an ephemeral column:" << endl;
-    column< uintX_t > * colEphi = new column< uintX_t >(sizeAllocateByte);
+    column * colEphi = new column(sizeAllocateByte);
     fillColumn( colEphi, countValues );
     printColumn( colEphi );
     
     cout << "Testing a perpetual column:" << endl;
-    column< uintX_t > * colPerp = column< uintX_t >::createPerpetualColumn(sizeAllocateByte);
+    column * colPerp = column::createPerpetualColumn(sizeAllocateByte);
     fillColumn( colPerp, countValues );
     printColumn( colPerp );
     

@@ -36,7 +36,6 @@ enum class storage_persistence_type {
    EPHEMERAL
 };
 
-template< typename T >
 class column {
    public:
       // Creates an emphemeral column. Intended for intermediate results.
@@ -58,32 +57,33 @@ class column {
       }
       
    private:
-      column_meta_data< T > m_MetaData;
-      T const * m_Data;
+      column_meta_data m_MetaData;
+      void const * m_Data;
       
       column(
          storage_persistence_type p_PersistenceType,
          size_t p_SizeAllocatedByte
-         ) :
+      ) :
          m_MetaData{ 0, 0, p_SizeAllocatedByte },
          m_Data{
 #ifndef MSV_NO_SELFMANAGED_MEMORY
-            ( p_PersistenceType == storage_persistence_type::PERPETUAL ) ?
-            static_cast< T * >(
-               morphstore::memory::general_memory_manager::get_instance().allocate( p_SizeAllocatedByte )
-               ) :
-            static_cast< T * >( malloc( p_SizeAllocatedByte ) )
+            ( p_PersistenceType == storage_persistence_type::PERPETUAL )
+            ? morphstore::memory::general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
+            : malloc( p_SizeAllocatedByte )
 #else
-            static_cast< T * >( malloc( p_SizeAllocatedByte ) );
+            malloc( p_SizeAllocatedByte );
 #endif
-      } { }
+         }
+      {
+         //
+      }
 
    public:
-      inline T const * data( void ) const {
+      inline void const * data( void ) const {
          return m_Data;
       }
-      inline T * data( void ) {
-         return const_cast< T * >( m_Data );
+      inline void * data( void ) {
+         return const_cast< void * >( m_Data );
       }
       inline size_t count_values( void ) const {
          return m_MetaData.m_CountLogicalValues;
@@ -103,14 +103,14 @@ class column {
       }
       
       // Creates a perpetual column. Intended for base data.
-      static column< T > * createPerpetualColumn( size_t p_SizeAllocByte ) {
+      static column * createPerpetualColumn( size_t p_SizeAllocByte ) {
          return new
             (
                morphstore::memory::general_memory_manager::get_instance( ).allocate(
-                  sizeof( column< T > )
+                  sizeof( column )
                )
             )
-            column< T >(
+            column(
                storage_persistence_type::PERPETUAL,
                p_SizeAllocByte
             );

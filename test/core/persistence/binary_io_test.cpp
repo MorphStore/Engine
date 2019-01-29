@@ -31,8 +31,6 @@
 #include <cstdint>
 #include <cstring>
 
-#define uintX_t uint64_t
-
 const char * okStr( bool isOk ) {
     return isOk ? "ok" : "not ok";
 }
@@ -44,12 +42,12 @@ int main( void ) {
     
     // Parameters.
     const size_t origCountValues = 100 * 1000;
-    const size_t origSizeUsedByte = origCountValues * sizeof( uintX_t );
+    const size_t origSizeUsedByte = origCountValues * sizeof( uint64_t );
     const std::string fileName = "binary_io_test__testcol123";
     
     // Create the column.
-    column< uintX_t > * origCol = new column< uintX_t >( origSizeUsedByte );
-    uintX_t * origData = origCol->data( );
+    column * origCol = new column( origSizeUsedByte );
+    uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
     origCol->count_values( origCountValues );
@@ -57,10 +55,10 @@ int main( void ) {
     
     // Store the column.
     // TODO maybe we should delete the file afterwards
-    binary_io< uintX_t >::store( origCol, fileName );
+    binary_io::store( origCol, fileName );
     
     // Reload the column and compare it to the original one.
-    const column< uintX_t > * reloCol = binary_io< uintX_t >::load( fileName );
+    const column * reloCol = binary_io::load( fileName );
     const size_t reloCountValues = reloCol->count_values( );
     const size_t reloSizeUsedByte = reloCol->size_used_byte( );
     
