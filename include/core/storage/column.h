@@ -19,6 +19,7 @@
  * @file storage_container.h
  * @brief Brief description
  * @author Johannes Pietrzyk
+ * @author Patrick Damme
  * @todo TODOS?
  */
 
@@ -38,8 +39,28 @@ enum class storage_persistence_type {
 template< typename T >
 class column {
    public:
+      // Creates an emphemeral column. Intended for intermediate results.
+      column( size_t p_SizeAllocatedByte ) : column(
+         storage_persistence_type::EPHEMERAL,
+         p_SizeAllocatedByte
+      ) {
+         //
+      };
+         
+      column( column const & ) = delete;
+      column( column && ) = delete;
+      column & operator= ( column const & ) = delete;
+      column & operator= ( column && ) = delete;
 
-
+      virtual ~column( ) {
+//         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
+//         free( const_cast< void * >( static_cast< void const * const >( m_Data ) ) );
+      }
+      
+   private:
+      storage_container_meta_data< T > m_MetaData;
+      T const * m_Data;
+      
       column(
          storage_persistence_type p_PersistenceType,
          size_t p_SizeAllocatedByte
@@ -55,22 +76,7 @@ class column {
 #else
             static_cast< T * >( malloc( p_SizeAllocatedByte ) );
 #endif
-         } { }
-
-
-      column( column const & ) = delete;
-      column( column && ) = delete;
-      column & operator= ( column const & ) = delete;
-      column & operator= ( column && ) = delete;
-
-      virtual ~column( ) {
-//         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
-//         free( const_cast< void * >( static_cast< void const * const >( m_Data ) ) );
-      }
-   private:
-      storage_container_meta_data< T > m_MetaData;
-      T const * m_Data;
-
+      } { }
 
    public:
       inline T const * data( void ) const {
@@ -94,6 +100,20 @@ class column {
       inline void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte )  {
          m_MetaData.m_CountLogicalValues = p_CountValues;
          m_MetaData.m_SizeUsedByte = p_SizeUsedByte;
+      }
+      
+      // Creates a perpetual column. Intended for base data.
+      static column< T > * createPerpetualColumn( size_t p_SizeAllocByte ) {
+         return new
+            (
+               morphstore::memory::general_memory_manager::get_instance( ).allocate(
+                  sizeof( column< T > )
+               )
+            )
+            column< T >(
+               storage_persistence_type::PERPETUAL,
+               p_SizeAllocByte
+            );
       }
 };
 

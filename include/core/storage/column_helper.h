@@ -20,6 +20,7 @@
  * @file storage_helper.h
  * @brief Brief description
  * @author Johannes Pietrzyk
+ * @author Patrick Damme
  * @todo TODOS?
  */
 
@@ -36,7 +37,8 @@ struct storage_container_meta_data {
    static constexpr size_t c_DataTypeBitwidth = sizeof( T ) * 8;
    size_t m_CountLogicalValues;
    size_t m_SizeUsedByte;
-   size_t const m_SizeAllocByte;
+   // TODO make this const again
+   size_t /*const*/ m_SizeAllocByte;
 
    storage_container_meta_data( size_t p_CountLogicalValues, size_t p_SizeUsedByte, size_t p_SizeAllocByte ) :
       m_CountLogicalValues{ p_CountLogicalValues },
@@ -47,10 +49,16 @@ struct storage_container_meta_data {
          ", |Data| =", p_SizeUsedByte, "Byte",
          ", Allocated Size = ", p_SizeAllocByte, " Bytes ).");
    }
-   storage_container_meta_data( storage_container_meta_data const & ) = delete;
-   storage_container_meta_data( storage_container_meta_data && ) = default;
-   storage_container_meta_data & operator=( storage_container_meta_data const & ) = delete;
-   storage_container_meta_data & operator=( storage_container_meta_data && ) = default;
+      
+   storage_container_meta_data( storage_container_meta_data< T > const & ) = delete;
+   storage_container_meta_data( storage_container_meta_data< T > && ) = default;
+   storage_container_meta_data & operator=( storage_container_meta_data< T > const & ) = delete;
+   storage_container_meta_data & operator=( storage_container_meta_data && that) {
+       m_CountLogicalValues = that.m_CountLogicalValues;
+       m_SizeUsedByte = that.m_SizeUsedByte;
+       m_SizeAllocByte = that.m_SizeAllocByte;
+       return *this;
+   }
 };
 
 
