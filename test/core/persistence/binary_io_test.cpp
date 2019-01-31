@@ -37,8 +37,9 @@ const char * okStr( bool isOk ) {
 
 int main( void ) {
     using namespace std;
-    using namespace morphstore::storage;
+    using namespace morphstore::morphing;
     using namespace morphstore::persistence;
+    using namespace morphstore::storage;
     
     // Parameters.
     const size_t origCountValues = 100 * 1000;
@@ -46,7 +47,7 @@ int main( void ) {
     const std::string fileName = "binary_io_test__testcol123";
     
     // Create the column.
-    column * origCol = new column( origSizeUsedByte );
+    column< format::UNCOMPR > * origCol = new column< format::UNCOMPR >( origSizeUsedByte );
     uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
@@ -55,10 +56,10 @@ int main( void ) {
     
     // Store the column.
     // TODO maybe we should delete the file afterwards
-    binary_io::store( origCol, fileName );
+    binary_io< format::UNCOMPR >::store( origCol, fileName );
     
     // Reload the column and compare it to the original one.
-    const column * reloCol = binary_io::load( fileName );
+    const column< format::UNCOMPR > * reloCol = binary_io< format::UNCOMPR >::load( fileName );
     const size_t reloCountValues = reloCol->count_values( );
     const size_t reloSizeUsedByte = reloCol->size_used_byte( );
     

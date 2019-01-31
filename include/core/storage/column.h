@@ -25,6 +25,8 @@
 
 #include "column_helper.h"
 
+#include "../morphing/format.h"
+
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
@@ -36,6 +38,7 @@ enum class storage_persistence_type {
    EPHEMERAL
 };
 
+template< morphstore::morphing::format F >
 class column {
    public:
       // Creates an emphemeral column. Intended for intermediate results.
@@ -46,10 +49,10 @@ class column {
          //
       };
          
-      column( column const & ) = delete;
-      column( column && ) = delete;
-      column & operator= ( column const & ) = delete;
-      column & operator= ( column && ) = delete;
+      column( column< F > const & ) = delete;
+      column( column< F > && ) = delete;
+      column< F > & operator= ( column< F > const & ) = delete;
+      column< F > & operator= ( column< F > && ) = delete;
 
       virtual ~column( ) {
 //         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
@@ -103,11 +106,11 @@ class column {
       }
       
       // Creates a perpetual column. Intended for base data.
-      static column * createPerpetualColumn( size_t p_SizeAllocByte ) {
+      static column< F > * createPerpetualColumn( size_t p_SizeAllocByte ) {
          return new
             (
                morphstore::memory::general_memory_manager::get_instance( ).allocate(
-                  sizeof( column )
+                  sizeof( column< F > )
                )
             )
             column(
