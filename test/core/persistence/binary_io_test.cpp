@@ -26,20 +26,18 @@
 #include "../../../include/core/memory/mm_glob.h"
 #include "../../../include/core/persistence/binary_io.h"
 #include "../../../include/core/storage/column.h"
+#include "../../../include/core/utils/equality_check.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 
-const char * okStr( bool isOk ) {
-    return isOk ? "ok" : "not ok";
-}
-
 int main( void ) {
     using namespace std;
-    using namespace morphstore::morphing;
-    using namespace morphstore::persistence;
-    using namespace morphstore::storage;
+    using namespace morphstore;
+    using namespace morphing;
+    using namespace persistence;
+    using namespace storage;
     
     // Parameters.
     const size_t origCountValues = 100 * 1000;
@@ -60,18 +58,9 @@ int main( void ) {
     
     // Reload the column and compare it to the original one.
     const column< format::UNCOMPR > * reloCol = binary_io< format::UNCOMPR >::load( fileName );
-    const size_t reloCountValues = reloCol->count_values( );
-    const size_t reloSizeUsedByte = reloCol->size_used_byte( );
     
     // Compare the original column to the reloaded column.
-    const bool okCountValues  = origCountValues  == reloCountValues;
-    const bool okSizeUsedByte = origSizeUsedByte == reloSizeUsedByte;
-    const bool okData = !memcmp( origData, reloCol->data( ), min( origSizeUsedByte, reloSizeUsedByte ) );
-    
-    // Print the result.
-    cout << "countValues: "  << okStr( okCountValues )  << " (expected " << origCountValues  << ", found " << reloCountValues  << ')' << endl;
-    cout << "sizeUsedByte: " << okStr( okSizeUsedByte ) << " (expected " << origSizeUsedByte << ", found " << reloSizeUsedByte << ')' << endl;
-    cout << "data: " << okStr( okData ) << " (this check is only valid, if countValues and sizeUsedByte are ok)" << endl;
+    cout << equality_check( origCol, reloCol );
     
     return 0;
 }
