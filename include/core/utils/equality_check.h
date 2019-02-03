@@ -43,7 +43,7 @@ namespace morphstore {
         const bool m_SizeUsedByteEqual;
         const bool m_DataEqual;
         
-        template< morphing::format F >
+        template< class F >
         equality_check(
                 const morphstore::storage::column< F > * colExp,
                 const morphstore::storage::column< F > * colFnd

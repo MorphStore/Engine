@@ -28,10 +28,15 @@
 
 namespace morphstore { namespace morphing {
 
-// TODO For now an enum should suffice, but later we might want format to be a
-//      class, e.g., for pessimistic physical size estimation.
-enum class format {
-   UNCOMPR,
+// TODO don't forget to make this abstract (when adding member functions)
+// The abstract base of all formats.
+struct format {
+    //
+};
+
+// The uncompressed format.
+struct uncompr_f : public format {
+    //
 };
 
 } }

@@ -38,8 +38,13 @@ enum class storage_persistence_type {
    EPHEMERAL
 };
 
-template< morphstore::morphing::format F >
+template< class F >
 class column {
+   static_assert(
+      std::is_base_of< morphstore::morphing::format, F >::value,
+      "column: template parameter F must be a subclass of format"
+   );
+    
    public:
       // Creates an emphemeral column. Intended for intermediate results.
       column( size_t p_SizeAllocatedByte ) : column(

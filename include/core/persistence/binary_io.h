@@ -37,7 +37,7 @@
 
 namespace morphstore { namespace persistence {
    
-template< morphstore::morphing::format F >
+template< class F >
 class binary_io {
     public:
         
