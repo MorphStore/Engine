@@ -15,52 +15,29 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
-
 /**
- * @file binary_io_test.cpp
- * @brief A short test and example usage of persistence::binary_io .
+ * @file format.h
+ * @brief Brief description
  * @author Patrick Damme
  * @todo TODOS?
  */
 
-#include "../../../include/core/memory/mm_glob.h"
-#include "../../../include/core/persistence/binary_io.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/utils/equality_check.h"
+#ifndef MORPHSTORE_CORE_MORPHING_FORMAT_H
+#define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
 
-int main( void ) {
-    using namespace std;
-    using namespace morphstore;
-    using namespace morphing;
-    using namespace persistence;
-    using namespace storage;
-    
-    // Parameters.
-    const size_t origCountValues = 100 * 1000;
-    const size_t origSizeUsedByte = origCountValues * sizeof( uint64_t );
-    const std::string fileName = "binary_io_test__testcol123";
-    
-    // Create the column.
-    auto origCol = new column< uncompr_f >( origSizeUsedByte );
-    uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
-    for( unsigned i = 0; i < origCountValues; i++ )
-        origData[ i ] = i;
-    origCol->count_values( origCountValues );
-    origCol->size_used_byte( origSizeUsedByte );
-    
-    // Store the column.
-    // TODO maybe we should delete the file afterwards
-    binary_io< uncompr_f >::store( origCol, fileName );
-    
-    // Reload the column and compare it to the original one.
-    auto reloCol = binary_io< uncompr_f >::load( fileName );
-    
-    // Compare the original column to the reloaded column.
-    cout << equality_check( origCol, reloCol );
-    
-    return 0;
-}
+namespace morphstore { namespace morphing {
+
+// TODO don't forget to make this abstract (when adding member functions)
+// The abstract base of all formats.
+struct format {
+    //
+};
+
+// The uncompressed format.
+struct uncompr_f : public format {
+    //
+};
+
+} }
+#endif //MORPHSTORE_CORE_MORPHING_FORMAT_H
