@@ -27,9 +27,11 @@
 #define MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 
 #ifndef MSV_PPUNUSED
-#define MSV_PPUNUSED __attribute__((unused))
+#  define MSV_PPUNUSED __attribute__((unused))
 #endif
 
-
+#ifndef __THROW
+#  define __THROW
+#endif
 
 #endif //MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
