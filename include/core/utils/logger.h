@@ -305,8 +305,6 @@ typedef shell_logger morphstore_logger;
 #     define trace(...) morphstore::logging::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
 #     define debug(...) morphstore::logging::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
 #     define info(...) morphstore::logging::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
-#  elif defined( MSV_DEBUG_MALLOC )
-#     define debug(...) morphstore::logging::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
 #  else
 #     define trace(...)
 #     define debug(...)
