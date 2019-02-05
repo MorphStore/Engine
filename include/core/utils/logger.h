@@ -27,10 +27,9 @@
 
 #include "cmake_template.h"
 
-#include <string>
-#include <array>
-#include <iostream>
+#include "../memory/stl_wrapper/ostream.h"
 
+#include <array>
 
 #define MSV_LOG_LEVEL_COUNT 6
 #ifndef MSV_GIT_BRANCH
@@ -154,7 +153,7 @@ class logger {
       virtual void log_header( void ) = 0;
       virtual void log_footer( void ) = 0;
       virtual formatter const & get_formatter( void ) const = 0;
-      virtual std::ostream & get_out( void ) = 0;
+      virtual morphstore::ostream & get_out( void ) = 0;
    public:
 
       template< typename T, typename ... Args >
@@ -184,7 +183,8 @@ class logger {
 
 
       void head( int p_LogLevel ) {
-         get_out( )  << get_formatter( ).head()
+         morphstore::ostream & ttt = get_out( );
+         ttt << get_formatter( ).head()
                      << get_formatter( ).tag_color( p_LogLevel )
                      << get_formatter( ).tag_text( p_LogLevel )
                      << get_formatter( ).color_default( );
@@ -198,6 +198,11 @@ class logger {
 class shell_logger : public logger {
    private:
       shell_formatter m_Formatter;
+      morphstore::ostream stream;
+      shell_logger( void ):
+         logger{} {
+         log_header();
+      }
    protected:
       void log_header( void ) override {
          get_out()   << "Project [ProjectName] started.\n"
@@ -206,22 +211,26 @@ class shell_logger : public logger {
                      << "Commit: " << MSV_GIT_HASH << "\n";
       }
       void log_footer( void ) override {}
-      std::ostream & get_out( void ) override {
-         return std::cout;
+
+      morphstore::ostream & get_out( void ) override {
+         return stream;
       }
 
       inline formatter const & get_formatter( void ) const override {
          return m_Formatter;
       }
    public:
-      shell_logger( void )  {
-         log_header();
+      static shell_logger & get_instance(void) {
+         static shell_logger instance;
+         return instance;
       }
+
 };
 
 class html_logger : public logger {
    private:
       html_formatter m_Formatter;
+      morphstore::ostream stream;
    protected:
       void log_header( void ) override {
          get_out( )
@@ -252,8 +261,8 @@ class html_logger : public logger {
          get_out( )
             << "</table></bodý></html>";
       }
-      std::ostream & get_out( void ) override {
-         return std::cout;
+      inline morphstore::ostream & get_out( void ) override {
+         return stream;
       }
 
       inline formatter const & get_formatter( void ) const override {
@@ -275,10 +284,10 @@ class html_logger : public logger {
 
 #ifdef MSV_NO_SHELL_LOGGER
 //html logger is assumed
-
+typedef shell_logger morphstore_logger;
 #else
 //html_logger log_instance;
-shell_logger log_instance;
+typedef shell_logger morphstore_logger;
 #endif
 
 }}
@@ -293,18 +302,19 @@ shell_logger log_instance;
 #  define wtf(...)
 #else
 #  ifdef DEBUG
-#     define trace(...) morphstore::logging::log_instance.log( 0, __FUNCTION__, __VA_ARGS__ )
-#     define debug(...) morphstore::logging::log_instance.log( 1, __FUNCTION__, __VA_ARGS__ )
-#     define info(...) morphstore::logging::log_instance.log( 2, __FUNCTION__, __VA_ARGS__ )
+#     define trace(...) morphstore::logging::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
+#     define debug(...) morphstore::logging::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
+#     define info(...) morphstore::logging::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
 #  elif defined( MSV_DEBUG_MALLOC )
-#     define debug(...) morphstore::logging::log_instance.log( 0, __FUNCTION__, __VA_ARGS__ )
+#     define debug(...) morphstore::logging::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
 #  else
+#     define trace(...)
 #     define debug(...)
 #     define info(...)
-#endif
-#  define warn(...) morphstore::logging::log_instance.log( 3, __FUNCTION__, __VA_ARGS__ )
-#  define error(...) morphstore::logging::log_instance.log( 4, __FUNCTION__, __VA_ARGS__ )
-#  define wtf(...) morphstore::logging::log_instance.log( 5, __FUNCTION__, __VA_ARGS__ )
+#  endif
+#  define warn(...) morphstore::logging::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
+#  define error(...) morphstore::logging::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
+#  define wtf(...) morphstore::logging::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
 #endif
 
 

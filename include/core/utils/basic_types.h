@@ -23,34 +23,15 @@
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_UTILS_TYPES_H
-#define MORPHSTORE_CORE_UTILS_TYPES_H
+#ifndef MORPHSTORE_CORE_UTILS_BASIC_TYPES_H
+#define MORPHSTORE_CORE_UTILS_BASIC_TYPES_H
 
 #include <cstddef>
 
 namespace morphstore {
 
-using size_t = std::size_t;
-
-constexpr std::size_t operator""_B( unsigned long long v ) {
-   return v;
-}
-constexpr std::size_t operator""_KB( unsigned long long v ) {
-   return ( 1024 * v );
-}
-constexpr std::size_t operator""_MB( unsigned long long v ) {
-   return ( 1024 * 1024 * v );
-}
-
-constexpr std::size_t operator""_GB( unsigned long long v ) {
-   return ( 1024 * 1024 * 1024 * v );
-}
-
-template< typename B, typename T >
-inline bool instanceof( T const * p_Ptr ) {
-   return dynamic_cast< B const * >( p_Ptr ) != nullptr;
-}
-
+   using size_t = std::size_t;
+   using ptrdiff_t = std::ptrdiff_t;
 
 }
-#endif //MORPHSTORE_CORE_UTILS_TYPES_H
+#endif //MORPHSTORE_CORE_UTILS_BASIC_TYPES_H
