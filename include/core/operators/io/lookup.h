@@ -55,7 +55,7 @@ void lookup(
     *
     */
 
-   uint64_t const mask = to_the_power_of_two( bw ) - 1;
+   uint64_t const mask = to_the_power_of_two( Bw ) - 1;
    uint64_t posValue = 0;
    uint64_t posInData = 0;
 
