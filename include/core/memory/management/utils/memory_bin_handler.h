@@ -1,109 +1,16 @@
-/**********************************************************************************************
- * Copyright (C) 2019 by Johannes Pietrzyk                                                    *
- *                                                                                            *
- * This file is part of MorphStore - a compression aware vectorized column store.             *
- *                                                                                            *
- * This program is free software: you can redistribute it and/or modify it under the          *
- * terms of the GNU General Public License as published by the Free Software Foundation,      *
- * either version 3 of the License, or (at your option) any later version.                    *
- *                                                                                            *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  *
- * See the GNU General Public License for more details.                                       *
- *                                                                                            *
- * You should have received a copy of the GNU General Public License along with this program. *
- * If not, see <http://www.gnu.org/licenses/>.                                                *
- **********************************************************************************************/
-
-
 /**
- * @file mm_helper.h
+ * @file memory_bin_handler.h
  * @brief Brief description
  * @author Johannes Pietrzyk
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_MEMORY_MM_HELPER_H
-#define MORPHSTORE_CORE_MEMORY_MM_HELPER_H
+#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H
+#define MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H
 
-#include "../utils/types.h"
-#include "../utils/math.h"
-#include "mm_hooks.h"
-#include "mm.h"
-
-#include <cassert>
-#include <cstdio>
-
+#include "../../../utils/logger.h"
 
 namespace morphstore { namespace memory {
-
-
-
-
-
-
-template< size_t MinChunkSize >
-constexpr size_t chunk_size( size_t pRequestedSize ) {
-   static_assert(
-      is_power_of_two( MinChunkSize ),
-      "For performance and convenience granularity (pN) has to be a power of 2.");
-   if( MinChunkSize >= pRequestedSize )
-      return MinChunkSize;
-   size_t remainder = pRequestedSize & ( MinChunkSize - 1 );
-   return ( remainder == 0 ) ? pRequestedSize : pRequestedSize + ( MinChunkSize - remainder );
-}
-
-
-size_t chunk_size( size_t MinChunkSize, size_t pRequestedSize ) {
-   assert( is_power_of_two( MinChunkSize ) );
-   if( MinChunkSize >= pRequestedSize )
-      return MinChunkSize;
-   size_t remainder = pRequestedSize & ( MinChunkSize - 1 );
-   return ( remainder == 0 ) ? pRequestedSize : pRequestedSize + ( MinChunkSize - remainder );
-}
-
-
-class mm_expand_strategy {
-   protected:
-      size_t mCurrentSize;
-   public:
-      constexpr mm_expand_strategy( void ) : mCurrentSize{ 0 } { }
-      constexpr mm_expand_strategy( size_t pCurrentSize ) : mCurrentSize{ pCurrentSize } { }
-};
-
-template< size_t MinimumExpandSize >
-class mm_expand_strategy_chunk_based : public mm_expand_strategy {
-      static_assert( is_power_of_two( MinimumExpandSize ),
-                     "For performance and convenience granularity (pN) has to be a power of 2." );
-   public:
-      constexpr mm_expand_strategy_chunk_based( ) : mm_expand_strategy( MinimumExpandSize ) { }
-
-      inline size_t current_size( void ) const {
-         return mCurrentSize;
-      }
-
-      inline size_t next_size( size_t pExpandSize ) {
-         mCurrentSize = chunk_size< MinimumExpandSize >( pExpandSize );
-         return mCurrentSize;
-      }
-};
-template< size_t MinimumExpandSize >
-class mm_expand_strategy_chunk_based_quadratic : public mm_expand_strategy {
-      static_assert( is_power_of_two( MinimumExpandSize ),
-                     "For performance and convenience granularity (pN) has to be a power of 2." );
-   public:
-      constexpr mm_expand_strategy_chunk_based_quadratic( ) : mm_expand_strategy( MinimumExpandSize ) { }
-
-      inline size_t current_size( void ) const {
-         return mCurrentSize;
-      }
-
-      inline size_t next_size( size_t pExpandSize ) {
-         mCurrentSize = chunk_size( mCurrentSize << 1, pExpandSize );
-         return mCurrentSize;
-      }
-};
-
 
 class memory_bin_handler {
    private:
@@ -195,7 +102,7 @@ class memory_bin_handler {
             "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager,
             ". Memory = ", p_BasePtr,
             ". Size = ", p_BinSize, " )."
-            );
+         );
          trace( "[Memory Bin Handler] - Create new Memory Bin handle." );
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
@@ -203,7 +110,7 @@ class memory_bin_handler {
             tmp->init( p_MemoryManager, p_BasePtr, p_BinSize, m_BinHandleStructTail, nullptr );
             trace(
                "[Memory Bin Handler] - Assign newly created handle ", tmp, " as new tail. Reset pointer from old tail."
-               );
+            );
             m_BinHandleStructTail->m_NextHandle = tmp;
             m_BinHandleStructTail = tmp;
          } else {
@@ -212,12 +119,15 @@ class memory_bin_handler {
          }
          trace(
             "[Memory Bin Handler] - Root = ", m_BinHandleStructRoot, ". Tail = ", m_BinHandleStructTail, "."
-            );
+         );
          trace( "[Memory Bin Handler] - OUT. ( void ).");
       }
 
       inline memory_bin_handle * get_tail( void ) const {
          return m_BinHandleStructTail;
+      }
+      inline memory_bin_handle * get_root( void ) const {
+         return m_BinHandleStructRoot;
       }
       inline void set_tail( memory_bin_handle * const handle ) {
          m_BinHandleStructTail = handle;
@@ -255,29 +165,36 @@ class memory_bin_handler {
       inline memory_bin_handle * find_and_remove_reverse_until_first_other(
          abstract_memory_manager * const p_MemoryManager,
          memory_bin_handle * p_Current
-         ) {
+      ) {
 
-         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         info( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
          memory_bin_handle * nextHandle = p_Current->m_NextHandle;
          memory_bin_handle * handle = p_Current;
          memory_bin_handle * prevHandle;
          // we assume, that find_reverse_first_not is NOT called with p_MemoryManager == General_memory_manager
          // thus this loop terminates at least when it comes to root.
          while( handle->m_MemoryManager == p_MemoryManager ) {
+            trace( "[Memory Bin Handler] - Freeing ", handle->m_BasePtr, " from Handle ", handle, "." );
             stdlib_free( static_cast< void * >( handle->m_BasePtr ) );
             prevHandle = handle->m_PrevHandle;
+            trace( "[Memory Bin Handler] - Next: ", nextHandle, ". Prev: ", prevHandle, "." );
+            trace( "[Memory Bin Handler] - Freeing handle ", handle, "." );
             stdlib_free( static_cast< void * >( handle ) );
             handle = prevHandle;
+            trace( "[Memory Bin Handler] - Current handle: ", handle, "." );
          }
          handle->m_NextHandle = nextHandle;
-         trace( "[Memory Bin Handler] - OUT. ( Handle not associated with ", p_MemoryManager, ": ", handle, " )." );
+         trace(
+            "[Memory Bin Handler] - OUT. ( Handle not associated with ", p_MemoryManager,
+            ": ", handle,
+            " [ Prev: ", handle->m_PrevHandle,
+            " . Next: ", handle->m_NextHandle,
+            " . Memory: ", handle->m_BasePtr,
+            " . Size: ", handle->m_SizeByte, " Bytes",
+            " )." );
          return handle;
       }
 };
 
-
-
-} }
-
-
-#endif //MORPHSTORE_CORE_MEMORY_MM_HELPER_H
+}}
+#endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H
