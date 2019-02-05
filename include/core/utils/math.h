@@ -41,10 +41,6 @@ constexpr bool is_power_of_two( size_t pN ) {
 }
 
 constexpr std::size_t to_the_power_of_two( uint8_t N ) {
-   if( N == 0 )
-      return 1;
-   if( N == 1 )
-      return 2;
    return 1 << N;
 }
 
