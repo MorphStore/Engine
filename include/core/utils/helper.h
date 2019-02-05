@@ -7,6 +7,8 @@
 
 #ifndef MORPHSTORE_CORE_UTILS_HELPER_H
 #define MORPHSTORE_CORE_UTILS_HELPER_H
+
+#include <cstddef>
 namespace morphstore {
 
    constexpr std::size_t operator""_B( unsigned long long v ) {

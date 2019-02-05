@@ -39,14 +39,16 @@ class general_memory_manager : public abstract_memory_manager {
 
       ~general_memory_manager(void) {
          trace( "[General Memory Manager] - IN.  ( void )." );
-         auto *handle = m_EphimeralMemoryBinHandler.get_tail();
-         while( handle != nullptr ) {
+         auto * handle = m_EphimeralMemoryBinHandler.get_tail( );
+         auto * rootEphimeral = m_EphimeralMemoryBinHandler.get_root( );
+         while( handle != rootEphimeral ) {
             debug( "[General Memory Manager] - Freeing ephimeral memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
             handle = handle->prev();
          }
          handle = m_PerpetualMemoryBinHandler.get_tail();
-         while (handle != nullptr) {
+         auto * rootPerpetual = m_PerpetualMemoryBinHandler.get_root( );
+         while (handle != rootPerpetual) {
             debug( "[General Memory Manager] - Freeing perpetual memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
             handle = handle->prev();
@@ -77,12 +79,20 @@ class general_memory_manager : public abstract_memory_manager {
 
       void *allocate(size_t p_AllocSize) override {
          trace( "[General Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
-         void *tmp = stdlib_malloc(p_AllocSize);
-         debug( "[General Memory Manager] - Allocated ", p_AllocSize, " Bytes ( @ position: ", tmp, " ).");
+         void * tmp = stdlib_malloc( p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE );
+
+         debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
          if (tmp != nullptr) {
             debug( "[General Memory Manager] - Add space to perpetual Memory Bin Handler." );
             m_PerpetualMemoryBinHandler.append_bin(this, tmp, p_AllocSize);
-            trace( "[General Memory Manager] - OUT. ( ", tmp, " )." );
+
+            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
+            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
+            if (offset)
+               tmp = reinterpret_cast< void * >(
+                  tmpToSizeT + ( MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset ) );
+
+            trace( "[General Memory Manager] - OUT. ( Aligned Pointer: ", tmp, " )." );
             return tmp;
          } else {
             wtf( "[General Memory Manager] - allocate( AllocSize = ", p_AllocSize, " ). Could not allocate the memory." );
@@ -98,12 +108,19 @@ class general_memory_manager : public abstract_memory_manager {
             wtf( "[General Memory Manager] - Can not be called with static general memory manager as caller.");
             handle_error();
          }
-         void *tmp = stdlib_malloc(p_AllocSize);
-         debug( "[General Memory Manager] - Allocated ", p_AllocSize, " Bytes ( @ position: ", tmp, " ).");
+         void * tmp = stdlib_malloc( p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE );
+         debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
          if (tmp != nullptr) {
             debug( "[General Memory Manager] - Add space to ephimeral Memory Bin Handler." );
             m_EphimeralMemoryBinHandler.append_bin(p_Caller, tmp, p_AllocSize);
-            trace( "[General Memory Manager] - OUT. ( ", tmp, " )." );
+
+            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
+            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
+            if (offset)
+               tmp = reinterpret_cast< void * >(
+                  tmpToSizeT + ( MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset ) );
+
+            trace( "[General Memory Manager] - OUT. ( Aligned Pointer: ", tmp, " )." );
             return tmp;
          } else {
             wtf( "[General Memory Manager] - allocate( Caller = ", p_Caller, ". AllocSize = ", p_AllocSize, " ): Could not allocate ", p_AllocSize, " Bytes." );
@@ -140,7 +157,7 @@ class general_memory_manager : public abstract_memory_manager {
          auto handle = m_EphimeralMemoryBinHandler.find_last(p_Caller);
          if (handle == m_EphimeralMemoryBinHandler.get_tail()) {
             while (handle != nullptr) {
-               trace("[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). ");
+               trace("[General Memory Manager] - Freeing Memory ( ", handle->m_BasePtr, " ) from Bin ( ", handle, " )." );
                auto tmpHandle =
                   m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle);
                m_EphimeralMemoryBinHandler.set_tail(tmpHandle);

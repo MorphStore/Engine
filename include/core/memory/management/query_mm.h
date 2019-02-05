@@ -69,25 +69,39 @@ class query_memory_manager : public abstract_memory_manager {
       void * allocate( size_t p_AllocSize ) override {
          trace( "[Query Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
          size_t nextExpandSize = p_AllocSize;
+         void * tmp = m_CurrentPtr;
+         debug( "[Query Memory Manager] - head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          if( m_SpaceLeft < p_AllocSize ) {
+            //alignment does not need to be minded, because the general memory manager returns an aligned piece of
+            //memory.
             debug(
                "[Query Memory Manager] - No Space Left. ( Needed: ", p_AllocSize,
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
             nextExpandSize = expander.next_size( p_AllocSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from perpetual memory." );
-            m_CurrentPtr = m_GeneralMemoryManager.allocate( this, nextExpandSize );
+            tmp = m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
+         } else {
+            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
+            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
+            trace( "[Query Memory Manager] - Alignment offset: ", offset, "." );
+            if( offset ) {
+               size_t const additionalSpace = MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset;
+               debug( "[Query Memory Manager] - Additional space needed for alignment: ", additionalSpace, "." );
+               tmp = reinterpret_cast< void * >( tmpToSizeT + additionalSpace );
+               p_AllocSize += additionalSpace;
+            }
          }
-         void * tmp = m_CurrentPtr;
-         if( m_CurrentPtr != nullptr ) {
-            m_CurrentPtr = static_cast< char * >( m_CurrentPtr ) + p_AllocSize;
+         if( tmp != nullptr ) {
+            trace( "[Query Memory Manager] - Increment head pointer ( ", m_CurrentPtr, " by ", p_AllocSize, " Bytes )." );
+            m_CurrentPtr = static_cast< char * >( tmp ) + p_AllocSize;
             m_SpaceLeft -= p_AllocSize;
          } else {
             m_GeneralMemoryManager.handle_error( );
             wtf( "[Query Memory Manager] - Could not aquire ", nextExpandSize, " Bytes ephimeral memory." );
          }
-         trace( "[Query Memory Manager] - head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
+         trace( "[Query Memory Manager] - OUT. ( pointer: ", tmp, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
          return tmp;
       }
 
