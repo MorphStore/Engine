@@ -164,7 +164,7 @@ class memory_bin_handler {
          memory_bin_handle * p_Current
       ) {
 
-         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         info( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
          memory_bin_handle * nextHandle = p_Current->m_NextHandle;
          memory_bin_handle * handle = p_Current;
          memory_bin_handle * prevHandle;
