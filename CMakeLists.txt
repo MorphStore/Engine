@@ -42,11 +42,11 @@ endif ( DEFINED DEBUG_MALLOC )
 
 if ( DEFINED CHECK_LEAKING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager will check for potential leaks.\n" )
-	add_definitions("-DMEMORY_LEAK_CHECK")
+	add_definitions("-DMSV_MEMORY_LEAK_CHECK")
 	set( ignoreMe ${CHECK_LEAKING} )
 else ( DEFINED CHECK_LEAKING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager is oblivious to potential memory leaks.\n" )
-	add_definitions("-UMEMORY_LEAK_CHECK")
+	add_definitions("-UMSV_MEMORY_LEAK_CHECK")
 endif ( DEFINED CHECK_LEAKING )
 
 if ( DEFINED MMGR_ALIGN )

@@ -39,7 +39,7 @@ static bool init_mem_hooks( void ) {
 #if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
-#ifdef MEMORY_LEAK_CHECK
+#ifdef MSV_MEMORY_LEAK_CHECK
    morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
 #endif
    fprintf( stdout, "[MEM  ]: %s [Kernel Malloc] - %p ( %zu Bytes ) [ %s - Line %d ].\n", func, result, p_AllocSize, file, line );
@@ -47,7 +47,7 @@ void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, cons
 }
 void * debug_stdlib_realloc( void * p_Ptr, size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_realloc_ptr( p_Ptr, p_AllocSize );
-#ifdef MEMORY_LEAK_CHECK
+#ifdef MSV_MEMORY_LEAK_CHECK
    morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
    morphstore::memory::leak_detector_free_called( p_Ptr );
 #endif
@@ -55,7 +55,7 @@ void * debug_stdlib_realloc( void * p_Ptr, size_t p_AllocSize, const char *file,
    return result;
 }
 void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *func ) __THROW {
-#ifdef MEMORY_LEAK_CHECK
+#ifdef MSV_MEMORY_LEAK_CHECK
    morphstore::memory::leak_detector_free_called( p_Ptr );
 #endif
    fprintf( stdout, "[MEM  ]: %s [Kernel Free] - %p [ %s - Line %d ].\n", func, p_Ptr, file, line );
