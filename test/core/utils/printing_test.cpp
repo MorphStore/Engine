@@ -33,13 +33,14 @@
 #include <unordered_map>
 #include <c++/7/bits/unordered_map.h>
 
+namespace ms = morphstore;
+namespace m = morphstore::morphing;
+namespace s = morphstore::storage;
+
 /**
  * A small example usage of print_columns.
  */
 void small_example( ) {
-    namespace m = morphstore::morphing;
-    namespace s = morphstore::storage;
-    
     const size_t origCountValues = 128;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new s::column< m::uncompr_f >( origSizeByte );
@@ -71,8 +72,6 @@ void systematic_test_internal(
         const morphstore::storage::column< morphstore::morphing::uncompr_f > * col2,
         const morphstore::storage::column< morphstore::morphing::uncompr_f > * col3
 ) {
-    namespace ms = morphstore;
-
     std::unordered_map< ms::print_buffer_base, std::string > map = {
         { ms::print_buffer_base::binary     , "binary"      },
         { ms::print_buffer_base::decimal    , "decimal"     },
@@ -106,10 +105,6 @@ void systematic_test_internal(
  * etc..
  */
 void systematic_test( ) {
-    namespace ms = morphstore;
-    namespace m = morphstore::morphing;
-    namespace s = morphstore::storage;
-    
     const size_t countValues1 = 10;
     const size_t sizeByte1 = countValues1 * sizeof( uint64_t );
     auto col1 = new s::column< m::uncompr_f >( sizeByte1 );
