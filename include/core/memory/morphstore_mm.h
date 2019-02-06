@@ -8,13 +8,17 @@
 #ifndef MORPHSTORE_MORPHSTORE_MM_H
 #define MORPHSTORE_MORPHSTORE_MM_H
 
-
 #include "global/mm_hooks.h"
 
 #include "management/allocators/perpetual_allocator.h"
 #include "stl_wrapper/ostream.h"
 #include "stl_wrapper/string.h"
 
+
+
+#ifdef MSV_MEMORY_LEAK_CHECK
+#  include "global/leak_detection.h"
+#endif
 #include "../utils/logger.h"
 
 
