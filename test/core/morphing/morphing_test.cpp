@@ -35,19 +35,18 @@
 #include <iomanip>
 #include <limits>
 
+namespace ms = morphstore;
+namespace m = morphstore::morphing;
+namespace s = morphstore::storage;
+
 template< unsigned bw >
 bool test( ) {
-    using namespace std;
-    using namespace morphstore;
-    using namespace morphing;
-    using namespace storage;
-    
     const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
-    auto origCol = new column< uncompr_f >( origSizeByte );
+    auto origCol = new s::column< m::uncompr_f >( origSizeByte );
     uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
     const uint64_t mask = ( bw == 64 )
-        ? numeric_limits< uint64_t >::max( )
+        ? std::numeric_limits< uint64_t >::max( )
         : ( ( static_cast< uint64_t >( 1 ) << bw ) - 1 );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i & mask;
@@ -55,23 +54,22 @@ bool test( ) {
     origCol->size_used_byte( origSizeByte );
     
     // TODO use a size depending on the bit width
-    auto comprCol = new column< static_vbp_f< bw > >( origSizeByte );
-    morph( origCol, comprCol );
+    auto comprCol = new s::column< m::static_vbp_f< bw > >( origSizeByte );
+    m::morph( origCol, comprCol );
     
     // TODO use a size depending on the bit width
-    auto decomprCol = new column< uncompr_f >( origSizeByte );
-    morph( comprCol, decomprCol );
+    auto decomprCol = new s::column< m::uncompr_f >( origSizeByte );
+    m::morph( comprCol, decomprCol );
     
-    const bool good = equality_check( origCol, decomprCol ).good( );
-    cout << setw(2) << bw << " bit: " << equality_check::okStr( good ) << endl;
+    const bool good = ms::equality_check( origCol, decomprCol ).good( );
+    std::cout
+            << std::setw(2) << bw << " bit: "
+            << ms::equality_check::okStr( good ) << std::endl;
     
     return good;
 }
 
 int main( void ) {
-    using namespace std;
-    using namespace morphstore;
-    
     bool allGood = true;
     
 #if 0
@@ -144,7 +142,7 @@ int main( void ) {
     allGood = allGood && test< 64 >( );
 #endif
     
-    cout << "overall: " << equality_check::okStr(allGood) << endl;
+    std::cout << "overall: " << ms::equality_check::okStr(allGood) << std::endl;
     
     return 0;
 }

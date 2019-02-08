@@ -18,6 +18,10 @@ function printHelp {
 	echo "	     Deactivates the memory hooks and enables standard C++ memory management."
 	echo "	-queryMinMemEx 2^x"
 	echo "	     Sets the minimum chunk reallocation size in bytes for the Query Memory Manager. The value should be a power of two."
+	echo "	-lc|--leakCheck"
+	echo "	     Makes the MemoryManager more aware of possible memory leaks."
+	echo "	--alignment 2^x"
+	echo "	     Sets the byte alignment for the MemoryManager"
 	echo ""
 	echo "	-jN:"
 	echo "	     N > 0 sets the number of parallel make jobs"
@@ -30,7 +34,9 @@ buildModeSet=0
 
 logging="-UNOLOGGING"
 debugMalloc="-UDEBUG_MALLOC"
-selfManagedMemory="-UQMMMES"
+selfManagedMemory="-UNO_SELF_MANAGING"
+qmmes="-UQMMMES"
+checkForLeaks="-UCHECK_LEAKING"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -38,6 +44,7 @@ then
 	makeParallel="-j$((numCores - 1))"
 	
 fi
+
 
 while [[ $# -gt 0 ]]
 do
@@ -59,8 +66,17 @@ case $key in
 	selfManagedMemory="-DNO_SELF_MANAGING=True"
 	shift # past argument
 	;;
+	-lc|--leakCheck)
+	checkForLeaks="-DCHECK_LEAKING=True"
+	shift # past argument
+	;;
 	-queryMinMemEx)
-	selfManagedMemory="-DQMMMES=$2"
+	qmmes="-DQMMMES=$2"
+	shift
+	shift
+	;;
+	--alignment)
+	setMemoryAlignment="-DMMGR_ALIGN=$2"
 	shift
 	shift
 	;;
@@ -103,5 +119,5 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 mkdir -p build
-cmake -E chdir build/ cmake $logging $selfManagedMemory $debugMalloc $buildMode -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel

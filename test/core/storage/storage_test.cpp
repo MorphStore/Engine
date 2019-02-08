@@ -15,7 +15,11 @@
 #include <vector>
 #include <iostream>
 
-void fillColumn( morphstore::storage::column< morphstore::morphing::uncompr_f > * p_Col, size_t p_CountValues ) {
+namespace ms = morphstore;
+namespace m = morphstore::morphing;
+namespace s = morphstore::storage;
+
+void fillColumn( s::column< m::uncompr_f > * p_Col, size_t p_CountValues ) {
     uint64_t * const data = reinterpret_cast< uint64_t * >( p_Col->data( ) );
     for( unsigned i = 0; i < p_CountValues; i++ )
         data[ i ] = i;
@@ -23,38 +27,32 @@ void fillColumn( morphstore::storage::column< morphstore::morphing::uncompr_f > 
     p_Col->size_used_byte( p_CountValues * sizeof( uint64_t ) );
 }
 
-void printColumn( const morphstore::storage::column< morphstore::morphing::uncompr_f > * p_Col ) {
-    using namespace std;
-    
+void printColumn( const s::column< m::uncompr_f > * p_Col ) {
     const size_t countValues = p_Col->count_values( );
-    const size_t countValuesPrint = min(
+    const size_t countValuesPrint = std::min(
         static_cast< size_t >( 10 ),
         countValues / 2
     );
     const uint64_t * const data = reinterpret_cast< const uint64_t * >( p_Col->data( ) );
     for( unsigned i = 0; i < countValuesPrint; i++ )
-        cout << data[ i ] << ',';
-    cout << " ... ";
+        std::cout << data[ i ] << ',';
+    std::cout << " ... ";
     for( unsigned i = countValues - countValuesPrint; i < countValues; i++ )
-        cout << data[ i ] << ',';
-    cout << "done." << endl;
+        std::cout << data[ i ] << ',';
+    std::cout << "done." << std::endl;
 }
 
 int main( void ) {
-    using namespace morphstore::morphing;
-    using namespace morphstore::storage;
-    using namespace std;
-    
     const size_t countValues = 100 * 1000 * 1000;
     const size_t sizeAllocateByte = countValues * sizeof( uint64_t );
     
-    cout << "Testing an ephemeral column:" << endl;
-    auto colEphi = new column< uncompr_f >(sizeAllocateByte);
+    std::cout << "Testing an ephemeral column:" << std::endl;
+    auto colEphi = new s::column< m::uncompr_f >( sizeAllocateByte );
     fillColumn( colEphi, countValues );
     printColumn( colEphi );
     
-    cout << "Testing a perpetual column:" << endl;
-    auto colPerp = column< uncompr_f >::createPerpetualColumn(sizeAllocateByte);
+    std::cout << "Testing a perpetual column:" << std::endl;
+    auto colPerp = s::column< m::uncompr_f >::createPerpetualColumn( sizeAllocateByte );
     fillColumn( colPerp, countValues );
     printColumn( colPerp );
     

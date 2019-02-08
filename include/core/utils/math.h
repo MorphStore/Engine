@@ -48,6 +48,19 @@ constexpr std::size_t log2( size_t n ) {
    return ( ( n < 2 ) ? 1 : 1 + log2( n / 2 ) );
 }
 
+/**
+ * Returns the quotient of numerator divided by denominator rounded up to the
+ * next multiple of denominator.
+ * @param numerator
+ * @param denominator
+ * @return 
+ */
+inline unsigned round_up_div( unsigned numerator, unsigned denominator ) {
+    return ( numerator + denominator - 1 ) / denominator;
+}
+
+const size_t bitsPerByte = 8;
+
 }
 
 #endif //MORPHSTORE_CORE_UTILS_MATH_H

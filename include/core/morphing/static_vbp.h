@@ -51,26 +51,24 @@ namespace morphstore { namespace morphing {
         // TODO efficient implementation (for now, it must merely work)
         template< unsigned bw >
         inline void pack( const __m128i * & in128, size_t countIn128, __m128i * & out128 ) {
-            // TODO use aligned L/S as soon as the memory manager provides aligned pointers
-            
             __m128i tmp = _mm_setzero_si128( );
             unsigned bitpos = 0;
             const __m128i * const endIn128 = in128 + countIn128;
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
+            const size_t countBits = std::numeric_limits< uint64_t >::digits;
             while( in128 < endIn128 ) {
                 while( bitpos + bw <= countBits ) { // as long as the next vector still fits
-                    tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_loadu_si128( in128++ ), bitpos ) );
+                    tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_load_si128( in128++ ), bitpos ) );
                     bitpos += bw;
                 }
                 if( bitpos == countBits ) {
-                    _mm_storeu_si128( out128++, tmp );
+                    _mm_store_si128( out128++, tmp );
                     tmp = _mm_setzero_si128( );
                     bitpos = 0;
                 }
                 else { // bitpos < countBits
-                    const __m128i tmp2 = _mm_loadu_si128( in128++ );
+                    const __m128i tmp2 = _mm_load_si128( in128++ );
                     tmp = _mm_or_si128( tmp, _mm_slli_epi64( tmp2, bitpos ) );
-                    _mm_storeu_si128( out128++, tmp );
+                    _mm_store_si128( out128++, tmp );
                     tmp = _mm_srli_epi64( tmp2, countBits - bitpos );
                     bitpos = bitpos + bw - countBits;
                 }
@@ -80,9 +78,7 @@ namespace morphstore { namespace morphing {
         // TODO efficient implementation (for now, it must merely work)
         template< unsigned bw >
         inline void unpack( const __m128i * & in128, __m128i * & out128, size_t countOut128 ) {
-            // TODO use aligned L/S as soon as the memory manager provides aligned pointers
-
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
+            const size_t countBits = std::numeric_limits< uint64_t >::digits;
             const __m128i mask = _mm_set1_epi64x(
                 ( bw == countBits )
                 ? std::numeric_limits< uint64_t >::max( )
@@ -94,12 +90,12 @@ namespace morphstore { namespace morphing {
             const __m128i * const endOut128 = out128 + countOut128;
             while( out128 < endOut128 ) {
                 if( bitpos == countBits ) {
-                    tmp = _mm_loadu_si128( in128++ );
+                    tmp = _mm_load_si128( in128++ );
                     bitpos = 0;
                 }
                 else { // bitpos < countBits
-                    const __m128i tmp2 = _mm_loadu_si128( in128++ );
-                    _mm_storeu_si128(
+                    const __m128i tmp2 = _mm_load_si128( in128++ );
+                    _mm_store_si128(
                         out128++,
                         _mm_and_si128(
                             mask,
@@ -113,7 +109,7 @@ namespace morphstore { namespace morphing {
                     bitpos = bitpos + bw - countBits;
                 }
                 while( bitpos + bw <= countBits ) {
-                    _mm_storeu_si128(
+                    _mm_store_si128(
                         out128++,
                         _mm_and_si128(
                             mask,

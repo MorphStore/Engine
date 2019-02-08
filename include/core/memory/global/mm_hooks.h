@@ -19,6 +19,10 @@ namespace morphstore { namespace memory {
    static void *(*stdlib_malloc_ptr)( size_t ) = nullptr;
    static void *(*stdlib_realloc_ptr)( void *, size_t ) = nullptr;
    static void (*stdlib_free_ptr)( void * ) = nullptr;
+#ifdef MSV_MEMORY_LEAK_CHECK
+   void leak_detector_malloc_called( void * const, size_t const );
+   void leak_detector_free_called( void const * const );
+#endif
 } }
 
 static bool init_mem_hooks( void ) {
@@ -31,24 +35,54 @@ static bool init_mem_hooks( void ) {
    return true;
 }
 
+
 #if defined( MSV_DEBUG_MALLOC ) && !defined( MSV_NO_LOG )
 void * debug_stdlib_malloc( size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
+#ifdef MSV_MEMORY_LEAK_CHECK
+   morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
+#endif
    fprintf( stdout, "[MEM  ]: %s [Kernel Malloc] - %p ( %zu Bytes ) [ %s - Line %d ].\n", func, result, p_AllocSize, file, line );
    return result;
 }
 void * debug_stdlib_realloc( void * p_Ptr, size_t p_AllocSize, const char *file, int line, const char *func ) __THROW {
    void * result = morphstore::memory::stdlib_realloc_ptr( p_Ptr, p_AllocSize );
+#ifdef MSV_MEMORY_LEAK_CHECK
+   morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
+   morphstore::memory::leak_detector_free_called( p_Ptr );
+#endif
    fprintf( stdout, "[MEM  ]: %s [Kernel Realloc] - %p -> %p ( %zu Bytes ) [ %s - Line %d ].\n", func, p_Ptr, result, p_AllocSize, file, line );
    return result;
 }
 void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *func ) __THROW {
+#ifdef MSV_MEMORY_LEAK_CHECK
+   morphstore::memory::leak_detector_free_called( p_Ptr );
+#endif
    fprintf( stdout, "[MEM  ]: %s [Kernel Free] - %p [ %s - Line %d ].\n", func, p_Ptr, file, line );
    morphstore::memory::stdlib_free_ptr( p_Ptr );
 }
 #     define stdlib_malloc( X ) debug_stdlib_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
 #     define stdlib_realloc( X ) debug_stdlib_realloc( X, __FILE__, __LINE__, __FUNCTION__ )
 #     define stdlib_free( X ) debug_stdlib_free( X, __FILE__, __LINE__, __FUNCTION__ )
+#  elif defined( MSV_MEMORY_LEAK_CHECK )
+void * mem_leak_stdlib_malloc( size_t p_AllocSize ) __THROW {
+   void * result = morphstore::memory::stdlib_malloc_ptr( p_AllocSize );
+   morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
+   return result;
+}
+void * mem_leak_stdlib_realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
+   void * result = morphstore::memory::stdlib_realloc_ptr( p_Ptr, p_AllocSize );
+   morphstore::memory::leak_detector_malloc_called( result, p_AllocSize );
+   morphstore::memory::leak_detector_free_called( p_Ptr );
+   return result;
+}
+void mem_leak_stdlib_free( void * p_Ptr ) __THROW {
+   morphstore::memory::leak_detector_free_called( p_Ptr );
+   morphstore::memory::stdlib_free_ptr( p_Ptr );
+}
+#     define stdlib_malloc( X ) mem_leak_stdlib_malloc( X )
+#     define stdlib_realloc( X ) mem_leak_stdlib_realloc( X )
+#     define stdlib_free( X ) mem_leak_stdlib_free( X )
 #  else
 #     define stdlib_malloc( X ) stdlib_malloc_ptr( X )
 #     define stdlib_realloc( X ) stdlib_realloc_ptr( X )

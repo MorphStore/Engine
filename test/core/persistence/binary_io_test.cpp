@@ -32,20 +32,19 @@
 #include <cstdint>
 #include <cstring>
 
+namespace ms = morphstore;
+namespace m = morphstore::morphing;
+namespace p = morphstore::persistence;
+namespace s = morphstore::storage;
+
 int main( void ) {
-    using namespace std;
-    using namespace morphstore;
-    using namespace morphing;
-    using namespace persistence;
-    using namespace storage;
-    
     // Parameters.
     const size_t origCountValues = 100 * 1000;
     const size_t origSizeUsedByte = origCountValues * sizeof( uint64_t );
     const std::string fileName = "binary_io_test__testcol123";
     
     // Create the column.
-    auto origCol = new column< uncompr_f >( origSizeUsedByte );
+    auto origCol = new s::column< m::uncompr_f >( origSizeUsedByte );
     uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
@@ -54,13 +53,13 @@ int main( void ) {
     
     // Store the column.
     // TODO maybe we should delete the file afterwards
-    binary_io< uncompr_f >::store( origCol, fileName );
+    p::binary_io< m::uncompr_f >::store( origCol, fileName );
     
     // Reload the column and compare it to the original one.
-    auto reloCol = binary_io< uncompr_f >::load( fileName );
+    auto reloCol = p::binary_io< m::uncompr_f >::load( fileName );
     
     // Compare the original column to the reloaded column.
-    cout << equality_check( origCol, reloCol );
+    std::cout << ms::equality_check( origCol, reloCol );
     
     return 0;
 }
