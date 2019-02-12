@@ -21,7 +21,6 @@
 #include <limits.h>
 
 
-using namespace std;
 using namespace morphstore;
 
 template <unsigned bw, class T>

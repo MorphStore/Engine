@@ -42,9 +42,7 @@ class binary_io {
     public:
         
         static const column< F > * load( const std::string & p_Filename ) {
-            using namespace std;
-
-            ifstream ifs( p_Filename, ios::in | ios::binary );
+            std::ifstream ifs( p_Filename, std::ios::in | std::ios::binary );
 
             if( ifs.good( ) ) {
                 size_t countValues;
@@ -53,13 +51,13 @@ class binary_io {
                 ifs.read( reinterpret_cast< char * >( & countValues ), sizeof( uint64_t ) );
                 ifs.read( reinterpret_cast< char * >( & sizeByte )   , sizeof( uint64_t ) );
                 if( !ifs.good( ) )
-                    throw runtime_error("could not read the column meta data");
+                    throw std::runtime_error("could not read the column meta data");
 
                 column< F > * col = column< F >::createPerpetualColumn( sizeByte );
 
                 ifs.read( col->data(), sizeByte );
                 if( !ifs.good( ) )
-                    throw runtime_error("could not read the column data");
+                    throw std::runtime_error("could not read the column data");
 
                 col->count_values( countValues );
                 col->size_used_byte( sizeByte );
@@ -67,13 +65,11 @@ class binary_io {
                 return col;
             }
             else
-                throw runtime_error("could not open the file for reading");
+                throw std::runtime_error("could not open the file for reading");
         }
 
         static void store( const column< F > * p_Column, const std::string & p_FileName ) {
-            using namespace std;
-
-            ofstream ofs( p_FileName, ios::out | ios::binary );
+            std::ofstream ofs( p_FileName, std::ios::out | std::ios::binary );
             
             if( ofs.good( ) ) {
                 const size_t countValues  = p_Column->count_values( );
@@ -83,10 +79,10 @@ class binary_io {
                 ofs.write( reinterpret_cast< const char * >( & sizeUsedByte )   , sizeof( uint64_t ) );
                 ofs.write( p_Column->data( ), sizeUsedByte );
                 if( !ofs.good( ) )
-                    throw runtime_error("could write the column meta data and data");
+                    throw std::runtime_error("could write the column meta data and data");
             }
             else
-                throw runtime_error("could open the file for writing");
+                throw std::runtime_error("could open the file for writing");
         }
 };
 
