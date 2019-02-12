@@ -7,7 +7,7 @@
 
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
-namespace morphstore { namespace memory {
+namespace morphstore {
 
 class abstract_memory_manager {
    public:
@@ -22,5 +22,5 @@ class abstract_memory_manager {
       virtual void handle_error() = 0;
 };
 
-}}
+}
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H

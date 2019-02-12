@@ -12,10 +12,10 @@
 
 #include "immintrin.h"
 
-namespace morphstore { namespace operators {
+namespace morphstore {
 
 uint64_t aggregate_sum(
-   storage::column< morphing::uncompr_f > const * const p_DataColumn
+   column< uncompr_f > const * const p_DataColumn
 ) {
 
    uint64_t result = 0;
@@ -46,6 +46,6 @@ uint64_t aggregate_sum(
 
 }
 
-}}
+}
 
 #endif //MORPHSTORE_CORE_OPERATORS_AGGREGATION_LOOKUP_H

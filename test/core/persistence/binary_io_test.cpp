@@ -32,10 +32,7 @@
 #include <cstdint>
 #include <cstring>
 
-namespace ms = morphstore;
-namespace m = morphstore::morphing;
-namespace p = morphstore::persistence;
-namespace s = morphstore::storage;
+using namespace morphstore;
 
 int main( void ) {
     // Parameters.
@@ -44,7 +41,7 @@ int main( void ) {
     const std::string fileName = "binary_io_test__testcol123";
     
     // Create the column.
-    auto origCol = new s::column< m::uncompr_f >( origSizeUsedByte );
+    auto origCol = new column< uncompr_f >( origSizeUsedByte );
     uint64_t * origData = origCol->data( );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
@@ -53,13 +50,13 @@ int main( void ) {
     
     // Store the column.
     // TODO maybe we should delete the file afterwards
-    p::binary_io< m::uncompr_f >::store( origCol, fileName );
+    binary_io< uncompr_f >::store( origCol, fileName );
     
     // Reload the column and compare it to the original one.
-    auto reloCol = p::binary_io< m::uncompr_f >::load( fileName );
+    auto reloCol = binary_io< uncompr_f >::load( fileName );
     
     // Compare the original column to the reloaded column.
-    std::cout << ms::equality_check( origCol, reloCol );
+    std::cout << equality_check( origCol, reloCol );
     
     return 0;
 }

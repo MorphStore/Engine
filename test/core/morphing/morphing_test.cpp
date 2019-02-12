@@ -35,15 +35,13 @@
 #include <iomanip>
 #include <limits>
 
-namespace ms = morphstore;
-namespace m = morphstore::morphing;
-namespace s = morphstore::storage;
+using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
     const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
-    auto origCol = new s::column< m::uncompr_f >( origSizeByte );
+    auto origCol = new column< uncompr_f >( origSizeByte );
     uint64_t * origData = origCol->data( );
     const uint64_t mask = ( bw == 64 )
         ? std::numeric_limits< uint64_t >::max( )
@@ -54,17 +52,17 @@ bool test( ) {
     origCol->size_used_byte( origSizeByte );
     
     // TODO use a size depending on the bit width
-    auto comprCol = new s::column< m::static_vbp_f< bw > >( origSizeByte );
-    m::morph( origCol, comprCol );
+    auto comprCol = new column< static_vbp_f< bw > >( origSizeByte );
+    morph( origCol, comprCol );
     
     // TODO use a size depending on the bit width
-    auto decomprCol = new s::column< m::uncompr_f >( origSizeByte );
-    m::morph( comprCol, decomprCol );
+    auto decomprCol = new column< uncompr_f >( origSizeByte );
+    morph( comprCol, decomprCol );
     
-    const bool good = ms::equality_check( origCol, decomprCol ).good( );
+    const bool good = equality_check( origCol, decomprCol ).good( );
     std::cout
             << std::setw(2) << bw << " bit: "
-            << ms::equality_check::okStr( good ) << std::endl;
+            << equality_check::okStr( good ) << std::endl;
     
     return good;
 }
@@ -142,7 +140,7 @@ int main( void ) {
     allGood = allGood && test< 64 >( );
 #endif
     
-    std::cout << "overall: " << ms::equality_check::okStr(allGood) << std::endl;
+    std::cout << "overall: " << equality_check::okStr(allGood) << std::endl;
     
     return 0;
 }

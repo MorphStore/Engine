@@ -26,7 +26,7 @@
 #define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
 
-namespace morphstore { namespace morphing {
+namespace morphstore {
 
 // TODO don't forget to make this abstract (when adding member functions)
 // The abstract base of all formats.
@@ -39,5 +39,5 @@ struct uncompr_f : public format {
     //
 };
 
-} }
+}
 #endif //MORPHSTORE_CORE_MORPHING_FORMAT_H

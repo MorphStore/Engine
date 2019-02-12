@@ -11,7 +11,7 @@
 
 #include <iomanip>
 
-namespace morphstore{ namespace memory {
+namespace morphstore{
 
 class leak_detector {
    struct memory_chunk {
@@ -148,5 +148,5 @@ void leak_detector_free_called( void const * const p_Ptr ) {
    leak_detector::get_instance( ).free_called( p_Ptr );
 }
 
-}}
+}
 #endif //MORPHSTORE_CORE_MEMORY_GLOBAL_LEAK_DETECTION_H

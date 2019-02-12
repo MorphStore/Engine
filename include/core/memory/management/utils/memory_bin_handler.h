@@ -10,7 +10,7 @@
 
 #include "../../../utils/logger.h"
 
-namespace morphstore { namespace memory {
+namespace morphstore {
 
 class memory_bin_handler {
    private:
@@ -53,7 +53,7 @@ class memory_bin_handler {
    public:
       explicit memory_bin_handler( abstract_memory_manager * const p_MemoryManager ) {
          trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, " )." );
-         if ( morphstore::memory::stdlib_malloc_ptr == nullptr ) {
+         if ( stdlib_malloc_ptr == nullptr ) {
             trace( "[Memory Bin Handler] - Initialize memory hooks." );
             if( ! init_mem_hooks( ) ) {
                wtf( "[Memory Bin Handler] - Could not initialize memory hooks" );
@@ -196,5 +196,5 @@ class memory_bin_handler {
       }
 };
 
-}}
+}
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H

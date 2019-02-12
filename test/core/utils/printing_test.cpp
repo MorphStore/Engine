@@ -33,9 +33,7 @@
 #include <unordered_map>
 #include <c++/7/bits/unordered_map.h>
 
-namespace ms = morphstore;
-namespace m = morphstore::morphing;
-namespace s = morphstore::storage;
+using namespace morphstore;
 
 /**
  * A small example usage of print_columns.
@@ -43,21 +41,21 @@ namespace s = morphstore::storage;
 void small_example( ) {
     const size_t origCountValues = 128;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
-    auto origCol = new s::column< m::uncompr_f >( origSizeByte );
+    auto origCol = new column< uncompr_f >( origSizeByte );
     uint64_t * const origData = origCol->data();
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
     origCol->count_values( origCountValues );
     origCol->size_used_byte( origSizeByte );
     
-    auto comprCol = new s::column< m::static_vbp_f< 8 > >( origSizeByte );
-    m::morph( origCol, comprCol );
+    auto comprCol = new column< static_vbp_f< 8 > >( origSizeByte );
+    morph( origCol, comprCol );
     
-    auto decomprCol = new s::column< m::uncompr_f >( origSizeByte );
-    m::morph( comprCol, decomprCol );
+    auto decomprCol = new column< uncompr_f >( origSizeByte );
+    morph( comprCol, decomprCol );
     
-    morphstore::print_columns(
-            morphstore::print_buffer_base::hexadecimal,
+    print_columns(
+            print_buffer_base::hexadecimal,
             origCol,
             comprCol,
             decomprCol,
@@ -69,25 +67,25 @@ void small_example( ) {
 
 template< typename uintX_t >
 void systematic_test_internal(
-        const morphstore::storage::column< morphstore::morphing::uncompr_f > * col1,
-        const morphstore::storage::column< morphstore::morphing::uncompr_f > * col2,
-        const morphstore::storage::column< morphstore::morphing::uncompr_f > * col3
+        const column< uncompr_f > * col1,
+        const column< uncompr_f > * col2,
+        const column< uncompr_f > * col3
 ) {
-    std::unordered_map< ms::print_buffer_base, std::string > map = {
-        { ms::print_buffer_base::binary     , "binary"      },
-        { ms::print_buffer_base::decimal    , "decimal"     },
-        { ms::print_buffer_base::hexadecimal, "hexadecimal" },
+    std::unordered_map< print_buffer_base, std::string > map = {
+        { print_buffer_base::binary     , "binary"      },
+        { print_buffer_base::decimal    , "decimal"     },
+        { print_buffer_base::hexadecimal, "hexadecimal" },
     };
 
-    for( ms::print_buffer_base pbb : {
-        ms::print_buffer_base::binary,
-        ms::print_buffer_base::decimal,
-        ms::print_buffer_base::hexadecimal
+    for( print_buffer_base pbb : {
+        print_buffer_base::binary,
+        print_buffer_base::decimal,
+        print_buffer_base::hexadecimal
     } ) {
         std::cout
                 << '(' << std::numeric_limits< uintX_t >::digits << " bits per line, "
                 << map[pbb] << ')' << std::endl;
-        ms::print_columns< uintX_t >(
+        print_columns< uintX_t >(
                 pbb,
                 col1,
                 col2,
@@ -108,7 +106,7 @@ void systematic_test_internal(
 void systematic_test( ) {
     const size_t countValues1 = 10;
     const size_t sizeByte1 = countValues1 * sizeof( uint64_t );
-    auto col1 = new s::column< m::uncompr_f >( sizeByte1 );
+    auto col1 = new column< uncompr_f >( sizeByte1 );
     uint64_t * const col1Data = col1->data();
     for( unsigned i = 0; i < countValues1; i++ )
         col1Data[ i ] = i;
@@ -117,7 +115,7 @@ void systematic_test( ) {
     
     const size_t countValues2 = 5;
     const size_t sizeByte2 = countValues2 * sizeof( uint64_t );
-    auto col2 = new s::column< m::uncompr_f >( sizeByte2 );
+    auto col2 = new column< uncompr_f >( sizeByte2 );
     uint64_t * const col2Data = col2->data();
     for( unsigned i = 0; i < countValues2; i++ )
         col2Data[ i ] = std::numeric_limits< uint64_t >::max( );
@@ -126,7 +124,7 @@ void systematic_test( ) {
     
     const size_t countValues3 = 10;
     const size_t sizeByte3 = countValues3 * sizeof( uint64_t );
-    auto col3 = new s::column< m::uncompr_f >( sizeByte3 );
+    auto col3 = new column< uncompr_f >( sizeByte3 );
     uint64_t * const col3Data = col3->data();
     for( unsigned i = 0; i < countValues3; i++ )
         col3Data[ i ] = i * 111;

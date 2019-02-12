@@ -16,7 +16,7 @@
 
 namespace morphstore {
 
-   typedef std::basic_string< char, std::char_traits< char >, memory::perpetual_stdlib_allocator< char > > string;
-   typedef std::basic_string< wchar_t, std::char_traits< wchar_t >, memory::perpetual_stdlib_allocator< wchar_t > > wstring;
+   typedef std::basic_string< char, std::char_traits< char >, perpetual_stdlib_allocator< char > > string;
+   typedef std::basic_string< wchar_t, std::char_traits< wchar_t >, perpetual_stdlib_allocator< wchar_t > > wstring;
 }
 #endif //MORPHSTORE_CORE_MEMORY_STL_WRAPPER_STRING_H

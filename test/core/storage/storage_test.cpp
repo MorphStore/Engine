@@ -15,11 +15,9 @@
 #include <vector>
 #include <iostream>
 
-namespace ms = morphstore;
-namespace m = morphstore::morphing;
-namespace s = morphstore::storage;
+using namespace morphstore;
 
-void fillColumn( s::column< m::uncompr_f > * p_Col, size_t p_CountValues ) {
+void fillColumn( column< uncompr_f > * p_Col, size_t p_CountValues ) {
     uint64_t * const data = p_Col->data( );
     for( unsigned i = 0; i < p_CountValues; i++ )
         data[ i ] = i;
@@ -27,7 +25,7 @@ void fillColumn( s::column< m::uncompr_f > * p_Col, size_t p_CountValues ) {
     p_Col->size_used_byte( p_CountValues * sizeof( uint64_t ) );
 }
 
-void printColumn( const s::column< m::uncompr_f > * p_Col ) {
+void printColumn( const column< uncompr_f > * p_Col ) {
     const size_t countValues = p_Col->count_values( );
     const size_t countValuesPrint = std::min(
         static_cast< size_t >( 10 ),
@@ -47,12 +45,12 @@ int main( void ) {
     const size_t sizeAllocateByte = countValues * sizeof( uint64_t );
     
     std::cout << "Testing an ephemeral column:" << std::endl;
-    auto colEphi = new s::column< m::uncompr_f >( sizeAllocateByte );
+    auto colEphi = new column< uncompr_f >( sizeAllocateByte );
     fillColumn( colEphi, countValues );
     printColumn( colEphi );
     
     std::cout << "Testing a perpetual column:" << std::endl;
-    auto colPerp = s::column< m::uncompr_f >::createPerpetualColumn( sizeAllocateByte );
+    auto colPerp = column< uncompr_f >::createPerpetualColumn( sizeAllocateByte );
     fillColumn( colPerp, countValues );
     printColumn( colPerp );
     

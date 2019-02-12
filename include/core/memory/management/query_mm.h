@@ -28,7 +28,7 @@
 
 
 
-namespace morphstore { namespace memory {
+namespace morphstore {
 
 class query_memory_manager : public abstract_memory_manager {
    public:
@@ -133,6 +133,6 @@ class query_memory_manager : public abstract_memory_manager {
 
 };
 
-}}
+}
 
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_QUERY_MM_H

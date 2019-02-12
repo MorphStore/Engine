@@ -18,8 +18,8 @@
 
 namespace morphstore {
 
-using ostring_stream = std::basic_ostringstream< char, std::char_traits< char >, memory::perpetual_stdlib_allocator< char > >;
-using basic_stringbuf = std::basic_stringbuf< char, std::char_traits< char >, memory::perpetual_stdlib_allocator< char > >;
+using ostring_stream = std::basic_ostringstream< char, std::char_traits< char >, perpetual_stdlib_allocator< char > >;
+using basic_stringbuf = std::basic_stringbuf< char, std::char_traits< char >, perpetual_stdlib_allocator< char > >;
 using basic_filebuf = std::basic_filebuf< char, std::char_traits< char > >;
 
 class outbuf : public morphstore::basic_stringbuf {

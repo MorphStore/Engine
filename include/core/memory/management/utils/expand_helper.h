@@ -13,7 +13,7 @@
 
 #include <cassert>
 
-namespace morphstore { namespace memory {
+namespace morphstore {
 
 template<size_t MinChunkSize>
 constexpr size_t chunk_size(size_t pRequestedSize) {
@@ -79,6 +79,6 @@ class mm_expand_strategy_chunk_based_quadratic : public mm_expand_strategy {
       }
    };
 
-}}
+}
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_EXPAND_HELPER_H
 

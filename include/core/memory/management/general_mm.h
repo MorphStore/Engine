@@ -22,7 +22,7 @@
 
 #include "utils/memory_bin_handler.h"
 
-namespace morphstore { namespace memory {
+namespace morphstore {
 
 class general_memory_manager : public abstract_memory_manager {
    public:
@@ -59,9 +59,9 @@ class general_memory_manager : public abstract_memory_manager {
    private:
       general_memory_manager(void) :
          m_Initialized{(
-                          (morphstore::memory::stdlib_malloc_ptr == nullptr) ||
-                          (morphstore::memory::stdlib_malloc_ptr == nullptr) ||
-                          (morphstore::memory::stdlib_malloc_ptr == nullptr)
+                          (stdlib_malloc_ptr == nullptr) ||
+                          (stdlib_malloc_ptr == nullptr) ||
+                          (stdlib_malloc_ptr == nullptr)
                        ) ? init_mem_hooks() : true
          },
          m_PerpetualMemoryBinHandler(this),
@@ -186,7 +186,7 @@ class general_memory_manager : public abstract_memory_manager {
 
    };
 
-}}
+}
 
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_GENERAL_MM_H
 

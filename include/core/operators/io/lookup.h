@@ -13,12 +13,12 @@
 #include "../../utils/math.h"
 #include <cassert>
 
-namespace morphstore { namespace operators {
+namespace morphstore {
 
 void lookup(
-   storage::column<morphing::uncompr_f> const * const p_DataColumn,
-   storage::column<morphing::uncompr_f> const * const p_PositionColumn,
-   storage::column<morphing::uncompr_f> * const p_ResultColumn
+   column<uncompr_f> const * const p_DataColumn,
+   column<uncompr_f> const * const p_PositionColumn,
+   column<uncompr_f> * const p_ResultColumn
 ) {
    assert( p_ResultColumn->count_values( ) == p_PositionColumn->count_values( ) );
    //@todo: Thus we are using only sse, there are no gather loads... so it has to be done in a scalar fashion
@@ -37,9 +37,9 @@ void lookup(
  */
 template< uint8_t Bw >
 void lookup(
-   storage::column< morphing::static_vbp_f< Bw > > const * const p_DataColumn,
-   storage::column< morphing::uncompr_f > const * const p_PositionColumn,
-   storage::column< morphing::uncompr_f > * const p_ResultColumn
+   column< static_vbp_f< Bw > > const * const p_DataColumn,
+   column< uncompr_f > const * const p_PositionColumn,
+   column< uncompr_f > * const p_ResultColumn
 ) {
    assert( p_ResultColumn->count_values( ) == p_PositionColumn->count_values( ) );
    /**
@@ -73,5 +73,5 @@ void lookup(
 }
 
 
-}}
+}
 #endif //MORPHSTORE_CORE_OPERATORS_IO_LOOKUP_H

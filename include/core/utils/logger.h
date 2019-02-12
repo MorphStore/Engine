@@ -39,7 +39,7 @@
 #  define MSV_GIT_HASH
 #endif
 
-namespace morphstore { namespace logging {
+namespace morphstore {
 
 class formatter {
    public:
@@ -290,7 +290,7 @@ typedef shell_logger morphstore_logger;
 typedef shell_logger morphstore_logger;
 #endif
 
-}}
+}
 
 
 #ifdef MSV_NO_LOG
@@ -302,17 +302,17 @@ typedef shell_logger morphstore_logger;
 #  define wtf(...)
 #else
 #  ifdef DEBUG
-#     define trace(...) morphstore::logging::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
-#     define debug(...) morphstore::logging::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
-#     define info(...) morphstore::logging::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
+#     define trace(...) morphstore::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
+#     define debug(...) morphstore::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
+#     define info(...) morphstore::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
 #  else
 #     define trace(...)
 #     define debug(...)
 #     define info(...)
 #  endif
-#  define warn(...) morphstore::logging::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
-#  define error(...) morphstore::logging::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
-#  define wtf(...) morphstore::logging::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
+#  define warn(...) morphstore::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
+#  define error(...) morphstore::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
+#  define wtf(...) morphstore::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
 #endif
 
 

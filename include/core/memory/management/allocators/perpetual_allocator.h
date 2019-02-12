@@ -21,7 +21,7 @@
 //#include <cstdlib>
 #include <utility>
 
-namespace morphstore { namespace memory {
+namespace morphstore {
    template< class C >
    class perpetual_stdlib_allocator {
    public:
@@ -49,9 +49,9 @@ namespace morphstore { namespace memory {
 
       perpetual_stdlib_allocator( void ) throw( ) {
          if( ! (
-            ( morphstore::memory::stdlib_malloc_ptr == nullptr ) ||
-            ( morphstore::memory::stdlib_malloc_ptr == nullptr ) ||
-            ( morphstore::memory::stdlib_malloc_ptr == nullptr ) )
+            ( stdlib_malloc_ptr == nullptr ) ||
+            ( stdlib_malloc_ptr == nullptr ) ||
+            ( stdlib_malloc_ptr == nullptr ) )
          )
             if( ! init_mem_hooks( ) ) {
 //               exit( 1 );
@@ -100,6 +100,6 @@ namespace morphstore { namespace memory {
    }
 
 
-}}
+}
 
 #endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_PERPETUAL_ALLOCATOR_H

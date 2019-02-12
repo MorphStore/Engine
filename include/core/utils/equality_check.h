@@ -45,8 +45,8 @@ namespace morphstore {
         
         template< class F >
         equality_check(
-                const morphstore::storage::column< F > * colExp,
-                const morphstore::storage::column< F > * colFnd
+                const column< F > * colExp,
+                const column< F > * colFnd
         ) :
             m_CountValuesExp( colExp->count_values( ) ),
             m_CountValuesFnd( colFnd->count_values( ) ),

@@ -36,7 +36,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace morphstore { namespace morphing {
+namespace morphstore {
     
     // The vertical bit packed format with a static bit width.
     template< unsigned bw >
@@ -47,85 +47,83 @@ namespace morphstore { namespace morphing {
         );
     };
     
-    namespace static_vbp {
-        // TODO efficient implementation (for now, it must merely work)
-        template< unsigned bw >
-        inline void pack( const __m128i * & in128, size_t countIn128, __m128i * & out128 ) {
-            __m128i tmp = _mm_setzero_si128( );
-            unsigned bitpos = 0;
-            const __m128i * const endIn128 = in128 + countIn128;
-            const size_t countBits = std::numeric_limits< uint64_t >::digits;
-            while( in128 < endIn128 ) {
-                while( bitpos + bw <= countBits ) { // as long as the next vector still fits
-                    tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_load_si128( in128++ ), bitpos ) );
-                    bitpos += bw;
-                }
-                if( bitpos == countBits ) {
-                    _mm_store_si128( out128++, tmp );
-                    tmp = _mm_setzero_si128( );
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    const __m128i tmp2 = _mm_load_si128( in128++ );
-                    tmp = _mm_or_si128( tmp, _mm_slli_epi64( tmp2, bitpos ) );
-                    _mm_store_si128( out128++, tmp );
-                    tmp = _mm_srli_epi64( tmp2, countBits - bitpos );
-                    bitpos = bitpos + bw - countBits;
-                }
+    // TODO efficient implementation (for now, it must merely work)
+    template< unsigned bw >
+    inline void pack( const __m128i * & in128, size_t countIn128, __m128i * & out128 ) {
+        __m128i tmp = _mm_setzero_si128( );
+        unsigned bitpos = 0;
+        const __m128i * const endIn128 = in128 + countIn128;
+        const size_t countBits = std::numeric_limits< uint64_t >::digits;
+        while( in128 < endIn128 ) {
+            while( bitpos + bw <= countBits ) { // as long as the next vector still fits
+                tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_load_si128( in128++ ), bitpos ) );
+                bitpos += bw;
+            }
+            if( bitpos == countBits ) {
+                _mm_store_si128( out128++, tmp );
+                tmp = _mm_setzero_si128( );
+                bitpos = 0;
+            }
+            else { // bitpos < countBits
+                const __m128i tmp2 = _mm_load_si128( in128++ );
+                tmp = _mm_or_si128( tmp, _mm_slli_epi64( tmp2, bitpos ) );
+                _mm_store_si128( out128++, tmp );
+                tmp = _mm_srli_epi64( tmp2, countBits - bitpos );
+                bitpos = bitpos + bw - countBits;
             }
         }
+    }
 
-        // TODO efficient implementation (for now, it must merely work)
-        template< unsigned bw >
-        inline void unpack( const __m128i * & in128, __m128i * & out128, size_t countOut128 ) {
-            const size_t countBits = std::numeric_limits< uint64_t >::digits;
-            const __m128i mask = _mm_set1_epi64x(
-                ( bw == countBits )
-                ? std::numeric_limits< uint64_t >::max( )
-                : ( static_cast< uint64_t>( 1 ) << bw ) - 1
-            );
-            
-            __m128i tmp;
-            unsigned bitpos = countBits;
-            const __m128i * const endOut128 = out128 + countOut128;
-            while( out128 < endOut128 ) {
-                if( bitpos == countBits ) {
-                    tmp = _mm_load_si128( in128++ );
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    const __m128i tmp2 = _mm_load_si128( in128++ );
-                    _mm_store_si128(
-                        out128++,
-                        _mm_and_si128(
-                            mask,
-                            _mm_or_si128(
-                                _mm_slli_epi64( tmp2, countBits - bitpos ),
-                                _mm_srli_epi64( tmp, bitpos )
-                            )
-                        )
-                    );
-                    tmp = tmp2;
-                    bitpos = bitpos + bw - countBits;
-                }
-                while( bitpos + bw <= countBits ) {
-                    _mm_store_si128(
-                        out128++,
-                        _mm_and_si128(
-                            mask,
+    // TODO efficient implementation (for now, it must merely work)
+    template< unsigned bw >
+    inline void unpack( const __m128i * & in128, __m128i * & out128, size_t countOut128 ) {
+        const size_t countBits = std::numeric_limits< uint64_t >::digits;
+        const __m128i mask = _mm_set1_epi64x(
+            ( bw == countBits )
+            ? std::numeric_limits< uint64_t >::max( )
+            : ( static_cast< uint64_t>( 1 ) << bw ) - 1
+        );
+
+        __m128i tmp;
+        unsigned bitpos = countBits;
+        const __m128i * const endOut128 = out128 + countOut128;
+        while( out128 < endOut128 ) {
+            if( bitpos == countBits ) {
+                tmp = _mm_load_si128( in128++ );
+                bitpos = 0;
+            }
+            else { // bitpos < countBits
+                const __m128i tmp2 = _mm_load_si128( in128++ );
+                _mm_store_si128(
+                    out128++,
+                    _mm_and_si128(
+                        mask,
+                        _mm_or_si128(
+                            _mm_slli_epi64( tmp2, countBits - bitpos ),
                             _mm_srli_epi64( tmp, bitpos )
                         )
-                    );
-                    bitpos += bw;
-                }
+                    )
+                );
+                tmp = tmp2;
+                bitpos = bitpos + bw - countBits;
+            }
+            while( bitpos + bw <= countBits ) {
+                _mm_store_si128(
+                    out128++,
+                    _mm_and_si128(
+                        mask,
+                        _mm_srli_epi64( tmp, bitpos )
+                    )
+                );
+                bitpos += bw;
             }
         }
     }
     
     template< unsigned bw >
     void morph(
-        const morphstore::storage::column< uncompr_f > * in,
-        morphstore::storage::column< static_vbp_f< bw > > * out
+        const column< uncompr_f > * in,
+        column< static_vbp_f< bw > > * out
     ) {
         // TODO support arbitrary numbers of data elements
         if( in->count_values( ) % 128 )
@@ -138,7 +136,7 @@ namespace morphstore { namespace morphing {
         __m128i * out128 = out->data( );
         const __m128i * const initOut128 = out128;
         
-        static_vbp::pack< bw >(
+        pack< bw >(
             in128,
             in->size_used_byte( ) / sizeof( __m128i ),
             out128
@@ -150,8 +148,8 @@ namespace morphstore { namespace morphing {
     
     template< unsigned bw >
     void morph(
-        const morphstore::storage::column< static_vbp_f< bw > > * in,
-        morphstore::storage::column< uncompr_f > * out
+        const column< static_vbp_f< bw > > * in,
+        column< uncompr_f > * out
     ) {
         // TODO support arbitrary numbers of data elements
         if( in->count_values( ) % 128 )
@@ -164,7 +162,7 @@ namespace morphstore { namespace morphing {
         __m128i * out128 = out->data( );
         const __m128i * const initOut128 = out128;
         
-        static_vbp::unpack< bw >(
+        unpack< bw >(
             in128,
             out128,
             in->count_values( ) * sizeof( uint64_t ) / sizeof( __m128i )
@@ -174,5 +172,5 @@ namespace morphstore { namespace morphing {
         out->size_used_byte( ( out128 - initOut128 ) * sizeof( __m128i ) );
     }
     
-} }
+}
 #endif //MORPHSTORE_CORE_MORPHING_STATIC_VBP_H

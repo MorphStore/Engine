@@ -31,7 +31,7 @@
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
 
-namespace morphstore { namespace storage {
+namespace morphstore {
 
 enum class storage_persistence_type {
    PERPETUAL,
@@ -41,7 +41,7 @@ enum class storage_persistence_type {
 template< class F >
 class column {
    static_assert(
-      std::is_base_of< morphstore::morphing::format, F >::value,
+      std::is_base_of< format, F >::value,
       "column: template parameter F must be a subclass of format"
    );
     
@@ -76,7 +76,7 @@ class column {
          m_Data{
 #ifndef MSV_NO_SELFMANAGED_MEMORY
             ( p_PersistenceType == storage_persistence_type::PERPETUAL )
-            ? morphstore::memory::general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
+            ? general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
             : malloc( p_SizeAllocatedByte )
 #else
             malloc( p_SizeAllocatedByte );
@@ -111,7 +111,7 @@ class column {
       static column< F > * createPerpetualColumn( size_t p_SizeAllocByte ) {
          return new
             (
-               morphstore::memory::general_memory_manager::get_instance( ).allocate(
+               general_memory_manager::get_instance( ).allocate(
                   sizeof( column< F > )
                )
             )
@@ -123,5 +123,5 @@ class column {
 };
 
 
-} }
+}
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_H

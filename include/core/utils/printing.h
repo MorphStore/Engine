@@ -58,7 +58,7 @@ void print_binary(
         char zeroChar = '.',
         char oneChar = 'I'
 ) {
-    for( signed i = countBytes * morphstore::bitsPerByte - 1; i >= 0; i-- ) {
+    for( signed i = countBytes * bitsPerByte - 1; i >= 0; i-- ) {
         os << ( ( ( val >> i ) & 1 ) ? oneChar : zeroChar );
         if( !( i % 8 ) && ( i > 0 ) )
             os << "-";
@@ -107,7 +107,7 @@ struct print_buffer_info {
     template< class F >
     print_buffer_info(
             const std::string & p_Title,
-            const storage::column< F > * p_Col
+            const column< F > * p_Col
     ) :
         m_Title( p_Title ),
         m_Buffer( p_Col->data( ) ),
@@ -360,7 +360,7 @@ void print_buffers(
 template< typename uintX_t = uint64_t, class F1 >
 void print_columns(
         print_buffer_base p_Base,
-        const storage::column< F1 > * p_Col1,
+        const column< F1 > * p_Col1,
         const std::string & p_Title1 = "column 1"
 ) {
     print_buffers< uintX_t >(
@@ -382,8 +382,8 @@ void print_columns(
 template< typename uintX_t = uint64_t, class F1, class F2 >
 void print_columns(
         print_buffer_base p_Base,
-        const storage::column< F1 > * p_Col1,
-        const storage::column< F2 > * p_Col2,
+        const column< F1 > * p_Col1,
+        const column< F2 > * p_Col2,
         const std::string & p_Title1 = "column 1",
         const std::string & p_Title2 = "column 2"
 ) {
@@ -409,9 +409,9 @@ void print_columns(
 template< typename uintX_t = uint64_t, class F1, class F2, class F3 >
 void print_columns(
         print_buffer_base p_Base,
-        const storage::column< F1 > * p_Col1,
-        const storage::column< F2 > * p_Col2,
-        const storage::column< F3 > * p_Col3,
+        const column< F1 > * p_Col1,
+        const column< F2 > * p_Col2,
+        const column< F3 > * p_Col3,
         const std::string & p_Title1 = "column 1",
         const std::string & p_Title2 = "column 2",
         const std::string & p_Title3 = "column 3"
@@ -441,10 +441,10 @@ void print_columns(
 template< typename uintX_t = uint64_t, class F1, class F2, class F3, class F4 >
 void print_columns(
         print_buffer_base p_Base,
-        const storage::column< F1 > * p_Col1,
-        const storage::column< F2 > * p_Col2,
-        const storage::column< F3 > * p_Col3,
-        const storage::column< F4 > * p_Col4,
+        const column< F1 > * p_Col1,
+        const column< F2 > * p_Col2,
+        const column< F3 > * p_Col3,
+        const column< F4 > * p_Col4,
         const std::string & p_Title1 = "column 1",
         const std::string & p_Title2 = "column 2",
         const std::string & p_Title3 = "column 3",

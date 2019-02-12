@@ -35,15 +35,14 @@
 #include <stdexcept>
 #include <string>
 
-namespace morphstore { namespace persistence {
+namespace morphstore {
    
 template< class F >
 class binary_io {
     public:
         
-        static const storage::column< F > * load( const std::string & p_Filename ) {
+        static const column< F > * load( const std::string & p_Filename ) {
             using namespace std;
-            using namespace storage;
 
             ifstream ifs( p_Filename, ios::in | ios::binary );
 
@@ -71,7 +70,7 @@ class binary_io {
                 throw runtime_error("could not open the file for reading");
         }
 
-        static void store( const storage::column< F > * p_Column, const std::string & p_FileName ) {
+        static void store( const column< F > * p_Column, const std::string & p_FileName ) {
             using namespace std;
 
             ofstream ofs( p_FileName, ios::out | ios::binary );
@@ -91,6 +90,6 @@ class binary_io {
         }
 };
 
-} }
+}
 
 #endif /* MORPHSTORE_CORE_PERSISTENCE_BINARY_IO_H */

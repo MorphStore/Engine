@@ -13,12 +13,10 @@
 
 #define AGGREGATE_SUM_TEST_DATA_COUNT 100000000
 
-namespace storage = morphstore::storage;
-namespace format = morphstore::morphing;
-namespace operations = morphstore::operators;
+using namespace morphstore;
 
 
-void init_data( storage::column< format::uncompr_f > * const perpetualDataColumn ) {
+void init_data( column< uncompr_f > * const perpetualDataColumn ) {
    uint64_t * data = perpetualDataColumn->data( );
    size_t const count = AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t );
    for( size_t i = 0; i < count; ++i ) {
@@ -30,11 +28,11 @@ void init_data( storage::column< format::uncompr_f > * const perpetualDataColumn
 
 int main( void ) {
 
-   storage::column< format::uncompr_f > * perpetualDataColumn =
-      storage::column< format::uncompr_f >::createPerpetualColumn( AGGREGATE_SUM_TEST_DATA_COUNT );
+   column< uncompr_f > * perpetualDataColumn =
+      column< uncompr_f >::createPerpetualColumn( AGGREGATE_SUM_TEST_DATA_COUNT );
    init_data( perpetualDataColumn );
 
-   std::cout << "Should be "<< AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << operations::aggregate_sum( perpetualDataColumn ) << "\n";
+   std::cout << "Should be "<< AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << aggregate_sum( perpetualDataColumn ) << "\n";
 
    return 0;
 }

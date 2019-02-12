@@ -23,15 +23,9 @@
 
 using namespace std;
 using namespace morphstore;
-using namespace morphing;
-using namespace storage;
 
 template <unsigned bw, class T>
 auto selectCompressed(T * col, T predicate, size_t values){
-    using namespace std;
-    using namespace morphstore;
-    using namespace morphing;
-    using namespace storage;
     int count_results = 0;
 
     

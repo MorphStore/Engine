@@ -29,7 +29,7 @@
 
 #include "core/utils/basic_types.h"
 
-namespace morphstore { namespace storage {
+namespace morphstore {
 
 struct column_meta_data {
    size_t m_CountLogicalValues;
@@ -59,6 +59,6 @@ struct column_meta_data {
 };
 
 
-} }
+}
 
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H
