@@ -24,9 +24,9 @@ void lookup(
    //@todo: Thus we are using only sse, there are no gather loads... so it has to be done in a scalar fashion
    //@todo: ONLY 64-Bit elements
    size_t const positionCount = p_PositionColumn->count_values();
-   uint64_t const * const data = reinterpret_cast< uint64_t const * >( p_DataColumn->data( ) );
-   uint64_t const * const positions = reinterpret_cast< uint64_t const * >( p_PositionColumn->data( ) );
-   uint64_t * result = reinterpret_cast< uint64_t * >( p_ResultColumn->data( ) );
+   uint64_t const * const data = p_DataColumn->data( );
+   uint64_t const * const positions = p_PositionColumn->data( );
+   uint64_t * result = p_ResultColumn->data( );
    for( size_t i = 0; i < positionCount; ++i ) {
       *result++ = data[ positions[ i ] ];
    }
@@ -62,9 +62,9 @@ void lookup(
    //@todo: Thus we are using only sse, there are no gather loads... so it has to be done in a scalar fashion
    //@todo: ONLY 64-Bit elements
    size_t const positionCount = p_PositionColumn->count_values();
-   uint64_t const * const data = reinterpret_cast< uint64_t const * >( p_DataColumn->data( ) );
-   uint64_t const * const positions = reinterpret_cast< uint64_t const * >( p_PositionColumn->data( ) );
-   uint64_t * result = reinterpret_cast< uint64_t * >( p_ResultColumn->data( ) );
+   uint64_t const * const data = p_DataColumn->data( );
+   uint64_t const * const positions = p_PositionColumn->data( );
+   uint64_t * result = p_ResultColumn->data( );
    for( size_t i = 0; i < positionCount; ++i ) {
       posValue = positions[ i ];
       posInData = posValue * Bw;

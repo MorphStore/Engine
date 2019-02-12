@@ -19,7 +19,7 @@ namespace operations = morphstore::operators;
 
 
 void init_data( storage::column< format::uncompr_f > * const perpetualDataColumn ) {
-   uint64_t * data = static_cast< uint64_t * >( perpetualDataColumn->data( ) );
+   uint64_t * data = perpetualDataColumn->data( );
    size_t const count = AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t );
    for( size_t i = 0; i < count; ++i ) {
       data[ i ] = static_cast< uint64_t >( 1 );

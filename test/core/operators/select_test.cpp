@@ -37,7 +37,7 @@ auto selectCompressed(T * col, T predicate, size_t values){
     
     //create result column
     auto resultCol = new column< uncompr_f >(values);
-    uint64_t * resultdata = reinterpret_cast< uint64_t * >( resultCol->data( ) );
+    uint64_t * resultdata = resultCol->data( );
 
     //compress predicate
     std::bitset<128> * constBS= new std::bitset<128>();
@@ -98,12 +98,12 @@ auto selectCompressed(T * col, T predicate, size_t values){
 }
 
 
-//TODO column statt ptr und values übergeben?
+//TODO column statt ptr und values ï¿½bergeben?
 template <class T>
 auto Select(T * col, T predicate, size_t values){
     
     auto resultCol = new column< uncompr_f >( values );
-    uint64_t * resultdata = reinterpret_cast< uint64_t * >( resultCol->data( ) );
+    uint64_t * resultdata = resultCol->data( );
     
     size_t count_results=0;
     
@@ -133,11 +133,11 @@ int main( void ) {
         
     // Create the column.
     auto origColUncompressed = new column< uncompr_f >( origSizeUsedByte );
-    uint64_t * origData = reinterpret_cast< uint64_t * >( origColUncompressed->data( ) );
+    uint64_t * origData = origColUncompressed->data( );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i%32;
     
-    //Können wir das in set_*/get_* umbenennen?
+    //Kï¿½nnen wir das in set_*/get_* umbenennen?
     origColUncompressed->count_values( origCountValues );
     origColUncompressed->size_used_byte( origSizeUsedByte );
     
@@ -145,7 +145,7 @@ int main( void ) {
     column< uncompr_f > * result = Select<uint64_t>(origData,predicate,origCountValues);
     
     std::cout << "Found " << result->count_values() << " values" << std::endl;
-    for (size_t i=0; i<result->count_values() && i< 5;i++) std::cout << "result: " << ((uint64_t *)(result->data()))[i] << endl;
+    for (size_t i=0; i<result->count_values() && i< 5;i++) std::cout << "result: " << result->data()[i] << endl;
     std::cout << "Test filter uncompressed finished" << std::endl;
     
     
@@ -158,10 +158,10 @@ int main( void ) {
     morph( origColUncompressed, comprCol );
 
     //do Select
-    result = selectCompressed< 8, uint64_t >((uint64_t *)comprCol->data(),predicate,origCountValues);
+    result = selectCompressed< 8, uint64_t >(comprCol->data(),predicate,origCountValues);
     
     std::cout << "Found " << result->count_values() << " values" << std::endl;
-    for (size_t i=0; i<result->count_values() && i< 5;i++) std::cout << "result: " << ((uint64_t *)(result->data()))[i] << endl;
+    for (size_t i=0; i<result->count_values() && i< 5;i++) std::cout << "result: " << result->data()[i] << endl;
     std::cout << "Test filter compressed finished" << std::endl;
    return 0;
 }

@@ -134,8 +134,8 @@ namespace morphstore { namespace morphing {
                 "must be a multiple of 128"
             );
         
-        const __m128i * in128 = reinterpret_cast< const __m128i * >( in->data( ) );
-        __m128i * out128 = reinterpret_cast< __m128i * >( out->data( ) );
+        const __m128i * in128 = in->data( );
+        __m128i * out128 = out->data( );
         const __m128i * const initOut128 = out128;
         
         static_vbp::pack< bw >(
@@ -160,8 +160,8 @@ namespace morphstore { namespace morphing {
                 "must be a multiple of 128"
             );
         
-        const __m128i * in128 = reinterpret_cast< const __m128i * >( in->data( ) );
-        __m128i * out128 = reinterpret_cast< __m128i * >( out->data( ) );
+        const __m128i * in128 = in->data( );
+        __m128i * out128 = out->data( );
         const __m128i * const initOut128 = out128;
         
         static_vbp::unpack< bw >(

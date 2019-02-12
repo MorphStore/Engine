@@ -110,7 +110,7 @@ struct print_buffer_info {
             const storage::column< F > * p_Col
     ) :
         m_Title( p_Title ),
-        m_Buffer( reinterpret_cast< const uint8_t * >( p_Col->data( ) ) ),
+        m_Buffer( p_Col->data( ) ),
         m_SizeByte( p_Col->size_used_byte( ) )
     {
         //

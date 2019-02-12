@@ -44,7 +44,7 @@ bool test( ) {
     const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new s::column< m::uncompr_f >( origSizeByte );
-    uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
+    uint64_t * origData = origCol->data( );
     const uint64_t mask = ( bw == 64 )
         ? std::numeric_limits< uint64_t >::max( )
         : ( ( static_cast< uint64_t >( 1 ) << bw ) - 1 );

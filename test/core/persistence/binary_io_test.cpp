@@ -45,7 +45,7 @@ int main( void ) {
     
     // Create the column.
     auto origCol = new s::column< m::uncompr_f >( origSizeUsedByte );
-    uint64_t * origData = reinterpret_cast< uint64_t * >( origCol->data( ) );
+    uint64_t * origData = origCol->data( );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
     origCol->count_values( origCountValues );

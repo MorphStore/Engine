@@ -44,8 +44,9 @@ void small_example( ) {
     const size_t origCountValues = 128;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new s::column< m::uncompr_f >( origSizeByte );
+    uint64_t * const origData = origCol->data();
     for( unsigned i = 0; i < origCountValues; i++ )
-        reinterpret_cast< uint64_t * >( origCol->data( ) )[ i ] = i;
+        origData[ i ] = i;
     origCol->count_values( origCountValues );
     origCol->size_used_byte( origSizeByte );
     
@@ -108,26 +109,27 @@ void systematic_test( ) {
     const size_t countValues1 = 10;
     const size_t sizeByte1 = countValues1 * sizeof( uint64_t );
     auto col1 = new s::column< m::uncompr_f >( sizeByte1 );
+    uint64_t * const col1Data = col1->data();
     for( unsigned i = 0; i < countValues1; i++ )
-        reinterpret_cast< uint64_t * >( col1->data( ) )[ i ] = i;
+        col1Data[ i ] = i;
     col1->count_values( countValues1 );
     col1->size_used_byte( sizeByte1 );
     
     const size_t countValues2 = 5;
     const size_t sizeByte2 = countValues2 * sizeof( uint64_t );
     auto col2 = new s::column< m::uncompr_f >( sizeByte2 );
-    for( unsigned i = 0; i < countValues2; i++ ) {
-        reinterpret_cast< uint64_t * >( col2->data( ) )[ i ] =
-                std::numeric_limits< uint64_t >::max( );
-    }
+    uint64_t * const col2Data = col2->data();
+    for( unsigned i = 0; i < countValues2; i++ )
+        col2Data[ i ] = std::numeric_limits< uint64_t >::max( );
     col2->count_values( countValues2 );
     col2->size_used_byte( sizeByte2 );
     
     const size_t countValues3 = 10;
     const size_t sizeByte3 = countValues3 * sizeof( uint64_t );
     auto col3 = new s::column< m::uncompr_f >( sizeByte3 );
+    uint64_t * const col3Data = col3->data();
     for( unsigned i = 0; i < countValues3; i++ )
-        reinterpret_cast< uint64_t * >( col3->data( ) )[ i ] = i * 111;
+        col3Data[ i ] = i * 111;
     col3->count_values( countValues3 );
     // -5 to show the case of bytes beyond the buffer's end.
     col3->size_used_byte( sizeByte3 - 5 );

@@ -58,7 +58,7 @@ class binary_io {
 
                 column< F > * col = column< F >::createPerpetualColumn( sizeByte );
 
-                ifs.read( reinterpret_cast< char * >( col->data( ) ), sizeByte );
+                ifs.read( col->data(), sizeByte );
                 if( !ifs.good( ) )
                     throw runtime_error("could not read the column data");
 
@@ -82,7 +82,7 @@ class binary_io {
 
                 ofs.write( reinterpret_cast< const char * >( & countValues )    , sizeof( uint64_t ) );
                 ofs.write( reinterpret_cast< const char * >( & sizeUsedByte )   , sizeof( uint64_t ) );
-                ofs.write( reinterpret_cast< const char * >( p_Column->data( ) ), sizeUsedByte );
+                ofs.write( p_Column->data( ), sizeUsedByte );
                 if( !ofs.good( ) )
                     throw runtime_error("could write the column meta data and data");
             }

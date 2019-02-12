@@ -55,8 +55,8 @@ namespace morphstore {
             m_SizeUsedByteFnd( colFnd->size_used_byte( ) ),
             m_SizeUsedByteEqual( m_SizeUsedByteExp == m_SizeUsedByteFnd ),
             m_DataEqual( !memcmp(
-                    reinterpret_cast< const void * >( colExp->data( ) ),
-                    reinterpret_cast< const void * >( colFnd->data( ) ),
+                    colExp->data( ),
+                    colFnd->data( ),
                     std::min( m_SizeUsedByteExp, m_SizeUsedByteFnd )
             ) )
         {

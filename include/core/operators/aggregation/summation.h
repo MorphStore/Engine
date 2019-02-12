@@ -23,7 +23,7 @@ uint64_t aggregate_sum(
 
    size_t const vectorCount = p_DataColumn->count_values() / elementsPerVectorCount;
    size_t const remainderCount = p_DataColumn->count_values() % elementsPerVectorCount;
-   __m128i const * dataVecPtr = reinterpret_cast< __m128i const * >( p_DataColumn->data( ) );
+   __m128i const * dataVecPtr = p_DataColumn->data( );
    __m128i resultVec = _mm_setzero_si128( );
    for( size_t i = 0; i < vectorCount; ++i ) {
       resultVec = _mm_add_epi64( resultVec, _mm_load_si128( dataVecPtr++ ) );
