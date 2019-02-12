@@ -20,7 +20,7 @@ namespace m = morphstore::morphing;
 namespace s = morphstore::storage;
 
 void fillColumn( s::column< m::uncompr_f > * p_Col, size_t p_CountValues ) {
-    uint64_t * const data = reinterpret_cast< uint64_t * >( p_Col->data( ) );
+    uint64_t * const data = p_Col->data( );
     for( unsigned i = 0; i < p_CountValues; i++ )
         data[ i ] = i;
     p_Col->count_values( p_CountValues );
@@ -33,7 +33,7 @@ void printColumn( const s::column< m::uncompr_f > * p_Col ) {
         static_cast< size_t >( 10 ),
         countValues / 2
     );
-    const uint64_t * const data = reinterpret_cast< const uint64_t * >( p_Col->data( ) );
+    const uint64_t * const data = p_Col->data( );
     for( unsigned i = 0; i < countValuesPrint; i++ )
         std::cout << data[ i ] << ',';
     std::cout << " ... ";

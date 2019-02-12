@@ -141,7 +141,7 @@ void operator delete( void * p_FreePtr ) noexcept {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  * @param p_DeallocSize Unused (see details)
  */
-void operator delete( void * p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
+void operator delete( void * p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_DeallocSize ) noexcept {
    free( p_FreePtr );
 }
 
@@ -167,7 +167,7 @@ void operator delete[]( void* p_FreePtr ) noexcept {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  * @param p_DeallocSize Unused (see details)
  */
-void operator delete[]( void* p_FreePtr, MSV_PPUNUSED size_t p_DeallocSize ) noexcept {
+void operator delete[]( void* p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_DeallocSize ) noexcept {
    free( p_FreePtr );
 }
 

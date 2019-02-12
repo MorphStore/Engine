@@ -84,7 +84,7 @@ namespace morphstore { namespace memory {
          p_FreePtr->~C( );
       }
 
-      void deallocate( pointer p_FreePtr, MSV_PPUNUSED size_t p_NumElements ) {
+      void deallocate( pointer p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_NumElements ) {
          stdlib_free( static_cast< void * >( p_FreePtr ) );
       }
    };

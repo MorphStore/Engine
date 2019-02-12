@@ -21,6 +21,7 @@
 #endif
 #include "../utils/logger.h"
 
+#include "../utils/helper_types.h"
 
 #include "management/abstract_mm.h"
 #include "management/utils/expand_helper.h"

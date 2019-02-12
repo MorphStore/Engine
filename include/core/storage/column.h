@@ -66,7 +66,7 @@ class column {
       
    private:
       column_meta_data m_MetaData;
-      void const * m_Data;
+      voidptr_t m_Data;
       
       column(
          storage_persistence_type p_PersistenceType,
@@ -87,11 +87,8 @@ class column {
       }
 
    public:
-      inline void const * data( void ) const {
+      inline voidptr_t data( void ) const {
          return m_Data;
-      }
-      inline void * data( void ) {
-         return const_cast< void * >( m_Data );
       }
       inline size_t count_values( void ) const {
          return m_MetaData.m_CountLogicalValues;

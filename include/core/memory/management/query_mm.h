@@ -105,18 +105,18 @@ class query_memory_manager : public abstract_memory_manager {
          return tmp;
       }
 
-      void * allocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED size_t p_AllocSize ) override {
+      void * allocate( MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager * const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_AllocSize ) override {
          warn( "[Query Memory Manager] - Allocate with different Memory Manager should not be invoked on the Query Memory Manager." );
          return nullptr;
       }
 
-      void deallocate( MSV_PPUNUSED abstract_memory_manager * const p_Caller, MSV_PPUNUSED void * const p_Ptr ) override {
+      void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager * const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
          trace( "[Query Memory Manager] - IN.  ( Caller = ", p_Caller, ". Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( abstract_memory_manager * const, void * const ) ",
                "should not be invoked on the Query Memory Manager." );
       }
 
-      void deallocate( MSV_PPUNUSED void * const p_Ptr ) override {
+      void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
          trace( "[Query Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( void * const ) should not be invoked on the Query Memory Manager." );
       }

@@ -26,8 +26,60 @@
 #ifndef MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 #define MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 
-#ifndef MSV_PPUNUSED
-#  define MSV_PPUNUSED __attribute__((unused))
+
+
+#ifndef MSV_CXX_ATTRIBUTE_PPUNUSED
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_PPUNUSED __attribute__((unused))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_MALLOC
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_MALLOC __attribute__((malloc))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_ALLOC_SIZE
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_ALLOC_SIZE(X) __attribute__((alloc_size(X)))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_FORCE_INLINE inline __attribute__((always_inline))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_INLINE
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_INLINE inline
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_COLD
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_COLD __attribute__((cold))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_HOT
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_HOT __attribute__((hot))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_PURE
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_PURE __attribute__((pure))
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_CONST
+#  if defined(__clang__) || defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_CONST __attribute__((const))
+#  endif
 #endif
 
 #ifndef __THROW

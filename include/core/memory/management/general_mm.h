@@ -130,13 +130,13 @@ class general_memory_manager : public abstract_memory_manager {
          }
       }
 
-      void deallocate(MSV_PPUNUSED abstract_memory_manager *const p_Caller, MSV_PPUNUSED void *const p_Ptr ) override {
+      void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager *const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Caller = ", p_Caller, ". Pointer = ", p_Ptr, " )." );
          info( "[General Memory Manager] - Deallocate should not be invoked on the General Memory Manager." );
          // NOP
       }
 
-      void deallocate(MSV_PPUNUSED void *const p_Ptr ) override {
+      void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
          warn( "[General Memory Manager] - @TODO: This can be done for perpetual storage. Needed to be implemented." );
          //@todo THIS CAN BE DONE!!! FOR PERPETUAL STORAGE
