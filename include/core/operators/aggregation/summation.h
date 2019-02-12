@@ -21,9 +21,9 @@ uint64_t aggregate_sum(
    uint64_t result = 0;
    size_t const elementsPerVectorCount = sizeof( __m128i ) / sizeof( uint64_t );
 
-   size_t const vectorCount = p_DataColumn->count_values() / elementsPerVectorCount;
-   size_t const remainderCount = p_DataColumn->count_values() % elementsPerVectorCount;
-   __m128i const * dataVecPtr = p_DataColumn->data( );
+   size_t const vectorCount = p_DataColumn->get_count_values() / elementsPerVectorCount;
+   size_t const remainderCount = p_DataColumn->get_count_values() % elementsPerVectorCount;
+   __m128i const * dataVecPtr = p_DataColumn->get_data( );
    __m128i resultVec = _mm_setzero_si128( );
    for( size_t i = 0; i < vectorCount; ++i ) {
       resultVec = _mm_add_epi64( resultVec, _mm_load_si128( dataVecPtr++ ) );

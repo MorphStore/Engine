@@ -18,20 +18,20 @@
 using namespace morphstore;
 
 void fillColumn( column< uncompr_f > * p_Col, size_t p_CountValues ) {
-    uint64_t * const data = p_Col->data( );
+    uint64_t * const data = p_Col->get_data( );
     for( unsigned i = 0; i < p_CountValues; i++ )
         data[ i ] = i;
-    p_Col->count_values( p_CountValues );
-    p_Col->size_used_byte( p_CountValues * sizeof( uint64_t ) );
+    p_Col->set_count_values( p_CountValues );
+    p_Col->set_size_used_byte( p_CountValues * sizeof( uint64_t ) );
 }
 
 void printColumn( const column< uncompr_f > * p_Col ) {
-    const size_t countValues = p_Col->count_values( );
+    const size_t countValues = p_Col->get_count_values( );
     const size_t countValuesPrint = std::min(
         static_cast< size_t >( 10 ),
         countValues / 2
     );
-    const uint64_t * const data = p_Col->data( );
+    const uint64_t * const data = p_Col->get_data( );
     for( unsigned i = 0; i < countValuesPrint; i++ )
         std::cout << data[ i ] << ',';
     std::cout << " ... ";
@@ -50,7 +50,7 @@ int main( void ) {
     printColumn( colEphi );
     
     std::cout << "Testing a perpetual column:" << std::endl;
-    auto colPerp = column< uncompr_f >::createPerpetualColumn( sizeAllocateByte );
+    auto colPerp = column< uncompr_f >::create_perpetual_column( sizeAllocateByte );
     fillColumn( colPerp, countValues );
     printColumn( colPerp );
     

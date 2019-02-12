@@ -17,7 +17,7 @@ using namespace morphstore;
 
 
 void init_data( column< uncompr_f > * const perpetualDataColumn ) {
-   uint64_t * data = perpetualDataColumn->data( );
+   uint64_t * data = perpetualDataColumn->get_data( );
    size_t const count = AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t );
    for( size_t i = 0; i < count; ++i ) {
       data[ i ] = static_cast< uint64_t >( 1 );
@@ -29,7 +29,7 @@ void init_data( column< uncompr_f > * const perpetualDataColumn ) {
 int main( void ) {
 
    column< uncompr_f > * perpetualDataColumn =
-      column< uncompr_f >::createPerpetualColumn( AGGREGATE_SUM_TEST_DATA_COUNT );
+      column< uncompr_f >::create_perpetual_column( AGGREGATE_SUM_TEST_DATA_COUNT );
    init_data( perpetualDataColumn );
 
    std::cout << "Should be "<< AGGREGATE_SUM_TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << aggregate_sum( perpetualDataColumn ) << "\n";

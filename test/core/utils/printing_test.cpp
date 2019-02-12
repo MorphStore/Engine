@@ -42,11 +42,11 @@ void small_example( ) {
     const size_t origCountValues = 128;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new column< uncompr_f >( origSizeByte );
-    uint64_t * const origData = origCol->data();
+    uint64_t * const origData = origCol->get_data();
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
-    origCol->count_values( origCountValues );
-    origCol->size_used_byte( origSizeByte );
+    origCol->set_count_values( origCountValues );
+    origCol->set_size_used_byte( origSizeByte );
     
     auto comprCol = new column< static_vbp_f< 8 > >( origSizeByte );
     morph( origCol, comprCol );
@@ -107,30 +107,30 @@ void systematic_test( ) {
     const size_t countValues1 = 10;
     const size_t sizeByte1 = countValues1 * sizeof( uint64_t );
     auto col1 = new column< uncompr_f >( sizeByte1 );
-    uint64_t * const col1Data = col1->data();
+    uint64_t * const col1Data = col1->get_data();
     for( unsigned i = 0; i < countValues1; i++ )
         col1Data[ i ] = i;
-    col1->count_values( countValues1 );
-    col1->size_used_byte( sizeByte1 );
+    col1->set_count_values( countValues1 );
+    col1->set_size_used_byte( sizeByte1 );
     
     const size_t countValues2 = 5;
     const size_t sizeByte2 = countValues2 * sizeof( uint64_t );
     auto col2 = new column< uncompr_f >( sizeByte2 );
-    uint64_t * const col2Data = col2->data();
+    uint64_t * const col2Data = col2->get_data();
     for( unsigned i = 0; i < countValues2; i++ )
         col2Data[ i ] = std::numeric_limits< uint64_t >::max( );
-    col2->count_values( countValues2 );
-    col2->size_used_byte( sizeByte2 );
+    col2->set_count_values( countValues2 );
+    col2->set_size_used_byte( sizeByte2 );
     
     const size_t countValues3 = 10;
     const size_t sizeByte3 = countValues3 * sizeof( uint64_t );
     auto col3 = new column< uncompr_f >( sizeByte3 );
-    uint64_t * const col3Data = col3->data();
+    uint64_t * const col3Data = col3->get_data();
     for( unsigned i = 0; i < countValues3; i++ )
         col3Data[ i ] = i * 111;
-    col3->count_values( countValues3 );
+    col3->set_count_values( countValues3 );
     // -5 to show the case of bytes beyond the buffer's end.
-    col3->size_used_byte( sizeByte3 - 5 );
+    col3->set_size_used_byte( sizeByte3 - 5 );
     
     systematic_test_internal< uint8_t >( col1, col2, col3 );
     systematic_test_internal< uint16_t >( col1, col2, col3 );

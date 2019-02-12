@@ -42,14 +42,14 @@ bool test( ) {
     const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new column< uncompr_f >( origSizeByte );
-    uint64_t * origData = origCol->data( );
+    uint64_t * origData = origCol->get_data( );
     const uint64_t mask = ( bw == 64 )
         ? std::numeric_limits< uint64_t >::max( )
         : ( ( static_cast< uint64_t >( 1 ) << bw ) - 1 );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i & mask;
-    origCol->count_values( origCountValues );
-    origCol->size_used_byte( origSizeByte );
+    origCol->set_count_values( origCountValues );
+    origCol->set_size_used_byte( origSizeByte );
     
     // TODO use a size depending on the bit width
     auto comprCol = new column< static_vbp_f< bw > >( origSizeByte );
@@ -62,7 +62,7 @@ bool test( ) {
     const bool good = equality_check( origCol, decomprCol ).good( );
     std::cout
             << std::setw(2) << bw << " bit: "
-            << equality_check::okStr( good ) << std::endl;
+            << equality_check::ok_str( good ) << std::endl;
     
     return good;
 }
@@ -140,7 +140,7 @@ int main( void ) {
     allGood = allGood && test< 64 >( );
 #endif
     
-    std::cout << "overall: " << equality_check::okStr(allGood) << std::endl;
+    std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
     
     return 0;
 }

@@ -48,15 +48,15 @@ namespace morphstore {
                 const column< F > * colExp,
                 const column< F > * colFnd
         ) :
-            m_CountValuesExp( colExp->count_values( ) ),
-            m_CountValuesFnd( colFnd->count_values( ) ),
+            m_CountValuesExp( colExp->get_count_values( ) ),
+            m_CountValuesFnd( colFnd->get_count_values( ) ),
             m_CountValuesEqual( m_CountValuesExp == m_CountValuesFnd ),
-            m_SizeUsedByteExp( colExp->size_used_byte( ) ),
-            m_SizeUsedByteFnd( colFnd->size_used_byte( ) ),
+            m_SizeUsedByteExp( colExp->get_size_used_byte( ) ),
+            m_SizeUsedByteFnd( colFnd->get_size_used_byte( ) ),
             m_SizeUsedByteEqual( m_SizeUsedByteExp == m_SizeUsedByteFnd ),
             m_DataEqual( !memcmp(
-                    colExp->data( ),
-                    colFnd->data( ),
+                    colExp->get_data( ),
+                    colFnd->get_data( ),
                     std::min( m_SizeUsedByteExp, m_SizeUsedByteFnd )
             ) )
         {
@@ -72,22 +72,22 @@ namespace morphstore {
         equality_check & operator=( equality_check const & ) = delete;
         equality_check & operator=( equality_check && ) = delete;
         
-        static const char * okStr( bool ok ) {
+        static const char * ok_str( bool ok ) {
             return ok ? "ok" : "not ok";
         }
     };
     
     std::ostream & operator<<( std::ostream & os, const equality_check & ec ) {
         os
-                << "countValues: " << equality_check::okStr( ec.m_CountValuesEqual )
+                << "countValues: " << equality_check::ok_str( ec.m_CountValuesEqual )
                 << " (expected " << ec.m_CountValuesExp
                 << ", found " << ec.m_CountValuesFnd << ')'
                 << std::endl
-                << "sizeUsedByte: " << equality_check::okStr( ec.m_SizeUsedByteEqual )
+                << "sizeUsedByte: " << equality_check::ok_str( ec.m_SizeUsedByteEqual )
                 << " (expected " << ec.m_SizeUsedByteExp
                 << ", found " << ec.m_SizeUsedByteFnd << ')'
                 << std::endl
-                << "data: " << equality_check::okStr( ec.m_DataEqual )
+                << "data: " << equality_check::ok_str( ec.m_DataEqual )
                 << " (this check is only valid, if countValues and sizeUsedByte are ok)"
                 << std::endl;
         return os;

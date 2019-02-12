@@ -110,8 +110,8 @@ struct print_buffer_info {
             const column< F > * p_Col
     ) :
         m_Title( p_Title ),
-        m_Buffer( p_Col->data( ) ),
-        m_SizeByte( p_Col->size_used_byte( ) )
+        m_Buffer( p_Col->get_data( ) ),
+        m_SizeByte( p_Col->get_size_used_byte( ) )
     {
         //
     }

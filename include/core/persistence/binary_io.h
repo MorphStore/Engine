@@ -53,14 +53,14 @@ class binary_io {
                 if( !ifs.good( ) )
                     throw std::runtime_error("could not read the column meta data");
 
-                column< F > * col = column< F >::createPerpetualColumn( sizeByte );
+                column< F > * col = column< F >::create_perpetual_column( sizeByte );
 
-                ifs.read( col->data(), sizeByte );
+                ifs.read( col->get_data(), sizeByte );
                 if( !ifs.good( ) )
                     throw std::runtime_error("could not read the column data");
 
-                col->count_values( countValues );
-                col->size_used_byte( sizeByte );
+                col->set_count_values( countValues );
+                col->set_size_used_byte( sizeByte );
 
                 return col;
             }
@@ -72,12 +72,12 @@ class binary_io {
             std::ofstream ofs( p_FileName, std::ios::out | std::ios::binary );
             
             if( ofs.good( ) ) {
-                const size_t countValues  = p_Column->count_values( );
-                const size_t sizeUsedByte = p_Column->size_used_byte( );
+                const size_t countValues  = p_Column->get_count_values( );
+                const size_t sizeUsedByte = p_Column->get_size_used_byte( );
 
                 ofs.write( reinterpret_cast< const char * >( & countValues )    , sizeof( uint64_t ) );
                 ofs.write( reinterpret_cast< const char * >( & sizeUsedByte )   , sizeof( uint64_t ) );
-                ofs.write( p_Column->data( ), sizeUsedByte );
+                ofs.write( p_Column->get_data( ), sizeUsedByte );
                 if( !ofs.good( ) )
                     throw std::runtime_error("could write the column meta data and data");
             }

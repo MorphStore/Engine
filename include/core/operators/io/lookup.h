@@ -20,13 +20,13 @@ void lookup(
    column<uncompr_f> const * const p_PositionColumn,
    column<uncompr_f> * const p_ResultColumn
 ) {
-   assert( p_ResultColumn->count_values( ) == p_PositionColumn->count_values( ) );
+   assert( p_ResultColumn->get_count_values( ) == p_PositionColumn->get_count_values( ) );
    //@todo: Thus we are using only sse, there are no gather loads... so it has to be done in a scalar fashion
    //@todo: ONLY 64-Bit elements
-   size_t const positionCount = p_PositionColumn->count_values();
-   uint64_t const * const data = p_DataColumn->data( );
-   uint64_t const * const positions = p_PositionColumn->data( );
-   uint64_t * result = p_ResultColumn->data( );
+   size_t const positionCount = p_PositionColumn->get_count_values();
+   uint64_t const * const data = p_DataColumn->get_data( );
+   uint64_t const * const positions = p_PositionColumn->get_data( );
+   uint64_t * result = p_ResultColumn->get_data( );
    for( size_t i = 0; i < positionCount; ++i ) {
       *result++ = data[ positions[ i ] ];
    }
@@ -41,7 +41,7 @@ void lookup(
    column< uncompr_f > const * const p_PositionColumn,
    column< uncompr_f > * const p_ResultColumn
 ) {
-   assert( p_ResultColumn->count_values( ) == p_PositionColumn->count_values( ) );
+   assert( p_ResultColumn->get_count_values( ) == p_PositionColumn->get_count_values( ) );
    /**
     * pos:      current position from p_PositionColumn
     * Bw:       bitwidth
@@ -61,10 +61,10 @@ void lookup(
 
    //@todo: Thus we are using only sse, there are no gather loads... so it has to be done in a scalar fashion
    //@todo: ONLY 64-Bit elements
-   size_t const positionCount = p_PositionColumn->count_values();
-   uint64_t const * const data = p_DataColumn->data( );
-   uint64_t const * const positions = p_PositionColumn->data( );
-   uint64_t * result = p_ResultColumn->data( );
+   size_t const positionCount = p_PositionColumn->get_count_values();
+   uint64_t const * const data = p_DataColumn->get_data( );
+   uint64_t const * const positions = p_PositionColumn->get_data( );
+   uint64_t * result = p_ResultColumn->get_data( );
    for( size_t i = 0; i < positionCount; ++i ) {
       posValue = positions[ i ];
       posInData = posValue * Bw;

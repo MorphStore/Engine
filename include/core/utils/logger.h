@@ -55,10 +55,10 @@ class formatter {
          levels_colors & operator=( levels_colors const & ) = default;
          levels_colors & operator=( levels_colors && ) = default;
 
-         char const * name() const {
+         char const * get_name() const {
             return m_LogLevelName;
          }
-         char const * color() const {
+         char const * get_color() const {
             return m_ColorText;
          }
       };
@@ -84,25 +84,25 @@ class formatter {
          m_EntryEndText{ p_EntryEndText },
          m_ColorDefaultText{ p_ColorDefaultText },
          m_LevelsAndColors{ p_LevelsAndColors }{ }
-      const char * tag_text( int p_LogLevel ) const {
+      const char * get_tag_text( int p_LogLevel ) const {
          return m_LevelsAndColors[ p_LogLevel ].m_LogLevelName;
       }
-      const char * tag_color( int p_LogLevel ) const {
+      const char * get_tag_color( int p_LogLevel ) const {
          return m_LevelsAndColors[ p_LogLevel ].m_ColorText;
       }
-      const char * head( void ) const {
+      const char * get_head( void ) const {
          return m_LineStartText;
       }
-      char const * tail( ) const {
+      char const * get_tail( ) const {
          return m_LineEndText;
       }
-      const char * color_default( void ) const {
+      const char * get_color_default( void ) const {
          return m_ColorDefaultText;
       }
-      const char * entry_start( void ) const {
+      const char * get_entry_start( void ) const {
          return m_EntryBeginText;
       }
-      const char * entry_end( void ) const {
+      const char * get_entry_end( void ) const {
          return m_EntryEndText;
       }
 
@@ -160,9 +160,9 @@ class logger {
       void log( T p_LogLevel, const char * p_From, Args &&... p_Args ) {
          head( p_LogLevel );
          log_message_from_line( p_From );
-         get_out( ) << get_formatter( ).entry_start( );
+         get_out( ) << get_formatter( ).get_entry_start( );
          log_message_line( p_Args... );
-         get_out( ) << get_formatter( ).entry_end( );
+         get_out( ) << get_formatter( ).get_entry_end( );
          tail( );
       }
 
@@ -178,20 +178,20 @@ class logger {
       }
 
       void log_message_from_line( const char * p_From ) {
-         get_out( ) << get_formatter( ).entry_start( ) << p_From << get_formatter( ).entry_end( );
+         get_out( ) << get_formatter( ).get_entry_start( ) << p_From << get_formatter( ).get_entry_end( );
       }
 
 
       void head( int p_LogLevel ) {
          morphstore::ostream & ttt = get_out( );
-         ttt << get_formatter( ).head()
-                     << get_formatter( ).tag_color( p_LogLevel )
-                     << get_formatter( ).tag_text( p_LogLevel )
-                     << get_formatter( ).color_default( );
+         ttt << get_formatter( ).get_head()
+                     << get_formatter( ).get_tag_color( p_LogLevel )
+                     << get_formatter( ).get_tag_text( p_LogLevel )
+                     << get_formatter( ).get_color_default( );
       }
 
       void tail( void ) {
-         get_out( ) << get_formatter( ).tail( );
+         get_out( ) << get_formatter( ).get_tail( );
       }
 };
 

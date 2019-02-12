@@ -42,11 +42,11 @@ int main( void ) {
     
     // Create the column.
     auto origCol = new column< uncompr_f >( origSizeUsedByte );
-    uint64_t * origData = origCol->data( );
+    uint64_t * origData = origCol->get_data( );
     for( unsigned i = 0; i < origCountValues; i++ )
         origData[ i ] = i;
-    origCol->count_values( origCountValues );
-    origCol->size_used_byte( origSizeUsedByte );
+    origCol->set_count_values( origCountValues );
+    origCol->set_size_used_byte( origSizeUsedByte );
     
     // Store the column.
     // TODO maybe we should delete the file afterwards

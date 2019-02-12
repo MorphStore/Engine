@@ -87,19 +87,19 @@ class column {
       }
 
    public:
-      inline voidptr_t data( void ) const {
+      inline voidptr_t get_data( void ) const {
          return m_Data;
       }
-      inline size_t count_values( void ) const {
+      inline size_t get_count_values( void ) const {
          return m_MetaData.m_CountLogicalValues;
       }
-      inline void count_values( size_t p_CountValues ) {
+      inline void set_count_values( size_t p_CountValues ) {
          m_MetaData.m_CountLogicalValues = p_CountValues;
       }
-      inline size_t size_used_byte( void ) const {
+      inline size_t get_size_used_byte( void ) const {
          return m_MetaData.m_SizeUsedByte;
       }
-      inline void size_used_byte( size_t p_SizeUsedByte ) {
+      inline void set_size_used_byte( size_t p_SizeUsedByte ) {
          m_MetaData.m_SizeUsedByte = p_SizeUsedByte;
       }
       inline void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte )  {
@@ -108,7 +108,7 @@ class column {
       }
       
       // Creates a perpetual column. Intended for base data.
-      static column< F > * createPerpetualColumn( size_t p_SizeAllocByte ) {
+      static column< F > * create_perpetual_column( size_t p_SizeAllocByte ) {
          return new
             (
                general_memory_manager::get_instance( ).allocate(
