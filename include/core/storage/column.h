@@ -18,12 +18,13 @@
 /**
  * @file column.h
  * @brief Brief description
- * @todo TODOS?
+ * @todo Which headers should be included to use the memory manager here?
  */
 
 #include "column_helper.h"
-
 #include "../morphing/format.h"
+#include "../utils/basic_types.h"
+#include "../utils/helper_types.h"
 
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
