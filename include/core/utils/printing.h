@@ -459,5 +459,90 @@ void print_columns(
     );
 }
 
+/**
+ * Prints five columns in the specified base, one uintX_t-word per line.
+ * @param p_Base
+ * @param p_Col1
+ * @param p_Col2
+ * @param p_Col3
+ * @param p_Col4
+ * @param p_Col5
+ * @param p_Title1
+ * @param p_Title2
+ * @param p_Title3
+ * @param p_Title4
+ * @param p_Title5
+ */
+template< typename uintX_t = uint64_t, class F1, class F2, class F3, class F4, class F5 >
+void print_columns(
+        print_buffer_base p_Base,
+        const column< F1 > * p_Col1,
+        const column< F2 > * p_Col2,
+        const column< F3 > * p_Col3,
+        const column< F4 > * p_Col4,
+        const column< F5 > * p_Col5,
+        const std::string & p_Title1 = "column 1",
+        const std::string & p_Title2 = "column 2",
+        const std::string & p_Title3 = "column 3",
+        const std::string & p_Title4 = "column 4",
+        const std::string & p_Title5 = "column 5"
+) {
+    print_buffers< uintX_t >(
+            p_Base,
+            {
+                print_buffer_info( p_Title1, p_Col1 ),
+                print_buffer_info( p_Title2, p_Col2 ),
+                print_buffer_info( p_Title3, p_Col3 ),
+                print_buffer_info( p_Title4, p_Col4 ),
+                print_buffer_info( p_Title5, p_Col5 )
+            }
+    );
+}
+
+/**
+ * Prints six columns in the specified base, one uintX_t-word per line.
+ * @param p_Base
+ * @param p_Col1
+ * @param p_Col2
+ * @param p_Col3
+ * @param p_Col4
+ * @param p_Col5
+ * @param p_Col6
+ * @param p_Title1
+ * @param p_Title2
+ * @param p_Title3
+ * @param p_Title4
+ * @param p_Title5
+ * @param p_Title6
+ */
+template< typename uintX_t = uint64_t, class F1, class F2, class F3, class F4, class F5, class F6 >
+void print_columns(
+        print_buffer_base p_Base,
+        const column< F1 > * p_Col1,
+        const column< F2 > * p_Col2,
+        const column< F3 > * p_Col3,
+        const column< F4 > * p_Col4,
+        const column< F5 > * p_Col5,
+        const column< F6 > * p_Col6,
+        const std::string & p_Title1 = "column 1",
+        const std::string & p_Title2 = "column 2",
+        const std::string & p_Title3 = "column 3",
+        const std::string & p_Title4 = "column 4",
+        const std::string & p_Title5 = "column 5",
+        const std::string & p_Title6 = "column 6"
+) {
+    print_buffers< uintX_t >(
+            p_Base,
+            {
+                print_buffer_info( p_Title1, p_Col1 ),
+                print_buffer_info( p_Title2, p_Col2 ),
+                print_buffer_info( p_Title3, p_Col3 ),
+                print_buffer_info( p_Title4, p_Col4 ),
+                print_buffer_info( p_Title5, p_Col5 ),
+                print_buffer_info( p_Title6, p_Col6 )
+            }
+    );
+}
+
 }
 #endif //MORPHSTORE_CORE_UTILS_PRINTING_H
