@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file select_test.cpp
+ * @file select_test_old.cpp
  * @brief Brief description
  * @todo TODOS?
  */
