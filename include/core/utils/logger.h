@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by Johannes Pietrzyk                                                    *
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -18,7 +18,6 @@
 /**
  * @file logger.h
  * @brief Brief description
- * @author Johannes Pietrzyk
  * @todo TODOS?
  */
 

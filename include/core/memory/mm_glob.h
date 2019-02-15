@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by Johannes Pietrzyk                                                    *
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -15,12 +15,9 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
-
 /**
  * @file mm_glob.h
- *
- * @author Johannes Pietrzyk
- *
+ * @brief ...
  * @todo What happens, if MSV_NO_SELFMANAGED_MEMORY is defined. ( take care of this in logger.h )
  */
 

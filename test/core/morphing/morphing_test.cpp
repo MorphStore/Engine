@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by Patrick Damme                                                        *
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -15,11 +15,9 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
-
 /**
  * @file morphing_test.cpp
  * @brief ...
- * @author Patrick Damme
  * @todo TODOS?
  */
 
