@@ -45,15 +45,16 @@ namespace morphstore {
 typedef const column<uncompr_f> * (*op_1in_1out)(
         const column<uncompr_f> *
 );
-typedef const column<uncompr_f> * (*op_1in_1out_val)(
+typedef const column<uncompr_f> * (*op_1in_1out_2val)(
         const column<uncompr_f> *,
-        const uint64_t
+        const uint64_t,
+        const size_t
 );
 typedef const column<uncompr_f> * (*op_2in_1out)(
         const column<uncompr_f> *,
         const column<uncompr_f> *
 );
-typedef const column<uncompr_f> * (*op_2in_1out_val)(
+typedef const column<uncompr_f> * (*op_2in_1out_1val)(
         const column<uncompr_f> *,
         const column<uncompr_f> *,
         size_t
@@ -62,16 +63,18 @@ typedef const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-(*op_1in_2out)(
-        const column<uncompr_f> *
+(*op_1in_2out_1val)(
+        const column<uncompr_f> *,
+        size_t
 );
 typedef const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-(*op_2in_2out)(
+(*op_2in_2out_1val)(
         const column<uncompr_f> *,
-        const column<uncompr_f> *
+        const column<uncompr_f> *,
+        size_t
 );
 
 // ****************************************************************************
@@ -129,18 +132,19 @@ bool test_op_1in_1out(
     return allGood;
 }
 
-bool test_op_1in_1out_val(
+bool test_op_1in_1out_2val(
         const std::string & opName,
-        op_1in_1out_val op,
+        op_1in_1out_2val op,
         const column<uncompr_f> * inCol0,
         const std::string & inCol0Name,
         const column<uncompr_f> * outCol0Exp,
         const std::string & outCol0Name,
-        uint64_t val
+        uint64_t val0,
+        size_t val1
 ) {
     print_header(opName);
     
-    auto outCol0Fnd = op(inCol0, val);
+    auto outCol0Fnd = op(inCol0, val0, val1);
     
     print_columns(
             print_buffer_base::decimal,
@@ -190,20 +194,20 @@ bool test_op_2in_1out(
     return allGood;
 }
 
-bool test_op_2in_1out_val(
+bool test_op_2in_1out_1val(
         const std::string & opName,
-        op_2in_1out_val op,
+        op_2in_1out_1val op,
         const column<uncompr_f> * inCol0,
         const column<uncompr_f> * inCol1,
         const std::string & inCol0Name,
         const std::string & inCol1Name,
         const column<uncompr_f> * outCol0Exp,
         const std::string & outCol0Name,
-        size_t val
+        size_t val0
 ) {
     print_header(opName);
     
-    auto outCol0Fnd = op(inCol0, inCol1, val);
+    auto outCol0Fnd = op(inCol0, inCol1, val0);
     
     print_columns(
             print_buffer_base::decimal,
@@ -222,21 +226,22 @@ bool test_op_2in_1out_val(
     return allGood;
 }
 
-bool test_op_1in_2out(
+bool test_op_1in_2out_1val(
         const std::string & opName,
-        op_1in_2out op,
+        op_1in_2out_1val op,
         const column<uncompr_f> * inCol0,
         const std::string & inCol0Name,
         const column<uncompr_f> * outCol0Exp,
         const column<uncompr_f> * outCol1Exp,
         const std::string & outCol0Name,
-        const std::string & outCol1Name
+        const std::string & outCol1Name,
+        size_t val0
 ) {
     print_header(opName);
     
     const column<uncompr_f> * outCol0Fnd;
     const column<uncompr_f> * outCol1Fnd;
-    std::tie(outCol0Fnd, outCol1Fnd) = op(inCol0);
+    std::tie(outCol0Fnd, outCol1Fnd) = op(inCol0, val0);
     
     print_columns(
             print_buffer_base::decimal,
@@ -258,9 +263,9 @@ bool test_op_1in_2out(
     return allGood;
 }
 
-bool test_op_2in_2out(
+bool test_op_2in_2out_1val(
         const std::string & opName,
-        op_2in_2out op,
+        op_2in_2out_1val op,
         const column<uncompr_f> * inCol0,
         const column<uncompr_f> * inCol1,
         const std::string & inCol0Name,
@@ -268,13 +273,14 @@ bool test_op_2in_2out(
         const column<uncompr_f> * outCol0Exp,
         const column<uncompr_f> * outCol1Exp,
         const std::string & outCol0Name,
-        const std::string & outCol1Name
+        const std::string & outCol1Name,
+        size_t val0
 ) {
     print_header(opName);
     
     const column<uncompr_f> * outCol0Fnd;
     const column<uncompr_f> * outCol1Fnd;
-    std::tie(outCol0Fnd, outCol1Fnd) = op(inCol0, inCol1);
+    std::tie(outCol0Fnd, outCol1Fnd) = op(inCol0, inCol1, val0);
     
     print_columns(
             print_buffer_base::decimal,

@@ -26,6 +26,7 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_JOIN_H
 
 #include "../../storage/column.h"
+#include "../../utils/basic_types.h"
 #include "../../utils/processing_style.h"
 
 #include <tuple>
@@ -45,10 +46,16 @@ namespace morphstore {
  * 
  * @param inDataLCol The left column to join on.
  * @param inDataRCol The right column to join on.
+ * @param outCountEstimate An optional estimate of the number of data
+ * elements in each of the output columns. If specified, both output columns
+ * will allocate enough memory for exactly this number of data elements.
+ * Otherwise, a pessimistic estimation will be done.
  * @return A tuple of two columns containing equally many data elements. The
  * first (second) output column contains positions referring to the left
  * (right) input column. The i-th positions in the two output columns denote
  * one matching pair.
+ * @todo Maybe the nested-loop-join should have a template for the join
+ * predicate/operation just like the selection.
  */
 template<
         processing_style_t t_ps,
@@ -63,7 +70,8 @@ const std::tuple<
 >
 nested_loop_join(
         const column<t_in_data_l_f> * const inDataLCol,
-        const column<t_in_data_r_f> * const inDataRCol
+        const column<t_in_data_r_f> * const inDataRCol,
+        const size_t outCountEstimate = 0
 );
 
 }

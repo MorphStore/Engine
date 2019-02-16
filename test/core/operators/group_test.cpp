@@ -34,7 +34,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_1in_2out(
+    test_op_1in_2out_1val(
             "Unary group",
             &group<processing_style_t::scalar, uncompr_f, uncompr_f>,
             make_column({333, 333, 111, 333, 222, 111}),
@@ -42,10 +42,11 @@ int main( void ) {
             make_column({0, 0, 1, 0, 2, 1}),
             make_column({0, 2, 4}),
             "outGrCol",
-            "outExtCol"
+            "outExtCol",
+            0 // use pessimistic output size estimation
     );
             
-    test_op_2in_2out(
+    test_op_2in_2out_1val(
             "Binary group",
             &group<processing_style_t::scalar, uncompr_f, uncompr_f>,
             make_column({0, 0, 1, 0, 2, 1}),
@@ -55,7 +56,8 @@ int main( void ) {
             make_column({0, 1, 2, 0, 3, 4}),
             make_column({0, 1, 2, 4, 5}),
             "outGrCol",
-            "outExtCol"
+            "outExtCol",
+            0 // use pessimistic output size estimation
     );
     
     return 0;

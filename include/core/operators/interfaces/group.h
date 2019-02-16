@@ -26,6 +26,7 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_GROUP_H
 
 #include "../../storage/column.h"
+#include "../../utils/basic_types.h"
 #include "../../utils/processing_style.h"
 
 #include <tuple>
@@ -44,6 +45,10 @@ namespace morphstore {
  * 
  * @param inDataCol The column to group by. Each distinct value in this column
  * yields one group in the output.
+ * @param outExtCountEstimate An optional estimate of the number of data
+ * elements in the output extents column. If specified, the output extents
+ * column will allocate enough memory for exactly this number of data elements.
+ * Otherwise, a pessimistic estimation will be done.
  * @return A tuple of two columns. The first one contains as many data elements
  * as inDataCol and its i-th data element is the group-id of the i-th data
  * element in inDataCol. The group-ids are positions referring to the second
@@ -62,7 +67,8 @@ const std::tuple<
         const column<t_out_ext_f> *
 >
 group(
-        const column<t_in_data_f> * const inDataCol
+        const column<t_in_data_f> * const inDataCol,
+        const size_t outExtCountEstimate = 0
 );
 
 /**
@@ -101,7 +107,8 @@ const std::tuple<
 >
 group(
         const column<t_in_gr_f> * const inGrCol,
-        const column<t_in_data_f> * const inDataCol
+        const column<t_in_data_f> * const inDataCol,
+        const size_t outExtCountEstimate = 0
 );
 
 }

@@ -36,7 +36,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_1in_1out_val(
+    test_op_1in_1out_2val(
             "Select",
             &morphstore::select<
                     std::less,
@@ -48,6 +48,7 @@ int main( void ) {
             "inDataCol",
             make_column({0, 3}),
             "outPosCol",
-            100
+            100,
+            0 // use pessimistic output size estimation
     );
 }

@@ -43,7 +43,7 @@ int main( void ) {
             "outDataCol"
     );
             
-    test_op_2in_1out_val(
+    test_op_2in_1out_1val(
             "Group-Based aggregation(sum)",
             &agg_sum<processing_style_t::scalar, uncompr_f>,
             make_column({0, 0, 1, 0, 2, 1}),

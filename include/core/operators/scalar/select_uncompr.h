@@ -40,15 +40,23 @@ template<template<typename> class t_op>
 struct select<t_op, processing_style_t::scalar, uncompr_f, uncompr_f> {
     static
     const column<uncompr_f> * apply(
-        const column<uncompr_f> * const inDataCol,
-        const uint64_t val
+            const column<uncompr_f> * const inDataCol,
+            const uint64_t val,
+            const size_t outPosCountEstimate = 0
     ) {
         const size_t inDataCount = inDataCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
 
-        // Pessimistic allocation size (for uncompressed data), reached only if
-        // all input data elements pass the selection.
-        auto outPosCol = new column<uncompr_f>(inDataCol->get_size_used_byte());
+        // If no estimate is provided: Pessimistic allocation size (for
+        // uncompressed data), reached only if all input data elements pass the
+        // selection.
+        auto outPosCol = new column<uncompr_f>(
+                bool(outPosCountEstimate)
+                // use given estimate
+                ? (outPosCountEstimate * sizeof(uint64_t))
+                // use pessimistic estimate
+                : inDataCol->get_size_used_byte()
+        );
         uint64_t * outPos = outPosCol->get_data();
         const uint64_t * const initOutPos = outPos;
 

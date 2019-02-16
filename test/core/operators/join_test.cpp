@@ -34,7 +34,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_2in_2out(
+    test_op_2in_2out_1val(
             "Join",
             &nested_loop_join<
                     processing_style_t::scalar,
@@ -48,7 +48,8 @@ int main( void ) {
             make_column({0, 0, 2, 3, 3}),
             make_column({1, 2, 3, 1, 2}),
             "outPosLCol",
-            "outPosRCol"
+            "outPosRCol",
+            0 // use pessimistic output size estimation
     );
             
     return 0;

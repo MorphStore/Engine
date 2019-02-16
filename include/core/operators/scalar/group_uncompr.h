@@ -48,7 +48,8 @@ const std::tuple<
 >
 group<processing_style_t::scalar>(
         const column<uncompr_f> * const inGrCol,
-        const column<uncompr_f> * const inDataCol
+        const column<uncompr_f> * const inDataCol,
+        const size_t outExtCountEstimate
 ) {
     // This implementation of the binary group-operator covers also the unary
     // case if inGrCol == nullptr .
@@ -69,9 +70,14 @@ group<processing_style_t::scalar>(
     const size_t inDataSize = inDataCol->get_size_used_byte();
     // Exact allocation size (for uncompressed data).
     auto outGrCol = new column<uncompr_f>(inDataSize);
-    // Pessimistic allocation size (for uncompressed data), reached only if
-    // there are as many groups as data elements.
-    auto outExtCol = new column<uncompr_f>(inDataSize); 
+    // If no estimate is provided: Pessimistic allocation size (for
+    // uncompressed data), reached only if there are as many groups as data
+    // elements.
+    auto outExtCol = new column<uncompr_f>(
+            bool(outExtCountEstimate)
+            ? (outExtCountEstimate * sizeof(uint64_t)) // use given estimate
+            : inDataSize // use pessimistic estimate
+    );
     uint64_t * outGr = outGrCol->get_data();
     uint64_t * outExt = outExtCol->get_data();
     const uint64_t * const initOutExt = outExt;
@@ -124,11 +130,13 @@ const std::tuple<
         const column<uncompr_f> *
 >
 group<processing_style_t::scalar>(
-        const column<uncompr_f> * const inDataCol
+        const column<uncompr_f> * const inDataCol,
+        const size_t outExtCountEstimate
 ) {
     return group<processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>(
             nullptr,
-            inDataCol
+            inDataCol,
+            outExtCountEstimate
     );
 }
 

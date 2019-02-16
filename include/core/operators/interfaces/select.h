@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_SELECT_H
 
 #include "../../storage/column.h"
+#include "../../utils/basic_types.h"
 #include "../../utils/processing_style.h"
 
 #include <cstdint>
@@ -54,6 +55,10 @@ struct select {
      * @param inDataCol The column to do the selection on.
      * @param val The constant each data element is compared to using the
      * comparison operation t_op.
+     * @param outPosCountEstimate An optional estimate of the number of data
+     * elements in the output position column. If specified, the output
+     * positions column will allocate enough memory for exactly this number of
+     * data elements. Otherwise, a pessimistic estimation will be done.
      * @return A column containing the positions of all data elements d in
      * inDataCol for which t_op(d, val) is true.
      */
@@ -61,7 +66,8 @@ struct select {
     const column<t_out_pos_f> *
     apply(
         const column<t_in_data_f> * const inDataCol,
-        const uint64_t val
+        const uint64_t val,
+        const size_t outPosCountEstimate = 0
     );
 };
 

@@ -44,7 +44,8 @@ const std::tuple<
 >
 nested_loop_join<processing_style_t::scalar>(
         const column<uncompr_f> * const inDataLCol,
-        const column<uncompr_f> * const inDataRCol
+        const column<uncompr_f> * const inDataRCol,
+        const size_t outCountEstimate
 ) {
     const size_t inDataLCount = inDataLCol->get_count_values();
     const size_t inDataRCount = inDataRCol->get_count_values();
@@ -58,7 +59,8 @@ nested_loop_join<processing_style_t::scalar>(
                 uncompr_f
         >(
                 inDataRCol,
-                inDataLCol
+                inDataLCol,
+                outCountEstimate
         );
         return std::make_tuple(std::get<1>(outPosRL), std::get<0>(outPosRL));
     }
@@ -66,11 +68,15 @@ nested_loop_join<processing_style_t::scalar>(
     const uint64_t * const inDataL = inDataLCol->get_data();
     const uint64_t * const inDataR = inDataRCol->get_data();
     
-    const size_t size = inDataLCount * inDataRCount * sizeof(uint64_t);
-    // Pessimistic allocation size (for uncompressed data), reached only if the
-    // result is the cross product of the two input columns.
+    // If no estimate is provided: Pessimistic allocation size (for
+    // uncompressed data), reached only if the result is the cross product of
+    // the two input columns.
+    const size_t size = bool(outCountEstimate)
+            // use given estimate
+            ? (outCountEstimate * sizeof(uint64_t))
+            // use pessimistic estimate
+            : (inDataLCount * inDataRCount * sizeof(uint64_t));
     auto outPosLCol = new column<uncompr_f>(size);
-    // Pessimistic allocation size (for uncompressed data), see above.
     auto outPosRCol = new column<uncompr_f>(size);
     uint64_t * const outPosL = outPosLCol->get_data();
     uint64_t * const outPosR = outPosRCol->get_data();
