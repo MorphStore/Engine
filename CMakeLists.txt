@@ -96,5 +96,6 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories( include )
 
+add_subdirectory( src )
 add_subdirectory( test )
 
