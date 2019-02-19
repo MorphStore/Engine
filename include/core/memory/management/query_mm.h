@@ -74,7 +74,7 @@ class query_memory_manager : public abstract_memory_manager {
             m_SpaceLeft = p_InitSpaceSize;
             debug( "[Query Memory Manager] - Head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
          } else {
-            wtf( "[Query Memory Manager] - Could not aquire ", p_InitSpaceSize, " Bytes ephimeral memory." );
+            wtf( "[Query Memory Manager] - Could not aquire ", p_InitSpaceSize, " Bytes query scoped memory." );
             m_GeneralMemoryManager.handle_error( );
          }
          trace( "[Query Memory Manager] - OUT. ( this: ", this, " )." );
@@ -94,7 +94,7 @@ class query_memory_manager : public abstract_memory_manager {
                "[Query Memory Manager] - No Space Left. ( Needed: ", p_AllocSize,
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
             nextExpandSize = expander.next_size( p_AllocSize );
-            trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from perpetual memory." );
+            trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
             tmp = m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
@@ -115,7 +115,7 @@ class query_memory_manager : public abstract_memory_manager {
             m_SpaceLeft -= p_AllocSize;
          } else {
             m_GeneralMemoryManager.handle_error( );
-            wtf( "[Query Memory Manager] - Could not aquire ", nextExpandSize, " Bytes ephimeral memory." );
+            wtf( "[Query Memory Manager] - Could not aquire ", nextExpandSize, " Bytes query scoped memory." );
          }
          trace( "[Query Memory Manager] - OUT. ( pointer: ", tmp, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
          return tmp;

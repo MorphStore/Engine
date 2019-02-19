@@ -65,7 +65,7 @@ int main( void ) {
     printColumn( colEphi );
     
     std::cout << "Testing a perpetual column:" << std::endl;
-    auto colPerp = column< uncompr_f >::create_perpetual_column( sizeAllocateByte );
+    auto colPerp = column<uncompr_f>::create_global_column(sizeAllocateByte);
     fillColumn( colPerp, countValues );
     printColumn( colPerp );
     

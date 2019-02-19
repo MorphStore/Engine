@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_CORE_MEMORY_STL_WRAPPER_OSTREAM_H
 #define MORPHSTORE_CORE_MEMORY_STL_WRAPPER_OSTREAM_H
 
-#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_PERPETUAL_ALLOCATOR_H
-#  error "Perpetual allocator ( allocators/perpetual_allocator.h ) has to be included before all stl_wrapper."
+#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H
+#  error "Perpetual (global scoped) allocator ( allocators/global_scope_allocator.h ) has to be included before all stl_wrapper."
 #endif
 
 #include <sstream>
@@ -34,8 +34,8 @@
 
 namespace morphstore {
 
-using ostring_stream = std::basic_ostringstream< char, std::char_traits< char >, perpetual_stdlib_allocator< char > >;
-using basic_stringbuf = std::basic_stringbuf< char, std::char_traits< char >, perpetual_stdlib_allocator< char > >;
+using ostring_stream = std::basic_ostringstream< char, std::char_traits< char >, global_scope_stdlib_allocator< char > >;
+using basic_stringbuf = std::basic_stringbuf< char, std::char_traits< char >, global_scope_stdlib_allocator< char > >;
 using basic_filebuf = std::basic_filebuf< char, std::char_traits< char > >;
 
 class outbuf : public morphstore::basic_stringbuf {

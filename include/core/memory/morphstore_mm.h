@@ -26,7 +26,7 @@
 
 #include <core/memory/global/mm_hooks.h>
 
-#include <core/memory/management/allocators/perpetual_allocator.h>
+#include <core/memory/management/allocators/global_scope_allocator.h>
 #include <core/memory/stl_wrapper/ostream.h>
 #include <core/memory/stl_wrapper/string.h>
 

@@ -55,17 +55,17 @@ class general_memory_manager : public abstract_memory_manager {
 
       ~general_memory_manager(void) {
          trace( "[General Memory Manager] - IN.  ( void )." );
-         auto * handle = m_EphimeralMemoryBinHandler.get_tail( );
-         auto * rootEphimeral = m_EphimeralMemoryBinHandler.get_root( );
-         while( handle != rootEphimeral ) {
-            debug( "[General Memory Manager] - Freeing ephimeral memory ", handle->m_BasePtr, " in Bin ", handle, "." );
+         auto * handle = m_QueryScopeMemoryBinHandler.get_tail( );
+         auto * rootQueryScope = m_QueryScopeMemoryBinHandler.get_root( );
+         while( handle != rootQueryScope ) {
+            debug( "[General Memory Manager] - Freeing query scoped memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
             handle = handle->prev();
          }
-         handle = m_PerpetualMemoryBinHandler.get_tail();
-         auto * rootPerpetual = m_PerpetualMemoryBinHandler.get_root( );
-         while (handle != rootPerpetual) {
-            debug( "[General Memory Manager] - Freeing perpetual memory ", handle->m_BasePtr, " in Bin ", handle, "." );
+         handle = m_GlobalScopeMemoryBinHandler.get_tail();
+         auto * rootGlobalScope = m_GlobalScopeMemoryBinHandler.get_root( );
+         while (handle != rootGlobalScope) {
+            debug( "[General Memory Manager] - Freeing global scoped memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
             handle = handle->prev();
          }
@@ -80,15 +80,15 @@ class general_memory_manager : public abstract_memory_manager {
                           (stdlib_malloc_ptr == nullptr)
                        ) ? init_mem_hooks() : true
          },
-         m_PerpetualMemoryBinHandler(this),
-         m_EphimeralMemoryBinHandler(this) {
+         m_GlobalScopeMemoryBinHandler(this),
+         m_QueryScopeMemoryBinHandler(this) {
          trace( "[General Memory Manager] - IN.  ( void )." );
          if (!m_Initialized)
             handle_error();
          trace(
             "[General Memory Manager] - OUT. ( this: ", this,
-            ". Perpetual Memory Bin Handler: ", &m_PerpetualMemoryBinHandler ,
-            ". Ephimeral Memory Bin Handler: ", &m_EphimeralMemoryBinHandler , " ).");
+            ". Global Scoped Memory Bin Handler: ", &m_GlobalScopeMemoryBinHandler ,
+            ". Query Scoped Memory Bin Handler: ", &m_QueryScopeMemoryBinHandler , " ).");
       }
 
    public:
@@ -99,8 +99,8 @@ class general_memory_manager : public abstract_memory_manager {
 
          debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
          if (tmp != nullptr) {
-            debug( "[General Memory Manager] - Add space to perpetual Memory Bin Handler." );
-            m_PerpetualMemoryBinHandler.append_bin(this, tmp, p_AllocSize);
+            debug( "[General Memory Manager] - Add space to global scoped Memory Bin Handler." );
+            m_GlobalScopeMemoryBinHandler.append_bin(this, tmp, p_AllocSize);
 
             size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
             size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
@@ -127,8 +127,8 @@ class general_memory_manager : public abstract_memory_manager {
          void * tmp = stdlib_malloc( p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE );
          debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
          if (tmp != nullptr) {
-            debug( "[General Memory Manager] - Add space to ephimeral Memory Bin Handler." );
-            m_EphimeralMemoryBinHandler.append_bin(p_Caller, tmp, p_AllocSize);
+            debug( "[General Memory Manager] - Add space to query scoped Memory Bin Handler." );
+            m_QueryScopeMemoryBinHandler.append_bin(p_Caller, tmp, p_AllocSize);
 
             size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
             size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
@@ -154,8 +154,8 @@ class general_memory_manager : public abstract_memory_manager {
 
       void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
-         warn( "[General Memory Manager] - @TODO: This can be done for perpetual storage. Needed to be implemented." );
-         //@todo THIS CAN BE DONE!!! FOR PERPETUAL STORAGE
+         warn( "[General Memory Manager] - @TODO: This can be done for global scoped storage. Needed to be implemented." );
+         //@todo THIS CAN BE DONE!!! FOR GLOBAL SCOPED STORAGE
       }
 
       void handle_error(void) override {
@@ -170,15 +170,15 @@ class general_memory_manager : public abstract_memory_manager {
             wtf( "[General Memory Manager] - Can not be called with static general memory manager as caller.");
             handle_error();
          }
-         auto handle = m_EphimeralMemoryBinHandler.find_last(p_Caller);
-         if (handle == m_EphimeralMemoryBinHandler.get_tail()) {
+         auto handle = m_QueryScopeMemoryBinHandler.find_last(p_Caller);
+         if (handle == m_QueryScopeMemoryBinHandler.get_tail()) {
             while (handle != nullptr) {
                trace("[General Memory Manager] - Freeing Memory ( ", handle->m_BasePtr, " ) from Bin ( ", handle, " )." );
                auto tmpHandle =
-                  m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle);
-               m_EphimeralMemoryBinHandler.set_tail(tmpHandle);
+                  m_QueryScopeMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle);
+               m_QueryScopeMemoryBinHandler.set_tail(tmpHandle);
                handle =
-                  m_EphimeralMemoryBinHandler.find_prev(
+                  m_QueryScopeMemoryBinHandler.find_prev(
                      p_Caller,
                      tmpHandle);
             }
@@ -186,9 +186,9 @@ class general_memory_manager : public abstract_memory_manager {
             while (handle != nullptr) {
                trace("[General Memory Manager] - Freeing Bin from Caller ( ", handle->m_BasePtr, " ). ");
                handle =
-                  m_EphimeralMemoryBinHandler.find_prev(
+                  m_QueryScopeMemoryBinHandler.find_prev(
                      p_Caller,
-                     m_EphimeralMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle)
+                     m_QueryScopeMemoryBinHandler.find_and_remove_reverse_until_first_other(p_Caller, handle)
                   );
             }
          }
@@ -197,8 +197,8 @@ class general_memory_manager : public abstract_memory_manager {
 
    private:
       bool m_Initialized;
-      memory_bin_handler m_PerpetualMemoryBinHandler;
-      memory_bin_handler m_EphimeralMemoryBinHandler;
+      memory_bin_handler m_GlobalScopeMemoryBinHandler;
+      memory_bin_handler m_QueryScopeMemoryBinHandler;
 
    };
 

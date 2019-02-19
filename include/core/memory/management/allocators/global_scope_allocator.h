@@ -16,17 +16,17 @@
  **********************************************************************************************/
 
 /**
- * @file perpetual_allocator.h
+ * @file global_scope_allocator.h
  * @brief Brief description
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_PERPETUAL_ALLOCATOR_H
-#define MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_PERPETUAL_ALLOCATOR_H
+#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H
+#define MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H
 
 
 #ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
-#  error "Memory Hooks ( global/mm_hooks.h ) has to be included before perpetual allocator."
+#  error "Memory Hooks ( global/mm_hooks.h ) has to be included before perpetual (global scoped) allocator."
 #endif
 
 #include <core/utils/basic_types.h>
@@ -39,7 +39,7 @@
 
 namespace morphstore {
    template< class C >
-   class perpetual_stdlib_allocator {
+   class global_scope_stdlib_allocator {
    public:
       typedef C               value_type;
       typedef C *             pointer;
@@ -53,7 +53,7 @@ namespace morphstore {
    public:
       template< class U >
       struct rebind {
-         typedef perpetual_stdlib_allocator< U > other;
+         typedef global_scope_stdlib_allocator< U > other;
       };
 
       pointer address( reference value ) const {
@@ -63,7 +63,7 @@ namespace morphstore {
          return &value;
       }
 
-      perpetual_stdlib_allocator( void ) throw( ) {
+      global_scope_stdlib_allocator( void ) throw( ) {
          if( ! (
             ( stdlib_malloc_ptr == nullptr ) ||
             ( stdlib_malloc_ptr == nullptr ) ||
@@ -74,10 +74,10 @@ namespace morphstore {
                throw( 1 );
             }
       }
-      perpetual_stdlib_allocator( const perpetual_stdlib_allocator & ) throw( ) { }
+      global_scope_stdlib_allocator( const global_scope_stdlib_allocator & ) throw( ) { }
       template< class U >
-      perpetual_stdlib_allocator( const perpetual_stdlib_allocator< U >& ) throw( ) { }
-      ~perpetual_stdlib_allocator( ) throw( ) { }
+      global_scope_stdlib_allocator( const global_scope_stdlib_allocator< U >& ) throw( ) { }
+      ~global_scope_stdlib_allocator( ) throw( ) { }
 
       size_type max_size( ) const throw( ) {
          return m_MaxSize;
@@ -105,17 +105,17 @@ namespace morphstore {
       }
    };
    template <class T1, class T2>
-   bool operator== (const perpetual_stdlib_allocator<T1>&,
-                    const perpetual_stdlib_allocator<T2>&) throw() {
+   bool operator== (const global_scope_stdlib_allocator<T1>&,
+                    const global_scope_stdlib_allocator<T2>&) throw() {
       return true;
    }
    template <class T1, class T2>
-   bool operator!= (const perpetual_stdlib_allocator<T1>&,
-                    const perpetual_stdlib_allocator<T2>&) throw() {
+   bool operator!= (const global_scope_stdlib_allocator<T1>&,
+                    const global_scope_stdlib_allocator<T2>&) throw() {
       return false;
    }
 
 
 }
 
-#endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_PERPETUAL_ALLOCATOR_H
+#endif //MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H

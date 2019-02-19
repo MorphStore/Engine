@@ -43,7 +43,7 @@ void init_data( column< uncompr_f > * const perpetualDataColumn ) {
 int main( void ) {
 
    column< uncompr_f > * perpetualDataColumn =
-      column< uncompr_f >::create_perpetual_column( LOOKUP_TEST_DATA_COUNT );
+      column<uncompr_f>::create_global_column(LOOKUP_TEST_DATA_COUNT);
    init_data( perpetualDataColumn );
 
    column< uncompr_f > ephimeralPositionColumn( 10 * sizeof( uint64_t ) );

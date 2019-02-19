@@ -33,8 +33,8 @@
 namespace morphstore {
 
 enum class storage_persistence_type {
-   PERPETUAL,
-   EPHEMERAL
+   globalScope,
+   queryScope
 };
 
 template< class F >
@@ -47,7 +47,7 @@ class column {
    public:
       // Creates an emphemeral column. Intended for intermediate results.
       column( size_t p_SizeAllocatedByte ) : column(
-         storage_persistence_type::EPHEMERAL,
+         storage_persistence_type::queryScope,
          p_SizeAllocatedByte
       ) {
          //
@@ -74,7 +74,7 @@ class column {
          m_MetaData{ 0, 0, p_SizeAllocatedByte },
          m_Data{
 #ifndef MSV_NO_SELFMANAGED_MEMORY
-            ( p_PersistenceType == storage_persistence_type::PERPETUAL )
+            ( p_PersistenceType == storage_persistence_type::globalScope )
             ? general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
             : malloc( p_SizeAllocatedByte )
 #else
@@ -106,8 +106,8 @@ class column {
          m_MetaData.m_SizeUsedByte = p_SizeUsedByte;
       }
       
-      // Creates a perpetual column. Intended for base data.
-      static column< F > * create_perpetual_column( size_t p_SizeAllocByte ) {
+      // Creates a global scoped column. Intended for base data.
+      static column< F > * create_global_column(size_t p_SizeAllocByte) {
          return new
             (
                general_memory_manager::get_instance( ).allocate(
@@ -115,7 +115,7 @@ class column {
                )
             )
             column(
-               storage_persistence_type::PERPETUAL,
+               storage_persistence_type::globalScope,
                p_SizeAllocByte
             );
       }

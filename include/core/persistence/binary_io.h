@@ -52,7 +52,7 @@ class binary_io {
                 if( !ifs.good( ) )
                     throw std::runtime_error("could not read the column meta data");
 
-                column< F > * col = column< F >::create_perpetual_column( sizeByte );
+                column< F > * col = column<F>::create_global_column(sizeByte);
 
                 ifs.read( col->get_data(), sizeByte );
                 if( !ifs.good( ) )
