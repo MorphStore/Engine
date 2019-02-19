@@ -25,9 +25,9 @@
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_GEN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_GEN_H
 
-#include "column.h"
-#include "../morphing/format.h"
-#include "../utils/basic_types.h"
+#include <core/storage/column.h>
+#include <core/morphing/format.h>
+#include <core/utils/basic_types.h>
 
 #include <algorithm>
 #include <chrono>

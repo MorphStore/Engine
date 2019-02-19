@@ -36,11 +36,11 @@
 #  define MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_MB
 #endif
 
-#include "../../utils/basic_types.h"
-#include "../../utils/helper.h"
-#include "../../utils/preprocessor.h"
+#include <core/utils/basic_types.h>
+#include <core/utils/helper.h>
+#include <core/utils/preprocessor.h>
 
-#include "utils/memory_bin_handler.h"
+#include <core/memory/management/utils/memory_bin_handler.h>
 
 
 

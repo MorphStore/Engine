@@ -22,12 +22,12 @@
  * @todo TODOS?
  */
 
-#include "../../../include/core/memory/mm_glob.h"
-#include "../../../include/core/morphing/format.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/storage/column_gen.h"
-#include "../../../include/core/utils/basic_types.h"
-#include "../../../include/core/utils/printing.h"
+#include <core/memory/mm_glob.h>
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/printing.h>
 
 #include <cstdint>
 #include <random>

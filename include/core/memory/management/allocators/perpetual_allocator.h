@@ -29,9 +29,9 @@
 #  error "Memory Hooks ( global/mm_hooks.h ) has to be included before perpetual allocator."
 #endif
 
-#include "../../../utils/basic_types.h"
-#include "../../global/mm_hooks.h"
-#include "../../../utils/preprocessor.h"
+#include <core/utils/basic_types.h>
+#include <core/utils/preprocessor.h>
+#include <core/memory/global/mm_hooks.h>
 
 #include <limits>
 //#include <cstdlib>

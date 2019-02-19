@@ -24,9 +24,9 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_SELECT_H
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_SELECT_H
 
-#include "../../storage/column.h"
-#include "../../utils/basic_types.h"
-#include "../../utils/processing_style.h"
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 

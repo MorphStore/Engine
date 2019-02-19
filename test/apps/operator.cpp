@@ -22,7 +22,7 @@
  */
 
 #include <iostream>
-#include "core/storage/storage_container_uncompressed.h"
+#include <core/storage/storage_container_uncompressed.h>
 
 int main( void ) {
 

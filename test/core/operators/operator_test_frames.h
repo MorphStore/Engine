@@ -24,11 +24,11 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_OPERATOR_TEST_FRAMES_H
 #define MORPHSTORE_CORE_OPERATORS_OPERATOR_TEST_FRAMES_H
 
-#include "../../../include/core/morphing/format.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/utils/basic_types.h"
-#include "../../../include/core/utils/equality_check.h"
-#include "../../../include/core/utils/printing.h"
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/equality_check.h>
+#include <core/utils/printing.h>
 
 #include <cstdint>
 #include <iostream>

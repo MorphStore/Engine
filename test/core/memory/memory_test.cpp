@@ -22,7 +22,7 @@
  */
 
 
-#include "../../../include/core/memory/mm_glob.h"
+#include <core/memory/mm_glob.h>
 
 
 #include <cstdio>

@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_STDLIB_H
 #define MORPHSTORE_CORE_MEMORY_GLOBAL_MM_STDLIB_H
 
-#include "../../utils/preprocessor.h"
+#include <core/utils/preprocessor.h>
 
 
 extern "C" {

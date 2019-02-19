@@ -24,28 +24,28 @@
 #ifndef MORPHSTORE_MORPHSTORE_MM_H
 #define MORPHSTORE_MORPHSTORE_MM_H
 
-#include "global/mm_hooks.h"
+#include <core/memory/global/mm_hooks.h>
 
-#include "management/allocators/perpetual_allocator.h"
-#include "stl_wrapper/ostream.h"
-#include "stl_wrapper/string.h"
+#include <core/memory/management/allocators/perpetual_allocator.h>
+#include <core/memory/stl_wrapper/ostream.h>
+#include <core/memory/stl_wrapper/string.h>
 
 
 
 #ifdef MSV_MEMORY_LEAK_CHECK
-#  include "global/leak_detection.h"
+#  include <core/memory/global/leak_detection.h>
 #endif
-#include "../utils/logger.h"
+#include <core/utils/logger.h>
 
-#include "../utils/helper_types.h"
+#include <core/utils/helper_types.h>
 
-#include "management/abstract_mm.h"
-#include "management/utils/expand_helper.h"
-#include "management/utils/memory_bin_handler.h"
-#include "management/general_mm.h"
-#include "management/query_mm.h"
+#include <core/memory/management/abstract_mm.h>
+#include <core/memory/management/utils/expand_helper.h>
+#include <core/memory/management/utils/memory_bin_handler.h>
+#include <core/memory/management/general_mm.h>
+#include <core/memory/management/query_mm.h>
 
-#include "global/mm_stdlib.h"
+#include <core/memory/global/mm_stdlib.h>
 
 
 #endif //MORPHSTORE_MORPHSTORE_MM_H

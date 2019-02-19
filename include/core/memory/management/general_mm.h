@@ -32,11 +32,11 @@
 #  error "Memory Hooks ( global/mm_hooks.h ) has to be included before general memory manager."
 #endif
 
-#include "../../utils/basic_types.h"
-#include "../../utils/helper.h"
-#include "../../utils/preprocessor.h"
+#include <core/utils/basic_types.h>
+#include <core/utils/helper.h>
+#include <core/utils/preprocessor.h>
 
-#include "utils/memory_bin_handler.h"
+#include <core/memory/management/utils/memory_bin_handler.h>
 
 namespace morphstore {
 

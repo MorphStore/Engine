@@ -24,10 +24,10 @@
 #ifndef MORPHSTORE_CORE_PERSISTENCE_BINARY_IO_H
 #define MORPHSTORE_CORE_PERSISTENCE_BINARY_IO_H
 
-#include "../memory/mm_glob.h"
-#include "../morphing/format.h"
-#include "../storage/column.h"
-#include "../storage/column_helper.h"
+#include <core/memory/mm_glob.h>
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
+#include <core/storage/column_helper.h>
 
 #include <cstdint>
 #include <fstream>

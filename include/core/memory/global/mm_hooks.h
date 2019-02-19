@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
 #define MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
 
-#include "../../utils/preprocessor.h"
+#include <core/utils/preprocessor.h>
 
 //#define MSV_DEBUG_MALLOC
 

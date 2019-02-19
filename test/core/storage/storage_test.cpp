@@ -21,9 +21,9 @@
  * @todo TODOS?
  */
 
-#include "../../../include/core/memory/mm_glob.h"
-#include "../../../include/core/morphing/format.h"
-#include "../../../include/core/storage/column.h"
+#include <core/memory/mm_glob.h>
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
 
 #include <cstddef>
 #include <cstdio>

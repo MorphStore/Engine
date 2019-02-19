@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_UTILS_MATH_H
 #define MORPHSTORE_CORE_UTILS_MATH_H
 
-#include "basic_types.h"
+#include <core/utils/basic_types.h>
 
 #include <cstdint>
 

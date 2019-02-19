@@ -24,9 +24,8 @@
 #ifndef MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 #define MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 
-#include "format.h"
-
-#include "../storage/column.h"
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
 
 #include <cstddef>
 #include <cstdint>

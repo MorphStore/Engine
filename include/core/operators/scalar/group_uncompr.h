@@ -26,11 +26,11 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_GROUP_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_SCALAR_GROUP_UNCOMPR_H
 
-#include "../interfaces/group.h"
-#include "../../morphing/format.h"
-#include "../../storage/column.h"
-#include "../../utils/basic_types.h"
-#include "../../utils/processing_style.h"
+#include <core/operators/interfaces/group.h>
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <map>

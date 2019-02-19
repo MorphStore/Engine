@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_H
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_H
 
-#include "../../storage/column.h"
-#include "../../utils/processing_style.h"
+#include <core/storage/column.h>
+#include <core/utils/processing_style.h>
 
 namespace morphstore {
     

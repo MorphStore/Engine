@@ -27,11 +27,11 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_UNCOMPR_H
 
-#include "../interfaces/agg_sum.h"
-#include "../../morphing/format.h"
-#include "../../storage/column.h"
-#include "../../utils/basic_types.h"
-#include "../../utils/processing_style.h"
+#include <core/operators/interfaces/agg_sum.h>
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <stdexcept>

@@ -26,7 +26,7 @@
 
 #include "cmake_template.h"
 
-#include "../memory/stl_wrapper/ostream.h"
+#include <core/memory/stl_wrapper/ostream.h>
 
 #include <array>
 

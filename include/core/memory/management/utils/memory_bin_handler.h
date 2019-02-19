@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_MEMORY_BIN_HANDLER_H
 
-#include "../../../utils/logger.h"
+#include <core/utils/logger.h>
 
 namespace morphstore {
 

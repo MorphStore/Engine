@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_EXPAND_HELPER_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_UTILS_EXPAND_HELPER_H
 
-#include "../../../utils/basic_types.h"
-#include "../../../utils/math.h"
+#include <core/utils/basic_types.h>
+#include <core/utils/math.h>
 
 #include <cassert>
 

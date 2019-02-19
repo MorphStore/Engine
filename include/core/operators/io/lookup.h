@@ -24,9 +24,9 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_IO_LOOKUP_H
 #define MORPHSTORE_CORE_OPERATORS_IO_LOOKUP_H
 
-#include "../../storage/column.h"
-#include "../../morphing/static_vbp.h"
-#include "../../utils/math.h"
+#include <core/storage/column.h>
+#include <core/morphing/static_vbp.h>
+#include <core/utils/math.h>
 #include <cassert>
 
 namespace morphstore {

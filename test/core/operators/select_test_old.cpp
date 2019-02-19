@@ -21,11 +21,11 @@
  * @todo TODOS?
  */
 
-#include "../../include/core/memory/mm_glob.h"
-#include "../../include/core/persistence/binary_io.h"
-#include "../../include/core/storage/column.h"
-#include "../../include/core/utils/equality_check.h"
-#include "../../include/core/morphing/static_vbp.h"
+#include <core/memory/mm_glob.h>
+#include <core/persistence/binary_io.h>
+#include <core/storage/column.h>
+#include <core/utils/equality_check.h>
+#include <core/morphing/static_vbp.h>
 
 #include <cstddef>
 #include <cstdint>

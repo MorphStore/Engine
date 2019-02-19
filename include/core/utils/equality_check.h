@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_CORE_UTILS_EQUALITY_CHECK_H
 #define MORPHSTORE_CORE_UTILS_EQUALITY_CHECK_H
 
-#include "../morphing/format.h"
-#include "../storage/column.h"
+#include <core/morphing/format.h>
+#include <core/storage/column.h>
 
 #include <algorithm>
 #include <cstring>

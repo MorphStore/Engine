@@ -22,14 +22,14 @@
  */
 
 // This must be included first to allow compilation.
-#include "../../../include/core/memory/mm_glob.h"
+#include <core/memory/mm_glob.h>
 
 #include "operator_test_frames.h"
-#include "../../../include/core/morphing/format.h"
-#include "../../../include/core/operators/scalar/agg_sum_uncompr.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/storage/column_gen.h"
-#include "../../../include/core/utils/processing_style.h"
+#include <core/morphing/format.h>
+#include <core/operators/scalar/agg_sum_uncompr.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <core/utils/processing_style.h>
 
 using namespace morphstore;
 

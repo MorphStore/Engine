@@ -26,12 +26,12 @@
 
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 #  ifndef MSV_MEMORY_MANAGER_ALIGNMENT_BYTE
-#     include "../utils/helper.h"
+#     include <core/utils/helper.h>
 #     define MSV_MEMORY_MANAGER_ALIGNMENT_BYTE 64_B
 #  endif
 #  define MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE (MSV_MEMORY_MANAGER_ALIGNMENT_BYTE-1)
 
-#  include "morphstore_mm.h"
+#  include <core/memory/morphstore_mm.h>
 #endif
 
 

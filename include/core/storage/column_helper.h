@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_HELPER_H
 
-#include "../utils/basic_types.h"
-#include "../utils/logger.h"
+#include <core/utils/basic_types.h>
+#include <core/utils/logger.h>
 
 namespace morphstore {
 

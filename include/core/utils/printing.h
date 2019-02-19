@@ -24,9 +24,9 @@
 #ifndef MORPHSTORE_CORE_UTILS_PRINTING_H
 #define MORPHSTORE_CORE_UTILS_PRINTING_H
 
-#include "../storage/column.h"
-#include "../utils/math.h"
-#include "../utils/basic_types.h"
+#include <core/storage/column.h>
+#include <core/utils/math.h>
+#include <core/utils/basic_types.h>
 
 #include <cmath>
 #include <cstdint>

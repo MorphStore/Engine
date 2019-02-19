@@ -21,9 +21,9 @@
  * @todo TODOS?
  */
 
-#include "../../../include/core/memory/mm_glob.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/operators/aggregation/summation.h"
+#include <core/memory/mm_glob.h>
+#include <core/storage/column.h>
+#include <core/operators/aggregation/summation.h>
 
 #include <iostream>
 

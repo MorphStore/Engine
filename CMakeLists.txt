@@ -81,6 +81,7 @@ file( WRITE recentMorphStoreProjectConf.log ${MorphStoreProjectConf} )
 
 ########### Checking Defines />
 
+include_directories( ${PROJECT_SOURCE_DIR}/include )
 
 add_definitions("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
 add_definitions("-DGIT_BRANCH=${GIT_BRANCH}")

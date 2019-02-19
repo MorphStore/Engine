@@ -21,11 +21,11 @@
  * @todo TODOS?
  */
 
-#include "../../../include/core/memory/mm_glob.h"
-#include "../../../include/core/morphing/format.h"
-#include "../../../include/core/morphing/static_vbp.h"
-#include "../../../include/core/storage/column.h"
-#include "../../../include/core/utils/printing.h"
+#include <core/memory/mm_glob.h>
+#include <core/morphing/format.h>
+#include <core/morphing/static_vbp.h>
+#include <core/storage/column.h>
+#include <core/utils/printing.h>
 
 #include <cstdint>
 #include <unordered_map>

@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_AGGREGATION_LOOKUP_H
 #define MORPHSTORE_CORE_OPERATORS_AGGREGATION_LOOKUP_H
 
-#include "../../storage/column.h"
+#include <core/storage/column.h>
 
 #include "immintrin.h"
 
