@@ -7,3 +7,5 @@ release/
 build_clion/
 binary_io_test__testcol123
 recentMorphStoreProjectConf.log
+Dockerfile
+.DS_Store

@@ -1,0 +1,8 @@
+# COPY Dockerfile.template
+cp Dockerfile.template Dockerfile
+
+# Build-Phase
+docker build -t morphstore .
+
+# Run Docker in an interactive mode
+docker run -v host_dir:/morphstore -it morphstore bash
