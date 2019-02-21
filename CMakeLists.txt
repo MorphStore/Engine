@@ -19,6 +19,8 @@ execute_process(
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+set( LOG_FILE "recentMorphStoreProjectConf.log" )
+
 ########### <Checking Defines
 set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
 
@@ -77,7 +79,7 @@ else ( DEFINED QMMMES )
 endif ( DEFINED QMMMES )
 
 MESSAGE( ${MorphStoreProjectConf} )
-file( WRITE recentMorphStoreProjectConf.log ${MorphStoreProjectConf} )
+file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
 ########### Checking Defines />
 
@@ -98,5 +100,10 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 include_directories( include )
 
 add_subdirectory( src )
-add_subdirectory( test )
 
+if ( RUN_CTESTS )
+	MESSAGE( "Running CTets has been enabled" )
+	include(CTest)
+	add_subdirectory( test )
+endif( RUN_CTESTS )	
+	

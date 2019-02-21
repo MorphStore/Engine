@@ -1,4 +1,9 @@
 #!/bin/bash
+function is_power_of_two () {
+    declare -i n=$1
+    (( n > 0 && (n & (n - 1)) == 0 ))
+}
+
 function printHelp {
 	echo "build.sh -buildMode [-loggerControl] [-memory] [-jN]"
 	echo "buildMode:"
@@ -25,6 +30,22 @@ function printHelp {
 	echo ""
 	echo "	-jN:"
 	echo "	     N > 0 sets the number of parallel make jobs"
+	echo ""
+	echo "sanity:"
+	echo "	-tA|--testAll"
+	echo "	     Runs CTest for all layers"
+	echo "	-tMm|--testMem"
+	echo "	     Runs CTest for the memory manager"
+	echo "	-tMo|--testMorph"
+	echo "	     Runs CTest for the morphing layer"
+	echo "	-tOp|--testOps"
+	echo "	     Runs CTest for the operators"
+	echo "	-tPe|--testPers"
+	echo "	     Runs CTest for the persistence layer"
+	echo "	-tSt|--testStorage"
+	echo "	     Runs CTest for the storage layer"
+	echo "	-tUt|--testUtils"
+	echo "	     Runs CTest for some utilities"
 }
 
 buildType=""
@@ -37,6 +58,14 @@ debugMalloc="-UDEBUG_MALLOC"
 selfManagedMemory="-UNO_SELF_MANAGING"
 qmmes="-UQMMMES"
 checkForLeaks="-UCHECK_LEAKING"
+runCtest=false
+testAll="-DCTEST_ALL=False"
+testMemory="-DCTEST_MEMORY=False"
+testMorph="-DCTEST_MORPHING=False"
+testOps="-DCTEST_OPERATORS=False"
+testPers="-DCTEST_PERSISTENCE=False"
+testStorage="-DCTEST_STORAGE=False"
+testUtils="-DCTEST_UTILS=False"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -71,11 +100,19 @@ case $key in
 	shift # past argument
 	;;
 	-queryMinMemEx)
+	if ! is_power_of_two $2; then
+		echo "queryMinMemEx is not a power of 2, exiting."
+		exit -1
+	fi
 	qmmes="-DQMMMES=$2"
 	shift
 	shift
 	;;
 	--alignment)
+	if ! is_power_of_two $2; then
+		echo "Memory Manager alignment is not a power of 2, exiting"
+		exit -1
+	fi
 	setMemoryAlignment="-DMMGR_ALIGN=$2"
 	shift
 	shift
@@ -90,11 +127,50 @@ case $key in
 	buildMode="-DCMAKE_BUILD_TYPE=Release"
 	shift # past argument
 	;;
+	-tA|--testAll)
+	runCtest=true
+	testAll="-DCTEST_ALL=True"
+	shift # past argument
+	;;
+	-tMm|--testMem)
+	runCtest=true
+	testMemory="-DCTEST_MEMORY=True"
+	shift # past argument
+	;;
+	-tMo|--testMorph)
+	runCtest=true
+	testMorph="-DCTEST_MORPHING=True"
+	shift # past argument
+	;;
+	-tOp|--testOps)
+	runCtest=true
+	testOps="-DCTEST_OPERATORS=True"
+	shift # past argument
+	;;
+	-tPe|--testPers)
+	runCtest=true
+	testPers="-DCTEST_PERSISTENCE=True"
+	shift # past argument
+	;;
+	-tSt|--testStorage)
+	runCtest=true
+	testStorage="-DCTEST_STORAGE=True"
+	shift # past argument
+	;;
+	-tUt|--testUtils)
+	runCtest=true
+	testUtils="-DCTEST_UTILS=True"
+	shift # past argument
+	;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
 	then
 		printf "%s: Unknown option\n" $1
+		if [[ $1 == *"="* ]]; then
+		  echo "Value assignment is done without the equality sign, use a space! E.g. --alignment 256"
+		fi
+		exit -1
 	else
 		re='^-j[1-9][0-9]*$'
 		if ! [[ $1 =~ $re ]];
@@ -118,6 +194,17 @@ fi
 
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
+if [ "$runCtest" = true ] ; then
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils"
+	echo "AddTest String: $addTests"
+fi
+
+echo "My Build String: cmake  $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $addTests -G Unix Makefiles ../"
+
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $addTests -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel
+
+if [ "$runCtest" = true ] ; then
+	cd build && ctest
+fi
