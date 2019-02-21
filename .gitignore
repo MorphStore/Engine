@@ -9,3 +9,5 @@ binary_io_test__testcol123
 recentMorphStoreProjectConf.log
 Dockerfile
 .DS_Store
+doc/doxygen/latex
+doc/doxygen/html
