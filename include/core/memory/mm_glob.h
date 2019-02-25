@@ -23,7 +23,6 @@
 
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
-
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 #  ifndef MSV_MEMORY_MANAGER_ALIGNMENT_BYTE
 #     include <core/utils/helper.h>
