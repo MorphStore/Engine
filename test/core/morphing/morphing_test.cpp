@@ -140,5 +140,5 @@ int main( void ) {
     
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
     
-    return 0;
+    return !allGood;
 }

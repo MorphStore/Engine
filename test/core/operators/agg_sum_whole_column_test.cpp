@@ -16,8 +16,9 @@
  **********************************************************************************************/
 
 /**
- * @file agg_sum_test.cpp
- * @brief A little test/reference of the aggregation(sum)-operator.
+ * @file agg_sum_whole_column_test.cpp
+ * @brief A little test/reference of the whole-column
+ * aggregation(sum)-operator.
  * @todo TODOS?
  */
 
@@ -34,7 +35,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_1in_1out(
+    const bool allGood = test_op_1in_1out(
             "Whole-column aggregation(sum)",
             &agg_sum<processing_style_t::scalar>,
             make_column({100, 150, 50, 500, 200, 100}),
@@ -42,18 +43,6 @@ int main( void ) {
             make_column({1100}),
             "outDataCol"
     );
-            
-    test_op_2in_1out_1val(
-            "Group-Based aggregation(sum)",
-            &agg_sum<processing_style_t::scalar, uncompr_f>,
-            make_column({0, 0, 1, 0, 2, 1}),
-            make_column({100, 150, 50, 500, 200, 100}),
-            "inGrCol",
-            "inDataCol",
-            make_column({750, 150, 200}),
-            "outDataCol",
-            3
-    );
     
-    return 0;
+    return !allGood;
 }

@@ -16,46 +16,35 @@
  **********************************************************************************************/
 
 /**
- * @file binary_io_test.cpp
- * @brief A short test and example usage of persistence::binary_io .
+ * @file group_unary_test.cpp
+ * @brief A little test/reference of the unary group-operator.
  * @todo TODOS?
  */
 
+// This must be included first to allow compilation.
 #include <core/memory/mm_glob.h>
-#include <core/persistence/binary_io.h>
-#include <core/storage/column.h>
-#include <core/utils/equality_check.h>
 
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
+#include "operator_test_frames.h"
+#include <core/morphing/format.h>
+#include <core/operators/scalar/group_uncompr.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <core/utils/processing_style.h>
 
 using namespace morphstore;
 
-int main( void ) {
-    // Parameters.
-    const size_t origCountValues = 100 * 1000;
-    const size_t origSizeUsedByte = origCountValues * sizeof( uint64_t );
-    const std::string fileName = "binary_io_test__testcol123";
+int main(void) {
+    const bool allGood = test_op_1in_2out_1val(
+            "Unary group",
+            &group<processing_style_t::scalar, uncompr_f, uncompr_f>,
+            make_column({333, 333, 111, 333, 222, 111}),
+            "inDataCol",
+            make_column({0, 0, 1, 0, 2, 1}),
+            make_column({0, 2, 4}),
+            "outGrCol",
+            "outExtCol",
+            0 // use pessimistic output size estimation
+    );
     
-    // Create the column.
-    auto origCol = new column< uncompr_f >( origSizeUsedByte );
-    uint64_t * origData = origCol->get_data( );
-    for( unsigned i = 0; i < origCountValues; i++ )
-        origData[ i ] = i;
-    origCol->set_count_values( origCountValues );
-    origCol->set_size_used_byte( origSizeUsedByte );
-    
-    // Store the column.
-    // TODO maybe we should delete the file afterwards
-    binary_io< uncompr_f >::store( origCol, fileName );
-    
-    // Reload the column and compare it to the original one.
-    auto reloCol = binary_io< uncompr_f >::load( fileName );
-    
-    // Compare the original column to the reloaded column.
-    const equality_check eq(origCol, reloCol);
-    std::cout << eq;
-    
-    return !eq.good();
+    return !allGood;
 }

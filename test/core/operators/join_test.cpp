@@ -34,7 +34,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_2in_2out_1val(
+    const bool allGood = test_op_2in_2out_1val(
             "Join",
             &nested_loop_join<
                     processing_style_t::scalar,
@@ -52,5 +52,5 @@ int main( void ) {
             0 // use pessimistic output size estimation
     );
             
-    return 0;
+    return !allGood;
 }

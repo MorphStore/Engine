@@ -34,7 +34,7 @@
 using namespace morphstore;
 
 int main( void ) {
-    test_op_2in_1out(
+    const bool allGood = test_op_2in_1out(
             "Project",
             &project<processing_style_t::scalar, uncompr_f>,
             make_column({11, 44, 22, 33, 11}),
@@ -45,5 +45,5 @@ int main( void ) {
             "outPosCol"
     );
     
-    return 0;
+    return !allGood;
 }
