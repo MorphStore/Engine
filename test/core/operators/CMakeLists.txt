@@ -6,6 +6,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( group_unary_test_app group_unary_test.cpp )
 	add_executable( intersect_test_app intersect_test.cpp )
 	add_executable( join_test_app join_test.cpp )
+	add_executable( merge_test_app merge_test.cpp )
 	add_executable( project_test_app project_test.cpp )
 	add_executable( select_test_app select_test.cpp )
 	add_executable( operation_lookup_test_app lookup_test.cpp )
@@ -65,6 +66,15 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( join_test_app PRIVATE "-ldl" )
 	
+	target_compile_options( merge_test_app PRIVATE
+	        -Werror
+	        -Wall
+	        -Wextra
+	        -pedantic
+	        -fstack-protector-all
+	        $<$<CONFIG:DEBUG>:-DDEBUG> )
+	target_link_libraries( merge_test_app PRIVATE "-ldl" )
+	
 	target_compile_options( project_test_app PRIVATE
 	        -Werror
 	        -Wall
@@ -108,6 +118,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_test( group_unary_test group_unary_test_app )
 	add_test( intersect_test intersect_test_app )
 	add_test( join_test join_test_app )
+	add_test( merge_test merge_test_app )
 	add_test( project_test project_test_app )
 	add_test( select_test select_test_app )
 	add_test( operation_lookup_test operation_lookup_test_app )
