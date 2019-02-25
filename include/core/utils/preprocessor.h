@@ -80,6 +80,18 @@
 #  endif
 #endif
 
+#ifndef MSV_CXX_ATTRIBUTE_LIKELY
+#  if defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_LIKELY(x) __builtin_expect(!!(x), 1)
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_UNLIKELY
+#  if defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#  endif
+#endif
+
 #ifndef __THROW
 #  define __THROW
 #endif
