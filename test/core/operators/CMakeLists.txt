@@ -2,6 +2,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	MESSAGE( "Building test, TESTING OPERATORS " )
 	add_executable( agg_sum_group_based_test_app agg_sum_group_based_test.cpp )
 	add_executable( agg_sum_whole_column_test_app agg_sum_whole_column_test.cpp )
+	add_executable( calc_binary_test_app calc_binary_test.cpp )
+	add_executable( calc_unary_test_app calc_unary_test.cpp )
 	add_executable( group_binary_test_app group_binary_test.cpp )
 	add_executable( group_unary_test_app group_unary_test.cpp )
 	add_executable( intersect_test_app intersect_test.cpp )
@@ -29,6 +31,24 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	        -fstack-protector-all
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( agg_sum_whole_column_test_app PRIVATE "-ldl" )
+	
+	target_compile_options( calc_binary_test_app PRIVATE
+	        -Werror
+	        -Wall
+	        -Wextra
+	        -pedantic
+	        -fstack-protector-all
+	        $<$<CONFIG:DEBUG>:-DDEBUG> )
+	target_link_libraries( calc_binary_test_app PRIVATE "-ldl" )
+	
+	target_compile_options( calc_unary_test_app PRIVATE
+	        -Werror
+	        -Wall
+	        -Wextra
+	        -pedantic
+	        -fstack-protector-all
+	        $<$<CONFIG:DEBUG>:-DDEBUG> )
+	target_link_libraries( calc_unary_test_app PRIVATE "-ldl" )
 	
 	target_compile_options( group_binary_test_app PRIVATE
 	        -Werror
@@ -114,6 +134,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	
 	add_test( agg_sum_group_based_test agg_sum_group_based_test_app )
 	add_test( agg_sum_whole_column_test agg_sum_whole_column_test_app )
+	add_test( calc_binary_test calc_binary_test_app )
+	add_test( calc_unary_test calc_unary_test_app )
 	add_test( group_binary_test group_binary_test_app )
 	add_test( group_unary_test group_unary_test_app )
 	add_test( intersect_test intersect_test_app )
