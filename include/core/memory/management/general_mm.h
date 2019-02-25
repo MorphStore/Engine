@@ -53,7 +53,7 @@ class general_memory_manager : public abstract_memory_manager {
 
       general_memory_manager &operator=(general_memory_manager const &) = delete;
 
-      ~general_memory_manager(void) {
+      virtual ~general_memory_manager(void) {
          trace( "[General Memory Manager] - IN.  ( void )." );
          auto * handle = m_QueryScopeMemoryBinHandler.get_tail( );
          auto * rootQueryScope = m_QueryScopeMemoryBinHandler.get_root( );
@@ -74,6 +74,7 @@ class general_memory_manager : public abstract_memory_manager {
 
    private:
       general_memory_manager(void) :
+         abstract_memory_manager{},
          m_Initialized{(
                           (stdlib_malloc_ptr == nullptr) ||
                           (stdlib_malloc_ptr == nullptr) ||

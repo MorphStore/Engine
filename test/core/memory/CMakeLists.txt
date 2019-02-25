@@ -9,6 +9,6 @@ if ( CTEST_ALL OR CTEST_MEMORY )
 	                        -fstack-protector-all
 	                        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( memory_test_app PRIVATE "-ldl" )
-	
+
 	add_test( memory_test memory_test_app )
 endif()

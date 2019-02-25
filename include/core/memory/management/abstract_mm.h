@@ -28,7 +28,7 @@ namespace morphstore {
 class abstract_memory_manager {
    public:
 
-      virtual ~abstract_memory_manager() = default;
+      virtual ~abstract_memory_manager() {}
       virtual void *allocate(size_t) = 0;
 
       virtual void *allocate(abstract_memory_manager *const, size_t) = 0;

@@ -55,7 +55,10 @@ void *malloc(size_t p_AllocSize) __THROW {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void free(void *p_FreePtr) __THROW {
-   morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);
+   if( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive() )
+      morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);
+   else
+      morphstore::stdlib_free_ptr( p_FreePtr );
 }
 #elif defined( MSV_DEBUG_MALLOC )
 /**
@@ -93,7 +96,10 @@ void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char 
  */
 void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
    fprintf( stdout, "[MEM  ]: %s [Managed Free] - %p [ %s - Line %d ].\n", func, p_FreePtr, file, line );
-   morphstore::query_memory_manager::get_instance( ).deallocate( p_FreePtr );
+   if( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive() )
+      morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);
+   else
+      morphstore::stdlib_free_ptr( p_FreePtr );
 }
 #  define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
 #  define free( X ) debug_free( X, __FILE__, __LINE__, __FUNCTION__ )

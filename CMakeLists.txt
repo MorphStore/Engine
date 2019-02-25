@@ -103,7 +103,8 @@ add_subdirectory( src )
 
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTets has been enabled" )
-	include(CTest)
+   #	include(CTest)
+   enable_testing()
 	add_subdirectory( test )
-endif( RUN_CTESTS )	
-	
+endif( RUN_CTESTS )
+

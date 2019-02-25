@@ -43,8 +43,34 @@
 #include <core/memory/management/utils/memory_bin_handler.h>
 
 
-
 namespace morphstore {
+
+class query_memory_manager_state_helper {
+   private:
+      bool m_Alive;
+      query_memory_manager_state_helper( ) :
+         m_Alive{ false } { }
+      void set_alive( bool p_Alive ) {
+         trace( "[Query Memory Manager State Helper] - IN.  ( ", p_Alive, " )." );
+         trace( "[Query Memory Manager State Helper] - Current state: ", m_Alive, "." );
+         m_Alive = p_Alive;
+         trace( "[Query Memory Manager State Helper] - OUT. ( void )." );
+      }
+      friend class query_memory_manager;
+   public:
+      static query_memory_manager_state_helper & get_instance(void) {
+         trace( "[Query Memory Manager State Helper] - IN.  ( void )." );
+         static thread_local query_memory_manager_state_helper instance;
+         trace( "[Query Memory Manager State Helper] - OUT. ( Instance: ", &instance, " )." );
+         return instance;
+      }
+      bool is_alive(void) const {
+         trace( "[Query Memory Manager State Helper] - IN.  ( void )." );
+         trace( "[Query Memory Manager State Helper] - OUT. ( ", m_Alive, " )." );
+         return m_Alive;
+      }
+};
+
 
 class query_memory_manager : public abstract_memory_manager {
    public:
@@ -57,12 +83,15 @@ class query_memory_manager : public abstract_memory_manager {
 
       query_memory_manager( query_memory_manager const & ) = delete;
       void operator=( query_memory_manager const & ) = delete;
-      ~query_memory_manager( void ) {
+      virtual ~query_memory_manager( void ) {
          trace( "[Query Memory Manager] - IN.  ( this: ", this, " ).");
          m_GeneralMemoryManager.destroy( this );
+         query_memory_manager_state_helper::get_instance().set_alive( false );
+         trace( "[Query Memory Manager] - OUT.");
       }
    private:
       explicit query_memory_manager( size_t p_InitSpaceSize ) :
+         abstract_memory_manager{},
          m_GeneralMemoryManager{ general_memory_manager::get_instance( ) },
          m_CurrentPtr{ nullptr },
          m_SpaceLeft{ 0 } {
@@ -73,8 +102,9 @@ class query_memory_manager : public abstract_memory_manager {
             m_CurrentPtr = tmp;
             m_SpaceLeft = p_InitSpaceSize;
             debug( "[Query Memory Manager] - Head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
+            query_memory_manager_state_helper::get_instance().set_alive( true );
          } else {
-            wtf( "[Query Memory Manager] - Could not aquire ", p_InitSpaceSize, " Bytes query scoped memory." );
+            wtf( "[Query Memory Manager] - query_memory_managerCould not aquire ", p_InitSpaceSize, " Bytes query scoped memory." );
             m_GeneralMemoryManager.handle_error( );
          }
          trace( "[Query Memory Manager] - OUT. ( this: ", this, " )." );

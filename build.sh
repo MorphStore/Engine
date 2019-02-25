@@ -69,9 +69,9 @@ testUtils="-DCTEST_UTILS=False"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
-then 
+then
 	makeParallel="-j$((numCores - 1))"
-	
+
 fi
 
 
@@ -206,5 +206,5 @@ cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debug
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
-	cd build && ctest
+	cd build && ctest --output-on-failure #--extra-verbose
 fi
