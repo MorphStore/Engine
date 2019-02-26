@@ -95,8 +95,6 @@ configure_file(
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
-
-
 include_directories( include )
 
 add_subdirectory( src )
@@ -107,4 +105,3 @@ if ( RUN_CTESTS )
    enable_testing()
 	add_subdirectory( test )
 endif( RUN_CTESTS )
-
