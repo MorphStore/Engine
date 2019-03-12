@@ -26,20 +26,27 @@ We try to abstract vectorized computation with its low-level intrinsics api and 
 Thus there is an abstract vector-register struct (vector/general_vector.h):
 ```
 1    template<uint16_t BitWidth, typename T>
-2    struct vector_reg {
+2    struct vector_view {
 3      static constexpr uint16_t size_b = BitWidth / 8;
 4      static constexpr uint16_t element_count = size_b / sizeof(T);
 5   };
 ```
+The template parameter `BitWidth` denotes the size of a specific vector register in bit. `T` denotes the basetype which should be processed with this type.
+`T` has to be an arithmetic type like `int`, `float` etc.
+___
+#####Usage
 This helper struct can be used for simple arithmetic tasks and facilitates templated access.
-A Vector register holding up to 128-bit data is a specialization of `vector_reg`:
+A Vector register holding up to 128-bit data is a specialization of `vector_view`:
 ```
 1    template<typename T>
-2    using v128 = vector_reg<128, T>;
+2    using v128 = vector_view<128, T>;
 ```
-
+___
 ####Vector Extensions
-To realize template function wrappers for low-level intrinsics we use another helper struct per available vector extension (vector/simd/extension.h):
+To realize template function wrappers for low-level intrinsics we use another helper struct per available vector extension (vector/simd/extension.h see below):
+
+First of all we are focusing on arithmetic types (see line 3 ). To query the number of elements or the size of a vector register the helper struct `vector_helper_t` can be used (see line 4).
+In addition the depicted sse-struct provides a vector type `vector_t`. The underlying type of `vector_t` depends on the specified basetype T. For integral types (like `uint8_t, uint32_t, uint64_t,...`), `vetor_t` is `__m128i` (see line 9). If the basetype is float then `vector_t` will be `__m128`, `__m128d` for double respectively.
 ```
  1   template<typename T>
  2   struct sse< v128< T > > {
@@ -61,10 +68,8 @@ To realize template function wrappers for low-level intrinsics we use another he
 18      using mask_t = uint16_t;
 19   };
 ```
-First of all we are focusing on arithmetic types (see line 3 ). To query the number of elements or the size of a vector register the helper struct `vector_helper_t` can be used (see line 4).
-In addition the depicted sse-struct provides a vector type `vector_t`. The underlying type of `vector_t` depends on the specified basetype T. For integral types (like `uint8_t, uint32_t, uint64_t,...`), `vetor_t` is `__m128i` (see line 9). If the basetype is float then `vector_t` will be `__m128`, `__m128d` for double respectively.
 
-Implementing
+How to implement functionality for the VectorLib 
 ------------------
 
 ####Primitives
@@ -80,7 +85,7 @@ a partial specialization can be used. **Watch out:** partial specialization is *
 One of the main drawbacks with structs is that c++-standard prohibits static functors ( `static operator()` ). To avoid the need of instantiating the particular
 struct aside passing a `this` pointer and so on an additional member method has to be used. Maybe this can be shortened for ease of use.
 
-If a primitive shall be fully specialized, an ordinary global function can be used.
+If a primitive shall be fully specialized, an ordinary global function can be used. In the following example a quite simple load primitives is shown. `iov::ALIGNED` is the Input/Ouput variant which can be found using SIMDI regarding the cache alignment. `IOGranularity` is just a number, denotating the size of loaded elements. 
 
 ```
  1    template<typename T, int IOGranularity>

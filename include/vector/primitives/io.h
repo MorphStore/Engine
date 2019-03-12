@@ -20,7 +20,7 @@ namespace vector {
    };
 
    template<class VectorExtension, iov IOVariant, int IOGranularity>
-   struct load;
+   struct io;
 
 }
 #endif //MORPHSTORE_VECTOR_PRIMITIVES_IO_H
