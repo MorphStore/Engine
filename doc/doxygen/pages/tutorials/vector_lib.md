@@ -38,7 +38,7 @@ Usage
 </div>
 
 
-How to implement additonal functionality for the VectorLib 
+How to implement additional functionality for the VectorLib 
 ------------------
 
 ####Primitives

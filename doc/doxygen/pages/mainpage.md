@@ -21,8 +21,8 @@ This section is designed to hand a plan to staff members and students, who never
 <div class="ToDo">Sinnvolle Struktur für die Doku?</div>
 Each section/tutorial is roughly divided into 3 parts:
 - **Usage:** How can the described feature be used by the end-user (i.e. the one writing a query)
-- **How to extend this feature:** How can a developer add more functionality to the described feature
-- **Conceptual remarks:** In-depth dive into the internal workflow/implementation/functionality of this feature. Might only be interesting for other Morph-Store core developers.
+- **Developer Interface** How can a developer add more functionality to the described feature
+- **Conceptual remarks:** Deep dive into the internal workflow/implementation/functionality of this feature. Might only be interesting for other Morph-Store core developers.
 
 According to these 3 parts, code examples are colored differently:
 <div class="userCode">
