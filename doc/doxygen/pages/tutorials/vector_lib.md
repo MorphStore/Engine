@@ -18,66 +18,37 @@ Thus AVX-512 has special subsets which may or may not appear together onto a pro
 - AVX512DQ = AVX-512DQ 
 - AVX512CD = AVX-512CD
 
-Conceptual remarks
-------------------
-We try to abstract vectorized computation with its low-level intrinsics api and execution models from the general C++-code.
 
-####Vector Registers
-Thus there is an abstract vector-register struct (vector/general_vector.h):
-```
-1    template<uint16_t BitWidth, typename T>
-2    struct vector_view {
-3      static constexpr uint16_t size_b = BitWidth / 8;
-4      static constexpr uint16_t element_count = size_b / sizeof(T);
-5   };
-```
-The template parameter `BitWidth` denotes the size of a specific vector register in bit. `T` denotes the basetype which should be processed with this type.
-`T` has to be an arithmetic type like `int`, `float` etc.
-___
-#####Usage
-This helper struct can be used for simple arithmetic tasks and facilitates templated access.
-A Vector register holding up to 128-bit data is a specialization of `vector_view`:
-```
-1    template<typename T>
-2    using v128 = vector_view<128, T>;
-```
-___
-####Vector Extensions
-To realize template function wrappers for low-level intrinsics we use another helper struct per available vector extension (vector/simd/extension.h see below):
+Usage
+-----
+<div class="ToDo">Use MemoryManager instead of malloc</div>
+<div class="ToDo">Explain what happens here</div>
+<div class="ToDo">Rename according to current code base</div>
 
-First of all we are focusing on arithmetic types (see line 3 ). To query the number of elements or the size of a vector register the helper struct `vector_helper_t` can be used (see line 4).
-In addition the depicted sse-struct provides a vector type `vector_t`. The underlying type of `vector_t` depends on the specified basetype T. For integral types (like `uint8_t, uint32_t, uint64_t,...`), `vetor_t` is `__m128i` (see line 9). If the basetype is float then `vector_t` will be `__m128`, `__m128d` for double respectively.
-```
- 1   template<typename T>
- 2   struct sse< v128< T > > {
- 3      static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
- 4      using vector_helper_t = v128<T>;
- 5
- 6      using vector_t =
- 7      typename std::conditional<
- 8         std::is_integral<T>::value,    // if T is integer
- 9         __m128i,                       //    vector register = __m128i
-10         typename std::conditional<
-11            std::is_same<float, T>::value, // else if T is float
-12            __m128,                       //    vector register = __m128
-13            __m128d                       // else [T == double]: vector register = __m128d
-14         >::type
-15      >::type;
-16
-17      using size = std::integral_constant<size_t, sizeof(vector_t)>;
-18      using mask_t = uint16_t;
-19   };
-```
+<div class=userCode>
+~~~{.cpp}
+1    using namespace vector;
+2    uint32_t * const data = (uint32_t*)_mm_malloc( 128, 16 );
+3    typename sse< v128< uint32_t > >::vector_t a =
+4        load< sse< v128< uint32_t > >, iov::ALIGNED, 128 >::apply( data );
+5    typename sse< v128< double > >::vector_t b =
+6        load< sse< v128< double > >, iov::UNALIGNED, 128 >::apply( reinterpret_cast< double * >( data ) );
+7    _mm_free( data );
+~~~
+</div>
 
-How to implement functionality for the VectorLib 
+
+How to implement additonal functionality for the VectorLib 
 ------------------
 
 ####Primitives
-In general a primitives looks like the following:
-```
+In general a primitive looks like the following:
+<div class=morphStoreDeveloperCode>
+~~~{.cpp}
     template<class VectorExtension>
     struct primitive;
-```
+~~~
+</div>
 `VectorExtension` has to be a template struct like sse. This general template should enable a plethora of possible specialization.
 
 If partial specialization regarding the underlying type, the size of the vector register or the used vector extension should be realized,
@@ -86,8 +57,8 @@ One of the main drawbacks with structs is that c++-standard prohibits static fun
 struct aside passing a `this` pointer and so on an additional member method has to be used. Maybe this can be shortened for ease of use.
 
 If a primitive shall be fully specialized, an ordinary global function can be used. In the following example a quite simple load primitives is shown. `iov::ALIGNED` is the Input/Ouput variant which can be found using SIMDI regarding the cache alignment. `IOGranularity` is just a number, denotating the size of loaded elements. 
-
-```
+<div class=morphStoreDeveloperCode>
+~~~{.cpp}
  1    template<typename T, int IOGranularity>
  2    struct load<sse<v128<T>>,iov::ALIGNED, IOGranularity> {
  3        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -114,20 +85,70 @@ If a primitive shall be fully specialized, an ordinary global function can be us
 24            return _mm_load_pd(reinterpret_cast< U const * >(p_DataPtr));
 25        }
 26    };
-```
+~~~
+</div>
 
 This is an example for implementing a partial specialized load primitive. Line 3-9 cover all integral basetypes, Line 11-25 all floating point basetypes.
 
-####Usage
-```
-1    using namespace vector;
-2    uint32_t * const data = (uint32_t*)_mm_malloc( 128, 16 );
-3    typename sse< v128< uint32_t > >::vector_t a =
-4        load< sse< v128< uint32_t > >, iov::ALIGNED, 128 >::apply( data );
-5    typename sse< v128< double > >::vector_t b =
-6        load< sse< v128< double > >, iov::UNALIGNED, 128 >::apply( reinterpret_cast< double * >( data ) );
-7    _mm_free( data );
-```
+
+Conceptual remarks 
+------------------
+We try to abstract vectorized computation with its low-level intrinsics api and execution models from the general C++-code.
+
+####Vector Registers
+Thus there is an abstract vector-register struct (vector/general_vector.h):
+<div class=morphStoreBaseCode>
+~~~{.cpp}
+1    template<uint16_t BitWidth, typename T>
+2    struct vector_view {
+3      static constexpr uint16_t size_b = BitWidth / 8;
+4      static constexpr uint16_t element_count = size_b / sizeof(T);
+5   };
+~~~
+</div>
+The template parameter `BitWidth` denotes the size of a specific vector register in bit. `T` denotes the basetype which should be processed with this type.
+`T` has to be an arithmetic type like `int`, `float` etc.
+___
+#####Usage
+This helper struct can be used for simple arithmetic tasks and facilitates templated access.
+A Vector register holding up to 128-bit data is a specialization of `vector_view`:
+<div class=morphStoreBaseCode>
+~~~{.cpp}
+1    template<typename T>
+2    using v128 = vector_view<128, T>;
+~~~
+</div>
+___
+####Vector Extensions
+To realize template function wrappers for low-level intrinsics we use another helper struct per available vector extension (vector/simd/extension.h see below):
+
+First of all we are focusing on arithmetic types (see line 3 ). To query the number of elements or the size of a vector register the helper struct `vector_helper_t` can be used (see line 4).
+In addition the depicted sse-struct provides a vector type `vector_t`. The underlying type of `vector_t` depends on the specified basetype T. For integral types (like `uint8_t, uint32_t, uint64_t,...`), `vetor_t` is `__m128i` (see line 9). If the basetype is float then `vector_t` will be `__m128`, `__m128d` for double respectively.
+<div class=morphStoreBaseCode>
+~~~{.cpp}
+ 1   template<typename T>
+ 2   struct sse< v128< T > > {
+ 3      static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
+ 4      using vector_helper_t = v128<T>;
+ 5
+ 6      using vector_t =
+ 7      typename std::conditional<
+ 8         std::is_integral<T>::value,    // if T is integer
+ 9         __m128i,                       //    vector register = __m128i
+10         typename std::conditional<
+11            std::is_same<float, T>::value, // else if T is float
+12            __m128,                       //    vector register = __m128
+13            __m128d                       // else [T == double]: vector register = __m128d
+14         >::type
+15      >::type;
+16
+17      using size = std::integral_constant<size_t, sizeof(vector_t)>;
+18      using mask_t = uint16_t;
+19   };
+~~~
+</div>
+
+
 
 Important Files
 ---------------

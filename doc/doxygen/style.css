@@ -1,0 +1,67 @@
+/* color palette from flatuicolors.com, canada palette:
+
+    jigglypuff: #ff9ff3
+    casandora yellow: #feca57
+    pastel red: #ff6b6b
+    megaman:    #48dbfb
+    wildcarribean green: #1dd1a1
+    lian hong lotus pink: #f368e0
+    double dragon skin: #ff9f43
+    amour: #ee5253
+    cyanite: #0abde3
+    dark mountain meadow: #10ac84
+    jade dust: #00d2d3
+    joust blue: #54a0ff
+    nasu purple: #5f27cd
+    light blue ballerina: #c8d6e5
+    fuel town: #576574
+    aqua velvet: #01a3a4
+    bleu de france: #2e86de
+    bluebell: #341f97
+    storm petrel: #8395a7
+    omperial primer: #222f3e  
+*/
+
+.morphStoreBaseCode{
+  background-color: #c8d6e5;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.morphStoreDeveloperCode{
+  background-color: #feca57;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.userCode{
+  background-color: #1dd1a1;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.ToDo{
+  border: 1px solid #ee5253;
+  color:  #ee5253;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: auto;
+  padding: 5px;
+  display: block;
+}
+.ToDo::before{
+  font-weight: bold;
+  content: "TODO ";
+}
