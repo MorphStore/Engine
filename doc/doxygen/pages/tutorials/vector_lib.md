@@ -96,7 +96,7 @@ Conceptual remarks
 We try to abstract vectorized computation with its low-level intrinsics api and execution models from the general C++-code.
 
 ####Vector Registers
-![Vector Registers](img/vector_type.tif)
+![Vector Registers](vector_type.png)
 
 
 Thus there is an abstract vector-register struct (vector/general_vector.h):
