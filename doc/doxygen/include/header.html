@@ -30,7 +30,7 @@
         <script type="text/javascript" src="$relpath^lib.js"></script>
         <script type="text/javascript" src="$relpath^doxy.script.js"></script>
         <script type="text/javascript" src="$relpath^clipboard.js-master/dist/clipboard.min.js"></script>
-        <link rel="shortcut icon" href="$relpath^logo_16x16.png" type="image/png">
+        <link rel="shortcut icon" href="$relpath^logo_16x16.png" qtype="image/png">
     </head>
     <body>
         <noscript>
@@ -41,30 +41,27 @@
             <!--
             -->
         </noscript>
-        <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+             
+             <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+              <div id="titlearea">
+              <table cellspacing="0" cellpadding="0">
+               <tbody>
+               <tr style="height: 56px;">
+                <td id="projectalign" style="padding-left: 0.5em;">
+                 <div id="projectname"> <a href="https://github.com/MorphStore/" target="_blank">
+                                          <!--<img width="100px" src="$relpath^morph_logo.jpg"/>    -->
+                                         <img width="100px" src="../images/morphicorn1.png"/>
+                                      </a> MorphStore
+                 &#160;<span id="projectnumber">0.01</span>
+                 </div>
+                 <div id="projectbrief">MorphStore -memory column store with adaptive storage layout</div>
+                </td>
+               </tr>
+               </tbody>
+              </table>
+              </div>
 
-        <!--BEGIN TITLEAREA-->
-        <div id="titlearea">
-            <table class="titlearea" cellspacing="0" cellpadding="0">
-             <tbody>
-                <tr style="height: 56px;">
-                    <td id="projectlogo">
-                        <a href="https://github.com/MorphStore/" target="_blank">
-                            <img width="100px" src="$relpath^morph_logo.jpg"/>
-                        </a>
-The MorphStore
-                    </td>
-                    <td>
-                        <div id="console">
-                            <div id="consoleContent"></div>
-                        </div>
-                    </td>
-                    <td>
-                        <a href="https://wwwdb.inf.tu-dresden.de/" class="db_logo" target="_blank"></a>
-                    </td>
-                </tr>
-             </tbody>
-            </table>
+            
         </div>
     <!--END TITLEAREA-->
     <!-- end header part -->
