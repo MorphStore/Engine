@@ -46,6 +46,8 @@ function printHelp {
 	echo "	     Runs CTest for the storage layer"
 	echo "	-tUt|--testUtils"
 	echo "	     Runs CTest for some utilities"
+	echo "	-tVt|--testVectoring"
+	echo "	     Runs CTest for vectorized "
 }
 
 buildType=""
@@ -66,6 +68,7 @@ testOps="-DCTEST_OPERATORS=False"
 testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
+testVectors="-DCTEST_VECTOR=False"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -162,6 +165,11 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
+	-tVt|--testVectoring)
+	runCtest=true
+	testVectors="-DCTEST_VECTOR=True"
+	shift # past argument
+	;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -195,8 +203,10 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors"
 	echo "AddTest String: $addTests"
+else
+	addTests="-DRUN_CTESTS=False"
 fi
 
 echo "My Build String: cmake  $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $addTests -G Unix Makefiles ../"
@@ -207,4 +217,6 @@ make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
 	cd build && ctest --output-on-failure #--extra-verbose
+else
+    echo "No tests to be run"
 fi
