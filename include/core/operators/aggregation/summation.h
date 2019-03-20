@@ -30,7 +30,7 @@
 
 namespace morphstore {
 
-uint64_t aggregate_sum(
+uint64_t aggregate_sum_128(
    column< uncompr_f > const * const p_DataColumn
 ) {
 
