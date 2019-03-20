@@ -122,6 +122,38 @@ struct print_buffer_info {
 };
 
 /**
+ * Prints the specified uncompressed columns in CSV format.
+ * @param p_Cols The uncompressed columns to print.
+ * @param p_ColSep The character for separating columns.
+ */
+void print_columns_csv(
+    const std::vector<const column<uncompr_f> *> p_Cols, char p_ColSep = ','
+) {
+    const size_t countCols = p_Cols.size();
+
+    if(!countCols)
+        throw std::runtime_error("no column provided");
+    
+    const size_t countValues = p_Cols[0]->get_count_values();
+    for(auto col : p_Cols)
+        if(col->get_count_values() != countValues)
+            throw std::runtime_error(
+                    "the given columns differ in their numbers of data "
+                    "elements"
+            );
+    
+    std::vector<const uint64_t *> datas;
+    for(auto col : p_Cols)
+        datas.push_back(col->get_data());
+    
+    for(unsigned rowIdx = 0; rowIdx < countValues; rowIdx++) {
+        for(unsigned colIdx = 0; colIdx < countCols - 1; colIdx++)
+            std::cout << datas[colIdx][rowIdx] << p_ColSep;
+        std::cout << datas[countCols - 1][rowIdx] << std::endl;
+    }
+}
+
+/**
  * Prints the given buffers to std::cout side by side in the specified
  * representation. One uintX_t-word per line is output for each buffer. This is
  * a low-level function, consider using print_columns instead.
