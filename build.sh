@@ -61,6 +61,7 @@ selfManagedMemory="-UNO_SELF_MANAGING"
 qmmes="-UQMMMES"
 checkForLeaks="-UCHECK_LEAKING"
 runCtest=false
+enableMonitoring="-UENABLE_MONITORING"
 testAll="-DCTEST_ALL=False"
 testMemory="-DCTEST_MEMORY=False"
 testMorph="-DCTEST_MORPHING=False"
@@ -128,6 +129,10 @@ case $key in
 	-rel|--release)
 	buildModeSet=$((buildModeSet + 1))
 	buildMode="-DCMAKE_BUILD_TYPE=Release"
+	shift # past argument
+	;;
+	-mon|--enable-monitoring)
+	enableMonitoring="-DENABLE_MONITORING=True"
 	shift # past argument
 	;;
 	-tA|--testAll)
@@ -209,10 +214,8 @@ else
 	addTests="-DRUN_CTESTS=False"
 fi
 
-echo "My Build String: cmake  $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $addTests -G Unix Makefiles ../"
-
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $addTests -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
