@@ -1,4 +1,4 @@
-	message( "Vector/" )
+if ( CTEST_ALL OR CTEST_VECTOR )
     add_executable( vector_test_app main.cpp )
     target_compile_options( vector_test_app PRIVATE
 #            -Werror
@@ -9,3 +9,6 @@
             -msse4.2 -mavx2
             $<$<CONFIG:DEBUG>:-DDEBUG> )
     target_link_libraries( vector_test_app PRIVATE "-ldl" )
+    
+    add_test( vector_test vector_test_app )
+endif()

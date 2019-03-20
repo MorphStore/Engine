@@ -27,6 +27,8 @@
 #include <core/storage/column.h>
 #include <core/utils/equality_check.h>
 
+#include <core/utils/monitoring.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -37,7 +39,8 @@ using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-    const size_t origCountValues = 128 * 1024;
+	MONITOR_START_INTERVAL( "operatorTime" );
+	const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new column< uncompr_f >( origSizeByte );
     uint64_t * origData = origCol->get_data( );
@@ -61,13 +64,12 @@ bool test( ) {
     std::cout
             << std::setw(2) << bw << " bit: "
             << equality_check::ok_str( good ) << std::endl;
-    
+    MONITOR_END_INTERVAL( "operatorTime" );
     return good;
 }
 
 int main( void ) {
     bool allGood = true;
-    
 #if 0
     for( unsigned bw = 1; bw <= 64; bw++ )
         allGood = allGood && test< bw >( );
@@ -136,9 +138,16 @@ int main( void ) {
     allGood = allGood && test< 62 >( );
     allGood = allGood && test< 63 >( );
     allGood = allGood && test< 64 >( );
+    MONITOR_PRINT_COUNTERS( "operatorTime" );
 #endif
     
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
+
+#ifdef MSV_USE_MONITORING
+    std::cout << "Monitoring was ENABLED" << std::endl;
+#else
+    std::cout << "Monitoring was DISABLED" << std::endl;
+#endif
     
     return !allGood;
 }
