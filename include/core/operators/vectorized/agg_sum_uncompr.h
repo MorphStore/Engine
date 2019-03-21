@@ -25,7 +25,7 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-agg_sum_128<processing_style_t::scalar>(
+agg_sum<processing_style_t::vec128>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 
@@ -66,7 +66,7 @@ agg_sum_128<processing_style_t::scalar>(
 
 template<>
 const column<uncompr_f> *
-agg_sum_256<processing_style_t::scalar>(
+agg_sum<processing_style_t::vec256>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 

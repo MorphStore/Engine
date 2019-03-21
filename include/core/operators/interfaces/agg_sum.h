@@ -54,23 +54,7 @@ agg_sum(
         const column<t_in_data_f> * const inDataCol
 );
 
-template<
-        processing_style_t t_ps,
-        class t_in_data_f
->
-const column<uncompr_f> *
-agg_sum_128(
-        const column<t_in_data_f> * const inDataCol
-);
 
-template<
-        processing_style_t t_ps,
-        class t_in_data_f
->
-const column<uncompr_f> *
-agg_sum_256(
-        const column<t_in_data_f> * const inDataCol
-);
 
 /**
  * Group-based aggregation(sum)-operator. Aggregates all data elements in the
