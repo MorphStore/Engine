@@ -24,17 +24,19 @@
 #ifndef MORPHSTORE_CORE_UTILS_MONITORING_H_
 #define MORPHSTORE_CORE_UTILS_MONITORING_H_
 
-#include <map>
-#include <unordered_map>
+#include <algorithm>
+#include <atomic>
 #include <chrono>
-#include <math.h>
-
-#include <iostream>
-#include <iomanip>
 #include <ctime>
+#include <inttypes.h>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <math.h>
+#include <unordered_map>
+#include <vector>
 
 #include <core/utils/logger.h>
-#include <inttypes.h>
 
 namespace morphstore {
 
@@ -119,38 +121,57 @@ public:
 auto monitorShellLog = morphstore::monitoring_shell_logger::get_instance();
 auto monitorFileLog = morphstore::monitoring_file_logger::get_instance();
 
-struct monitoring_parameter {
+class monitoring_info {
+public:
 	const std::string name;
+	size_t id;
+
+	monitoring_info ( const std::string name, size_t id ) :
+		name( name ),
+		id( id )
+	{
+	}
+
+	virtual ~monitoring_info() {
+	}
+
+	virtual void print( monitoring_logger& log ) = 0;
+};
+
+class monitoring_parameter : public monitoring_info {
+public:
 	double value;
 
-	monitoring_parameter( const std::string name, double value ) :
-	name( name ),
-	value( value )
+	monitoring_parameter( const std::string name, size_t id, double value ) :
+		monitoring_info( name, id ),
+		value( value )
 	{
 	}
 
 	void print( monitoring_logger& log ) {
+		log.write( "[Monitoring] " );
 		log.write( name.c_str() );
-		log.write( " " );
+		log.write( " (id " );
+		log.write( id );
+		log.write( "): " );
 		log.write( value );
 		log.write( "\n" );
 	}
 };
 
-struct monitoring_counter {
+class monitoring_counter : public monitoring_info {
+public:
 	bool started;
 	chrono_tp startTp;
 	uint32_t maxValues;
 	uint32_t lastValue;
 	uint64_t* values;
 
-	const std::string name;
-
-	monitoring_counter( const std::string name ) :
+	explicit monitoring_counter( const std::string name, size_t id ) :
+		monitoring_info( name, id ),
 		started( false ),
 		maxValues( 1024 ),
-		lastValue( 0 ),
-		name( name )
+		lastValue( 0 )
 	{
 		values = (uint64_t*) malloc( maxValues * sizeof( uint64_t ) );
 	}
@@ -176,7 +197,7 @@ struct monitoring_counter {
 		}
 	}
 
-	void print( monitoring_logger& logChannel ) {
+	void print( monitoring_logger& log) {
 		std::string valueList ="";
 		for ( size_t i = 0; i < lastValue; ++i ) {
 			valueList += std::to_string( values[i] );
@@ -184,14 +205,22 @@ struct monitoring_counter {
 				valueList += ", ";
 			}
 		}
-		logChannel.write( "[Monitoring] " );
-		logChannel.write( name.c_str() );
-		logChannel.write( ": " );
-		logChannel.write( valueList.c_str() );
-		logChannel.write( "\n" );
-
+		log.write( "[Monitoring] " );
+		log.write( name.c_str() );
+		log.write( " (id " );
+		log.write( id );
+		log.write( "): " );
+		log.write( valueList.c_str() );
+		log.write( "\n" );
 	}
 };
+
+struct CompareMonitorInfo {
+    bool operator() (const monitoring_info* left, const monitoring_info* right)
+    {
+        return left->id < right->id;
+    }
+} CompareMonitorInfo;
 
 typedef std::map< std::string, monitoring_counter* > monitorCounterMap;
 typedef std::map< std::string, monitoring_parameter* > monitorParameterMap;
@@ -212,7 +241,7 @@ public:
     			wtf( "[Monitoring] Starting counter with already open interval: " + ident );
     		}
     	} else {
-    		monitoring_counter* ct = new monitoring_counter( ident );
+    		monitoring_counter* ct = new monitoring_counter( ident, rollingId++ );
     		counterData.insert( {ident, ct} );
     		ct->start();
     	}
@@ -234,39 +263,78 @@ public:
     	if ( counter != parameterData.cend() ) {
     		wtf( "[Monitoring] Trying to add the same parameter twice is not yet supported" );
     	} else {
-    		parameterData.insert( { ident, new monitoring_parameter( ident, val ) } );
+    		parameterData.insert( { ident, new monitoring_parameter( ident, rollingId++, val ) } );
     	}
     }
 
-    void printCounterData( monitoring_logger& log ) {
-    	for ( auto counter : counterData ) {
-    		counter.second->print( log );
+    void printCounterData( monitoring_logger& log, bool sorted = false ) {
+    	if ( sorted ) {
+    		std::vector< monitoring_counter* > sortedCounters;
+    		sortedCounters.reserve( counterData.size() );
+    		for ( auto counter: counterData ) {
+    			sortedCounters.insert( std::upper_bound( sortedCounters.begin(), sortedCounters.end(), counter.second, CompareMonitorInfo ), counter.second );
+    		}
+    		for ( size_t i = 0; i < sortedCounters.size(); ++i ) {
+    			sortedCounters[ i ]->print( log );
+    		}
+    	} else {
+			for ( auto counter : counterData ) {
+				counter.second->print( log );
+			}
     	}
     }
 
     void printCounterData( monitoring_logger& log, const std::string& ident ) {
-    	monitorCounterMap::iterator counter = counterData.find( ident);
-    	if ( counter != counterData.cend() ) {
-    		counter->second->print( log );
-    	}
+			monitorCounterMap::iterator counter = counterData.find( ident);
+			if ( counter != counterData.cend() ) {
+				counter->second->print( log );
+			}
     }
 
-    void printPropertyData( monitoring_logger& log ) {
-    	for ( auto property : parameterData ) {
-    		property.second->print( log );
+    void printPropertyData( monitoring_logger& log, bool sorted = false ) {
+    	if ( sorted ) {
+    		std::vector< monitoring_parameter* > sortedParameters;
+    		sortedParameters.reserve( parameterData.size() );
+    		for ( auto parameter: parameterData ) {
+    			sortedParameters.insert( std::upper_bound( sortedParameters.begin(), sortedParameters.end(), parameter.second, CompareMonitorInfo ), parameter.second );
+    		}
+    		for ( size_t i = 0; i < sortedParameters.size(); ++i ) {
+    			sortedParameters[ i ]->print( log );
+    		}
+    	} else {
+    		for ( auto property : parameterData ) {
+    			property.second->print( log );
+    		}
     	}
     }
 
     void printPropertyData( monitoring_logger& log, const std::string& ident ) {
-		monitorParameterMap::iterator parameter = parameterData.find( ident);
-		if ( parameter != parameterData.cend() ) {
-			parameter->second->print( log );
-		}
+    	monitorParameterMap::iterator parameter = parameterData.find( ident);
+    	if ( parameter != parameterData.cend() ) {
+    		parameter->second->print( log );
+    	}
     }
 
-    void printAllData( monitoring_logger& log ) {
-    	printCounterData( log );
-    	printPropertyData( log );
+    void printAllData( monitoring_logger& log, bool sorted = false ) {
+    	if ( sorted ) {
+    		std::vector< monitoring_info* > sortedInfo;
+    		sortedInfo.reserve( counterData.size() + parameterData.size() );
+
+    		for ( auto counter: counterData ) {
+    			sortedInfo.insert( std::upper_bound( sortedInfo.begin(), sortedInfo.end(), counter.second, CompareMonitorInfo ), counter.second );
+    		}
+
+    		for ( auto parameter: parameterData ) {
+    			sortedInfo.insert( std::upper_bound( sortedInfo.begin(), sortedInfo.end(), parameter.second, CompareMonitorInfo ), parameter.second );
+    		}
+
+    		for ( size_t i = 0; i < sortedInfo.size(); ++i ) {
+    			sortedInfo[ i ]->print( log );
+    		}
+    	} else {
+    		printCounterData( log, sorted );
+    		printPropertyData( log, sorted );
+    	}
     }
 
 private:
@@ -275,7 +343,7 @@ private:
 
     monitorCounterMap counterData;
     monitorParameterMap parameterData;
-
+    std::atomic< size_t > rollingId = { 0 };
 };
 
 	#define MONITOR_START_INTERVAL( CTR ) 		morphstore::monitoring::get_instance().startInterval( CTR );

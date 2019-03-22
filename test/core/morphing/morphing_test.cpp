@@ -140,7 +140,23 @@ int main( void ) {
     allGood = allGood && test< 62 >( );
     allGood = allGood && test< 63 >( );
     allGood = allGood && test< 64 >( );
+    allGood = allGood && test< 64 >( );
 #endif
+
+    std::cout << "#### Testing All Counters not sorted" << std::endl;
+    MONITOR_PRINT_ALL( monitorShellLog, true )
+    
+    std::cout << "#### Testing All Counters not sorted" << std::endl;
+    MONITOR_PRINT_COUNTERS( monitorShellLog );
+
+    std::cout << "#### Testing All Counters with sorting" << std::endl;
+    MONITOR_PRINT_COUNTERS( monitorShellLog, true );
+
+    std::cout << "#### Testing All Counters not sorted" << std::endl;
+    MONITOR_PRINT_PROPERTIES( monitorShellLog );
+
+    std::cout << "#### Testing All Counters with sorting" << std::endl;
+    MONITOR_PRINT_PROPERTIES( monitorShellLog, true );
 
     std::cout << "#### Testing Single Counter" << std::endl;
     MONITOR_PRINT_COUNTERS( monitorShellLog, "operatorTime43" );
@@ -156,7 +172,7 @@ int main( void ) {
 
     std::cout << "#### Testing Print All" << std::endl;
     MONITOR_PRINT_ALL( monitorShellLog )
-    
+
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 
 #ifdef MSV_USE_MONITORING
