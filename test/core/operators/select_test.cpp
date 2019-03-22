@@ -39,8 +39,8 @@ int main( void ) {
     const bool allGood = test_op_1in_1out_2val(
             "Select",
             &morphstore::select<
-                    std::less,
-                    processing_style_t::scalar,
+                    std::less
+,                    processing_style_t::scalar,
                     uncompr_f,
                     uncompr_f
             >::apply,
