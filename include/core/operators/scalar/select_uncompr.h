@@ -57,10 +57,12 @@ struct select<t_op, processing_style_t::scalar, uncompr_f, uncompr_f> {
                 // use pessimistic estimate
                 : inDataCol->get_size_used_byte()
         );
+        
+                t_op<uint64_t> op;
         uint64_t * outPos = outPosCol->get_data();
         const uint64_t * const initOutPos = outPos;
 
-        t_op<uint64_t> op;
+
         for(unsigned i = 0; i < inDataCount; i++)
             if(op(inData[i], val)) {
                 *outPos = i;
