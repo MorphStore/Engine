@@ -39,7 +39,7 @@ using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-	MONITOR_START_INTERVAL( "operatorTime" );
+	MONITOR_START_INTERVAL( "operatorTime" + std::to_string( bw ) );
 	const size_t origCountValues = 128 * 1024;
     const size_t origSizeByte = origCountValues * sizeof( uint64_t );
     auto origCol = new column< uncompr_f >( origSizeByte );
@@ -64,7 +64,9 @@ bool test( ) {
     std::cout
             << std::setw(2) << bw << " bit: "
             << equality_check::ok_str( good ) << std::endl;
-    MONITOR_END_INTERVAL( "operatorTime" );
+    MONITOR_END_INTERVAL( "operatorTime" + std::to_string( bw ) );
+
+    MONITOR_ADD_PROPERTY( "operatorParam" + std::to_string( bw ), bw );
     return good;
 }
 
@@ -138,8 +140,22 @@ int main( void ) {
     allGood = allGood && test< 62 >( );
     allGood = allGood && test< 63 >( );
     allGood = allGood && test< 64 >( );
-    MONITOR_PRINT_COUNTERS( "operatorTime" );
 #endif
+
+    std::cout << "#### Testing Single Counter" << std::endl;
+    MONITOR_PRINT_COUNTERS( monitorShellLog, "operatorTime43" );
+
+    std::cout << "#### Testing All Counter" << std::endl;
+    MONITOR_PRINT_COUNTERS( monitorShellLog );
+
+    std::cout << "#### Testing Single Parameter" << std::endl;
+    MONITOR_PRINT_PROPERTIES( monitorShellLog, "operatorParam8" );
+
+    std::cout << "#### Testing All Parameters" << std::endl;
+    MONITOR_PRINT_PROPERTIES( monitorShellLog );
+
+    std::cout << "#### Testing Print All" << std::endl;
+    MONITOR_PRINT_ALL( monitorShellLog )
     
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 
