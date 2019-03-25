@@ -1,4 +1,4 @@
-@page Monitoring
+@page Monitoring Monitoring
 
 The monitoring framework allows the user to leverage compile-time switches for enabling or disabling software coutners.
 Monitoring is enabled, by compiling MorphStore using the "-mon" or "--enable-monitoring" switches.
