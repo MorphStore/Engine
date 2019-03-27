@@ -101,7 +101,7 @@ void mem_leak_stdlib_free( void * p_Ptr ) __THROW {
 #     define stdlib_free( X ) mem_leak_stdlib_free( X )
 #  else
 #     define stdlib_malloc( X ) stdlib_malloc_ptr( X )
-#     define stdlib_realloc( X ) stdlib_realloc_ptr( X )
+#     define stdlib_realloc( X,Y ) stdlib_realloc_ptr( X,Y )
 #     define stdlib_free( X ) stdlib_free_ptr( X )
 #  endif
 

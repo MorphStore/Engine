@@ -37,6 +37,10 @@ class abstract_memory_manager {
 
       virtual void deallocate(void *const) = 0;
 
+      virtual void * reallocate(void *, size_t) = 0;
+
+      virtual void * reallocate(abstract_memory_manager * const, void *, size_t) = 0;
+
       virtual void handle_error() = 0;
 };
 

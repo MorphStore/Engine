@@ -43,6 +43,21 @@ extern "C" {
 void *malloc(size_t p_AllocSize) __THROW {
    return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
 }
+/*
+
+void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
+   if( MSV_CXX_ATTRIBUTE_UNLIKELY( p_Ptr == nullptr ) ) {
+      return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
+   }
+
+   void * tmp = morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
+   std::memcpy( )
+
+   free( p_Ptr );
+
+}
+  */
+
 
 /**
  * @brief Global replacement for free from cstdlib.

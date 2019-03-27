@@ -55,15 +55,15 @@ class general_memory_manager : public abstract_memory_manager {
 
       virtual ~general_memory_manager(void) {
          trace( "[General Memory Manager] - IN.  ( void )." );
-         auto * handle = m_QueryScopeMemoryBinHandler.get_tail( );
-         auto * rootQueryScope = m_QueryScopeMemoryBinHandler.get_root( );
+         auto handle = m_QueryScopeMemoryBinHandler.get_tail( );
+         auto rootQueryScope = m_QueryScopeMemoryBinHandler.get_root( );
          while( handle != rootQueryScope ) {
             debug( "[General Memory Manager] - Freeing query scoped memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
             handle = handle->prev();
          }
          handle = m_GlobalScopeMemoryBinHandler.get_tail();
-         auto * rootGlobalScope = m_GlobalScopeMemoryBinHandler.get_root( );
+         auto rootGlobalScope = m_GlobalScopeMemoryBinHandler.get_root( );
          while (handle != rootGlobalScope) {
             debug( "[General Memory Manager] - Freeing global scoped memory ", handle->m_BasePtr, " in Bin ", handle, "." );
             stdlib_free(handle->m_BasePtr);
@@ -96,23 +96,17 @@ class general_memory_manager : public abstract_memory_manager {
 
       void *allocate(size_t p_AllocSize) override {
          trace( "[General Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
-         void * tmp = stdlib_malloc( p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE );
+         size_t allocSize = get_size_with_alignment_padding(p_AllocSize);
+         void * tmp = stdlib_malloc(allocSize);
 
-         debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
-         if (tmp != nullptr) {
+         debug( "[General Memory Manager] - Allocated ", allocSize, " Bytes ( @ position: ", tmp, " ).");
+         if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
             debug( "[General Memory Manager] - Add space to global scoped Memory Bin Handler." );
-            m_GlobalScopeMemoryBinHandler.append_bin(this, tmp, p_AllocSize);
-
-            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
-            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
-            if (offset)
-               tmp = reinterpret_cast< void * >(
-                  tmpToSizeT + ( MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset ) );
-
+            tmp = m_GlobalScopeMemoryBinHandler.append_bin(this, tmp, allocSize);
             trace( "[General Memory Manager] - OUT. ( Aligned Pointer: ", tmp, " )." );
             return tmp;
          } else {
-            wtf( "[General Memory Manager] - allocate( AllocSize = ", p_AllocSize, " ). Could not allocate the memory." );
+            wtf( "[General Memory Manager] - allocate( AllocSize = ", allocSize, " ). Could not allocate the memory." );
             handle_error();
             trace( "[General Memory Manager] - OUT. ( nullptr )." );
             return nullptr;
@@ -125,18 +119,12 @@ class general_memory_manager : public abstract_memory_manager {
             wtf( "[General Memory Manager] - Can not be called with static general memory manager as caller.");
             handle_error();
          }
-         void * tmp = stdlib_malloc( p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE );
-         debug( "[General Memory Manager] - Allocated ", p_AllocSize + MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE, " Bytes ( @ position: ", tmp, " ).");
-         if (tmp != nullptr) {
+         size_t allocSize = get_size_with_alignment_padding(p_AllocSize);
+         void * tmp = stdlib_malloc( allocSize );
+         debug( "[General Memory Manager] - Allocated ", allocSize, " Bytes ( @ position: ", tmp, " ).");
+         if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
             debug( "[General Memory Manager] - Add space to query scoped Memory Bin Handler." );
-            m_QueryScopeMemoryBinHandler.append_bin(p_Caller, tmp, p_AllocSize);
-
-            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
-            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
-            if (offset)
-               tmp = reinterpret_cast< void * >(
-                  tmpToSizeT + ( MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset ) );
-
+            tmp = m_QueryScopeMemoryBinHandler.append_bin(p_Caller, tmp, p_AllocSize);
             trace( "[General Memory Manager] - OUT. ( Aligned Pointer: ", tmp, " )." );
             return tmp;
          } else {
@@ -156,9 +144,34 @@ class general_memory_manager : public abstract_memory_manager {
       void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
          warn( "[General Memory Manager] - @TODO: This can be done for global scoped storage. Needed to be implemented." );
+         auto handle = m_GlobalScopeMemoryBinHandler.get_tail( );
+         auto root = m_GlobalScopeMemoryBinHandler.get_root( );
+         while(handle!= root) {
+            if(handle->m_AlignedPtr == p_Ptr) {
+               stdlib_free(handle->m_BasePtr);
+
+            }
+         }
          //@todo THIS CAN BE DONE!!! FOR GLOBAL SCOPED STORAGE
       }
 
+      void * reallocate(void * p_Ptr, size_t p_AllocSize) override {
+         size_t ptrToSizeT = reinterpret_cast<size_t>(p_Ptr);
+         auto handle = m_GlobalScopeMemoryBinHandler.get_tail( );
+         auto root = m_GlobalScopeMemoryBinHandler.get_root( );
+         while(handle != root) {
+            if(handle->m_AlignedPtr == p_Ptr) {
+               size_t allocSize = get_size_with_alignment_padding(p_AllocSize);
+               return stdlib_realloc( handle->m_BasePtr, allocSize );
+            }
+            handle = handle->prev();
+         }
+      }
+
+      void * reallocate(abstract_memory_manager * const, void *, size_t) override {
+         warn( "[Query Memory Manager] - Allocate from the context of a different Memory Manager should not be invoked on the Query Memory Manager." );
+         return nullptr;
+      }
       void handle_error(void) override {
          warn( "[General Memory Manager] - @TODO: Not implemented yet." );
          //@todo IMPLEMENT

@@ -42,6 +42,7 @@
 
 #include <core/memory/management/utils/memory_bin_handler.h>
 
+#include <cstring>
 
 namespace morphstore {
 
@@ -114,45 +115,44 @@ class query_memory_manager : public abstract_memory_manager {
 
       void * allocate( size_t p_AllocSize ) override {
          trace( "[Query Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
-         size_t nextExpandSize = p_AllocSize;
+
+         //increasing the allocated size by one size_t, so the actual size can be stored at the very first item.
+         size_t allocSize = get_size_with_alignment_padding(p_AllocSize) + sizeof(size_t);
+         trace( "[Query Memory Manager] - Have to allocate ", allocSize, " Bytes ).");
          void * tmp = m_CurrentPtr;
          debug( "[Query Memory Manager] - head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
-         if( m_SpaceLeft < p_AllocSize ) {
-            //alignment does not need to be minded, because the general memory manager returns an aligned piece of
-            //memory.
+         if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_SpaceLeft < allocSize)) {
             debug(
-               "[Query Memory Manager] - No Space Left. ( Needed: ", p_AllocSize,
+               "[Query Memory Manager] - No Space Left. ( Needed: ", allocSize,
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
-            nextExpandSize = expander.next_size( p_AllocSize );
+            size_t nextExpandSize = expander.next_size( nextExpandSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
             tmp = m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;
-            trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
-         } else {
-            size_t tmpToSizeT = reinterpret_cast< size_t >( tmp );
-            size_t const offset = tmpToSizeT & MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE;
-            trace( "[Query Memory Manager] - Alignment offset: ", offset, "." );
-            if( offset ) {
-               size_t const additionalSpace = MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset;
-               debug( "[Query Memory Manager] - Additional space needed for alignment: ", additionalSpace, "." );
-               tmp = reinterpret_cast< void * >( tmpToSizeT + additionalSpace );
-               p_AllocSize += additionalSpace;
-            }
+            trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          }
-         if( tmp != nullptr ) {
-            trace( "[Query Memory Manager] - Increment head pointer ( ", m_CurrentPtr, " by ", p_AllocSize, " Bytes )." );
-            m_CurrentPtr = static_cast< char * >( tmp ) + p_AllocSize;
-            m_SpaceLeft -= p_AllocSize;
+
+         if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
+            trace( "[Query Memory Manager] - Creating extended aligned ptr (current = ", tmp, ". Size = ", p_AllocSize, " Bytes." );
+            void * result_ptr = create_extended_aligned_ptr(tmp, p_AllocSize);
+            size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
+            trace(
+               "[Query Memory Manager] - Set new Head to aligned ptr ( ", result_ptr, " ). ",
+               "Bytes lost through Alignment: ",
+               bytes_lost, ".");
+            m_CurrentPtr = static_cast< char * >( result_ptr ) + p_AllocSize;
+            m_SpaceLeft -= ( p_AllocSize + bytes_lost );
+            trace( "[Query Memory Manager] - OUT. ( pointer: ", result_ptr, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
+            return result_ptr;
          } else {
             m_GeneralMemoryManager.handle_error( );
-            wtf( "[Query Memory Manager] - Could not aquire ", nextExpandSize, " Bytes query scoped memory." );
+            wtf( "[Query Memory Manager] - Could not aquire ", allocSize, " Bytes query scoped memory." );
+            return nullptr;
          }
-         trace( "[Query Memory Manager] - OUT. ( pointer: ", tmp, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
-         return tmp;
       }
 
       void * allocate( MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager * const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_AllocSize ) override {
-         warn( "[Query Memory Manager] - Allocate with different Memory Manager should not be invoked on the Query Memory Manager." );
+         warn( "[Query Memory Manager] - Allocate from the context of a different Memory Manager should not be invoked on the Query Memory Manager." );
          return nullptr;
       }
 
@@ -167,8 +167,29 @@ class query_memory_manager : public abstract_memory_manager {
          info( "[Query Memory Manager] - Deallocate ( void * const ) should not be invoked on the Query Memory Manager." );
       }
 
+
+      void * reallocate(void * p_Ptr, size_t p_AllocSize) override {
+         if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_Ptr == nullptr))
+            return allocate(p_AllocSize);
+         if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_AllocSize == 0))
+            return nullptr;
+         void * result = allocate(p_AllocSize);
+         if(MSV_CXX_ATTRIBUTE_UNLIKELY(result == nullptr))
+            return nullptr;
+         std::memcpy(result, p_Ptr, (reinterpret_cast<size_t *>(p_Ptr))[-1]);
+         return result;
+      }
+
+      void * reallocate(abstract_memory_manager * const, void *, size_t) override {
+         warn( "[Query Memory Manager] - Allocate from the context of a different Memory Manager should not be invoked on the Query Memory Manager." );
+         return nullptr;
+      }
+
+
       void handle_error( void ) override {
       }
+
+
 
 
    private:

@@ -1,16 +1,36 @@
 VectorLib
 =========
-All files associated with vectorization should be located in ${PROJECT_HOME}/include/vector/ and reside in `namespace vector`.
+SIMD (Single Instruction Multiple Data) or Vectorization denotes a data processing scheme, where multiple data elements where processed in parallel by the same operation. 
+
+The SIMD paradigma comes in two different flavours. On the one hand there are "real" vector processors using specialized cpu's alongside pipelines. This type of maschines has their origin in the CRAY-1. 
+
+On the other hand, SIMD was introduced by Intel as an extension (MMX) to their general purpose CPU in 1997. Back then 124 instructions, operating with 64-bit wide vector registers were available. Multiple successing extensions with wider vector registers and increasing instruction sets from different have been released on the market ever since (see table 1).
+
+|             | Extension | Vector size (Bit) |
+| ----------- | --------- | ----------------- |
+| Intel (AMD) | MMX       | 64                |
+|             | SSE       | 128               |
+| ARM         | NEON v1   | 128               |
+|             | NEON v2   | 256               |
+| Intel (AMD) | AVX(2)    | 256               |
+|             | AVX512    | 512               |
+
+<p style="text-align: center;">Table 1: Different SIMD extension sorted by vector size</p>
+
+While writing vectorizable or even 
 
 General remarks
 ---------------
+All files associated with vectorization should be located in ${PROJECT_HOME}/include/vector/ and reside in `namespace vector`.
+
 Through the variety of existing minor versions of vector extensions provided by Intel (SSE2/3/4.1/4.2,...) only the major extensions (in terms of applicability) is provided (and subsumes the related versions).
 
 E.g.: 
 - SSE = { SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2 }
 - AVX2 = { AVX, AVX2 }
 
-####Exception
+### Exception
+
 Thus AVX-512 has special subsets which may or may not appear together onto a processor, a distinction where be made:
 
 - AVX512 = { AVX-512, AVX-512F }
@@ -41,8 +61,10 @@ Usage
 How to implement additional functionality for the VectorLib 
 ------------------
 
-####Primitives
+### Primitives
+
 In general a primitive looks like the following:
+
 <div class=morphStoreDeveloperCode>
 ~~~{.cpp}
     template<class VectorExtension>
@@ -95,7 +117,8 @@ Conceptual remarks
 ------------------
 We try to abstract vectorized computation with its low-level intrinsics api and execution models from the general C++-code.
 
-####Vector Registers
+### Vector Registers
+
 ![Vector Registers](vector_type.png)
 
 
@@ -112,9 +135,11 @@ Thus there is an abstract vector-register struct (vector/general_vector.h):
 The template parameter `BitWidth` denotes the size of a specific vector register in bit. `T` denotes the basetype which should be processed with this type.
 `T` has to be an arithmetic type like `int`, `float` etc.
 ___
-#####Usage
+#### Usage
+
 This helper struct can be used for simple arithmetic tasks and facilitates templated access.
 A Vector register holding up to 128-bit data is a specialization of `vector_view`:
+
 <div class=morphStoreBaseCode>
 ~~~{.cpp}
 1    template<typename T>
@@ -122,11 +147,13 @@ A Vector register holding up to 128-bit data is a specialization of `vector_view
 ~~~
 </div>
 ___
-####Vector Extensions
+### Vector Extensions
+
 To realize template function wrappers for low-level intrinsics we use another helper struct per available vector extension (vector/simd/extension.h see below):
 
 First of all we are focusing on arithmetic types (see line 3 ). To query the number of elements or the size of a vector register the helper struct `vector_helper_t` can be used (see line 4).
 In addition the depicted sse-struct provides a vector type `vector_t`. The underlying type of `vector_t` depends on the specified basetype T. For integral types (like `uint8_t, uint32_t, uint64_t,...`), `vetor_t` is `__m128i` (see line 9). If the basetype is float then `vector_t` will be `__m128`, `__m128d` for double respectively.
+
 <div class=morphStoreBaseCode>
 ~~~{.cpp}
  1   template<typename T>
