@@ -7,6 +7,8 @@ function is_power_of_two () {
 function printHelp {
 	echo "build.sh -buildMode [-loggerControl] [-memory] [-jN]"
 	echo "buildMode:"
+	echo "	-hi|--hiPerformance"
+	echo "	     Release mode, but with O3 and link time optimization"
 	echo "	-rel|--release"
 	echo "	     Release mode"
 	echo "	-deb|--debug"
@@ -27,6 +29,9 @@ function printHelp {
 	echo "	     Makes the MemoryManager more aware of possible memory leaks."
 	echo "	--alignment 2^x"
 	echo "	     Sets the byte alignment for the MemoryManager"
+	echo ""
+	echo "	-mon|--enable-monitoring"
+	echo "	     Embedds the monitoring macros which are optimized out otherwise."
 	echo ""
 	echo "	-jN:"
 	echo "	     N > 0 sets the number of parallel make jobs"
@@ -129,6 +134,11 @@ case $key in
 	-rel|--release)
 	buildModeSet=$((buildModeSet + 1))
 	buildMode="-DCMAKE_BUILD_TYPE=Release"
+	shift # past argument
+	;;
+	-hi|--HighPerf)
+	buildModeSet=$((buildModeSet + 1))
+	buildMode="-DCMAKE_BUILD_TYPE=HighPerf"
 	shift # past argument
 	;;
 	-mon|--enable-monitoring)
