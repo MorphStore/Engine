@@ -137,26 +137,30 @@ class general_memory_manager : public abstract_memory_manager {
 
       void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager *const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Caller = ", p_Caller, ". Pointer = ", p_Ptr, " )." );
-         info( "[General Memory Manager] - Deallocate should not be invoked on the General Memory Manager." );
+         warn( "[General Memory Manager] - Deallocate should not be invoked on the General Memory Manager." );
          // NOP
       }
 
       void deallocate(MSV_CXX_ATTRIBUTE_PPUNUSED void *const p_Ptr ) override {
          trace( "[General Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
-         warn( "[General Memory Manager] - @TODO: This can be done for global scoped storage. Needed to be implemented." );
          auto handle = m_GlobalScopeMemoryBinHandler.get_tail( );
          auto root = m_GlobalScopeMemoryBinHandler.get_root( );
          while(handle!= root) {
+            trace(
+               "[General Memory Manager] - Checking Handle ", handle,
+               " ( base ptr = ", handle->m_BasePtr, ". aligned ptr = ",
+               handle->m_AlignedPtr, ". size = ", handle->m_SizeByte, " Bytes ). ");
             if(handle->m_AlignedPtr == p_Ptr) {
-               stdlib_free(handle->m_BasePtr);
-
+               trace( "[General Memory Manager] - Remove handle and free space." );
+               m_GlobalScopeMemoryBinHandler.remove_handle_and_free(handle);
+               trace( "[General Memory Manager] - OUT. ( void )." );
+               return;
             }
          }
-         //@todo THIS CAN BE DONE!!! FOR GLOBAL SCOPED STORAGE
+         warn( "[General Memory Manager] - OUT. ( memory not found ).");
       }
 
       void * reallocate(void * p_Ptr, size_t p_AllocSize) override {
-         size_t ptrToSizeT = reinterpret_cast<size_t>(p_Ptr);
          auto handle = m_GlobalScopeMemoryBinHandler.get_tail( );
          auto root = m_GlobalScopeMemoryBinHandler.get_root( );
          while(handle != root) {
@@ -166,6 +170,8 @@ class general_memory_manager : public abstract_memory_manager {
             }
             handle = handle->prev();
          }
+         warn( "[General Memory Manager] - OUT. ( nullptr, because specified memory not found ).");
+         return nullptr;
       }
 
       void * reallocate(abstract_memory_manager * const, void *, size_t) override {

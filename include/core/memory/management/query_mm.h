@@ -125,7 +125,7 @@ class query_memory_manager : public abstract_memory_manager {
             debug(
                "[Query Memory Manager] - No Space Left. ( Needed: ", allocSize,
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
-            size_t nextExpandSize = expander.next_size( nextExpandSize );
+            size_t nextExpandSize = expander.next_size( allocSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
             tmp = m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;

@@ -187,7 +187,7 @@ class memory_bin_handler {
          memory_bin_handle * p_Current
       ) {
 
-         info( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
          memory_bin_handle * nextHandle = p_Current->m_NextHandle;
          memory_bin_handle * handle = p_Current;
          memory_bin_handle * prevHandle;
@@ -216,7 +216,26 @@ class memory_bin_handler {
       }
 
       MSV_CXX_ATTRIBUTE_INLINE void remove_handle_and_free(memory_bin_handle * p_ToRemove) {
-
+         //since the root handle is empty, it is assumed, that any runtime allocated handle has a predecessor
+         trace("[Memory Bin Handler] -  IN. ( Handle = ", p_ToRemove, " ).");
+         memory_bin_handle * prev = p_ToRemove->m_PrevHandle;
+         trace("[Memory Bin Handler] - Prev Handle = ", prev, " ).");
+         trace("[Memory Bin Handler] - Freeing (stdlib) base ptr: ", p_ToRemove->m_BasePtr, " ).");
+         stdlib_free(static_cast<void*>(p_ToRemove->m_BasePtr));
+         if(MSV_CXX_ATTRIBUTE_LIKELY(m_BinHandleStructTail == p_ToRemove)) {
+            trace("[Memory Bin Handler] - Handle is tail.");
+            prev->m_NextHandle = nullptr;
+            m_BinHandleStructTail = prev;
+            trace("[Memory Bin Handler] - New tail assigned: ", m_BinHandleStructTail, ".");
+         } else {
+            memory_bin_handle * next = p_ToRemove->m_NextHandle;
+            prev->m_NextHandle = next;
+            next->m_PrevHandle = prev;
+            trace("[Memory Bin Handler] - Previous Handle -> next = ", prev->m_NextHandle, " ." );
+            trace("[Memory Bin Handler] - Next Handle -> prev = ", next->m_PrevHandle, " ." );
+         }
+         trace("[Memory Bin Handler] - Freeing (stdlib) handle struct: ", p_ToRemove, " ).");
+         stdlib_free(static_cast<void*>(p_ToRemove));
       }
 };
 

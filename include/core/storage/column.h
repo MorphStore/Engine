@@ -61,11 +61,15 @@ class column {
       virtual ~column( ) {
 //         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
 //         free( const_cast< void * >( static_cast< void const * const >( m_Data ) ) );
+         if( m_PersistenceType == storage_persistence_type::globalScope ) {
+            general_memory_manager::get_instance( ).deallocate( m_Data );
+         }
       }
       
    private:
       column_meta_data m_MetaData;
       voidptr_t m_Data;
+      storage_persistence_type m_PersistenceType;
       
       column(
          storage_persistence_type p_PersistenceType,
@@ -80,7 +84,8 @@ class column {
 #else
             malloc( p_SizeAllocatedByte );
 #endif
-         }
+         },
+         m_PersistenceType{ p_PersistenceType }
       {
          //
       }
