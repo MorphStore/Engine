@@ -140,7 +140,7 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
     }
 };
 
-/* This does really compress, just shift the values we want to store to the lower bits.
+/* This does not really compress, just shift the values we want to store to the lower bits.
  * If you need a real compress store, copy this code and change the used store-intrinsic to _mm256_maskstore* (and provide the according mask, of course).
  * This function will move to the vector lib someday.
  */
