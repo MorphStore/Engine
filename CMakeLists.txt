@@ -3,6 +3,11 @@ project( MorphStore )
 
 set( CMAKE_CXX_STANDARD 14 )
 
+macro(morph_flag)
+	add_definitions(${ARGN})
+	LIST(APPEND MODULE_FLAGS ${ARGN})
+endmacro(morph_flag)
+
 # Get the current working branch
 execute_process(
         COMMAND git rev-parse --abbrev-ref HEAD
@@ -21,70 +26,87 @@ execute_process(
 
 set( LOG_FILE "recentMorphStoreProjectConf.log" )
 
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+	morph_flag(-g)
+	message(STATUS "MorphStore is configured in DEBUG mode.")
+ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
+	morph_flag(-O2)
+	message(STATUS "MorphStore is configured in RELEASE mode.")
+ELSEIF(CMAKE_BUILD_TYPE MATCHES HighPerf)
+	morph_flag(-O3)
+	morph_flag(-flto)
+	message(STATUS "MorphStore is configured in HIGH PERFORMANCE mode.")
+ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
+	message( SEND_ERROR "No known build type specified. Use either Debug, Release or HighPerf" )
+ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+
+# remove build type to allow for custom flag handling
+set(CMAKE_BUILD_TYPE "")
+
 ########### <Checking Defines
 set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
 
 if ( DEFINED NO_SELF_MANAGING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMorphStore uses STANDARD C MALLOC.\n" )
-	add_definitions("-DMSV_NO_SELFMANAGED_MEMORY")
+	morph_flag("-DMSV_NO_SELFMANAGED_MEMORY")
 	set( ignoreMe ${NO_SELF_MANAGING} )
 else ( DEFINED NO_SELF_MANAGING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMorphStore uses its CUSTOM MEMORY MANAGER.\n" )
-	add_definitions("-UMSV_NO_SELFMANAGED_MEMORY")
+	morph_flag("-UMSV_NO_SELFMANAGED_MEMORY")
 endif ( DEFINED NO_SELF_MANAGING )
 
 if ( DEFINED DEBUG_MALLOC )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager calls will be printed to the debug channel.\n" )
-	add_definitions("-DMSV_DEBUG_MALLOC")
+	morph_flag("-DMSV_DEBUG_MALLOC")
 	set( ignoreMe ${DEBUG_MALLOC} )
 else ( DEFINED DEBUG_MALLOC )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager calls are not printed.\n")
-	add_definitions("-UMSV_DEBUG_MALLOC")
+	morph_flag("-UMSV_DEBUG_MALLOC")
 endif ( DEFINED DEBUG_MALLOC )
 
 if ( DEFINED CHECK_LEAKING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager will check for potential leaks.\n" )
-	add_definitions("-DMSV_MEMORY_LEAK_CHECK")
+	morph_flag("-DMSV_MEMORY_LEAK_CHECK")
 	set( ignoreMe ${CHECK_LEAKING} )
 else ( DEFINED CHECK_LEAKING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager is oblivious to potential memory leaks.\n" )
-	add_definitions("-UMSV_MEMORY_LEAK_CHECK")
+	morph_flag("-UMSV_MEMORY_LEAK_CHECK")
 endif ( DEFINED CHECK_LEAKING )
 
 if ( DEFINED MMGR_ALIGN )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager aligns to ${MMGR_ALIGN} Byte.\n" )
-	add_definitions("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=${MMGR_ALIGN}")
+	morph_flag("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=${MMGR_ALIGN}")
 	set( ignoreMe ${MMGR_ALIGN} )
 else ( DEFINED MMGR_ALIGN )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager align defaults to 64 Byte.\n" )
-	add_definitions("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=64")
+	morph_flag("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=64")
 endif ( DEFINED MMGR_ALIGN )
 
 if ( DEFINED NOLOGGING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tLogging is completely disabled.\n")
-	add_definitions("-DMSV_NO_LOG" )
+	morph_flag("-DMSV_NO_LOG" )
 	set( ignoreMe ${NOLOGGING} )
 else ( DEFINED NOLOGGING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tLogging is set to standard.\n")
-	add_definitions("-UMSV_NO_LOG" )
+	morph_flag("-UMSV_NO_LOG" )
 endif ( DEFINED NOLOGGING )
 
 if ( DEFINED QMMMES )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQMMMES is set to ${QMMMES}\n" )
-	add_definitions("-DMSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE=${QMMMES}")
+	morph_flag("-DMSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE=${QMMMES}")
 	set( ignoreMe ${QMMMES} )
 else ( DEFINED QMMMES )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQMMMES defaults to 128M.\n" )
-	add_definitions("-UMSV_NO_SELFMANAGED_MEMORY")
+	morph_flag("-UMSV_NO_SELFMANAGED_MEMORY")
 endif ( DEFINED QMMMES )
 
 if ( DEFINED ENABLE_MONITORING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tENABLE_MONITORING is set to to TRUE\n" )
-	add_definitions("-DMSV_USE_MONITORING")
+	morph_flag("-DMSV_USE_MONITORING")
 	set( ignoreMe ${ENABLE_MONITORING} )
 else ( DEFINED ENABLE_MONITORING )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tENABLE_MONITORING is set to FALSE\n" )
-	add_definitions("-UMSV_USE_MONITORING")
+	morph_flag("-UMSV_USE_MONITORING")
 endif ( DEFINED ENABLE_MONITORING )
 
 MESSAGE( ${MorphStoreProjectConf} )
@@ -94,8 +116,8 @@ file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 
-add_definitions("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
-add_definitions("-DGIT_BRANCH=${GIT_BRANCH}")
+morph_flag("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
+morph_flag("-DGIT_BRANCH=${GIT_BRANCH}")
 
 configure_file(
    ${CMAKE_SOURCE_DIR}/include/core/utils/cmake_template.h.in

@@ -140,6 +140,31 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
     }
 };
 
+/* This does not really compress, just shift the values we want to store to the lower bits.
+ * If you need a real compress store, copy this code and change the used store-intrinsic to _mm256_maskstore* (and provide the according mask, of course).
+ * This function will move to the vector lib someday.
+ */
+__attribute__((always_inline)) inline void compress_store256(__m256i * outPtr, int mask, __m256i vector){
+    switch (mask){
+          
+                    case 0: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
+                    case 1: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
+                    case 2: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,225)); break;
+                    case 3: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
+                    case 4: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,210)); break;
+                    case 5: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,216)); break;
+                    case 6: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,201)); break;
+                    case 7: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
+                    case 8: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,147)); break;
+                    case 9: _mm256_store_si256(outPtr, _mm256_permute4x64_epi64(vector,156)); break;
+                    case 10: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,141)); break;
+                    case 11: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,180)); break;
+                    case 12: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,78)); break;
+                    case 13: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,120)); break;
+                    case 14: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,57)); break;
+                    case 15: _mm256_store_si256(outPtr,_mm256_permute4x64_epi64(vector,228)); break;
+                }
+}
 template<template<typename> class t_op>
 struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
     static
@@ -161,13 +186,15 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         t_op<uint64_t> op;
         uint64_t * outP =  outPosCol->get_data();
         //I know the following is ugly, but _mm_maskstore_epi64 requires a long long (64 bit types are only long on a 64-bit system))
-        long long int * outPos =  reinterpret_cast< long long int * >(outP);
-        const long long int * const initOutPos = reinterpret_cast< long long int * > (outP);
+        __m256i * outPos =  reinterpret_cast< __m256i * >(outP);
+        const __m256i * const initOutPos = reinterpret_cast< __m256i * > (outP);
 
         
         
         __m256i value = _mm256_set_epi64x(val,val,val,val);
         __m256i cmpres;
+        __m256i ids=_mm256_set_epi64x(3,2,1,0);
+        __m256i add=_mm256_set_epi64x(4,4,4,4);
         int mask;
         
         if (typeid(op)==typeid(std::less<uint64_t>)){
@@ -176,9 +203,11 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
               
                 cmpres = _mm256_cmpgt_epi64(value,_mm256_load_si256( &inData[i] ));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
-                outPos-=(__builtin_clz(mask)-28);
-                _mm256_maskstore_epi64(outPos, cmpres, _mm256_set_epi64x(i*4+3,i*4+2,i*4+1,i*4));
-                outPos+=(__builtin_clz(mask)-28);
+                
+                compress_store256(outPos,mask,ids);
+                
+                ids=_mm256_add_epi64(ids,add);
+                
                 outPos+=__builtin_popcountl(mask);
                 
             }
@@ -190,9 +219,9 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
 
                 cmpres = _mm256_cmpgt_epi64(_mm256_load_si256( &inData[i] ),value);
                 mask = _mm256_movemask_pd((__m256d)cmpres);
-                outPos-=(__builtin_clz(mask)-28);
-                _mm256_maskstore_epi64(outPos, cmpres, _mm256_set_epi64x(i*4+3,i*4+2,i*4+1,i*4));
-                outPos+=(__builtin_clz(mask)-28);
+                
+                compress_store256(outPos,mask,ids);
+                ids=_mm256_add_epi64(ids,add);                
                 outPos+=__builtin_popcountl(mask);
 
             }
@@ -205,9 +234,8 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
                 
                 cmpres = _mm256_cmpeq_epi64(_mm256_load_si256( &inData[i]) ,value);
                 mask = _mm256_movemask_pd((__m256d)cmpres);
-                outPos-=(__builtin_clz(mask)-28);
-                _mm256_maskstore_epi64(outPos, cmpres, _mm256_set_epi64x(i*4+3,i*4+2,i*4+1,i*4));
-                outPos+=(__builtin_clz(mask)-28);
+                compress_store256(outPos,mask,ids);
+                ids=_mm256_add_epi64(ids,add);
                 outPos+=__builtin_popcountl(mask);
                 
             }
@@ -220,9 +248,8 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
               
                 cmpres = _mm256_or_si256(_mm256_cmpeq_epi64(_mm256_load_si256( &inData[i] ),value),_mm256_cmpgt_epi64(_mm256_load_si256( &inData[i] ),value));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
-                outPos-=(__builtin_clz(mask)-28);
-                _mm256_maskstore_epi64(outPos, cmpres, _mm256_set_epi64x(i*4+3,i*4+2,i*4+1,i*4));
-                outPos+=(__builtin_clz(mask)-28);
+                compress_store256(outPos,mask,ids);
+                ids=_mm256_add_epi64(ids,add);
                 outPos+=__builtin_popcountl(mask);
             }
         }
@@ -233,9 +260,8 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
           
                 cmpres = _mm256_or_si256(_mm256_cmpeq_epi64(_mm256_load_si256( &inData[i] ),value),_mm256_cmpgt_epi64(value,_mm256_load_si256( &inData[i] )));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
-                outPos-=(__builtin_clz(mask)-28);
-                _mm256_maskstore_epi64(outPos, cmpres, _mm256_set_epi64x(i*4+3,i*4+2,i*4+1,i*4));
-                outPos+=(__builtin_clz(mask)-28);
+                compress_store256(outPos,mask,ids);
+                ids=_mm256_add_epi64(ids,add);
                 outPos+=__builtin_popcountl(mask);
             }
         }
@@ -245,26 +271,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
        return outPosCol; 
     }
 };
-/*template<template<typename> class t_op>
-struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
-    static
-    const column<uncompr_f> * apply(
-            const column<uncompr_f> * const inDataCol,
-            const uint64_t val,
-            const size_t outPosCountEstimate = 0
-    ) {
-        
-         auto outPosCol = new column<uncompr_f>(
-                bool(outPosCountEstimate)
-                // use given estimate
-                ? (outPosCountEstimate * sizeof(uint64_t))
-                // use pessimistic estimate
-                : inDataCol->get_size_used_byte()
-        );
-         
-         return outPosCol;
-    }
-};*/
+
 
     }
 
