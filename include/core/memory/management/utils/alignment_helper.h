@@ -32,14 +32,18 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE void* create_aligned_ptr(void* p_Ptr) {
    trace( "[] - OUT. ( ptr = ", reinterpret_cast<void*>(ptrToSizeT + ((offset!=0) * (MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset))), " ).");
    return reinterpret_cast<void*>( ptrToSizeT + ( (offset!=0) * (MSV_MEMORY_MANAGER_ALIGNMENT_BYTE - offset) ) );
 #else
-   trace( "[] - OUT. ( ptr = ", reinterpret_cast<void*>(ptrToSizeT + MSV_MEMORY_MANAGER_ALIGNMENT_BYTE + (-offset | MSV_MEMORY_MANAGER_ALIGNMENT_TWOS_COMPLEMENT)), " ).");
+   trace(
+      "[] - OUT. ( ptr = ",
+      reinterpret_cast<void*>(ptrToSizeT + MSV_MEMORY_MANAGER_ALIGNMENT_BYTE +
+         (-offset | MSV_MEMORY_MANAGER_ALIGNMENT_TWOS_COMPLEMENT)),
+      ". padding = ", MSV_MEMORY_MANAGER_ALIGNMENT_BYTE + (-offset | MSV_MEMORY_MANAGER_ALIGNMENT_TWOS_COMPLEMENT), " ).");
    return reinterpret_cast<void*>( ptrToSizeT + MSV_MEMORY_MANAGER_ALIGNMENT_BYTE + (-offset | MSV_MEMORY_MANAGER_ALIGNMENT_TWOS_COMPLEMENT) );
 #endif
 }
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE void* create_extended_aligned_ptr(void* p_Ptr, size_t p_SizeOfMemChunk) {
-   trace( "[] -  IN. ( ptr = ", p_Ptr, ". Size = ", p_SizeOfMemChunk, " Bytes )." );
-   void * aligned_ptr = create_aligned_ptr(p_Ptr);
+MSV_CXX_ATTRIBUTE_FORCE_INLINE void* create_extended_aligned_ptr(void* p_StartPtr, size_t p_SizeOfMemChunk) {
+   trace( "[] -  IN. ( ptr = ", p_StartPtr, ". Size = ", p_SizeOfMemChunk, " Bytes )." );
+   void * aligned_ptr = create_aligned_ptr(p_StartPtr);
    (reinterpret_cast<size_t *>(aligned_ptr))[-1] = p_SizeOfMemChunk;
    trace( "[] - OUT. ( ptr = ", aligned_ptr, ". ptr[-1] = ", reinterpret_cast<size_t*>(aligned_ptr)[-1], " )." );
    return aligned_ptr;

@@ -119,7 +119,6 @@ class query_memory_manager : public abstract_memory_manager {
          //increasing the allocated size by one size_t, so the actual size can be stored at the very first item.
          size_t allocSize = get_size_with_alignment_padding(p_AllocSize) + sizeof(size_t);
          trace( "[Query Memory Manager] - Have to allocate ", allocSize, " Bytes ).");
-         void * tmp = m_CurrentPtr;
          debug( "[Query Memory Manager] - head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_SpaceLeft < allocSize)) {
             debug(
@@ -127,17 +126,19 @@ class query_memory_manager : public abstract_memory_manager {
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
             size_t nextExpandSize = expander.next_size( allocSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
-            tmp = m_GeneralMemoryManager.allocate( this, nextExpandSize );
+            m_CurrentPtr = m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          }
-
+         void * tmp = m_CurrentPtr;
          if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
+            trace( "[Query Memory Manager] - Move current head ", sizeof( size_t ), " byte forward, to hold the datasize." );
+            tmp = static_cast< void * >(static_cast< char * >(tmp) + sizeof(size_t));
             trace( "[Query Memory Manager] - Creating extended aligned ptr (current = ", tmp, ". Size = ", p_AllocSize, " Bytes." );
             void * result_ptr = create_extended_aligned_ptr(tmp, p_AllocSize);
             size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
             trace(
-               "[Query Memory Manager] - Set new Head to aligned ptr ( ", result_ptr, " ). ",
+               "[Query Memory Manager] - Set new Head to aligned ptr ( ", result_ptr, " ) + size ( ", p_AllocSize, " ). ",
                "Bytes lost through Alignment: ",
                bytes_lost, ".");
             m_CurrentPtr = static_cast< char * >( result_ptr ) + p_AllocSize;
