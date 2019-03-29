@@ -44,6 +44,11 @@ void *malloc(size_t p_AllocSize) __THROW {
    return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
 }
 
+void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
+   return morphstore::query_memory_manager::get_instance().reallocate(p_Ptr, p_AllocSize);
+}
+
+
 /**
  * @brief Global replacement for free from cstdlib.
  *

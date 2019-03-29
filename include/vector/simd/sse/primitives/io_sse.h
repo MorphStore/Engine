@@ -13,6 +13,8 @@
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/primitives/io.h>
 
+#include <functional>
+
 
 namespace vector {
 
@@ -93,7 +95,9 @@ namespace vector {
       }
    };
 
-
-
+//   template<class VectorExtension, iov IOVariant, int IOGranularity>
+//   std::function< typename VectorExtension::vector_t ( typename VectorExtension::base_t const * const ) > foo = io< VectorExtension, IOVariant, IOGranularity >::load;
 }
+
+
 #endif //MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_IO_SSE_H

@@ -78,7 +78,7 @@ void debug_stdlib_free( void * p_Ptr, const char *file, int line, const char *fu
    morphstore::stdlib_free_ptr( p_Ptr );
 }
 #     define stdlib_malloc( X ) debug_stdlib_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
-#     define stdlib_realloc( X ) debug_stdlib_realloc( X, __FILE__, __LINE__, __FUNCTION__ )
+#     define stdlib_realloc( X,Y ) debug_stdlib_realloc( X, Y, __FILE__, __LINE__, __FUNCTION__ )
 #     define stdlib_free( X ) debug_stdlib_free( X, __FILE__, __LINE__, __FUNCTION__ )
 #  elif defined( MSV_MEMORY_LEAK_CHECK )
 void * mem_leak_stdlib_malloc( size_t p_AllocSize ) __THROW {
@@ -97,11 +97,11 @@ void mem_leak_stdlib_free( void * p_Ptr ) __THROW {
    morphstore::stdlib_free_ptr( p_Ptr );
 }
 #     define stdlib_malloc( X ) mem_leak_stdlib_malloc( X )
-#     define stdlib_realloc( X ) mem_leak_stdlib_realloc( X )
+#     define stdlib_realloc( X,Y ) mem_leak_stdlib_realloc( X,Y )
 #     define stdlib_free( X ) mem_leak_stdlib_free( X )
 #  else
 #     define stdlib_malloc( X ) stdlib_malloc_ptr( X )
-#     define stdlib_realloc( X ) stdlib_realloc_ptr( X )
+#     define stdlib_realloc( X,Y ) stdlib_realloc_ptr( X,Y )
 #     define stdlib_free( X ) stdlib_free_ptr( X )
 #  endif
 

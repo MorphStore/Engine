@@ -24,12 +24,6 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #ifndef MSV_NO_SELFMANAGED_MEMORY
-#  ifndef MSV_MEMORY_MANAGER_ALIGNMENT_BYTE
-#     include <core/utils/helper.h>
-#     define MSV_MEMORY_MANAGER_ALIGNMENT_BYTE 64_B
-#  endif
-#  define MSV_MEMORY_MANAGER_ALIGNMENT_MINUS_ONE_BYTE (MSV_MEMORY_MANAGER_ALIGNMENT_BYTE-1)
-
 #  include <core/memory/morphstore_mm.h>
 #endif
 

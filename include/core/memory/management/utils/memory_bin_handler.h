@@ -38,6 +38,7 @@ class memory_bin_handler {
       struct memory_bin_handle {
          abstract_memory_manager * m_MemoryManager;
          void * m_BasePtr;
+         void * m_AlignedPtr;
          size_t m_SizeByte;
          memory_bin_handle * m_PrevHandle;
          memory_bin_handle * m_NextHandle;
@@ -48,9 +49,10 @@ class memory_bin_handler {
          memory_bin_handle & operator=( memory_bin_handle const & ) = default;
          memory_bin_handle & operator=( memory_bin_handle && ) = default;
 
-         inline void init(  abstract_memory_manager * p_MemoryManager, void * p_BasePtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle  ) {
+         inline void init(  abstract_memory_manager * p_MemoryManager, void * p_BasePtr, void * p_AlignedPtr, size_t p_SizeByte, memory_bin_handle * p_PrevHandle, memory_bin_handle * p_NextHandle  ) {
             m_MemoryManager = p_MemoryManager;
             m_BasePtr = p_BasePtr;
+            m_AlignedPtr = p_AlignedPtr;
             m_SizeByte = p_SizeByte;
             m_PrevHandle = p_PrevHandle;
             m_NextHandle = p_NextHandle;
@@ -80,7 +82,7 @@ class memory_bin_handler {
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
             trace( "[Memory Bin Handler] - Initialize Bin Handle." );
-            tmp->init( p_MemoryManager, nullptr, 0, nullptr, nullptr );
+            tmp->init( p_MemoryManager, nullptr, nullptr, 0, nullptr, nullptr );
             trace( "[Memory Bin Handler] - Assign newly created handle ", tmp, " as root and tail." );
             m_BinHandleStructRoot = tmp;
             m_BinHandleStructTail = tmp;
@@ -113,17 +115,18 @@ class memory_bin_handler {
 
    public:
 
-      inline void append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
+      inline void * append_bin( abstract_memory_manager * const p_MemoryManager, void * const p_BasePtr, size_t p_BinSize ) {
          trace(
             "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager,
             ". Memory = ", p_BasePtr,
             ". Size = ", p_BinSize, " )."
          );
          trace( "[Memory Bin Handler] - Create new Memory Bin handle." );
+         void * alignedPtr = create_aligned_ptr(p_BasePtr);
          memory_bin_handle * tmp = static_cast< memory_bin_handle * >( stdlib_malloc( sizeof( memory_bin_handle ) ) );
          if( tmp != nullptr ) {
             trace( "[Memory Bin Handler] - Initialize Bin Handle." );
-            tmp->init( p_MemoryManager, p_BasePtr, p_BinSize, m_BinHandleStructTail, nullptr );
+            tmp->init( p_MemoryManager, p_BasePtr, alignedPtr, p_BinSize, m_BinHandleStructTail, nullptr );
             trace(
                "[Memory Bin Handler] - Assign newly created handle ", tmp, " as new tail. Reset pointer from old tail."
             );
@@ -136,7 +139,8 @@ class memory_bin_handler {
          trace(
             "[Memory Bin Handler] - Root = ", m_BinHandleStructRoot, ". Tail = ", m_BinHandleStructTail, "."
          );
-         trace( "[Memory Bin Handler] - OUT. ( void ).");
+         trace( "[Memory Bin Handler] - OUT. ( aligned ptr = ", alignedPtr, " ).");
+         return alignedPtr;
       }
 
       inline memory_bin_handle * get_tail( void ) const {
@@ -183,7 +187,7 @@ class memory_bin_handler {
          memory_bin_handle * p_Current
       ) {
 
-         info( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
+         trace( "[Memory Bin Handler] - IN.  ( Owner = ", p_MemoryManager, ", Current Handle = ", p_Current, " )." );
          memory_bin_handle * nextHandle = p_Current->m_NextHandle;
          memory_bin_handle * handle = p_Current;
          memory_bin_handle * prevHandle;
@@ -209,6 +213,29 @@ class memory_bin_handler {
             " . Size: ", handle->m_SizeByte, " Bytes",
             " )." );
          return handle;
+      }
+
+      MSV_CXX_ATTRIBUTE_INLINE void remove_handle_and_free(memory_bin_handle * p_ToRemove) {
+         //since the root handle is empty, it is assumed, that any runtime allocated handle has a predecessor
+         trace("[Memory Bin Handler] -  IN. ( Handle = ", p_ToRemove, " ).");
+         memory_bin_handle * prev = p_ToRemove->m_PrevHandle;
+         trace("[Memory Bin Handler] - Prev Handle = ", prev, " ).");
+         trace("[Memory Bin Handler] - Freeing (stdlib) base ptr: ", p_ToRemove->m_BasePtr, " ).");
+         stdlib_free(static_cast<void*>(p_ToRemove->m_BasePtr));
+         if(MSV_CXX_ATTRIBUTE_LIKELY(m_BinHandleStructTail == p_ToRemove)) {
+            trace("[Memory Bin Handler] - Handle is tail.");
+            prev->m_NextHandle = nullptr;
+            m_BinHandleStructTail = prev;
+            trace("[Memory Bin Handler] - New tail assigned: ", m_BinHandleStructTail, ".");
+         } else {
+            memory_bin_handle * next = p_ToRemove->m_NextHandle;
+            prev->m_NextHandle = next;
+            next->m_PrevHandle = prev;
+            trace("[Memory Bin Handler] - Previous Handle -> next = ", prev->m_NextHandle, " ." );
+            trace("[Memory Bin Handler] - Next Handle -> prev = ", next->m_PrevHandle, " ." );
+         }
+         trace("[Memory Bin Handler] - Freeing (stdlib) handle struct: ", p_ToRemove, " ).");
+         stdlib_free(static_cast<void*>(p_ToRemove));
       }
 };
 

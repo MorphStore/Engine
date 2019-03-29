@@ -22,6 +22,7 @@ namespace vector {
    struct sse< v128< T > > {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v128<T>;
+      using base_t = T;
 
       using vector_t =
       typename std::conditional<
