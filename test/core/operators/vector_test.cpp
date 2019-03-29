@@ -15,7 +15,7 @@
 #include <iostream>
 
 
-#define TEST_DATA_COUNT 100000
+#define TEST_DATA_COUNT 1000000
 
 using namespace morphstore;
 
