@@ -9,11 +9,14 @@
 #include <core/storage/column_gen.h>
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/operators/vectorized/agg_sum_uncompr.h>
-#include <core/operators/vectorized/select_uncompr.h>
+//#include <core/operators/vectorized/select_uncompr.h>
 #include <core/operators/vectorized/project_uncompr.h>
+#include <core/operators/vectorized/intersect_uncompr.h>
 #include <core/operators/scalar/select_uncompr.h>
 
 #include <iostream>
+
+#include "core/operators/interfaces/intersect.h"
 
 
 #define TEST_DATA_COUNT 10000
@@ -33,6 +36,7 @@ int main( void ) {
     column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
     const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT);
     init_data(testDataColumn);
+    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,2);
 
     std::cout << "Start scalar aggregation...\n";
     auto sum_aggscalar_result=agg_sum<processing_style_t::scalar>( testDataColumn );//Do aggregation
@@ -196,6 +200,12 @@ int main( void ) {
     ok = memcmp(projectionscalar_result,projection256_result,projectionscalar_result->get_count_values()*sizeof(uint64_t));
     if (!ok) return ok;
     else std::cout << "Scalar and 256 bit Projections are equal\n";     
+    
+  
+    auto intersect256_result=morphstore::intersect_sorted<processing_style_t::vec256, uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT);
+    std::cout << "256 bit Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect256_result->get_data()))[0] << ", " << ((uint64_t*)(intersect256_result->get_data()))[1] << ", " << ((uint64_t*)(intersect256_result->get_data()))[2] <<  "\n\t Count: " << intersect256_result->get_count_values() << "\n";
+    
+    
     
     return 0;
 }

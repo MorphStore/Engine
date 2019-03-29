@@ -30,6 +30,7 @@ namespace morphstore {
  * Known issues
  * 1. This does not work for very large unsigned integers, which use all 64 bits, because values are casted to signed.
  * 2. 256-bit-version does not (yet) store indices correctly when there are gaps within one register
+ * UPDATE: 2 is solved :-)
  */
 
 template<template<typename> class t_op>

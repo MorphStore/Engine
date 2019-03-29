@@ -37,6 +37,7 @@
 
 namespace morphstore {
     
+    
 template<>
 const column<uncompr_f> *
 intersect_sorted<processing_style_t::scalar>(
