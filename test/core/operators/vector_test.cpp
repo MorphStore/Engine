@@ -10,12 +10,13 @@
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/operators/vectorized/agg_sum_uncompr.h>
 #include <core/operators/vectorized/select_uncompr.h>
+#include <core/operators/vectorized/project_uncompr.h>
 #include <core/operators/scalar/select_uncompr.h>
 
 #include <iostream>
 
 
-#define TEST_DATA_COUNT 100000
+#define TEST_DATA_COUNT 10000
 
 using namespace morphstore;
 
@@ -180,6 +181,21 @@ int main( void ) {
     std::cout << "256 bit (Less Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
+    std::cout << "Start projection...\n";
+    
+    auto projectionscalar_result=project<processing_style_t::vec128, uncompr_f>(testDataColumnSorted,testDataColumn);
+    std::cout << "Scalar Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projectionscalar_result->get_data()))[0] << ", " << ((uint64_t*)(projectionscalar_result->get_data()))[1] << ", " << ((uint64_t*)(projectionscalar_result->get_data()))[2] <<  "\n\t Count: " << projectionscalar_result->get_count_values() << "\n";            
+    auto projection128_result=project<processing_style_t::vec128, uncompr_f>(testDataColumnSorted,testDataColumn);
+    std::cout << "128 bit Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projection128_result->get_data()))[0] << ", " << ((uint64_t*)(projection128_result->get_data()))[1] << ", " << ((uint64_t*)(projection128_result->get_data()))[2] <<  "\n\t Count: " << projection128_result->get_count_values() << "\n";            
+    auto projection256_result=project<processing_style_t::vec256, uncompr_f>(testDataColumnSorted,testDataColumn);
+    std::cout << "256 bit Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projection256_result->get_data()))[0] << ", " << ((uint64_t*)(projection256_result->get_data()))[1] << ", " << ((uint64_t*)(projection256_result->get_data()))[2] <<  "\n\t Count: " << projection256_result->get_count_values() << "\n";            
+    
+    int ok = memcmp(projectionscalar_result,projection128_result,projectionscalar_result->get_count_values()*sizeof(uint64_t));
+    if (!ok) return ok;
+    else std::cout << "Scalar and 128 bit Projections are equal\n";
+    ok = memcmp(projectionscalar_result,projection256_result,projectionscalar_result->get_count_values()*sizeof(uint64_t));
+    if (!ok) return ok;
+    else std::cout << "Scalar and 256 bit Projections are equal\n";     
     
     return 0;
 }
