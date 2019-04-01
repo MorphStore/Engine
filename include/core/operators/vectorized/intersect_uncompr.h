@@ -61,19 +61,19 @@ intersect_sorted<processing_style_t::vec256>(
     left=_mm256_loadu_si256(inPosL);
     right=_mm256_loadu_si256(inPosR);
     
-    
+   
     while(inPosL < endInPosL && inPosR < endInPosR){
 
         for (int i=0;i<4;i++){
-            mask= (mask | _mm256_movemask_pd((__m256d)(_mm256_cmpeq_epi64(right,left))));
-            right=_mm256_permute4x64_epi64(right,228);
-
-            mask_greater_than = (mask_greater_than | _mm256_movemask_pd((__m256d)(_mm256_cmpgt_epi64(right,left))));
+            mask |= _mm256_movemask_pd((__m256d)(_mm256_cmpeq_epi64(right,left)));
+            
+            mask_greater_than |=  _mm256_movemask_pd((__m256d)(_mm256_cmpgt_epi64(right,left)));
+            right=_mm256_permute4x64_epi64(right,57);
         }
         
         compress_store256(outPos,mask,left);
         outPos=(__m256i*)(((uint64_t *)outPos)+__builtin_popcountl(mask));
-    
+        
         if ((mask | mask_greater_than) == 0) {
            inPosR++;
            right=_mm256_loadu_si256(inPosR);
@@ -89,6 +89,7 @@ intersect_sorted<processing_style_t::vec256>(
     }
     
     const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);
+   
     outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
     return outPosCol; 
     

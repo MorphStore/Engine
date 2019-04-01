@@ -13,13 +13,14 @@
 #include <core/operators/vectorized/project_uncompr.h>
 #include <core/operators/vectorized/intersect_uncompr.h>
 #include <core/operators/scalar/select_uncompr.h>
+#include <core/operators/scalar/intersect_uncompr.h>
 
 #include <iostream>
 
 #include "core/operators/interfaces/intersect.h"
 
 
-#define TEST_DATA_COUNT 10000
+#define TEST_DATA_COUNT 100
 
 using namespace morphstore;
 
@@ -36,7 +37,7 @@ int main( void ) {
     column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
     const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT);
     init_data(testDataColumn);
-    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,2);
+    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,3);
 
     std::cout << "Start scalar aggregation...\n";
     auto sum_aggscalar_result=agg_sum<processing_style_t::scalar>( testDataColumn );//Do aggregation
@@ -194,18 +195,48 @@ int main( void ) {
     auto projection256_result=project<processing_style_t::vec256, uncompr_f>(testDataColumnSorted,testDataColumn);
     std::cout << "256 bit Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projection256_result->get_data()))[0] << ", " << ((uint64_t*)(projection256_result->get_data()))[1] << ", " << ((uint64_t*)(projection256_result->get_data()))[2] <<  "\n\t Count: " << projection256_result->get_count_values() << "\n";            
     
-    int ok = memcmp(projectionscalar_result,projection128_result,projectionscalar_result->get_count_values()*sizeof(uint64_t));
-    if (!ok) return ok;
+    int ok = memcmp(projectionscalar_result->get_data(),projection128_result->get_data(),projectionscalar_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
     else std::cout << "Scalar and 128 bit Projections are equal\n";
-    ok = memcmp(projectionscalar_result,projection256_result,projectionscalar_result->get_count_values()*sizeof(uint64_t));
-    if (!ok) return ok;
+    ok = memcmp(projectionscalar_result->get_data(),projection256_result->get_data(),projectionscalar_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    
     else std::cout << "Scalar and 256 bit Projections are equal\n";     
     
   
+    auto intersect_result=intersect_sorted<processing_style_t::scalar, uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT);
+    std::cout << "Scalar Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect_result->get_data()))[0] << ", " << ((uint64_t*)(intersect_result->get_data()))[1] << ", " << ((uint64_t*)(intersect_result->get_data()))[2] <<  "\n\t Count: " << intersect_result->get_count_values() << "\n";
+    
     auto intersect256_result=morphstore::intersect_sorted<processing_style_t::vec256, uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT);
     std::cout << "256 bit Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect256_result->get_data()))[0] << ", " << ((uint64_t*)(intersect256_result->get_data()))[1] << ", " << ((uint64_t*)(intersect256_result->get_data()))[2] <<  "\n\t Count: " << intersect256_result->get_count_values() << "\n";
     
+    ok = memcmp(intersect_result->get_data(),intersect256_result->get_data(),intersect256_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Intersections are equal\n";
     
-    
+    std::cout << "Test Permutation: \n";
+    __m256i test =_mm256_set_epi64x(3,2,1,0);
+    __m256i test2;
+    std::cout << _mm256_extract_epi64(test,0) << ", " << _mm256_extract_epi64(test,1) << ", " << _mm256_extract_epi64(test,2) << ", " << _mm256_extract_epi64(test,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,27);
+    std::cout << "27: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,57);
+    std::cout << "57: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,228);
+    std::cout << "228: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,78);
+    std::cout << "78: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,147);
+    std::cout << "147: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,141);
+    std::cout << "141: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,156);
+    std::cout << "156: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,216);
+    std::cout << "216: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,120);
+    std::cout << "120: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
+    test2=_mm256_permute4x64_epi64(test,180);
+    std::cout << "120: " << _mm256_extract_epi64(test2,0) << ", " << _mm256_extract_epi64(test2,1) << ", " << _mm256_extract_epi64(test2,2) << ", " << _mm256_extract_epi64(test2,3) << std::endl;
     return 0;
 }

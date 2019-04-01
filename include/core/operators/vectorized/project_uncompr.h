@@ -73,10 +73,10 @@ project<processing_style_t::vec256>(
     __m256i buffer;
     
     
-    for(unsigned i = 0; i < inPosCount/4; i++) {
+    for(size_t i = 0; i < inPosCount; i+=4) {
         //A gather could be faster here but requires loading a second register with the indexes in every loop
         //->Any opinions about that?
-        buffer=_mm256_set_epi64x(inData[inPos[i*2+3]],inData[inPos[i*2+2]],inData[inPos[i*2+1]],inData[inPos[i*2]]);
+        buffer=_mm256_set_epi64x(inData[inPos[i+3]],inData[inPos[i+2]],inData[inPos[i+1]],inData[inPos[i]]);
         _mm256_store_si256(outData,buffer);
         outData++;
     }

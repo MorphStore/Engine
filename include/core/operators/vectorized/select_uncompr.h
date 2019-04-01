@@ -148,11 +148,11 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE/*__attribute__((always_inline)) inline*/ void com
           
                     case 0: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
                     case 1: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
-                    case 2: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,225)); break;
+                    case 2: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,57)); break;
                     case 3: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
-                    case 4: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,210)); break;
+                    case 4: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,78)); break;
                     case 5: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,216)); break;
-                    case 6: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,201)); break;
+                    case 6: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,57)); break;
                     case 7: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,228)); break;
                     case 8: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,147)); break;
                     case 9: _mm256_storeu_si256(outPtr, _mm256_permute4x64_epi64(vector,156)); break;
