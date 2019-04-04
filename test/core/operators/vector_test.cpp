@@ -14,10 +14,13 @@
 #include <core/operators/vectorized/intersect_uncompr.h>
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/operators/scalar/intersect_uncompr.h>
+#include <core/operators/scalar/join_uncompr.h>
+#include <core/operators/vectorized/join_uncompr.h>
 
 #include <iostream>
 
 #include "core/operators/interfaces/intersect.h"
+
 
 
 #define TEST_DATA_COUNT 100
@@ -213,6 +216,24 @@ int main( void ) {
     ok = memcmp(intersect_result->get_data(),intersect256_result->get_data(),intersect256_result->get_count_values()*sizeof(uint64_t));
     if (ok!=0) return ok;
     else std::cout << "Scalar and 256 bit Intersections are equal\n";
+    
+    auto joinscalar_result=morphstore::nested_loop_join<processing_style_t::scalar, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT*TEST_DATA_COUNT/4);
+    std::cout << "Scalar Join\n\t 1st 3 IDs:\n" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[0] << ", " << ((uint64_t*)(std::get<1>(joinscalar_result)->get_data()))[0] << "\n";
+    std::cout << "" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[1] << ", " << ((uint64_t*)((std::get<1>(joinscalar_result))->get_data()))[1] << "\n";
+    std::cout << "" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[2] << ", " << ((uint64_t*)((std::get<1>(joinscalar_result))->get_data()))[2] << "\n";
+    std::cout <<  "Count A: " << ((uint64_t*)(std::get<0>(joinscalar_result)->get_count_values())) <<  "\n";
+    std::cout <<  "Count B: " << ((uint64_t*)(std::get<1>(joinscalar_result)->get_count_values())) <<  "\n";
+    
+    auto join256_result=morphstore::nested_loop_join<processing_style_t::vec256, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT*TEST_DATA_COUNT/4);
+    std::cout << "256 bit Join\n\t 1st 3 IDs:\n" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[0] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[0] << "\n";
+    std::cout << "" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[1] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[1] << "\n";
+    std::cout << "" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[2] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[2] << "\n";
+    std::cout <<  "Count A: " << ((uint64_t*)(std::get<0>(join256_result)->get_count_values())) <<  "\n";
+    std::cout <<  "Count B: " << ((uint64_t*)(std::get<1>(join256_result)->get_count_values())) <<  "\n";
+    
+    ok = memcmp(std::get<0>(join256_result)->get_data(),std::get<0>(joinscalar_result)->get_data(),std::get<0>(join256_result)->get_count_values()*sizeof(uint64_t)) && memcmp(std::get<0>(join256_result)->get_data(),std::get<1>(joinscalar_result)->get_data(),std::get<1>(join256_result)->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Joins are equal\n";
     
     std::cout << "Test Permutation: \n";
     __m256i test =_mm256_set_epi64x(3,2,1,0);
