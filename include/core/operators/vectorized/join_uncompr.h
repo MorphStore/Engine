@@ -77,12 +77,33 @@ nested_loop_join<processing_style_t::vec256>(
     __m256i right;
     __m256i leftIDs;
     __m256i rightIDs;
+    
+    
+    //Iterate over all elements of the left column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
     for(unsigned iL = 0; iL < inDataLCount/4; iL++){
+        //Load 4 values of the left relation into a vector register
         left=_mm256_load_si256(inDataL+iL);
+        //Set the according IDs for the left relation
         leftIDs=_mm256_set_epi64x(iL*4+3,iL*4+2,iL*4+1,iL*4);
+        
+        //Iterate over all elements of the right column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
         for(unsigned iR = 0; iR < inDataRCount/4; iR++){
+            //Load 4 values of the right relation into a vector register
            right=_mm256_load_si256(inDataR+iR);
+           //Set the according IDs for the right relation
            rightIDs=_mm256_set_epi64x(iR*4+3,iR*4+2,iR*4+1,iR*4);
+           
+           /* Check all combinations for equality:
+            * 1. Compare left and right
+            * 2. Make a mask out of the result of step 1
+            * 3. Store all IDs of the left relation, where the values matched with the right relation
+            * 3. Store all IDs of the right relation, where the values matched with the left relation
+            * 4. Increase the output address for the left relation by the number of results in this iteration
+            * 5. Increase the output address for the right relation by the number of results in this iteration
+            * 6. Rotate the right relation by 64 bit
+            * 7. Rotate the indexes of the right relation by 64 bit
+            * 8. Increas ethe output counter by thenumber of results in this iteration
+            */
             for (int i=0; i<4;i++){
                 cmpres=_mm256_cmpeq_epi64(left,right);
                 mask = _mm256_movemask_pd((__m256d)cmpres);
@@ -96,7 +117,9 @@ nested_loop_join<processing_style_t::vec256>(
             }
     }
     }
-    const size_t outSize = iOut * sizeof(uint64_t);
+    const size_t outSize = iOut * sizeof(uint64_t);//How large is our result set?
+    
+    //Store output size in meta data of the output columns
     outPosLCol->set_meta_data(iOut, outSize);
     outPosRCol->set_meta_data(iOut, outSize);
     

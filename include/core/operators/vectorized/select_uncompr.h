@@ -28,11 +28,11 @@ namespace morphstore {
     
 /*!
  * Known issues
- * 1. This does not work for very large unsigned integers, which use all 64 bits, because values are casted to signed.
- * 2. 256-bit-version does not (yet) store indices correctly when there are gaps within one register
- * UPDATE: 2 is solved :-)
+ * - This Select does not work for very large unsigned integers, which use all 64 bits, because values are casted to signed.
+ * 
  */
 
+    //! 128-bit Select implementation using only SSE and AVX(2) intrinsics
 template<template<typename> class t_op>
 struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
     static
@@ -58,15 +58,25 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
         const long long int * const initOutPos = reinterpret_cast< long long int * > (outP);
 
         
-        
-        __m128i value = _mm_set_epi64x(val,val);
+        __m128i value = _mm_set_epi64x(val,val);//! Fill a register with the select predicate
         __m128i cmpres;
         int mask;
         
+        //!Are we doing a less-than comparison?
         if (typeid(op)==typeid(std::less<uint64_t>)){
          
+            //!Iterate over all elements of the column, 2 in each iteration because we can store 2 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/2; i++){
               
+                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 2 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Pointer magic: We move the output position one element in front of the actual output position if the first of our values (loaded in step 1) did not match. We nee dthis step to not produce "holes" in step 4.
+                 * 4. maskstore: Store the index for each value that matched in step 1 
+                 * 5. Move the output position bakc if we changed it in step 3
+                 * 6. Increase output position again by the number of matching results in this step
+                 */
                 cmpres = _mm_cmpgt_epi64(value,_mm_load_si128( &inData[i] ));
                 mask = _mm_movemask_pd((__m128d)cmpres);
                 outPos=(long long int *)((uint64_t *)outPos-(__builtin_clz(mask)-30));
@@ -77,10 +87,20 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
             }
         }
         
+        //Are we doing a greater-than comparison?
         if (typeid(op)==typeid(std::greater<uint64_t>)){
             
             for(unsigned i = 0; i < inDataCount/2; i++){
 
+                                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 2 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Pointer magic: We move the output position one element in front of the actual output position if the first of our values (loaded in step 1) did not match. We nee dthis step to not produce "holes" in step 4.
+                 * 4. maskstore: Store the index for each value that matched in step 1 
+                 * 5. Move the output position bakc if we changed it in step 3
+                 * 6. Increase output position again by the number of matching results in this step
+                 */
                 cmpres = _mm_cmpgt_epi64(_mm_load_si128( &inData[i] ),value);
                 mask = _mm_movemask_pd((__m128d)cmpres);
                 outPos=(long long int *)((uint64_t *)outPos-(__builtin_clz(mask)-30));
@@ -91,11 +111,21 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
             }
         }
         
+        //Are we comparing for equality?
          if (typeid(op)==typeid(std::equal_to<uint64_t>)){
             
             
             for(unsigned i = 0; i < inDataCount/2; i++){
                 
+                                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 2 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Pointer magic: We move the output position one element in front of the actual output position if the first of our values (loaded in step 1) did not match. We nee dthis step to not produce "holes" in step 4.
+                 * 4. maskstore: Store the index for each value that matched in step 1 
+                 * 5. Move the output position bakc if we changed it in step 3
+                 * 6. Increase output position again by the number of matching results in this step
+                 */
                 cmpres = _mm_cmpeq_epi64(_mm_load_si128( &inData[i]) ,value);
                 mask = _mm_movemask_pd((__m128d)cmpres);
                 if ((mask << 31)==0) outPos--;
@@ -106,11 +136,22 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
             }
         }
         
+        
+        //Are we doing a greater-than-or-equal comparison?
         if (typeid(op)==typeid(std::greater_equal<uint64_t>)){
             
          
             for(unsigned i = 0; i < inDataCount/2; i++){
               
+                                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 2 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Pointer magic: We move the output position one element in front of the actual output position if the first of our values (loaded in step 1) did not match. We nee dthis step to not produce "holes" in step 4.
+                 * 4. maskstore: Store the index for each value that matched in step 1 
+                 * 5. Move the output position bakc if we changed it in step 3
+                 * 6. Increase output position again by the number of matching results in this step
+                 */
                 __m128i cmpres = _mm_or_si128(_mm_cmpeq_epi64(_mm_load_si128( &inData[i] ),value),_mm_cmpgt_epi64(_mm_load_si128( &inData[i] ),value));
                 mask = _mm_movemask_pd((__m128d)cmpres);
                 outPos=(long long int *)((uint64_t *)outPos-(__builtin_clz(mask)-30));
@@ -120,10 +161,21 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
             }
         }
         
+        //!Are we doing a less-than-or-equal comparison?
          if (typeid(op)==typeid(std::less_equal<uint64_t>)){
 
+             //!Iterate over all elements of the column, 2 in each iteration because we can store 2 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/2; i++){
           
+                                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 2 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Pointer magic: We move the output position one element in front of the actual output position if the first of our values (loaded in step 1) did not match. We nee dthis step to not produce "holes" in step 4.
+                 * 4. maskstore: Store the index for each value that matched in step 1 
+                 * 5. Move the output position bakc if we changed it in step 3
+                 * 6. Increase output position again by the number of matching results in this step
+                 */
                 __m128i cmpres = _mm_or_si128(_mm_cmpeq_epi64(_mm_load_si128( &inData[i] ),value),_mm_cmpgt_epi64(value,_mm_load_si128( &inData[i] )));
                 mask = _mm_movemask_pd((__m128d)cmpres);
                 outPos=(long long int *)((uint64_t *)outPos-(__builtin_clz(mask)-30));
@@ -139,9 +191,13 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
     }
 };
 
-/* This does not really compress, just shift the values we want to store to the lower bits.
+/*! This function compresses the data in a register according to a bitmask (all values with an according set bit will be packed at the beginning of the register), and stores it at a given address.
+ * Note: This does not really compress, just shift the values we want to store to the lower bits.
  * If you need a real compress store, copy this code and change the used store-intrinsic to _mm256_maskstore* (and provide the according mask, of course).
  * This function will move to the vector lib someday.
+ * @param outPtr The memory address where the vector should be stored
+ * @param mask A bitmask with a bit set for every value which is goin to be stored
+ * @param vector The 256-bit vector to be comprssed and stored 
  */
 MSV_CXX_ATTRIBUTE_FORCE_INLINE/*__attribute__((always_inline)) inline*/ void compress_store256(__m256i * outPtr, int mask, __m256i vector){
     switch (mask){
@@ -164,6 +220,8 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE/*__attribute__((always_inline)) inline*/ void com
                     case 15: _mm256_storeu_si256(outPtr,_mm256_permute4x64_epi64(vector,228)); break;
                 }
 }
+
+//! 256-bit Select implementation using only SSE and AVX(2) intrinsics
 template<template<typename> class t_op>
 struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
     static
@@ -190,16 +248,25 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
 
         
         
-        __m256i value = _mm256_set_epi64x(val,val,val,val);
+        __m256i value = _mm256_set_epi64x(val,val,val,val);//!Fill a vector with the select predicate
         __m256i cmpres;
-        __m256i ids=_mm256_set_epi64x(3,2,1,0);
-        __m256i add=_mm256_set_epi64x(4,4,4,4);
+        __m256i ids=_mm256_set_epi64x(3,2,1,0);//!Set initial IDs
+        __m256i add=_mm256_set_epi64x(4,4,4,4);//!We will use this vector later to increase the IDs in every iteration
         int mask;
         
+        //!Are we doing a less-than comparison?
         if (typeid(op)==typeid(std::less<uint64_t>)){
          
             for(unsigned i = 0; i < inDataCount/4; i++){
               
+                 /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 4 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Store the index for each value that matched in step 1 
+                 * 4. Increase all IDs by 4 (maybe we should do it this way for 128 bit, too)
+                 * 5. Increase output position by the number of results in this step
+                 */
                 cmpres = _mm256_cmpgt_epi64(value,_mm256_load_si256( &inData[i] ));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 
@@ -212,10 +279,20 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
         
+        //!Are we doing a greater-than comparison?
         if (typeid(op)==typeid(std::greater<uint64_t>)){
             
+            //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/4; i++){
 
+                   /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 4 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Store the index for each value that matched in step 1 
+                 * 4. Increase all IDs by 4 (maybe we should do it this way for 128 bit, too)
+                 * 5. Increase output position by the number of results in this step
+                 */
                 cmpres = _mm256_cmpgt_epi64(_mm256_load_si256( &inData[i] ),value);
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 
@@ -227,11 +304,20 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
         
+        //Are we comparing for equality?
          if (typeid(op)==typeid(std::equal_to<uint64_t>)){
             
-            
+            //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/4; i++){
                 
+                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 4 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Store the index for each value that matched in step 1 
+                 * 4. Increase all IDs by 4 (maybe we should do it this way for 128 bit, too)
+                 * 5. Increase output position by the number of results in this step
+                 */
                 cmpres = _mm256_cmpeq_epi64(_mm256_load_si256( &inData[i]) ,value);
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 compress_store256(outPos,mask,ids);
@@ -241,11 +327,20 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
         
+        //Are we doing a greater-than-or-equal comparison?
         if (typeid(op)==typeid(std::greater_equal<uint64_t>)){
             
-         
+         //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/4; i++){
               
+                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 4 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Store the index for each value that matched in step 1 
+                 * 4. Increase all IDs by 4 (maybe we should do it this way for 128 bit, too)
+                 * 5. Increase output position by the number of results in this step
+                 */
                 cmpres = _mm256_or_si256(_mm256_cmpeq_epi64(_mm256_load_si256( &inData[i] ),value),_mm256_cmpgt_epi64(_mm256_load_si256( &inData[i] ),value));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 compress_store256(outPos,mask,ids);
@@ -254,10 +349,20 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
         
+        //Are we doing a less-than-or-equal comparison?
          if (typeid(op)==typeid(std::less_equal<uint64_t>)){
 
+             //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
             for(unsigned i = 0; i < inDataCount/4; i++){
           
+                /*!
+                 * Do the following steps for comparison:
+                 * 1. Load 4 values into vector register and compare them with the predicate 
+                 * 2. Make a mask out of the result of step 1
+                 * 3. Store the index for each value that matched in step 1 
+                 * 4. Increase all IDs by 4 (maybe we should do it this way for 128 bit, too)
+                 * 5. Increase output position by the number of results in this step
+                 */
                 cmpres = _mm256_or_si256(_mm256_cmpeq_epi64(_mm256_load_si256( &inData[i] ),value),_mm256_cmpgt_epi64(value,_mm256_load_si256( &inData[i] )));
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 compress_store256(outPos,mask,ids);
@@ -266,7 +371,9 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
       
-        const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);
+        const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos); //!<How large is our result set?
+        
+        //Store output size in meta data of the output column
         outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
        return outPosCol; 
     }

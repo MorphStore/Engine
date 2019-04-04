@@ -58,12 +58,18 @@ intersect_sorted<processing_style_t::vec256>(
     __m256i right;
     int mask=0;
     int mask_greater_than=0;
-    left=_mm256_loadu_si256(inPosL);
-    right=_mm256_loadu_si256(inPosR);
+    left=_mm256_loadu_si256(inPosL); //Load the first 4 values of the left column
+    right=_mm256_loadu_si256(inPosR); //Load the first 4 values of the right column
     
    
+    //Iterate as long as there are still values left in both columns
     while(inPosL < endInPosL && inPosR < endInPosR){
 
+          /* Check all combinations for equality:
+           * 1. Compare left and right, and store the result as a mask. Bitwise OR the masks of all combinations per iteration.
+           * 2. Make a greater-than comparison between right and left. STore the result as a mask. Bitwise OR the masks of all combinations per iteration.
+           * 3. Rotate the right relation by 64 bit
+           */
         for (int i=0;i<4;i++){
             mask |= _mm256_movemask_pd((__m256d)(_mm256_cmpeq_epi64(right,left)));
             
@@ -71,9 +77,12 @@ intersect_sorted<processing_style_t::vec256>(
             right=_mm256_permute4x64_epi64(right,57);
         }
         
+        //Store all matching values (use left relation)
         compress_store256(outPos,mask,left);
+        //Increase output position yb thenumber of results in this iteration
         outPos=(__m256i*)(((uint64_t *)outPos)+__builtin_popcountl(mask));
         
+        //Find out if we load the next vector from the right or the left column and load it -> check results of equality and greater-than comparison done earlier
         if ((mask | mask_greater_than) == 0) {
            inPosR++;
            right=_mm256_loadu_si256(inPosR);
@@ -82,14 +91,16 @@ intersect_sorted<processing_style_t::vec256>(
            left=_mm256_loadu_si256(inPosL); 
         }
 
+        //Reset all masks for the next iteration
         mask=0;
         mask_greater_than=0;
         
         
     }
     
-    const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);
-   
+    const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);//How large is our result set?
+    
+    //Store output size in meta data of the output column
     outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
     return outPosCol; 
     
