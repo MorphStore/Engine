@@ -140,7 +140,6 @@ int main( void ) {
     allGood = allGood && test< 62 >( );
     allGood = allGood && test< 63 >( );
     allGood = allGood && test< 64 >( );
-    allGood = allGood && test< 64 >( );
 #endif
 
     std::cout << "#### Testing All Counters not sorted" << std::endl;
