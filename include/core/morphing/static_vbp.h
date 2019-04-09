@@ -17,17 +17,19 @@
 
 /**
  * @file static_vbp.h
- * @brief Brief description
- * @todo TODOS?
+ * @brief A compressed format using the vertical bit-packed layout with a fixed
+ *        bit width for an entire column and the corresponding morph operators
+ *        for compression and decompression.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 #define MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 
 #include <core/morphing/format.h>
+#include <core/morphing/vbp_routines.h>
 #include <core/storage/column.h>
+#include <core/utils/basic_types.h>
 
-#include <cstddef>
 #include <cstdint>
 #include <immintrin.h>
 #include <limits>
@@ -44,79 +46,6 @@ namespace morphstore {
            "static_vbp: template parameter bw must satisfy 1 <= bw <= 64"
         );
     };
-    
-    // TODO efficient implementation (for now, it must merely work)
-    template< unsigned bw >
-    inline void pack( const __m128i * & in128, size_t countIn128, __m128i * & out128 ) {
-        __m128i tmp = _mm_setzero_si128( );
-        unsigned bitpos = 0;
-        const __m128i * const endIn128 = in128 + countIn128;
-        const size_t countBits = std::numeric_limits< uint64_t >::digits;
-        while( in128 < endIn128 ) {
-            while( bitpos + bw <= countBits ) { // as long as the next vector still fits
-                tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_load_si128( in128++ ), bitpos ) );
-                bitpos += bw;
-            }
-            if( bitpos == countBits ) {
-                _mm_store_si128( out128++, tmp );
-                tmp = _mm_setzero_si128( );
-                bitpos = 0;
-            }
-            else { // bitpos < countBits
-                const __m128i tmp2 = _mm_load_si128( in128++ );
-                tmp = _mm_or_si128( tmp, _mm_slli_epi64( tmp2, bitpos ) );
-                _mm_store_si128( out128++, tmp );
-                tmp = _mm_srli_epi64( tmp2, countBits - bitpos );
-                bitpos = bitpos + bw - countBits;
-            }
-        }
-    }
-
-    // TODO efficient implementation (for now, it must merely work)
-    template< unsigned bw >
-    inline void unpack( const __m128i * & in128, __m128i * & out128, size_t countOut128 ) {
-        const size_t countBits = std::numeric_limits< uint64_t >::digits;
-        const __m128i mask = _mm_set1_epi64x(
-            ( bw == countBits )
-            ? std::numeric_limits< uint64_t >::max( )
-            : ( static_cast< uint64_t>( 1 ) << bw ) - 1
-        );
-
-        __m128i tmp;
-        unsigned bitpos = countBits;
-        const __m128i * const endOut128 = out128 + countOut128;
-        while( out128 < endOut128 ) {
-            if( bitpos == countBits ) {
-                tmp = _mm_load_si128( in128++ );
-                bitpos = 0;
-            }
-            else { // bitpos < countBits
-                const __m128i tmp2 = _mm_load_si128( in128++ );
-                _mm_store_si128(
-                    out128++,
-                    _mm_and_si128(
-                        mask,
-                        _mm_or_si128(
-                            _mm_slli_epi64( tmp2, countBits - bitpos ),
-                            _mm_srli_epi64( tmp, bitpos )
-                        )
-                    )
-                );
-                tmp = tmp2;
-                bitpos = bitpos + bw - countBits;
-            }
-            while( bitpos + bw <= countBits ) {
-                _mm_store_si128(
-                    out128++,
-                    _mm_and_si128(
-                        mask,
-                        _mm_srli_epi64( tmp, bitpos )
-                    )
-                );
-                bitpos += bw;
-            }
-        }
-    }
     
     template< unsigned bw >
     void morph(
