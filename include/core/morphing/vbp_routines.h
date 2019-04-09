@@ -72,6 +72,8 @@ namespace morphstore {
             : ( static_cast< uint64_t>( 1 ) << bw ) - 1
         );
 
+#if 0
+        // This variant uses a store instruction at two points.
         __m128i tmp;
         unsigned bitpos = countBits;
         const __m128i * const endOut128 = out128 + countOut128;
@@ -106,6 +108,39 @@ namespace morphstore {
                 bitpos += bw;
             }
         }
+#else
+        // This variant uses a store instruction at only one point.
+        __m128i nextOut = _mm_setzero_si128( );
+        unsigned bitpos = countBits + bw;
+        const __m128i * const endOut128 = out128 + countOut128;
+        while( out128 < endOut128 ) {
+            __m128i tmp;
+            if( bitpos == countBits + bw ) {
+                tmp = _mm_load_si128( in128++ );
+                nextOut = _mm_and_si128( mask, tmp );
+                bitpos = bw;
+            }
+            else { // bitpos > countBits && bitpos < countBits + bw
+                tmp = _mm_load_si128( in128++ );
+                nextOut = _mm_and_si128(
+                    mask,
+                    _mm_or_si128(
+                        _mm_slli_epi64( tmp, countBits - bitpos + bw ),
+                        nextOut
+                    )
+                );
+                bitpos = bitpos - countBits;
+            }
+            while( bitpos <= countBits ) {
+                _mm_store_si128( out128++, nextOut );
+                nextOut = _mm_and_si128(
+                    mask,
+                    _mm_srli_epi64( tmp, bitpos )
+                );
+                bitpos += bw;
+            }
+        }
+#endif
     }
     
 }
