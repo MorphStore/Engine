@@ -59,6 +59,26 @@ inline unsigned round_up_div( unsigned numerator, unsigned denominator ) {
 
 const size_t bitsPerByte = 8;
 
+/**
+ * @brief Converts the size of something counted in units of some source type
+ * `t_src` to the size counted in units of some destination type `t_dst`.
+ * 
+ * For instance, assume `count64` is the number of 64-bit elements in an array.
+ * The number of 128-bit vectors in this array can be obtained as follows:
+ * 
+ *     size_t count128 = convert_size<uint64_t, __m128i>(count64);
+ * 
+ * Note that, when converting to larger units, any remainder is ignored. For
+ * instance, three 64-bit elements are one 128-bit element.
+ * 
+ * @param p_SizeSrc The size in units of the source type.
+ * @return The size in units of the destination type.
+ */
+template<typename t_src, typename t_dst>
+inline size_t convert_size(size_t p_SizeInSrcUnits) {
+    return p_SizeInSrcUnits * sizeof(t_src) / sizeof(t_dst);
+}
+
 }
 
 #endif //MORPHSTORE_CORE_UTILS_MATH_H
