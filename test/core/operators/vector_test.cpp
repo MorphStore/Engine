@@ -9,7 +9,7 @@
 #include <core/storage/column_gen.h>
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/operators/vectorized/agg_sum_uncompr.h>
-//#include <core/operators/vectorized/select_uncompr.h>
+#include <core/operators/vectorized/select_uncompr.h>
 #include <core/operators/vectorized/project_uncompr.h>
 #include <core/operators/vectorized/intersect_uncompr.h>
 #include <core/operators/scalar/select_uncompr.h>
@@ -18,6 +18,8 @@
 #include <core/operators/vectorized/join_uncompr.h>
 #include <core/operators/vectorized/merge_uncompr.h>
 #include <core/operators/scalar/merge_uncompr.h>
+#include <core/operators/vectorized/calc_uncompr.h>
+#include <core/operators/scalar/calc_uncompr.h>
 
 #include <iostream>
 
@@ -40,9 +42,9 @@ void init_data( column< uncompr_f > * const dataColumn ) {
 
 int main( void ) {
     column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT);
+    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
     init_data(testDataColumn);
-    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,3);
+    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,1,3);
 
     std::cout << "Start scalar aggregation...\n";
     auto sum_aggscalar_result=agg_sum<processing_style_t::scalar>( testDataColumn );//Do aggregation
@@ -247,6 +249,48 @@ int main( void ) {
     if (ok!=0) return ok;
     else std::cout << "Scalar and 256 bit Merge are equal\n";
      
+    
+    auto calcscalar_add_result=morphstore::calc_binary<std::plus, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "Scalar calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_add_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_add_result->get_count_values() << "\n";
+    
+    auto calc256_add_result=morphstore::calc_binary<std::plus, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "256 bit calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_add_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[2] <<  "\n\t Count: " << calc256_add_result->get_count_values() << "\n";
+    
+    ok = memcmp(calcscalar_add_result->get_data(),calc256_add_result->get_data(),calc256_add_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Add are equal\n";
+    
+    auto calcscalar_div_result=morphstore::calc_binary<std::divides, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "Scalar calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_div_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_div_result->get_count_values() << "\n";
+    
+    auto calc256_div_result=morphstore::calc_binary<std::divides, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "256 bit calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_div_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[2] <<  "\n\t Count: " << calc256_div_result->get_count_values() << "\n";
+    
+    ok = memcmp(calcscalar_div_result->get_data(),calc256_div_result->get_data(),calc256_div_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Div are equal\n";
+    
+    auto calcscalar_mod_result=morphstore::calc_binary<std::modulus, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted);
+    std::cout << "Scalar calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mod_result->get_count_values() << "\n";
+    
+    auto calc256_mod_result=morphstore::calc_binary<std::modulus, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted);
+    std::cout << "256 bit calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[2] <<  "\n\t Count: " << calc256_mod_result->get_count_values() << "\n";
+    
+    ok = memcmp(calcscalar_mod_result->get_data(),calc256_mod_result->get_data(),calc256_mod_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Mod are equal\n";
+    
+    auto calcscalar_mult_result=morphstore::calc_binary<std::multiplies, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "Scalar calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mult_result->get_count_values() << "\n";
+    
+    auto calc256_mult_result=morphstore::calc_binary<std::multiplies, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    std::cout << "256 bit calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[2] <<  "\n\t Count: " << calc256_mult_result->get_count_values() << "\n";
+    
+    ok = memcmp(calcscalar_mult_result->get_data(),calc256_mult_result->get_data(),calc256_mult_result->get_count_values()*sizeof(uint64_t));
+    if (ok!=0) return ok;
+    else std::cout << "Scalar and 256 bit Mult are equal\n";
+    
+    
     std::cout << "Test Permutation: \n";
     __m256i test =_mm256_set_epi64x(3,2,1,0);
     __m256i test2;
