@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file test_dynamic_vbp.cpp
+ * @file dynamic_vbp_test.cpp
  * @brief Tests of the (de)compression morph operators for the dynamic_vbp
  * format.
  */

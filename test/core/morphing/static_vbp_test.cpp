@@ -16,9 +16,9 @@
  **********************************************************************************************/
 
 /**
- * @file morphing_test.cpp
- * @brief ...
- * @todo TODOS?
+ * @file static_vbp_test.cpp
+ * @brief Tests of the (de)compression morph operators for the static_vbp
+ * format.
  */
 
 #include <core/memory/mm_glob.h>
