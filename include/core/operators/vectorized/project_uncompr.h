@@ -42,7 +42,8 @@ project<processing_style_t::vec128>(
     __m128i * outData = outDataCol->get_data();
     __m128i buffer;
     
-    for(unsigned i = 0; i < inPosCount/2; i++) {
+    unsigned i;
+    for(i = 0; i < inPosCount/2; i++) {
         //A gather could be faster here but requires loading a second register with the indexes in every loop
         //->Any opinions about that?
         buffer=_mm_set_epi64x(inData[inPos[i*2+1]],inData[inPos[i*2]]);
@@ -50,6 +51,13 @@ project<processing_style_t::vec128>(
         outData++;
     }
     
+    //Process the last elements (which do not fill up a whole register) sequentially
+    unsigned k=i;
+    uint64_t* oData=(uint64_t*) outData;
+    for(i=k; i < inPosCount; i++) {
+        oData[0] = inData[inPos[i]];
+        oData++;
+    }
     outDataCol->set_meta_data(inPosCount, inPosSize);
     
     return outDataCol;
@@ -73,12 +81,21 @@ project<processing_style_t::vec256>(
     __m256i buffer;
     
     
-    for(size_t i = 0; i < inPosCount; i+=4) {
+    unsigned i;
+    for( i=0 ; i < inPosCount; i+=4) {
         //A gather could be faster here but requires loading a second register with the indexes in every loop
         //->Any opinions about that?
         buffer=_mm256_set_epi64x(inData[inPos[i+3]],inData[inPos[i+2]],inData[inPos[i+1]],inData[inPos[i]]);
         _mm256_store_si256(outData,buffer);
         outData++;
+    }
+    
+    //Process the last elements (which do not fill up a whole register) sequentially 
+    unsigned k=i;
+    uint64_t* oData=(uint64_t*) outData;
+    for(i=k; i < inPosCount; i++) {
+        oData[0] = inData[inPos[i]];
+        oData++;
     }
     
     outDataCol->set_meta_data(inPosCount, inPosSize);

@@ -61,12 +61,13 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
         __m128i value = _mm_set_epi64x(val,val);//! Fill a register with the select predicate
         __m128i cmpres;
         int mask;
+        unsigned i=0;
         
         //!Are we doing a less-than comparison?
         if (typeid(op)==typeid(std::less<uint64_t>)){
          
             //!Iterate over all elements of the column, 2 in each iteration because we can store 2 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/2; i++){
+            for( i = 0; i < inDataCount/2; i++){
               
                 /*!
                  * Do the following steps for comparison:
@@ -90,7 +91,7 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
         //Are we doing a greater-than comparison?
         if (typeid(op)==typeid(std::greater<uint64_t>)){
             
-            for(unsigned i = 0; i < inDataCount/2; i++){
+            for( i = 0; i < inDataCount/2; i++){
 
                                 /*!
                  * Do the following steps for comparison:
@@ -115,7 +116,7 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
          if (typeid(op)==typeid(std::equal_to<uint64_t>)){
             
             
-            for(unsigned i = 0; i < inDataCount/2; i++){
+            for( i = 0; i < inDataCount/2; i++){
                 
                                 /*!
                  * Do the following steps for comparison:
@@ -141,7 +142,7 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
         if (typeid(op)==typeid(std::greater_equal<uint64_t>)){
             
          
-            for(unsigned i = 0; i < inDataCount/2; i++){
+            for( i = 0; i < inDataCount/2; i++){
               
                                 /*!
                  * Do the following steps for comparison:
@@ -165,7 +166,7 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
          if (typeid(op)==typeid(std::less_equal<uint64_t>)){
 
              //!Iterate over all elements of the column, 2 in each iteration because we can store 2 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/2; i++){
+            for( i = 0; i < inDataCount/2; i++){
           
                                 /*!
                  * Do the following steps for comparison:
@@ -185,7 +186,14 @@ struct select<t_op, processing_style_t::vec128, uncompr_f, uncompr_f> {
             }
         }
       
-        const size_t outPosCount = (uint64_t*)outPos - (uint64_t*)initOutPos;
+         uint64_t* oPos=(uint64_t*)outPos;
+         for(unsigned j = i; j < inDataCount; j++)
+            if(op(((uint64_t*)inData)[j], val)) {
+                *oPos = j;
+                oPos++;
+            }
+          
+        const size_t outPosCount = (uint64_t*)oPos - (uint64_t*)initOutPos;
         outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
        return outPosCol; 
     }
@@ -253,11 +261,11 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         __m256i ids=_mm256_set_epi64x(3,2,1,0);//!Set initial IDs
         __m256i add=_mm256_set_epi64x(4,4,4,4);//!We will use this vector later to increase the IDs in every iteration
         int mask;
-        
+        unsigned i=0;
         //!Are we doing a less-than comparison?
         if (typeid(op)==typeid(std::less<uint64_t>)){
          
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
               
                  /*!
                  * Do the following steps for comparison:
@@ -283,7 +291,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         if (typeid(op)==typeid(std::greater<uint64_t>)){
             
             //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
 
                    /*!
                  * Do the following steps for comparison:
@@ -308,7 +316,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
          if (typeid(op)==typeid(std::equal_to<uint64_t>)){
             
             //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
                 
                 /*!
                  * Do the following steps for comparison:
@@ -331,7 +339,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         if (typeid(op)==typeid(std::greater_equal<uint64_t>)){
             
          //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
               
                 /*!
                  * Do the following steps for comparison:
@@ -353,7 +361,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
          if (typeid(op)==typeid(std::less_equal<uint64_t>)){
 
              //!Iterate over all elements of the column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for(i = 0; i < inDataCount/4; i++){
           
                 /*!
                  * Do the following steps for comparison:
@@ -371,7 +379,15 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
             }
         }
       
-        const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos); //!<How large is our result set?
+        uint64_t* oPos=(uint64_t*)outPos;
+         for(unsigned j = i; j < inDataCount; j++)
+            if(op(((uint64_t*)inData)[j], val)) {
+                *oPos = j;
+                oPos++;
+            }
+        
+        
+        const size_t outPosCount = ((uint64_t *)oPos - (uint64_t *)initOutPos); //!<How large is our result set?
         
         //Store output size in meta data of the output column
         outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));

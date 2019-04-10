@@ -26,7 +26,7 @@
 #include <immintrin.h>
 
 /*! Known issues:
- *  1. Multiplication works only for lower 32 bit of each 64-bit value
+ *  1. Multiplication/Division/Modulo work only for lower 32/52 bit of each 64-bit value
  *
  */
 namespace morphstore {
@@ -49,6 +49,7 @@ struct calc_unary<
         // Exact allocation size (for uncompressed data).
         auto outDataCol = new column<uncompr_f>(inDataSize);
         __m256i * outData = outDataCol->get_data();
+        const uint64_t * outDataInit = (uint64_t *) outData;
         
         t_unary_op<uint64_t> op;
         __m256i zeros=_mm256_set1_epi64x(0);
@@ -60,6 +61,11 @@ struct calc_unary<
             }
         }
            
+         //Process the last elements (which do not fill up a whole register) sequentially 
+        uint64_t * oData=(uint64_t *)outData;
+        for(unsigned i = (outDataInit+inDataSize-(uint64_t*)outData); i < inDataCount; i++)
+            oData[i] = op(((uint64_t*)inData)[i]);
+        
         outDataCol->set_meta_data(inDataCount, inDataSize);
         
         return outDataCol;
@@ -93,6 +99,7 @@ struct calc_binary<
         // Exact allocation size (for uncompressed data).
         auto outDataCol = new column<uncompr_f>(inDataSize);
         __m256i * outData = (__m256i*)outDataCol->get_data();
+        const uint64_t * outDataInit = (uint64_t *) outData;
         
         t_binary_op<uint64_t> op;
         
@@ -145,6 +152,7 @@ struct calc_binary<
             __m256i lefti;
             __m256d right;
             __m256i righti;
+            
             for(unsigned i = 0; i < inDataCount/4; i++){
                
                 // approach: divide -> floor -> multiply again -> difference between result and original
@@ -178,6 +186,11 @@ struct calc_binary<
                 
             }
         }
+        
+        //Process the last elements (which do not fill up a whole register) sequentially 
+        uint64_t * oData=(uint64_t *)outData;
+        for(unsigned i = (outDataInit+inDataSize-(uint64_t*)outData); i < inDataCount; i++)
+            oData[i] = op(((uint64_t*)inDataL)[i],((uint64_t*)inDataR)[i]);
         
               
         outDataCol->set_meta_data(inDataCount, inDataSize);
