@@ -21,6 +21,11 @@ namespace vector {
 
    template<class VectorExtension, iov IOVariant, int IOGranularity>
    struct io;
-
+   
+   template<class VectorExtension, iov IOVariant, int IOGranularity>
+   typename VectorExtension::vector_t
+   load(typename VectorExtension::base_t const * const a ) {
+       return io<VectorExtension, IOVariant, IOGranularity>::load( a );
+   }
 }
 #endif //MORPHSTORE_VECTOR_PRIMITIVES_IO_H

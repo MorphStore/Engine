@@ -15,8 +15,11 @@ namespace vector {
    template<uint16_t BitWidth, typename T>
    struct vector_view {
       vector_view() = delete;
-      static constexpr uint16_t size_b = BitWidth / 8;
-      static constexpr uint16_t element_count = size_b / sizeof(T);
+      using base_t          = T;
+      using size_b          = std::integral_constant<uint16_t, BitWidth>;
+      using size_B          = std::integral_constant<uint16_t, (BitWidth >> 3)>;
+      using alignment       = std::integral_constant<size_t, size_B::value>;
+      using element_count   = std::integral_constant<size_t, size_B::value / sizeof(T)>;
    };
 
 

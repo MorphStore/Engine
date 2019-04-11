@@ -94,9 +94,7 @@ namespace vector {
          return _mm_lddqu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
       }
    };
-
-//   template<class VectorExtension, iov IOVariant, int IOGranularity>
-//   std::function< typename VectorExtension::vector_t ( typename VectorExtension::base_t const * const ) > foo = io< VectorExtension, IOVariant, IOGranularity >::load;
+  
 }
 
 
