@@ -6,7 +6,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 #            -Wextra
 #            -pedantic
             -fstack-protector-all
-            -msse4.2 -mavx2
+             -msse4.2 -mavx2
             $<$<CONFIG:DEBUG>:-DDEBUG> )
     target_link_libraries( vector_test_app PRIVATE "-ldl" )
     

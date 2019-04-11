@@ -77,22 +77,21 @@ nested_loop_join<processing_style_t::vec256>(
     __m256i right;
     __m256i leftIDs;
     __m256i rightIDs;
-    
+    leftIDs=_mm256_set_epi64x(3,2,1,0);
+    __m256i add=_mm256_set_epi64x(4,4,4,4);//!We will use this vector later to increase the IDs in every iteration
     
     //Iterate over all elements of the left column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
     for(unsigned iL = 0; iL < inDataLCount/4; iL++){
         //Load 4 values of the left relation into a vector register
         left=_mm256_load_si256(inDataL+iL);
-        //Set the according IDs for the left relation
-        leftIDs=_mm256_set_epi64x(iL*4+3,iL*4+2,iL*4+1,iL*4);
+     
         
+        rightIDs=_mm256_set_epi64x(3,2,1,0);
         //Iterate over all elements of the right column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
         for(unsigned iR = 0; iR < inDataRCount/4; iR++){
             //Load 4 values of the right relation into a vector register
            right=_mm256_load_si256(inDataR+iR);
-           //Set the according IDs for the right relation
-           rightIDs=_mm256_set_epi64x(iR*4+3,iR*4+2,iR*4+1,iR*4);
-           
+              
            /* Check all combinations for equality:
             * 1. Compare left and right
             * 2. Make a mask out of the result of step 1
@@ -115,7 +114,12 @@ nested_loop_join<processing_style_t::vec256>(
                 rightIDs=_mm256_permute4x64_epi64(rightIDs,57); //rotate IDs to left
                 iOut+=__builtin_popcountl(mask);
             }
-    }
+           
+           //Increase IDs for the right relation
+           rightIDs=_mm256_add_epi64(rightIDs,add);
+        }
+        //Increase IDs for the left relation
+        leftIDs=_mm256_add_epi64(leftIDs,add);
     }
     const size_t outSize = iOut * sizeof(uint64_t);//How large is our result set?
     

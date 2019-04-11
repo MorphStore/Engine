@@ -26,10 +26,10 @@ namespace vector {
 
       using vector_t =
       typename std::conditional<
-         std::is_integral<T>::value,    // if T is integer
-         __m128i,                       //    vector register = __m128i
+         (1==1) == std::is_integral<T>::value,    // if T is integer, ugly but it works
+         __m128i, 
          typename std::conditional<
-            std::is_same<float, T>::value, // else if T is float
+            (1==1) == std::is_same<float, T>::value, // else if T is float
             __m128,                       //    vector register = __m128
             __m128d                       // else [T == double]: vector register = __m128d
          >::type

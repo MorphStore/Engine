@@ -95,7 +95,7 @@ merge_sorted<processing_style_t::vec256>(
             idx_left++;
             left=_mm256_set1_epi64x((inPosL)[idx_left]);//broadcast next value from left side into left register
         }else {
-            _mm256_maskstore_epi64((long long*)outPos, mask_gt_big, right);//save all values from right side, where left side is grater than right side
+            _mm256_maskstore_epi64((long long*)outPos, mask_gt_big, right);//save all values from right side, where left side is grater than right side -> a normal (u)store should work, too
         
             idx_right+= (__builtin_popcountl(mask_gt));//how many elements were that?
             outPos+=(__builtin_popcountl(mask_gt));
