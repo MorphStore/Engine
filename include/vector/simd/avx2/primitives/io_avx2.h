@@ -9,10 +9,15 @@
 #define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_IO_AVX2_H
 
 #include <core/utils/preprocessor.h>
+#include <core/memory/mm_glob.h>
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/primitives/io.h>
 
+#include <functional>
+
 namespace vector {
+    
+    
    template<typename T, int IOGranularity>
    struct io<avx2<v256<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -79,7 +84,7 @@ namespace vector {
    };
 
    template<typename T, int IOGranularity>
-   struct load<avx2<v256<T>>,iov::UNALIGNEDX, IOGranularity> {
+   struct io<avx2<v256<T>>,iov::UNALIGNEDX, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static typename avx2< v256< U > >::vector_t

@@ -53,6 +53,10 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
+        echo ""
+	echo "features:"
+	echo "	-avx512"
+	echo "	     Builds with avx512 support"
 }
 
 buildType=""
@@ -75,6 +79,7 @@ testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
+avx512="-DCAVX512=False"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -180,6 +185,10 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
+	-avx512)
+	avx512="-DCAVX512=True"
+	shift # past argument
+	;;
 	-tVt|--testVectoring)
 	runCtest=true
 	testVectors="-DCTEST_VECTOR=True"
@@ -218,14 +227,14 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
 fi
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then

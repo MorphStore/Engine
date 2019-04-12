@@ -29,7 +29,8 @@ namespace morphstore {
 enum class processing_style_t {
     scalar,
     vec128,
-    vec256
+    vec256,
+    vec512
 };
 
 }
