@@ -57,6 +57,11 @@ namespace morphstore {
                     "multiple of the number of bits in a vector register"
                 );
         }
+        
+        static size_t get_size_max_byte(size_t p_CountValues) {
+            check_count_values(p_CountValues);
+            return p_CountValues * bw / bitsPerByte;
+        }
     };
     
     template<unsigned bw>
@@ -75,7 +80,7 @@ namespace morphstore {
             out_f::check_count_values(count64);
             const __m128i * in128 = inCol->get_data();
             
-            auto outCol = new column<out_f>(inCol->get_size_used_byte());
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
             __m128i * out128 = outCol->get_data();
             const __m128i * const initOut128 = out128;
 
@@ -109,9 +114,7 @@ namespace morphstore {
             const size_t count64 = inCol->get_count_values();
             const __m128i * in128 = inCol->get_data();
             
-            auto outCol = new column<out_f>(
-                    convert_size<uint64_t, uint8_t>(inCol->get_count_values())
-            );
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
             __m128i * out128 = outCol->get_data();
             const __m128i * const initOut128 = out128;
 

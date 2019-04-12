@@ -87,6 +87,19 @@ namespace morphstore {
                         "multiple of the page size in data elements"
                 );
         }
+        
+        static size_t get_size_max_byte(size_t p_CountValues) {
+            check_count_values(p_CountValues);
+            // These numbers are exact (assuming that the check above
+            // succeeded).
+            const size_t pageCount = p_CountValues / m_PageSize64;
+            const size_t totalMetaSizeByte = pageCount * m_MetaSize8;
+            // These numbers are worst cases, which are only reached if all
+            // blocks require the maximum bit width of 64.
+            const size_t totalDataSizeByte = p_CountValues *
+                    std::numeric_limits<uint64_t>::digits / bitsPerByte;
+            return totalDataSizeByte + totalMetaSizeByte;
+        }
     };
     
     template<size_t t_BlockSize64, size_t t_PageSizeBlocks>
@@ -112,7 +125,9 @@ namespace morphstore {
             const __m128i * in128 = inCol->get_data();
             const __m128i * const endIn128 = in128 + inCount128;
 
-            auto outCol = new column<out_f>(inCol->get_size_used_byte());
+            auto outCol = new column<out_f>(
+                    out_f::get_size_max_byte(inCount64)
+            );
             __m128i * out128 = outCol->get_data();
             const __m128i * const initOut128 = out128;
 
@@ -199,7 +214,9 @@ namespace morphstore {
             const __m128i * in128 = inCol->get_data();
             const __m128i * const endIn128 = in128 + inCount128;
 
-            auto outCol = new column<out_f>(inCol->get_size_used_byte());
+            auto outCol = new column<out_f>(
+                    out_f::get_size_max_byte(inCount64)
+            );
             __m128i * out128 = outCol->get_data();
 
             // Iterate over all pages in the input.

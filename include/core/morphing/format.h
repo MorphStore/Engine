@@ -24,18 +24,37 @@
 #ifndef MORPHSTORE_CORE_MORPHING_FORMAT_H
 #define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
+#include <core/utils/math.h>
 
 namespace morphstore {
 
-// TODO don't forget to make this abstract (when adding member functions)
-// The abstract base of all formats.
+/**
+ * @brief The base class of all format implementations.
+ */
 struct format {
-    //
+    /**
+     * @brief Provides a pessimistic estimation of the maximum possible size a
+     * column containing the given number of data elements could have when
+     * represented in this format.
+     * 
+     * This size can be used for determining the number of bytes that must be
+     * allocated for a column. To prevent buffer overflows in all cases, it is
+     * very important not to underestimate this size.
+     * 
+     * @param p_CountValues The number of data elements.
+     * @return The maximum size (in bytes) that could be required in this
+     * format.
+     */
+    static size_t get_size_max_byte(size_t p_CountValues) = delete;
 };
 
-// The uncompressed format.
+/**
+ * @brief The uncompressed format, i.e., a sequence of 64-bit integers.
+ */
 struct uncompr_f : public format {
-    //
+    static size_t get_size_max_byte(size_t p_CountValues) {
+        return convert_size<uint64_t, uint8_t>(p_CountValues);
+    }
 };
 
 }
