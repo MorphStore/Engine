@@ -74,17 +74,17 @@ namespace morphstore {
                 );
             if(t_PageSizeBlocks % sizeof(t_vec_t))
                 throw std::runtime_error(
-                    "dynamic_vbp_f: the number of blocks per page must be a "
-                    "multiple of the number of bytes per vector register"
+                        "dynamic_vbp_f: the number of blocks per page must be "
+                        "a multiple of the number of bytes per vector register"
                 );
         }
         
-        static void check_count(size_t p_Count) {
+        static void check_count_values(size_t p_CountValues) {
             // @todo Support arbitrary numbers of data elements.
-            if(p_Count % m_PageSize64)
+            if(p_CountValues % m_PageSize64)
                 throw std::runtime_error(
-                    "dynamic_vbp_f: the number of data elements must be a "
-                    "multiple of the page size in data elements"
+                        "dynamic_vbp_f: the number of data elements must be a "
+                        "multiple of the page size in data elements"
                 );
         }
     };
@@ -104,7 +104,7 @@ namespace morphstore {
             out_f::template check_compatibility<__m128i>();
 
             const size_t inCount64 = inCol->get_count_values();
-            out_f::check_count(inCount64);
+            out_f::check_count_values(inCount64);
             const size_t inCount128 = convert_size<uint64_t, __m128i>(
                     inCount64
             );

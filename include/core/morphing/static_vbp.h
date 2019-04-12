@@ -48,6 +48,15 @@ namespace morphstore {
            (1 <= bw) && (bw <= std::numeric_limits<uint64_t>::digits),
            "static_vbp: template parameter bw must satisfy 1 <= bw <= 64"
         );
+        
+        static void check_count_values(size_t p_CountValues) {
+            // @todo Support arbitrary numbers of data elements.
+            if(p_CountValues % (sizeof(__m128i) * bitsPerByte))
+                throw std::runtime_error(
+                    "static_vbp_f: the number of data elements must be a "
+                    "multiple of the number of bits in a vector register"
+                );
+        }
     };
     
     template<unsigned bw>
@@ -62,12 +71,8 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            // TODO support arbitrary numbers of data elements
-            if(inCol->get_count_values() % 128)
-                throw std::runtime_error(
-                        "morph uncompr_f -> static_vbp_f: the number of data "
-                        "elements must be a multiple of 128"
-                );
+            const size_t count64 = inCol->get_count_values();
+            out_f::check_count_values(count64);
             const __m128i * in128 = inCol->get_data();
             
             auto outCol = new column<out_f>(inCol->get_size_used_byte());
@@ -76,14 +81,12 @@ namespace morphstore {
 
             pack<bw>(
                     in128,
-                    convert_size<uint8_t, __m128i>(
-                            inCol->get_size_used_byte()
-                    ),
+                    convert_size<uint64_t, __m128i>(count64),
                     out128
             );
 
             outCol->set_meta_data(
-                    inCol->get_count_values(),
+                    count64,
                     convert_size<__m128i, uint8_t>(out128 - initOut128)
             );
             
@@ -103,12 +106,7 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            // TODO support arbitrary numbers of data elements
-            if(inCol->get_count_values() % 128)
-                throw std::runtime_error(
-                        "morph uncompr_f -> static_vbp_f: the number of data "
-                        "elements must be a multiple of 128"
-                );
+            const size_t count64 = inCol->get_count_values();
             const __m128i * in128 = inCol->get_data();
             
             auto outCol = new column<out_f>(
@@ -120,11 +118,11 @@ namespace morphstore {
             unpack<bw>(
                     in128,
                     out128,
-                    convert_size<uint64_t, __m128i>(inCol->get_count_values())
+                    convert_size<uint64_t, __m128i>(count64)
             );
 
             outCol->set_meta_data(
-                    inCol->get_count_values(),
+                    count64,
                     convert_size<__m128i, uint8_t>(out128 - initOut128)
             );
 
