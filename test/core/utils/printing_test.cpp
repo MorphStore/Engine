@@ -18,18 +18,19 @@
 /**
  * @file printing_test.cpp
  * @brief A short test and example usage of print_columns .
- * @todo TODOS?
+ * @todo Move this file to some examples directory, since it is no actual test.
  */
 
 #include <core/memory/mm_glob.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
 #include <core/storage/column.h>
+#include <core/storage/column_gen.h>
 #include <core/utils/printing.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <unordered_map>
-//#include <unordered_map.h>
 
 using namespace morphstore;
 
@@ -37,20 +38,9 @@ using namespace morphstore;
  * A small example usage of print_columns.
  */
 void small_example( ) {
-    const size_t origCountValues = 128;
-    const size_t origSizeByte = origCountValues * sizeof( uint64_t );
-    auto origCol = new column< uncompr_f >( origSizeByte );
-    uint64_t * const origData = origCol->get_data();
-    for( unsigned i = 0; i < origCountValues; i++ )
-        origData[ i ] = i;
-    origCol->set_count_values( origCountValues );
-    origCol->set_size_used_byte( origSizeByte );
-    
-    auto comprCol = new column< static_vbp_f< 8 > >( origSizeByte );
-    morph( origCol, comprCol );
-    
-    auto decomprCol = new column< uncompr_f >( origSizeByte );
-    morph( comprCol, decomprCol );
+    auto origCol = generate_sorted_unique(128);
+    auto comprCol = morph<processing_style_t::vec128, static_vbp_f<8> >(origCol);
+    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
     
     print_columns(
             print_buffer_base::hexadecimal,
