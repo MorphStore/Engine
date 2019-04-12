@@ -43,13 +43,11 @@ using namespace morphstore;
 template<unsigned bw>
 bool test() {
     // Generate some data.
-    const size_t origCountValues = 128 * 1024;
-    const size_t origSizeByte = origCountValues * sizeof(uint64_t);
     const uint64_t maxVal = (bw == 64)
             ? std::numeric_limits<uint64_t>::max()
             : ((static_cast<uint64_t>(1) << bw) - 1);
     auto origCol = generate_with_distr(
-            origCountValues,
+            128 * 1024,
             std::uniform_int_distribution<uint64_t>(0, maxVal),
             true
     );
@@ -57,14 +55,12 @@ bool test() {
     // @todo Use a size depending on the bit width.
     // This template specialization is SIMD-BP128 with the difference that we
     // use 64-bit instead of 32-bit data elements.
-    auto comprCol = new column<dynamic_vbp_f<
-            sizeof(__m128i) * bitsPerByte,
-            sizeof(__m128i)
-    > >(origSizeByte * 2);
-    morph(origCol, comprCol);
+    auto comprCol = morph<
+            processing_style_t::vec128,
+            dynamic_vbp_f<sizeof(__m128i) * bitsPerByte, sizeof(__m128i)>
+    >(origCol);
     
-    auto decomprCol = new column<uncompr_f>(origSizeByte);
-    morph(comprCol, decomprCol);
+    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
     
     const bool good = equality_check(origCol, decomprCol).good();
     std::cout

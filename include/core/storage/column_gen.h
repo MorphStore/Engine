@@ -19,7 +19,6 @@
  * @file column_gen.h
  * @brief A collection of functions for creating uncompressed columns and
  * initializing them with synthetically generated data.
- * @todo TODOS?
  */
 
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_GEN_H
@@ -40,10 +39,12 @@
 namespace morphstore {
     
 /**
- * Creates an uncompressed column and copies the contents of the given vector
- * into that column's data buffer. This is a convenience function for creating
- * small toy example columns. To prevent its usage for non-toy examples, it
- * throws an exception if the given vector contains more than 20 elements.
+ * @brief Creates an uncompressed column and copies the contents of the given
+ * vector into that column's data buffer. This is a convenience function for
+ * creating small toy example columns. To prevent its usage for non-toy
+ * examples, it throws an exception if the given vector contains more than 20
+ * elements.
+ * 
  * @param vec The vector to initialize the column with.
  * @return An uncompressed column containing a copy of the data in the given
  * vector.
@@ -63,8 +64,9 @@ const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec) {
 }
 
 /**
- * Creates an uncompressed column and fills its data buffer with sorted unique
- * data elements. Can be used to generate primary key columns.
+ * @brief Creates an uncompressed column and fills its data buffer with sorted
+ * unique data elements. Can be used to generate primary key columns.
+ * 
  * @param countValues The number of data elements to generate.
  * @param start The first data element.
  * @param step The difference between two consecutive data elements.
@@ -88,23 +90,54 @@ const column<uncompr_f> * generate_sorted_unique(
 }
 
 /**
- * Creates an uncompressed column and fills its data buffer with values drawn
- * from the given random distribution. Suitable distributions can be found in
- * the <random> header. In particular, the following distributions are
- * supported:
- * - std::uniform_int_distribution
- * - std::binomial_distribution
- * - std::geometric_distribution
- * - std::negative_binomial_distribution
- * - std::poisson_distribution
- * - std::discrete_distribution
+ * @brief Random number distribution that produces two different values.
+ * 
+ * The interface follows that of the distributions in the STL's `<random>`
+ * header to the extend required for our data generation facilities.
+ */
+template<typename t_int_t>
+class two_value_distribution {
+    const t_int_t m_Val0;
+    const t_int_t m_Val1;
+    std::bernoulli_distribution m_Chooser;
+    
+    public:
+        two_value_distribution(
+                t_int_t p_Val0,
+                t_int_t p_Val1,
+                double p_ProbVal1
+        ) :
+                m_Val0(p_Val0),
+                m_Val1(p_Val1)
+        {
+            m_Chooser = std::bernoulli_distribution(p_ProbVal1);
+        }
+        
+        template<class t_generator_t>
+        t_int_t operator()(t_generator_t & p_Generator) {
+            return m_Chooser(p_Generator) ? m_Val1 : m_Val0;
+        }
+};
+
+/**
+ * @brief Creates an uncompressed column and fills its data buffer with values
+ * drawn from the given random distribution. Suitable distributions can be
+ * found in the STL's `<random>` header. In particular, the following
+ * distributions are supported:
+ * - `std::uniform_int_distribution`
+ * - `std::binomial_distribution`
+ * - `std::geometric_distribution`
+ * - `std::negative_binomial_distribution`
+ * - `std::poisson_distribution`
+ * - `std::discrete_distribution`
  * Optionally, the generated data can be sorted as an additional step.
+ * 
  * @param countValues The number of data elements to generate.
  * @param distr The random distribution to draw the data elements from.
  * @param sorted Whether the generated data shall be sorted.
  * @return An uncompressed column containing the generated data elements.
  * @todo Support also the random distributions returning real values, e.g., 
- * std::normal_distribution .
+ * `std::normal_distribution`.
  */
 template<template<typename> class t_distr>
 const column<uncompr_f> * generate_with_distr(

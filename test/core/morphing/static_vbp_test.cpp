@@ -25,7 +25,9 @@
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
 #include <core/storage/column.h>
+#include <core/storage/column_gen.h>
 #include <core/utils/equality_check.h>
+#include <core/utils/processing_style.h>
 
 #include <core/utils/monitoring.h>
 
@@ -33,32 +35,37 @@
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 
 using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-	MONITOR_START_INTERVAL( "operatorTime" + std::to_string( bw ) );
-	const size_t origCountValues = 128 * 1024;
-    const size_t origSizeByte = origCountValues * sizeof( uint64_t );
-    auto origCol = new column< uncompr_f >( origSizeByte );
-    uint64_t * origData = origCol->get_data( );
-    const uint64_t mask = ( bw == 64 )
-        ? std::numeric_limits< uint64_t >::max( )
-        : ( ( static_cast< uint64_t >( 1 ) << bw ) - 1 );
-    for( unsigned i = 0; i < origCountValues; i++ )
-        origData[ i ] = i & mask;
-    origCol->set_count_values( origCountValues );
-    origCol->set_size_used_byte( origSizeByte );
+    MONITOR_START_INTERVAL( "operatorTime" + std::to_string( bw ) );
     
-    // TODO use a size depending on the bit width
-    auto comprCol = new column< static_vbp_f< bw > >( origSizeByte );
-    morph( origCol, comprCol );
-    
-    // TODO use a size depending on the bit width
-    auto decomprCol = new column< uncompr_f >( origSizeByte );
-    morph( comprCol, decomprCol );
+    // Generate some data.
+    const uint64_t minVal = (bw == 1)
+            ? 0
+            : (static_cast<uint64_t>(1) << (bw - 1));
+    const uint64_t maxVal = (bw == 64)
+            ? std::numeric_limits<uint64_t>::max()
+            : ((static_cast<uint64_t>(1) << bw) - 1);
+    auto origCol = generate_with_distr(
+            128 * 1024,
+            std::uniform_int_distribution<uint64_t>(minVal, maxVal),
+            false
+    );
+
+#if 0
+    // Using the morph_t structs directly.
+    auto comprCol = morph_t<processing_style_t::vec128, static_vbp_f<bw>, uncompr_f>::apply(origCol);
+    auto decomprCol = morph_t<processing_style_t::vec128, uncompr_f, static_vbp_f<bw> >::apply(comprCol);
+#else
+    // Using the convenience function wrapping the morph_t structs.
+    auto comprCol = morph<processing_style_t::vec128, static_vbp_f<bw>>(origCol);
+    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
+#endif
     
     const bool good = equality_check( origCol, decomprCol ).good( );
     std::cout
@@ -76,70 +83,73 @@ int main( void ) {
     for( unsigned bw = 1; bw <= 64; bw++ )
         allGood = allGood && test< bw >( );
 #else
-    allGood = allGood && test<  1 >( );
-    allGood = allGood && test<  2 >( );
-    allGood = allGood && test<  3 >( );
-    allGood = allGood && test<  4 >( );
-    allGood = allGood && test<  5 >( );
-    allGood = allGood && test<  6 >( );
-    allGood = allGood && test<  7 >( );
-    allGood = allGood && test<  8 >( );
-    allGood = allGood && test<  9 >( );
-    allGood = allGood && test< 10 >( );
-    allGood = allGood && test< 11 >( );
-    allGood = allGood && test< 12 >( );
-    allGood = allGood && test< 13 >( );
-    allGood = allGood && test< 14 >( );
-    allGood = allGood && test< 15 >( );
-    allGood = allGood && test< 16 >( );
-    allGood = allGood && test< 17 >( );
-    allGood = allGood && test< 18 >( );
-    allGood = allGood && test< 19 >( );
-    allGood = allGood && test< 20 >( );
-    allGood = allGood && test< 21 >( );
-    allGood = allGood && test< 22 >( );
-    allGood = allGood && test< 23 >( );
-    allGood = allGood && test< 24 >( );
-    allGood = allGood && test< 25 >( );
-    allGood = allGood && test< 26 >( );
-    allGood = allGood && test< 27 >( );
-    allGood = allGood && test< 28 >( );
-    allGood = allGood && test< 29 >( );
-    allGood = allGood && test< 30 >( );
-    allGood = allGood && test< 31 >( );
-    allGood = allGood && test< 32 >( );
-    allGood = allGood && test< 33 >( );
-    allGood = allGood && test< 34 >( );
-    allGood = allGood && test< 35 >( );
-    allGood = allGood && test< 36 >( );
-    allGood = allGood && test< 37 >( );
-    allGood = allGood && test< 38 >( );
-    allGood = allGood && test< 39 >( );
-    allGood = allGood && test< 40 >( );
-    allGood = allGood && test< 41 >( );
-    allGood = allGood && test< 42 >( );
-    allGood = allGood && test< 43 >( );
-    allGood = allGood && test< 44 >( );
-    allGood = allGood && test< 45 >( );
-    allGood = allGood && test< 46 >( );
-    allGood = allGood && test< 47 >( );
-    allGood = allGood && test< 48 >( );
-    allGood = allGood && test< 49 >( );
-    allGood = allGood && test< 50 >( );
-    allGood = allGood && test< 51 >( );
-    allGood = allGood && test< 52 >( );
-    allGood = allGood && test< 53 >( );
-    allGood = allGood && test< 54 >( );
-    allGood = allGood && test< 55 >( );
-    allGood = allGood && test< 56 >( );
-    allGood = allGood && test< 57 >( );
-    allGood = allGood && test< 58 >( );
-    allGood = allGood && test< 59 >( );
-    allGood = allGood && test< 60 >( );
-    allGood = allGood && test< 61 >( );
-    allGood = allGood && test< 62 >( );
-    allGood = allGood && test< 63 >( );
-    allGood = allGood && test< 64 >( );
+    // Generated with Python:
+    // for bw in range(1, 64+1):
+    //   print("allGood = allGood && test<{: >2}>();".format(bw))
+    allGood = allGood && test< 1>();
+    allGood = allGood && test< 2>();
+    allGood = allGood && test< 3>();
+    allGood = allGood && test< 4>();
+    allGood = allGood && test< 5>();
+    allGood = allGood && test< 6>();
+    allGood = allGood && test< 7>();
+    allGood = allGood && test< 8>();
+    allGood = allGood && test< 9>();
+    allGood = allGood && test<10>();
+    allGood = allGood && test<11>();
+    allGood = allGood && test<12>();
+    allGood = allGood && test<13>();
+    allGood = allGood && test<14>();
+    allGood = allGood && test<15>();
+    allGood = allGood && test<16>();
+    allGood = allGood && test<17>();
+    allGood = allGood && test<18>();
+    allGood = allGood && test<19>();
+    allGood = allGood && test<20>();
+    allGood = allGood && test<21>();
+    allGood = allGood && test<22>();
+    allGood = allGood && test<23>();
+    allGood = allGood && test<24>();
+    allGood = allGood && test<25>();
+    allGood = allGood && test<26>();
+    allGood = allGood && test<27>();
+    allGood = allGood && test<28>();
+    allGood = allGood && test<29>();
+    allGood = allGood && test<30>();
+    allGood = allGood && test<31>();
+    allGood = allGood && test<32>();
+    allGood = allGood && test<33>();
+    allGood = allGood && test<34>();
+    allGood = allGood && test<35>();
+    allGood = allGood && test<36>();
+    allGood = allGood && test<37>();
+    allGood = allGood && test<38>();
+    allGood = allGood && test<39>();
+    allGood = allGood && test<40>();
+    allGood = allGood && test<41>();
+    allGood = allGood && test<42>();
+    allGood = allGood && test<43>();
+    allGood = allGood && test<44>();
+    allGood = allGood && test<45>();
+    allGood = allGood && test<46>();
+    allGood = allGood && test<47>();
+    allGood = allGood && test<48>();
+    allGood = allGood && test<49>();
+    allGood = allGood && test<50>();
+    allGood = allGood && test<51>();
+    allGood = allGood && test<52>();
+    allGood = allGood && test<53>();
+    allGood = allGood && test<54>();
+    allGood = allGood && test<55>();
+    allGood = allGood && test<56>();
+    allGood = allGood && test<57>();
+    allGood = allGood && test<58>();
+    allGood = allGood && test<59>();
+    allGood = allGood && test<60>();
+    allGood = allGood && test<61>();
+    allGood = allGood && test<62>();
+    allGood = allGood && test<63>();
+    allGood = allGood && test<64>();
 #endif
 
     std::cout << "#### Testing All Counters not sorted" << std::endl;

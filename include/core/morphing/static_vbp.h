@@ -26,9 +26,12 @@
 #define MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 
 #include <core/morphing/format.h>
+#include <core/morphing/morph.h>
 #include <core/morphing/vbp_routines.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
+#include <core/utils/math.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <immintrin.h>
@@ -39,65 +42,96 @@
 namespace morphstore {
     
     // The vertical bit packed format with a static bit width.
-    template< unsigned bw >
+    template<unsigned bw>
     struct static_vbp_f : public format {
         static_assert(
-           (1 <= bw) && (bw <= std::numeric_limits< uint64_t >::digits),
+           (1 <= bw) && (bw <= std::numeric_limits<uint64_t>::digits),
            "static_vbp: template parameter bw must satisfy 1 <= bw <= 64"
         );
+        
+        static void check_count_values(size_t p_CountValues) {
+            // @todo Support arbitrary numbers of data elements.
+            if(p_CountValues % (sizeof(__m128i) * bitsPerByte))
+                throw std::runtime_error(
+                    "static_vbp_f: the number of data elements must be a "
+                    "multiple of the number of bits in a vector register"
+                );
+        }
+        
+        static size_t get_size_max_byte(size_t p_CountValues) {
+            check_count_values(p_CountValues);
+            return p_CountValues * bw / bitsPerByte;
+        }
     };
     
-    template< unsigned bw >
-    void morph(
-        const column< uncompr_f > * in,
-        column< static_vbp_f< bw > > * out
-    ) {
-        // TODO support arbitrary numbers of data elements
-        if( in->get_count_values( ) % 128 )
-            throw std::runtime_error(
-                "morph uncompr_f -> static_vbp_f: the number of data elements "
-                "must be a multiple of 128"
+    template<unsigned bw>
+    struct morph_t<
+            processing_style_t::vec128,
+            static_vbp_f<bw>,
+            uncompr_f
+    > {
+        using out_f = static_vbp_f<bw>;
+        using in_f = uncompr_f;
+        
+        static
+        const column<out_f> *
+        apply(const column<in_f> * inCol) {
+            const size_t count64 = inCol->get_count_values();
+            out_f::check_count_values(count64);
+            const __m128i * in128 = inCol->get_data();
+            
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
+            __m128i * out128 = outCol->get_data();
+            const __m128i * const initOut128 = out128;
+
+            pack<bw>(
+                    in128,
+                    convert_size<uint64_t, __m128i>(count64),
+                    out128
             );
-        
-        const __m128i * in128 = in->get_data( );
-        __m128i * out128 = out->get_data( );
-        const __m128i * const initOut128 = out128;
-        
-        pack< bw >(
-            in128,
-            in->get_size_used_byte( ) / sizeof( __m128i ),
-            out128
-        );
-        
-        out->set_count_values( in->get_count_values( ) );
-        out->set_size_used_byte( ( out128 - initOut128 ) * sizeof( __m128i ) );
-    }
+
+            outCol->set_meta_data(
+                    count64,
+                    convert_size<__m128i, uint8_t>(out128 - initOut128)
+            );
+            
+            return outCol;
+        }
+    };
     
-    template< unsigned bw >
-    void morph(
-        const column< static_vbp_f< bw > > * in,
-        column< uncompr_f > * out
-    ) {
-        // TODO support arbitrary numbers of data elements
-        if( in->get_count_values( ) % 128 )
-            throw std::runtime_error(
-                "morph uncompr_f -> static_vbp_f: the number of data elements "
-                "must be a multiple of 128"
+    template<unsigned bw>
+    struct morph_t<
+            processing_style_t::vec128,
+            uncompr_f,
+            static_vbp_f<bw>
+    > {
+        using out_f = uncompr_f;
+        using in_f = static_vbp_f<bw>;
+        
+        static
+        const column<out_f> *
+        apply(const column<in_f> * inCol) {
+            const size_t count64 = inCol->get_count_values();
+            const __m128i * in128 = inCol->get_data();
+            
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
+            __m128i * out128 = outCol->get_data();
+            const __m128i * const initOut128 = out128;
+
+            unpack<bw>(
+                    in128,
+                    out128,
+                    convert_size<uint64_t, __m128i>(count64)
             );
-        
-        const __m128i * in128 = in->get_data( );
-        __m128i * out128 = out->get_data( );
-        const __m128i * const initOut128 = out128;
-        
-        unpack< bw >(
-            in128,
-            out128,
-            in->get_count_values( ) * sizeof( uint64_t ) / sizeof( __m128i )
-        );
-        
-        out->set_count_values( in->get_count_values( ) );
-        out->set_size_used_byte( ( out128 - initOut128 ) * sizeof( __m128i ) );
-    }
+
+            outCol->set_meta_data(
+                    count64,
+                    convert_size<__m128i, uint8_t>(out128 - initOut128)
+            );
+
+            return outCol;
+        }
+    };
     
 }
 #endif //MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
