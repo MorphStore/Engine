@@ -42,6 +42,11 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 IF(CAVX512)
     morph_flag(-DAVX512)
+    morph_flag(-mavx512f)
+    morph_flag(-mavx512pf)
+    morph_flag(-mavx512er)
+    morph_flag(-mavx512cd)
+    morph_flag(-mavx512vl)
     message(STATUS "AVX512 support switched on")
 ENDIF(CAVX512)
 

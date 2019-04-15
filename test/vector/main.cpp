@@ -34,7 +34,7 @@ int main( void ) {
    auto outColumn = new column<uncompr_f>(100);
    //const void * datav = (const void*) data; 
    
-
+   
    int temp=_mm_extract_epi64((load<sse< v128< uint64_t > >, iov::ALIGNED, 128>(data)),0);
    std::cout << "sse aligned " << temp << "\n";
    
@@ -57,6 +57,7 @@ int main( void ) {
    vector::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
    std::cout << "avx2 aligned store " << data[0] << "\n";
    
+   
    #ifdef AVX512
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((load<avx512< v512< uint64_t > >, iov::ALIGNED, 512>(data)),0),0);
    std::cout << "avx512 aligned " << temp << "\n";
@@ -68,6 +69,15 @@ int main( void ) {
    testvec512=load<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data);
    vector::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
    std::cout << "avx512 aligned store " << data[0] << "\n";
+   
+   vector::compressstore< avx512 < v512 < uint64_t > > , iov::UNALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512,15);
+   std::cout << "avx512 compress store, 512 bit " << data[0] << "\n";
+   
+   compressstore< avx512 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,7);
+   std::cout << "avx512 compress store, 256 bit " << data[0] << "\n";
+   
+   compressstore< avx512 < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,3);
+   std::cout << "avx512 compress store, 128 bit " << data[0] << "\n";
    #endif
    
    return 0;

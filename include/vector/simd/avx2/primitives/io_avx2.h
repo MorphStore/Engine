@@ -32,7 +32,7 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store aligned integer values into 256 Bit vector register." );
+         trace( "[VECTOR] - Store aligned integer values to memory" );
          _mm256_store_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
@@ -49,7 +49,7 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store aligned float values into 128 Bit vector register." );
+         trace( "[VECTOR] - Store aligned float values to memory" );
          _mm256_store_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
@@ -66,10 +66,11 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store aligned double values into 256 Bit vector register." );
+         trace( "[VECTOR] - Store aligned double values to memory" );
          _mm256_store_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
+
    };
 
    template<typename T, int IOGranularity>
@@ -86,10 +87,12 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Stream store integer values into 256 Bit vector register." );
+         trace( "[VECTOR] - Stream store integer values to memory" );
          _mm256_stream_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return ;
       }
+      
+
       
    };
 
@@ -107,13 +110,13 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store unaligned integer values into 256 Bit vector register." );
+         trace( "[VECTOR] - Store unaligned integer values to memory" );
           _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *> (p_DataPtr),p_vec);
           return;
       }
 
-
-            
+     
+      
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static typename avx2< v256< U > >::vector_t
@@ -126,7 +129,7 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store unaligned float values into 256 Bit vector register." );
+         trace( "[VECTOR] - Store unaligned float values to memory" );
          _mm256_storeu_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
@@ -143,7 +146,7 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store unaligned double values into 256 Bit vector register." );
+         trace( "[VECTOR] - Store unaligned double values to memory" );
          _mm256_storeu_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
@@ -164,11 +167,12 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_INLINE
       static void
       store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
-         trace( "[VECTOR] - Store unaligned integer values into 128 Bit vector register." );
+         trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
       
+
       
    };
 

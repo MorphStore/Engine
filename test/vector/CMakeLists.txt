@@ -9,7 +9,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 #            -pedantic
             -fstack-protector-all
             -msse4.2 -mavx2 -msse2
-            -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl 
+           # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl 
            
             $<$<CONFIG:DEBUG>:-DDEBUG> )
     else()
