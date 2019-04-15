@@ -111,184 +111,19 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i avalance( __m256i p_value ) {
 
 }
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i xxhash64( __m256i p_values ) {
-
+MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i xxhash64( __m256i p_values, uint64_t p_seed ) {
+   __m256i v64 = _mm256_xor_si256(
+      _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
+      round64( p_values ) );
+   return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
 }
 
-#define XXH_get64bits(p) XXH_readLE64_align(p, align)
+MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i xxhash64( __m256i p_values ) {
+   __m256i v64 = _mm256_xor_si256(
+      _mm256_set1_epi64x( PRIME64_5 + 8ULL ),
+      round64( p_values ) );
+   return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
 
-   static uint64_t
-   XXH64_finalize(uint64_t h64, const void* ptr, size_t len, XXH_alignment align)
-   {
-      const BYTE* p = (const BYTE*)ptr;
-
-#define PROCESS1_64            \
-    h64 ^= (*p++) * PRIME64_5; \
-    h64 = XXH_rotl64(h64, 11) * PRIME64_1;
-
-#define PROCESS4_64          \
-    h64 ^= (uint64_t)(XXH_get32bits(p)) * PRIME64_1; \
-    p+=4;                    \
-    h64 = XXH_rotl64(h64, 23) * PRIME64_2 + PRIME64_3;
-
-#define PROCESS8_64 {        \
-    uint64_t const k1 = XXH64_round(0, XXH_get64bits(p)); \
-    p+=8;                    \
-    h64 ^= k1;               \
-    h64  = XXH_rotl64(h64,27) * PRIME64_1 + PRIME64_4; \
-   }
-
-      switch(len&31) {
-         case 24: PROCESS8_64;
-            /* fallthrough */
-         case 16: PROCESS8_64;
-            /* fallthrough */
-         case  8: PROCESS8_64;
-            return XXH64_avalanche(h64);
-
-         case 28: PROCESS8_64;
-            /* fallthrough */
-         case 20: PROCESS8_64;
-            /* fallthrough */
-         case 12: PROCESS8_64;
-            /* fallthrough */
-         case  4: PROCESS4_64;
-            return XXH64_avalanche(h64);
-
-         case 25: PROCESS8_64;
-            /* fallthrough */
-         case 17: PROCESS8_64;
-            /* fallthrough */
-         case  9: PROCESS8_64;
-            PROCESS1_64;
-            return XXH64_avalanche(h64);
-
-         case 29: PROCESS8_64;
-            /* fallthrough */
-         case 21: PROCESS8_64;
-            /* fallthrough */
-         case 13: PROCESS8_64;
-            /* fallthrough */
-         case  5: PROCESS4_64;
-            PROCESS1_64;
-            return XXH64_avalanche(h64);
-
-         case 26: PROCESS8_64;
-            /* fallthrough */
-         case 18: PROCESS8_64;
-            /* fallthrough */
-         case 10: PROCESS8_64;
-            PROCESS1_64;
-            PROCESS1_64;
-            return XXH64_avalanche(h64);
-
-         case 30: PROCESS8_64;
-            /* fallthrough */
-         case 22: PROCESS8_64;
-            /* fallthrough */
-         case 14: PROCESS8_64;
-            /* fallthrough */
-         case  6: PROCESS4_64;
-            PROCESS1_64;
-            PROCESS1_64;
-            return XXH64_avalanche(h64);
-
-         case 27: PROCESS8_64;
-            /* fallthrough */
-         case 19: PROCESS8_64;
-            /* fallthrough */
-         case 11: PROCESS8_64;
-            PROCESS1_64;
-            PROCESS1_64;
-            PROCESS1_64;
-            return XXH64_avalanche(h64);
-
-         case 31: PROCESS8_64;
-            /* fallthrough */
-         case 23: PROCESS8_64;
-            /* fallthrough */
-         case 15: PROCESS8_64;
-            /* fallthrough */
-         case  7: PROCESS4_64;
-            /* fallthrough */
-         case  3: PROCESS1_64;
-            /* fallthrough */
-         case  2: PROCESS1_64;
-            /* fallthrough */
-         case  1: PROCESS1_64;
-            /* fallthrough */
-         case  0: return XXH64_avalanche(h64);
-      }
-
-      /* impossible to reach */
-      assert(0);
-      return 0;  /* unreachable, but some compilers complain without it */
-   }
-
-   XXH_FORCE_INLINE uint64_t
-   XXH64_endian_align(const void* input, size_t len, uint64_t seed, XXH_alignment align)
-   {
-      const BYTE* p = (const BYTE*)input;
-      const BYTE* bEnd = p + len;
-      uint64_t h64;
-
-#if defined(XXH_ACCEPT_NULL_INPUT_POINTER) && (XXH_ACCEPT_NULL_INPUT_POINTER>=1)
-      if (p==NULL) {
-        len=0;
-        bEnd=p=(const BYTE*)(size_t)32;
-    }
-#endif
-
-      if (len>=32) {
-         const BYTE* const limit = bEnd - 32;
-         uint64_t v1 = seed + PRIME64_1 + PRIME64_2;
-         uint64_t v2 = seed + PRIME64_2;
-         uint64_t v3 = seed + 0;
-         uint64_t v4 = seed - PRIME64_1;
-
-         do {
-            v1 = XXH64_round(v1, XXH_get64bits(p)); p+=8;
-            v2 = XXH64_round(v2, XXH_get64bits(p)); p+=8;
-            v3 = XXH64_round(v3, XXH_get64bits(p)); p+=8;
-            v4 = XXH64_round(v4, XXH_get64bits(p)); p+=8;
-         } while (p<=limit);
-
-         h64 = XXH_rotl64(v1, 1) + XXH_rotl64(v2, 7) + XXH_rotl64(v3, 12) + XXH_rotl64(v4, 18);
-         h64 = XXH64_mergeRound(h64, v1);
-         h64 = XXH64_mergeRound(h64, v2);
-         h64 = XXH64_mergeRound(h64, v3);
-         h64 = XXH64_mergeRound(h64, v4);
-
-      } else {
-         h64  = seed + PRIME64_5;
-      }
-
-      h64 += (uint64_t) len;
-
-      return XXH64_finalize(h64, p, len, align);
-   }
-
-
-   XXH_PUBLIC_API unsigned long long XXH64 (const void* input, size_t len, unsigned long long seed)
-   {
-#if 0
-      /* Simple version, good for code maintenance, but unfortunately slow for small inputs */
-    XXH64_state_t state;
-    XXH64_reset(&state, seed);
-    XXH64_update(&state, input, len);
-    return XXH64_digest(&state);
-
-#else
-
-      if (XXH_FORCE_ALIGN_CHECK) {
-         if ((((size_t)input) & 7)==0) {  /* Input is aligned, let's leverage the speed advantage */
-            return XXH64_endian_align(input, len, seed, XXH_aligned);
-         }   }
-
-      return XXH64_endian_align(input, len, seed, XXH_unaligned);
-
-#endif
-   }
 
 }
 
