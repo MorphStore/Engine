@@ -30,6 +30,8 @@ int main( void ) {
    
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(100,1,1);
    const uint64_t* data = (uint64_t*) testDataColumnSorted->get_data();
+   
+   auto outColumn = new column<uncompr_f>(100);
    //const void * datav = (const void*) data; 
    
 
@@ -39,11 +41,21 @@ int main( void ) {
    temp=_mm_extract_epi64((load<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data)),0);
    std::cout << "sse unaligned " << temp << "\n";
    
+   sse< v128< uint64_t > >::vector_t testvec128;
+   testvec128=load<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data);
+   vector::store < sse < v128 < uint64_t > > , iov::ALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128);
+   std::cout << "sse aligned store " << data[0] << "\n";
+   
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
 
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data)),0);
    std::cout << "avx2 unaligned " << temp << "\n";
+   
+   avx2< v256< uint64_t > >::vector_t testvec256;
+   testvec256=load<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data);
+   vector::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
+   std::cout << "avx2 aligned store " << data[0] << "\n";
    
    #ifdef AVX512
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((load<avx512< v512< uint64_t > >, iov::ALIGNED, 512>(data)),0),0);
@@ -51,6 +63,11 @@ int main( void ) {
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((load<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data)),0),0);
    std::cout << "avx512 unaligned " << temp << "\n";
+   
+   avx512< v512< uint64_t > >::vector_t testvec512;
+   testvec512=load<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data);
+   vector::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
+   std::cout << "avx512 aligned store " << data[0] << "\n";
    #endif
    
    return 0;

@@ -19,8 +19,9 @@
 #include "immintrin.h"
 
 #include "vector/general_vector.h"
+
 namespace vector{
-     template<class VectorReg>
+   template<class VectorReg>
    struct avx512;
 
    template<typename T>

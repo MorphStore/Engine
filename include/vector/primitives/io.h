@@ -27,5 +27,13 @@ namespace vector {
    load(typename VectorExtension::base_t const * const a ) {
        return io<VectorExtension, IOVariant, IOGranularity>::load( a );
    }
+   
+   template<class VectorExtension, iov IOVariant, int IOGranularity>
+   void
+   store(typename VectorExtension::base_t * a,  typename VectorExtension::vector_t b ) {
+       io<VectorExtension, IOVariant, IOGranularity>::store( a, b );
+       return;
+   }
+   
 }
 #endif //MORPHSTORE_VECTOR_PRIMITIVES_IO_H
