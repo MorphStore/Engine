@@ -107,7 +107,7 @@ if ( DEFINED QMMMES )
 	set( ignoreMe ${QMMMES} )
 else ( DEFINED QMMMES )
 	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQMMMES defaults to 128M.\n" )
-	morph_flag("-UMSV_NO_SELFMANAGED_MEMORY")
+	morph_flag("-UMSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE")
 endif ( DEFINED QMMMES )
 
 if ( DEFINED ENABLE_MONITORING )
