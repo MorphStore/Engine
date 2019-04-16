@@ -187,10 +187,10 @@ namespace vector {
    
     template<typename T, int IOGranularity>
     struct io<avx512<v256<T>>,iov::UNALIGNED, IOGranularity> {
-        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      compressstore( U const * const p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
+      compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm256_mask_compressstoreu_epi64((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -202,7 +202,7 @@ namespace vector {
     template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      compressstore( U const * const p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
+      compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm_mask_compressstoreu_epi64((void *)p_DataPtr,mask, p_vec);
          return ;

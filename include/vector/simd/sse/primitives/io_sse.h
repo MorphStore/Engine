@@ -151,6 +151,27 @@ namespace vector {
          _mm_storeu_pd(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
       }
+      
+      
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  sse< v128< int > >::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+   
+         switch (mask){
+             case 0:    return; //store nothing
+             case 1:    _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
+                        return; //store everything
+             case 2:    p_vec=_mm_shuffle_epi8(p_vec, _mm_set_epi8(7,6,5,4,3,2,1,0,15,14,13,12,11,10,9,8)); //move upper 64 bit to beginning of register and store it to memory
+                        _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
+                        return;
+             case 3:    _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec); //store everything
+                        return; 
+         }       
+         
+         return ;
+      }
 
    };
 

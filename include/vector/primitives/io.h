@@ -48,5 +48,7 @@ namespace vector {
        return;
    }
    
+   
+   
 }
 #endif //MORPHSTORE_VECTOR_PRIMITIVES_IO_H
