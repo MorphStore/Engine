@@ -10,6 +10,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( join_test_app join_test.cpp )
 	add_executable( merge_test_app merge_test.cpp )
 	add_executable( project_test_app project_test.cpp )
+	add_executable( project_benchmark_test_app project_benchmark_test.cpp )
 	add_executable( select_test_app select_test.cpp )
 	add_executable( operation_lookup_test_app lookup_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
@@ -104,6 +105,16 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	        -fstack-protector-all
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( project_test_app PRIVATE "-ldl" )
+
+        target_compile_options( project_benchmark_test_app PRIVATE
+                                -Werror
+                                -Wall
+                                -Wextra
+                                -pedantic
+                                -fstack-protector-all
+                                -msse4.2 -mavx2
+                                $<$<CONFIG:DEBUG>:-DDEBUG> )
+        target_link_libraries( project_benchmark_test_app PRIVATE "-ldl" )
 	
 	target_compile_options( select_test_app PRIVATE
 	        -Werror
@@ -153,6 +164,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_test( join_test join_test_app )
 	add_test( merge_test merge_test_app )
 	add_test( project_test project_test_app )
+	add_test( project_benchmark_test project_benchmark_test_app )
 	add_test( select_test select_test_app )
 	add_test( operation_lookup_test operation_lookup_test_app )
 	add_test( operation_summation_test operation_summation_test_app )
