@@ -76,6 +76,7 @@ namespace vector {
       }
       
     
+      
    };
 
    template<typename T, int IOGranularity>
@@ -161,7 +162,17 @@ namespace vector {
          _mm512_storeu_pd((void *)p_DataPtr, p_vec);
          return ;
       }
+      
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_INLINE
+      static typename avx512< v512< U > >::vector_t
+      gather( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
+         trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
+         return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), sizeof(uint64_t));
+         
+      }
    };
+
 
    template<typename T, int IOGranularity>
    struct io<avx512<v512<T>>,iov::UNALIGNEDX, IOGranularity> {

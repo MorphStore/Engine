@@ -36,7 +36,7 @@ namespace vector {
        return;
    }
    
-   /*! Selectively store vales from a vector register to memory using a bitmask
+   /*! Selectively store 64-bit integer vales from a vector register to memory using a bitmask
     * @param a A pointer to a memory adress
     * @param b A vector register
     * @param c A mask that indicates the of b are store at a 
@@ -48,6 +48,15 @@ namespace vector {
        return;
    }
    
+    /*! Gather 64-bit integers from memory
+    * @param a A pointer to a memory adress
+    * @param b A vector register with the indices (starting at a)
+    */
+   template<class VectorExtension, iov IOVariant, int IOGranularity>
+   typename VectorExtension::vector_t
+   gather(typename VectorExtension::base_t const * const a,  typename VectorExtension::vector_t b) {
+       return io<VectorExtension, IOVariant, IOGranularity>::gather( a, b);
+   }
    
    
 }
