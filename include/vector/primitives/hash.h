@@ -13,11 +13,7 @@
 
 namespace morphstore {
 
-const uint64_t PRIME64_1 = 11400714785074694791ULL;   /* 0b1001111000110111011110011011000110000101111010111100101010000111 */
-const uint64_t PRIME64_2 = 14029467366897019727ULL;   /* 0b1100001010110010101011100011110100100111110101001110101101001111 */
-const uint64_t PRIME64_3 =  1609587929392839161ULL;   /* 0b0001011001010110011001111011000110011110001101110111100111111001 */
-const uint64_t PRIME64_4 =  9650029242287828579ULL;   /* 0b1000010111101011110010100111011111000010101100101010111001100011 */
-const uint64_t PRIME64_5 =  2870177450012600261ULL;   /* 0b0010011111010100111010110010111100010110010101100110011111000101 */
+
 
 template< int32_t N >
 MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i rotl64( __m256i p_data, std::integral_constant< int32_t, N > ) {
@@ -66,66 +62,84 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i mul64( __m256i p_a, __m256i p_b ) {
    return prod;
 }
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_acc, __m256i p_value ) {
-   return
-      mul64(
-         rotl64(
-            _mm256_add_epi64(
-               p_acc,
-               mul64( p_value, IMM_UINT64( PRIME64_2 ) )
-            ),
-            IMM_INT32( 31 )
-         ),
-         IMM_UINT64(PRIME64_1)
-      );
-}
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_value ) {
-   return
-      mul64(
-         rotl64(
-            mul64( p_value, IMM_UINT64( PRIME64_2 ) ),
-            IMM_INT32( 31 )
-         ),
-         IMM_UINT64(PRIME64_1)
-      );
-}
+template< typename T >
+struct xxhash {
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values, T p_see ) = delete;
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values ) = delete;
+};
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i merge_round_64( __m256i p_acc, __m256i p_value ) {
-   return
-      _mm256_add_epi64(
+template< >
+struct xxhash< uint64_t > {
+   static const uint64_t PRIME64_1 = 11400714785074694791ULL;   /* 0b1001111000110111011110011011000110000101111010111100101010000111 */
+   static const uint64_t PRIME64_2 = 14029467366897019727ULL;   /* 0b1100001010110010101011100011110100100111110101001110101101001111 */
+   static const uint64_t PRIME64_3 =  1609587929392839161ULL;   /* 0b0001011001010110011001111011000110011110001101110111100111111001 */
+   static const uint64_t PRIME64_4 =  9650029242287828579ULL;   /* 0b1000010111101011110010100111011111000010101100101010111001100011 */
+   static const uint64_t PRIME64_5 =  2870177450012600261ULL;   /* 0b0010011111010100111010110010111100010110010101100110011111000101 */
+
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_acc, __m256i p_value ) {
+      return
          mul64(
-            _mm256_xor_si256(
-               p_acc,
-               round64( p_value )
+            rotl64(
+               _mm256_add_epi64(
+                  p_acc,
+                  mul64( p_value, IMM_UINT64( PRIME64_2 ) )
+               ),
+               IMM_INT32( 31 )
             ),
             IMM_UINT64(PRIME64_1)
-         ),
-         _mm256_set1_epi64x( PRIME64_4 )
-      );
-}
+         );
+   }
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_value ) {
+      return
+         mul64(
+            rotl64(
+               mul64( p_value, IMM_UINT64( PRIME64_2 ) ),
+               IMM_INT32( 31 )
+            ),
+            IMM_UINT64(PRIME64_1)
+         );
+   }
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i avalance( __m256i p_value ) {
-   __m256i tmp = mul64( _mm256_xor_si256( p_value, _mm256_srli_epi64( p_value, 33 ) ), IMM_UINT64( PRIME64_2 ) );
-   __m256i tmp1 = mul64( _mm256_xor_si256( tmp, _mm256_srli_epi64( tmp, 29 ) ), IMM_UINT64( PRIME64_3 ) );
-   return ( _mm256_xor_si256( tmp1, _mm256_srli_epi64( tmp1, 32 ) ) );
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i merge_round_64( __m256i p_acc, __m256i p_value ) {
+      return
+         _mm256_add_epi64(
+            mul64(
+               _mm256_xor_si256(
+                  p_acc,
+                  round64( p_value )
+               ),
+               IMM_UINT64(PRIME64_1)
+            ),
+            _mm256_set1_epi64x( PRIME64_4 )
+         );
+   }
 
-}
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i avalance( __m256i p_value ) {
+      __m256i tmp = mul64( _mm256_xor_si256( p_value, _mm256_srli_epi64( p_value, 33 ) ), IMM_UINT64( PRIME64_2 ) );
+      __m256i tmp1 = mul64( _mm256_xor_si256( tmp, _mm256_srli_epi64( tmp, 29 ) ), IMM_UINT64( PRIME64_3 ) );
+      return ( _mm256_xor_si256( tmp1, _mm256_srli_epi64( tmp1, 32 ) ) );
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i xxhash64( __m256i p_values, uint64_t p_seed ) {
-   __m256i v64 = _mm256_xor_si256(
-      _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
-      round64( p_values ) );
-   return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
-}
+   }
 
-MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i xxhash64( __m256i p_values ) {
-   __m256i v64 = _mm256_xor_si256(
-      _mm256_set1_epi64x( PRIME64_5 + 8ULL ),
-      round64( p_values ) );
-   return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
+// see https://github.com/Cyan4973/xxHash
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values, uint64_t p_seed ) {
+      __m256i v64 = _mm256_xor_si256(
+         _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
+         round64( p_values ) );
+      return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
+   }
+
+// see https://github.com/aappleby/smhasher/wiki/MurmurHash3
+// http://bitsquid.blogspot.com/2011/08/code-snippet-murmur-hash-inverse-pre.html
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values ) {
+      __m256i v64 = _mm256_xor_si256(
+         _mm256_set1_epi64x( PRIME64_5 + 8ULL ),
+         round64( p_values ) );
+      return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
+   }
+};
 
 
-}
-
+MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256 murmur
 
 #endif //MORPHSTORE_HASH_H
