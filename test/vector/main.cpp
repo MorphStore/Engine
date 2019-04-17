@@ -12,9 +12,12 @@
 #include <vector/general_vector.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
 
 #ifdef AVX512
 #include <vector/simd/avx512/primitives/io_avx512.h>
+#include <vector/simd/avx512/primitives/calc_avx512.h>
 #endif
 
 #include <iostream>
@@ -54,6 +57,17 @@ int main( void ) {
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "sse gather " << temp << "\n";
    
+   temp=_mm_extract_epi64((add<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
+   std::cout << "sse add 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((add<sse< v128< uint32_t > >, 32>(testvec128,gatherTest128)),0);
+   std::cout << "sse add 32 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi64((sub<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
+   std::cout << "sse sub 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((sub<sse< v128< uint32_t > >, 32>(testvec128,gatherTest128)),0);
+   std::cout << "sse sub 32 bit " << temp << "\n";
    
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
@@ -77,7 +91,17 @@ int main( void ) {
    temp=_mm256_extract_epi64(testvec256,0);
    std::cout << "avx2 gather, 256 bit " << temp << "\n";
    
+   temp=_mm256_extract_epi64((add<avx2< v256< uint64_t > >, 64>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 add 64 bit " << temp << "\n";
    
+   temp=_mm256_extract_epi32((add<avx2< v256< uint32_t > >, 32>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 add 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((sub<avx2< v256< uint64_t > >, 64>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 sub 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32((sub<avx2< v256< uint32_t > >, 32>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 sub 32 bit " << temp << "\n";
    
    #ifdef AVX512
 
@@ -107,6 +131,18 @@ int main( void ) {
    testvec512=gather<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data,gatherTest512);
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64(testvec512,0),0);
    std::cout << "avx512 gather " << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((add<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx2 add 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((add<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx2 add 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((sub<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx2 sub 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((sub<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx2 sub 32 bit " << temp << "\n";
    
    #endif
    

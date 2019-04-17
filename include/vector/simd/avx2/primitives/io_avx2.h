@@ -48,7 +48,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, vector::avx2< v256< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned float values to memory" );
          _mm256_store_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -65,7 +65,7 @@ namespace vector {
      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, vector::avx2< v256< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned double values to memory" );
          _mm256_store_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -128,7 +128,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, vector::avx2< v256< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned float values to memory" );
          _mm256_storeu_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -145,7 +145,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, vector::avx2< v256< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned double values to memory" );
          _mm256_storeu_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -229,10 +229,10 @@ namespace vector {
         MSV_CXX_ATTRIBUTE_INLINE
         static typename avx2< v128< U > >::vector_t
         gather( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
-        trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-        return _mm_i64gather_epi64( reinterpret_cast<typename avx2< v128< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
-         
-      }
+            trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
+            return _mm_i64gather_epi64( reinterpret_cast<typename avx2< v128< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+
+          }
     };
 }
 
