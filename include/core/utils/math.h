@@ -75,7 +75,7 @@ const size_t bitsPerByte = 8;
  * @return The size in units of the destination type.
  */
 template<typename t_src, typename t_dst>
-inline size_t convert_size(size_t p_SizeInSrcUnits) {
+constexpr inline size_t convert_size(size_t p_SizeInSrcUnits) {
     return p_SizeInSrcUnits * sizeof(t_src) / sizeof(t_dst);
 }
 
