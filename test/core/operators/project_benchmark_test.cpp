@@ -250,16 +250,20 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
 
 int main(void) {
 #ifdef MSV_NO_SELFMANAGED_MEMORY
+    bool curGood;
     bool allGood = true;
     
     // Setting in which a few positions refer to a large data column.
-    allGood = allGood && evaluate_variants(128 * 1000 * 1000, 16 * 1024);
+    curGood = evaluate_variants(128 * 1000 * 1000, 16 * 1024);
+    allGood = allGood && curGood;
     // Setting in which sequentially reading the input position column should
     // have a significant impact.
-    allGood = allGood && evaluate_variants(2, 128 * 1000 * 1000);
+    curGood = evaluate_variants(2, 128 * 1000 * 1000);
+    allGood = allGood && curGood;
     // Setting in which sequentially reading the input position column should
     // not have a significant impact.
-    allGood = allGood && evaluate_variants(1000 * 1000, 128 * 1000);
+    curGood = evaluate_variants(1000 * 1000, 128 * 1000);
+    allGood = allGood && curGood;
     
     // Output of the runtimes.
     // @todo These should be listed above, but the monitoring does not support
