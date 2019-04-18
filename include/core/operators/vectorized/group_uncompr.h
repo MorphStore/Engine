@@ -15,6 +15,7 @@
 #include <core/utils/processing_style.h>
 
 #include <immintrin.h>
+#include <core/utils/printing.h>
 
 namespace morphstore {
 
@@ -167,6 +168,7 @@ const std::tuple<
    uint64_t * const initOutExt = outExt;
 
    const size_t hashContainerSize = 1.6 * outCount;
+   const size_t lastPossibleVectorNumberInHashContainer = hashContainerSize - (sizeof( __m256i ) / sizeof( uint64_t ));
    uint64_t * hashContainerData = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
    uint64_t * hashContainerGroupIds = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
 
@@ -180,7 +182,7 @@ const std::tuple<
 
    size_t scalarPartCount = inDataCount & (elementCount-1);
    size_t vectorizedPartCount = inDataCount - scalarPartCount;
-
+   uint64_t groupId = 0;
 
    for( size_t dataPos = 0; dataPos < vectorizedPartCount; dataPos += sizeof( __m256i ) / sizeof( uint64_t ) ) {
       _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes),
@@ -188,15 +190,14 @@ const std::tuple<
       for(size_t hashPos = 0; hashPos < 4; ++hashPos) {
          uint32_t searchOffset = 0;
          bool dataFound;
-         uint64_t groupId = 0;
-         size_t pos = tmpHashes[hashPos];
-         __m256i dataV = _mm256_set1_epi64x(*inData++);
-         __m256i groupsV = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(&(hashContainerData[pos])));
-         dataFound = false;
 
-
+         size_t pos = tmpHashes[hashPos] % lastPossibleVectorNumberInHashContainer;
+         __m256i dataV = _mm256_set1_epi64x(inData[dataPos+hashPos]);
          do {
-            pos += sizeof(__m256i) / sizeof(uint64_t);
+            __m256i groupsV = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(&(hashContainerData[pos])));
+            dataFound = false;
+
+            pos = ( pos + sizeof(__m256i) / sizeof(uint64_t) ) % lastPossibleVectorNumberInHashContainer;
             searchOffset =
                _mm256_movemask_pd(
                   _mm256_castsi256_pd(
@@ -219,15 +220,15 @@ const std::tuple<
             } else {
                dataFound = true;
             }
-         } while(searchOffset != 0);
+         } while(searchOffset == 0);
          pos += __builtin_ctz(searchOffset) - sizeof(__m256i) / sizeof(uint64_t);
          if(dataFound) {
             //_bit_scan_forward( searchResult ) SHOULD work... but it doesn't
             *(outGr++) = hashContainerGroupIds[pos]; //BS
          } else {
-            hashContainerData[pos] = *inData;
-            hashContainerGroupIds[pos] = groupId++;
-            *(outGr++) = groupId;
+            hashContainerData[pos] = inData[dataPos+hashPos];
+            hashContainerGroupIds[pos] = groupId;
+            *(outGr++) = groupId++;
             *(outExt++) = dataPos + hashPos;
          }
       }

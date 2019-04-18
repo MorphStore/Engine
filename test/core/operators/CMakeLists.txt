@@ -14,7 +14,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( operation_lookup_test_app lookup_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
 	add_executable( operations_vector_test_app vector_test.cpp )
-	add_executable( group_unary_vector_test_app group_unary_vectorized_test.cpp )
+	add_executable( group_unary_vector_test_app group_unary_vectorized_test.cpp)
 	
 	target_compile_options( agg_sum_group_based_test_app PRIVATE
 	        -Werror
