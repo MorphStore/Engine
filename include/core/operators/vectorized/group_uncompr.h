@@ -22,7 +22,7 @@ namespace morphstore {
 
 template< int32_t N >
 MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i rotl64( __m256i p_data, std::integral_constant< int32_t, N > ) {
-   return _mm256_or_epi64(
+   return _mm256_or_si256(
          _mm256_slli_epi64( p_data, N ),
          _mm256_srli_epi64( p_data, 64-N)
       );
@@ -93,6 +93,8 @@ struct xxhash< uint64_t > {
             ),
             IMM_UINT64(PRIME64_1)
          );
+
+
    }
    static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_value ) {
       return

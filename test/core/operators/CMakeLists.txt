@@ -13,7 +13,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( select_test_app select_test.cpp )
 	add_executable( operation_lookup_test_app lookup_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
-        add_executable( operations_vector_test_app vector_test.cpp )
+	add_executable( operations_vector_test_app vector_test.cpp )
+	add_executable( group_unary_vector_test_app group_unary_vectorized_test.cpp )
 	
 	target_compile_options( agg_sum_group_based_test_app PRIVATE
 	        -Werror
@@ -142,7 +143,18 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
                 -msse4.2 -mavx2
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( operations_vector_test_app PRIVATE "-ldl" )
-	
+
+
+	target_compile_options( group_unary_vector_test_app PRIVATE
+			-Werror
+			-Wall
+			-Wextra
+			-pedantic
+			-fstack-protector-all
+			-msse4.2 -mavx2
+			$<$<CONFIG:DEBUG>:-DDEBUG> )
+	target_link_libraries( group_unary_vector_test_app PRIVATE "-ldl" )
+
 	add_test( agg_sum_group_based_test agg_sum_group_based_test_app )
 	add_test( agg_sum_whole_column_test agg_sum_whole_column_test_app )
 	add_test( calc_binary_test calc_binary_test_app )
@@ -156,6 +168,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_test( select_test select_test_app )
 	add_test( operation_lookup_test operation_lookup_test_app )
 	add_test( operation_summation_test operation_summation_test_app )
-        add_test( operations_vector_test operations_vector_test_app )
+	add_test( operations_vector_test operations_vector_test_app )
+	add_test( group_unary_vector_test group_unary_vector_test_app )
 endif()
 	
