@@ -61,6 +61,16 @@ namespace vector{
             return _mm256_sub_pd( p_vec1, p_vec2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static uint64_t
+        hadd( avx2< v256< uint32_t > >::vector_t p_vec1) {
+            trace( "[VECTOR] - Subtract double values (avx512)" );
+            __m256i a= (__m256i)_mm256_hadd_pd((__m256d)p_vec1,(__m256d)p_vec1);            
+            return _mm256_extract_epi64(a,0)+_mm256_extract_epi64(a,2);
+
+        }
     };
     
     template<typename T>
@@ -93,13 +103,25 @@ namespace vector{
 
         }
         
-         template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static typename avx2< v256< U > >::vector_t
         sub( avx2< v256< float > >::vector_t p_vec1,  avx2< v256< float > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Subtract float values (avx2)" );
             return _mm256_sub_ps( p_vec1, p_vec2);
         }
+         
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static uint64_t
+        hadd( avx2< v256< uint32_t > >::vector_t p_vec1) {
+            trace( "[VECTOR] - Subtract double values (avx512)" );
+            __m256i a=_mm256_hadd_epi32(p_vec1,p_vec1);            
+            return _mm256_extract_epi32(a,0)+_mm256_extract_epi32(a,1)+_mm256_extract_epi32(a,4)+_mm256_extract_epi32(a,5);
+
+        }
+        
+
     };
 }
 

@@ -42,6 +42,18 @@ namespace vector{
    sub(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
        return calc<VectorExtension,  Granularity>::sub( a, b );
    }
+   
+    /*!
+    * Builds the sum of all elements in vector a. This is really ugly if done 
+    * vectorized using sse or avx2 (sequentially might be faster in these cases).
+    */
+   
+   template<class VectorExtension, int Granularity>
+   typename VectorExtension::base_t
+   hadd(typename VectorExtension::vector_t a) {
+       return calc<VectorExtension,  Granularity>::hadd( a );
+   }
+   
 }
 #endif /* CALC_H */
 

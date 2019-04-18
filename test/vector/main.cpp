@@ -69,6 +69,15 @@ int main( void ) {
    temp=_mm_extract_epi32((sub<sse< v128< uint32_t > >, 32>(testvec128,gatherTest128)),0);
    std::cout << "sse sub 32 bit " << temp << "\n";
    
+   temp=hadd<sse< v128< uint64_t > >, 64>(testvec128);
+   std::cout << "sse hadd 64 bit " << temp << "\n";
+   
+   temp=hadd<sse< v128< uint32_t > >, 32>(testvec128);
+   std::cout << "sse hadd 32 bit " << temp << "\n";
+   
+   float temp3 = hadd<sse< v128< float > >, 32>((__m128)testvec128);
+   std::cout << "sse hadd 32 bit (float) " << temp3 << "\n";
+   
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
 
@@ -103,6 +112,12 @@ int main( void ) {
    temp=_mm256_extract_epi32((sub<avx2< v256< uint32_t > >, 32>(testvec256,gatherTest256)),0);
    std::cout << "avx2 sub 32 bit " << temp << "\n";
    
+   temp=hadd<avx2< v256< uint64_t > >, 64>(testvec256);
+   std::cout << "avx2 hadd 64 bit " << temp << "\n";
+   
+   temp=hadd<avx2< v256< uint32_t > >, 32>(testvec256);
+   std::cout << "avx2 hadd 32 bit " << temp << "\n";
+   
    #ifdef AVX512
 
    avx512< v512< uint64_t > >::vector_t gatherTest512 = _mm512_set_epi64(0,0,0,0,0,0,0,1);
@@ -133,16 +148,29 @@ int main( void ) {
    std::cout << "avx512 gather " << temp << "\n";
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((add<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 add 64 bit " << temp << "\n";
+   std::cout << "avx512 add 64 bit " << temp << "\n";
    
    temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((add<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 add 32 bit " << temp << "\n";
+   std::cout << "avx512 add 32 bit " << temp << "\n";
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((sub<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 sub 64 bit " << temp << "\n";
+   std::cout << "avx512 sub 64 bit " << temp << "\n";
    
    temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((sub<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 sub 32 bit " << temp << "\n";
+   std::cout << "avx512 sub 32 bit " << temp << "\n";
+   
+   temp=hadd<avx512< v512< uint64_t > >, 64>(testvec512);
+   std::cout << "avx512 hadd 64 bit " << temp << "\n";
+   
+   double temp2=hadd<avx512< v512< double > >, 64>((__m512d) testvec512);
+   std::cout << "avx512 hadd 64 bit (double) " << temp2 << "\n";
+   
+   temp=hadd<avx512< v512< uint32_t > >, 32>(testvec512);
+   std::cout << "avx512 hadd 32 bit " << temp << "\n";
+   
+   temp3=hadd<avx512< v512< float > >, 32>((__m512) testvec512);
+   std::cout << "avx512 hadd 32 bit (float) " << temp3 << "\n";
+   
    
    #endif
    
