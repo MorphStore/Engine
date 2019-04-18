@@ -23,8 +23,8 @@ public:
     AllocationStatus() : next(nullptr), curr_offset(0), StorageType(StorageType::CONTINUOUS) {}
     ChunkHeader* next;
     uint64_t curr_offset;
-    StorageType type;
     std::mutex sema;
+    StorageType type;
 };
 
 class InfoHeader {
@@ -97,6 +97,12 @@ public:
     void setDeallocated(void* start)
     {
         // TODO: just do it
+
+    }
+
+    // used to decide whether we can reallocate in front or behind a memory location
+    bool isAllocatable(void* start, size_t size)
+    {
 
     }
 
@@ -177,6 +183,7 @@ public:
 
     // Just allocate with StorageType padded in front
     // size must be larger than 128MB
+    // TODO: it must be aligned to work AT ALL
     void* allocateLarge(size_t size)
     {
         assert(size % LINUX_PAGE_SIZE == 0);
@@ -189,21 +196,32 @@ public:
         return ptr;
     }
 
-    void* allocatePages(size_t size)
+    void* allocatePages(size_t size, void* chunk_location)
     {
+
 
         return nullptr;
     }
 
     void* allocate(size_t size) override
     {
-        if (size > 128_MB)
+        if (size > 128_MB) {
             return allocateLarge(size);
-        else
-            return allocatePages(size);
+        }
+        else {
+            // TODO: concurrency
+            if (m_current_chunk == nullptr)
+                m_current_chunk = allocateContinuous();
+            return allocatePages(size, m_current_chunk);
+        }
     }
 
     void deallocate(void* const ptr) override
+    {
+
+    }
+
+    void deallocateAll(void* ptr)
     {
 
     }
@@ -229,10 +247,12 @@ public:
     }
 
 private:
-    mmap_memory_manager() : m_Instance(nullptr) {}
+    mmap_memory_manager() : m_current_chunk(nullptr) {}
 
     static mmap_memory_manager* m_Instance;
 
+    // used for direct allocation calls
+    void* m_current_chunk;
     std::mutex m_Mutex;
 
 };
