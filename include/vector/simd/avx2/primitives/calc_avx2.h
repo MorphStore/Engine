@@ -80,6 +80,39 @@ namespace vector{
             return _mm256_mul_epi32( p_vec1, p_vec2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        div( avx2< v256< double > >::vector_t p_vec1,  avx2< v256< double > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide float values (avx2)" );
+            return _mm256_div_pd( p_vec1, p_vec2);
+
+        }
+        
+                
+        
+        
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        div( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            
+            trace( "[VECTOR] - divide integer values (avx2)" );
+            __m256d intermediate;
+            __m256d divhelper=_mm256_set1_pd(0x0010000000000000);
+            
+            //Load as double and divide -> 64-bit integer division is not supported in sse or avx(2) 
+            intermediate=_mm256_div_pd((__m256d)p_vec1,(__m256d)p_vec2);
+
+            //Make an integer out of the double by adding a bit at the 52nd position and XORing the result bitwise with the bit at the 52nd position (all other bits are 0)
+            intermediate=_mm256_add_pd(intermediate,divhelper);
+
+            //return the result
+            return _mm256_xor_si256(_mm256_castpd_si256(intermediate),_mm256_castpd_si256(divhelper));
+
+        }
     };
     
     template<typename T>
@@ -139,6 +172,14 @@ namespace vector{
 
         }
         
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        div( avx2< v256< float > >::vector_t p_vec1,  avx2< v256< float > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide float values (avx2)" );
+            return _mm256_div_ps( p_vec1, p_vec2);
+
+        }
 
     };
 }

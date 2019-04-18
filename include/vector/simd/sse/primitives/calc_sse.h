@@ -79,6 +79,35 @@ namespace vector{
             return _mm_mul_epi32( p_vec1, p_vec2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename sse< v128< U > >::vector_t
+        div( sse< v128< double > >::vector_t p_vec1,  sse< v128< double > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide float values (sse)" );
+            return _mm_div_pd( p_vec1, p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename sse< v128< U > >::vector_t
+        div( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
+            
+            trace( "[VECTOR] - divide integer values (avx2)" );
+            __m128d intermediate;
+            __m128d divhelper=_mm_set1_pd(0x0010000000000000);
+            
+            //Load as double and divide -> 64-bit integer division is not supported in sse or avx(2) 
+            intermediate=_mm_div_pd((__m128d)p_vec1,(__m128d)p_vec2);
+
+            //Make an integer out of the double by adding a bit at the 52nd position and XORing the result bitwise with the bit at the 52nd position (all other bits are 0)
+            intermediate=_mm_add_pd(intermediate,divhelper);
+
+            //return the result
+            return _mm_xor_si128(_mm_castpd_si128(intermediate),_mm_castpd_si128(divhelper));
+
+        }
                 
     };
     
@@ -146,6 +175,15 @@ namespace vector{
         mul( sse< v128< uint32_t > >::vector_t p_vec1,  sse< v128< uint32_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - multiply integer values (sse)" );
             return _mm_mullo_epi32( p_vec1, p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename sse< v128< U > >::vector_t
+        div( sse< v128< float > >::vector_t p_vec1,  sse< v128< float > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide float values (sse)" );
+            return _mm_div_ps( p_vec1, p_vec2);
 
         }
     };

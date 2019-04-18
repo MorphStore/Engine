@@ -89,6 +89,35 @@ namespace vector{
             return _mm512_mul_epi32( p_vec1, p_vec2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        div( avx512< v512< double > >::vector_t p_vec1,  avx512< v512< double > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide double values (avx512)" );
+            return _mm512_div_pd( p_vec1, p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        div( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            
+            trace( "[VECTOR] - divide integer values (avx2)" );
+            __m512d intermediate;
+            __m512d divhelper=_mm512_set1_pd(0x0010000000000000);
+            
+            //Load as double and divide -> 64-bit integer division is not supported in sse or avx(2) 
+            intermediate=_mm512_div_pd((__m512d)p_vec1,(__m512d)p_vec2);
+
+            //Make an integer out of the double by adding a bit at the 52nd position and XORing the result bitwise with the bit at the 52nd position (all other bits are 0)
+            intermediate=_mm512_add_pd(intermediate,divhelper);
+
+            //return the result
+            return _mm512_xor_si512(_mm512_castpd_si512(intermediate),_mm512_castpd_si512(divhelper));
+
+        }
                 
     };
     
@@ -154,6 +183,15 @@ namespace vector{
         mul( avx512< v512< uint32_t > >::vector_t p_vec1,  avx512< v512< uint32_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - multiply integer values (avx512)" );
             return _mm512_mullo_epi32( p_vec1, p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        div( avx512< v512< float > >::vector_t p_vec1,  avx512< v512< float > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - divide float values (avx512)" );
+            return _mm512_div_ps( p_vec1, p_vec2);
 
         }
     };
