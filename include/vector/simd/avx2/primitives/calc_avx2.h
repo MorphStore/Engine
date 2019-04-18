@@ -74,7 +74,7 @@ namespace vector{
         
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
-        static typename avx2< v512< U > >::vector_t
+        static typename avx2< v256< U > >::vector_t
         mul( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - multiply integer values (avx2)" );
             return _mm256_mul_epi32( p_vec1, p_vec2);
@@ -132,7 +132,7 @@ namespace vector{
         
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
-        static typename avx2< v512< U > >::vector_t
+        static typename avx2< v256< U > >::vector_t
         mul( avx2< v256< uint32_t > >::vector_t p_vec1,  avx2< v256< uint32_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - multiply integer values (avx2)" );
             return _mm256_mullo_epi32( p_vec1, p_vec2);

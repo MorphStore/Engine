@@ -65,8 +65,15 @@ namespace vector{
    template<class VectorExtension, int Granularity>
    typename VectorExtension::vector_t
    mul(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::sub( a, b );
+       return calc<VectorExtension,  Granularity>::mul( a, b );
    }
+   
+   /*template<class VectorExtension, int Granularity>
+   typename VectorExtension::vector_t
+   div(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
+       return calc<VectorExtension,  Granularity>::div( a, b );
+   }*/
+      
 }
 #endif /* CALC_H */
 
