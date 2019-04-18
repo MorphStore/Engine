@@ -54,6 +54,19 @@ namespace vector{
        return calc<VectorExtension,  Granularity>::hadd( a );
    }
    
+   
+   /*! 
+    * Multiplies vector a and b element wise. 
+    * NOTE: There is no 64-bit multiply for SSE or AVX(2/512). So only the lower 32 bit 
+    * of any element will be used for multiplication.
+    * Benefit: Overflows are stored, too, since the result is still 64 bit
+    * 
+    */
+   template<class VectorExtension, int Granularity>
+   typename VectorExtension::vector_t
+   mul(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
+       return calc<VectorExtension,  Granularity>::sub( a, b );
+   }
 }
 #endif /* CALC_H */
 

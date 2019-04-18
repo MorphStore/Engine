@@ -71,6 +71,15 @@ namespace vector{
             return _mm256_extract_epi64(a,0)+_mm256_extract_epi64(a,2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v512< U > >::vector_t
+        mul( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - multiply integer values (avx2)" );
+            return _mm256_mul_epi32( p_vec1, p_vec2);
+
+        }
     };
     
     template<typename T>
@@ -118,6 +127,15 @@ namespace vector{
             trace( "[VECTOR] - Subtract double values (avx512)" );
             __m256i a=_mm256_hadd_epi32(p_vec1,p_vec1);            
             return _mm256_extract_epi32(a,0)+_mm256_extract_epi32(a,1)+_mm256_extract_epi32(a,4)+_mm256_extract_epi32(a,5);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v512< U > >::vector_t
+        mul( avx2< v256< uint32_t > >::vector_t p_vec1,  avx2< v256< uint32_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - multiply integer values (avx2)" );
+            return _mm256_mullo_epi32( p_vec1, p_vec2);
 
         }
         
