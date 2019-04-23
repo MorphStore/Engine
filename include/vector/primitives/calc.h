@@ -80,6 +80,20 @@ namespace vector{
    div(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
        return calc<VectorExtension,  Granularity>::div( a, b );
    }
+   
+   /*!
+    * a mod b element-wise.
+    * NOTE: We need a division here but there is no intrinsic to divide integers. This implementation uses a double division.
+    * Hence, 12 bit of every 64-bit value are lost for the sign and mantissa => Division only works 
+    * if no element in either vector uses more than 52 bit.
+    * 
+    */
+   template<class VectorExtension, int Granularity>
+   typename VectorExtension::vector_t
+   mod(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
+       return calc<VectorExtension,  Granularity>::mod( a, b );
+   }
+   
       
 }
 #endif /* CALC_H */

@@ -103,7 +103,7 @@ namespace vector{
             __m256d intermediate;
             __m256d divhelper=_mm256_set1_pd(0x0010000000000000);
             
-            //Load as double and divide -> 64-bit integer division is not supported in sse or avx(2) 
+            //Load as double and divide -> 64-bit integer division is not supported in sse or avx 
             intermediate=_mm256_div_pd((__m256d)p_vec1,(__m256d)p_vec2);
 
             //Make an integer out of the double by adding a bit at the 52nd position and XORing the result bitwise with the bit at the 52nd position (all other bits are 0)
@@ -113,6 +113,38 @@ namespace vector{
             return _mm256_xor_si256(_mm256_castpd_si256(intermediate),_mm256_castpd_si256(divhelper));
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        mod( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            
+             
+                __m256d divhelper=_mm256_set1_pd(0x0010000000000000);
+           
+                //Cast to double
+             
+                __m256d left=(__m256d)p_vec1;
+           
+                __m256d right=(__m256d)p_vec2;
+               
+                //Divide -> 64-bit integer division is not supported in sse or avx 
+                __m256d intermediate=_mm256_div_pd(left,right);
+                
+                //Floor
+                intermediate=_mm256_floor_pd(intermediate);
+                
+                //Make an integer out of the double by adding a bit at the 52nd position and masking out mantisse and sign
+                intermediate=_mm256_add_pd(intermediate,divhelper);
+                __m256i mod_intermediate=_mm256_xor_si256(_mm256_castpd_si256(intermediate),_mm256_castpd_si256(divhelper));
+               
+                //multiply again
+                mod_intermediate=_mm256_mul_epi32(mod_intermediate,p_vec2);
+                
+                //difference beween result and original
+                return _mm256_sub_epi64(p_vec1,mod_intermediate);
+                             
+            }
     };
     
     template<typename T>
@@ -180,6 +212,8 @@ namespace vector{
             return _mm256_div_ps( p_vec1, p_vec2);
 
         }
+        
+        
 
     };
 }

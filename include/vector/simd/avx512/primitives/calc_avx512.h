@@ -118,6 +118,38 @@ namespace vector{
             return _mm512_xor_si512(_mm512_castpd_si512(intermediate),_mm512_castpd_si512(divhelper));
 
         }
+        
+         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        mod( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            
+             
+                __m512d divhelper=_mm512_set1_pd(0x0010000000000000);
+           
+                //Cast to double
+             
+                __m512d left=(__m512d)p_vec1;
+           
+                __m512d right=(__m512d)p_vec2;
+               
+                //Divide -> 64-bit integer division is not supported in sse or avx 
+                __m512d intermediate=_mm512_div_pd(left,right);
+                
+                //Floor
+                intermediate=_mm512_floor_pd(intermediate);
+                
+                //Make an integer out of the double by adding a bit at the 52nd position and masking out mantisse and sign
+                intermediate=_mm512_add_pd(intermediate,divhelper);
+                __m512i mod_intermediate=_mm512_xor_si512(_mm512_castpd_si512(intermediate),_mm512_castpd_si512(divhelper));
+               
+                //multiply again
+                mod_intermediate=_mm512_mul_epi32(mod_intermediate,p_vec2);
+                
+                //difference beween result and original
+                return _mm512_sub_epi64(p_vec1,mod_intermediate);
+                             
+            }
                 
     };
     
