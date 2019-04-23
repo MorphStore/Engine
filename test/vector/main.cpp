@@ -14,10 +14,13 @@
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/simd/avx2/primitives/compare_avx2.h>
 
 #ifdef AVX512
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/calc_avx512.h>
+#include <vector/simd/avx512/primitives/compare_avx512.h>
 #endif
 
 #include <iostream>
@@ -113,6 +116,11 @@ int main( void ) {
    temp3=_mm_extract_epi32((inv<sse< v128< float > >, 32>((__m128)testvec128)),0);
    std::cout << "sse inv 32 bit (float) " << temp3 << "\n";
    
+   temp=equality<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse equality 64 bit " << temp << "\n";
+   
+   temp=equality<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse equality 32 bit " << temp << "\n";
    
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
@@ -183,6 +191,12 @@ int main( void ) {
    
    temp3=_mm256_extract_epi32((inv<avx2< v256< float > >, 32>((__m256)testvec256)),0);
    std::cout << "avx2 inv 32 bit (float) " << temp3 << "\n";
+   
+   temp=equality<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 equality 64 bit " << temp << "\n";
+   
+   temp=equality<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 equality 32 bit " << temp << "\n";
    
    #ifdef AVX512
 
@@ -266,6 +280,12 @@ int main( void ) {
    
    temp2=_mm256_extract_epi32(_mm512_extracti64x4_epi64((inv<avx512< v512< float > >, 32>((__m512)testvec512)),0),0);
    std::cout << "avx512 inv 32 bit (float) " << temp2 << "\n";
+   
+   temp=equality<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 equality 64 bit " << temp << "\n";
+   
+   temp=equality<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 equality 32 bit " << temp << "\n";
    
    #endif
    
