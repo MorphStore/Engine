@@ -119,7 +119,7 @@ namespace vector{
 
         }
         
-         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
         MSV_CXX_ATTRIBUTE_INLINE
         static typename avx512< v512< U > >::vector_t
         mod( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
@@ -150,7 +150,25 @@ namespace vector{
                 return _mm512_sub_epi64(p_vec1,mod_intermediate);
                              
             }
+      
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        inv( avx512< v512< int64_t > >::vector_t p_vec ) {
                 
+                return _mm512_sub_epi64(_mm512_set1_epi64(0),p_vec);
+                             
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        inv( avx512< v512< double > >::vector_t p_vec ) {
+                
+                return _mm512_sub_pd(_mm512_set1_pd(0),p_vec);
+                             
+        }
+      
     };
     
     template<typename T>
@@ -225,6 +243,24 @@ namespace vector{
             trace( "[VECTOR] - divide float values (avx512)" );
             return _mm512_div_ps( p_vec1, p_vec2);
 
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        inv( avx512< v512< int64_t > >::vector_t p_vec ) {
+                
+                return _mm512_sub_epi32(_mm512_set1_epi32(0),p_vec);
+                             
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        inv( avx512< v512< float > >::vector_t p_vec ) {
+                
+                return _mm512_sub_ps(_mm512_set1_ps(0),p_vec);
+                             
         }
     };
 }

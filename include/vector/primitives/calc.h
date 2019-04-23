@@ -94,6 +94,15 @@ namespace vector{
        return calc<VectorExtension,  Granularity>::mod( a, b );
    }
    
+    /*!
+    * Invert the sign of all numbers in vector a
+    */
+   template<class VectorExtension, int Granularity>
+   typename VectorExtension::vector_t
+   inv(typename VectorExtension::vector_t a ) {
+       return calc<VectorExtension,  Granularity>::inv( a );
+   }
+   
       
 }
 #endif /* CALC_H */

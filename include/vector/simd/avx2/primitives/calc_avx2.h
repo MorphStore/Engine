@@ -145,6 +145,24 @@ namespace vector{
                 return _mm256_sub_epi64(p_vec1,mod_intermediate);
                              
             }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        inv( avx2< v256< int64_t > >::vector_t p_vec ) {
+                
+                return _mm256_sub_epi64(_mm256_set1_epi64x(0),p_vec);
+                             
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        inv( avx2< v256< double > >::vector_t p_vec ) {
+                
+                return _mm256_sub_pd(_mm256_set1_pd(0),p_vec);
+                             
+        }
     };
     
     template<typename T>
@@ -213,7 +231,23 @@ namespace vector{
 
         }
         
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        inv( avx2< v256< int64_t > >::vector_t p_vec ) {
+                
+                return _mm256_sub_epi32(_mm256_set1_epi32(0),p_vec);
+                             
+        }
         
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx2< v256< U > >::vector_t
+        inv( avx2< v256< float > >::vector_t p_vec ) {
+                
+                return _mm256_sub_ps(_mm256_set1_ps(0),p_vec);
+                             
+        }
 
     };
 }

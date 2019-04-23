@@ -140,6 +140,24 @@ namespace vector{
                 return _mm_sub_epi64(p_vec1,mod_intermediate);
                              
             }
+        
+            template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+            MSV_CXX_ATTRIBUTE_INLINE
+            static typename sse< v128< U > >::vector_t
+            inv( sse< v128< int64_t > >::vector_t p_vec ) {
+
+                    return _mm_sub_epi64(_mm_set1_epi64x(0),p_vec);
+
+            }
+
+            template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
+            MSV_CXX_ATTRIBUTE_INLINE
+            static typename sse< v128< U > >::vector_t
+            inv( sse< v128< double > >::vector_t p_vec ) {
+
+                    return _mm_sub_pd(_mm_set1_pd(0),p_vec);
+
+            }
                 
     };
     
@@ -216,6 +234,24 @@ namespace vector{
         div( sse< v128< float > >::vector_t p_vec1,  sse< v128< float > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - divide float values (sse)" );
             return _mm_div_ps( p_vec1, p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0  >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename sse< v128< U > >::vector_t
+        inv( sse< v128< int64_t > >::vector_t p_vec ) {
+
+                return _mm_sub_epi32(_mm_set1_epi32(0),p_vec);
+
+        }
+
+        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename sse< v128< U > >::vector_t
+        inv( sse< v128< float > >::vector_t p_vec ) {
+
+                return _mm_sub_ps(_mm_set1_ps(0),p_vec);
 
         }
     };
