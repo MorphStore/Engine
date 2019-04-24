@@ -157,7 +157,6 @@ const column<uncompr_f> * generate_with_distr(
     std::default_random_engine generator(
          seed
     );
-    std::cout << "Seed = " << seed << "\n";
     for(unsigned i = 0; i < countValues; i++)
         res[i] = distr(generator);
     
