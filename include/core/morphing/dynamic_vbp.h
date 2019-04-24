@@ -167,8 +167,7 @@ namespace morphstore {
                     );
                     const uint64_t pseudoMax64 = 1 | tmp[0] | tmp[1];
     #endif
-                    const unsigned bw = std::numeric_limits<uint64_t>::digits -
-                            __builtin_clzll(pseudoMax64);
+                    const unsigned bw = effective_bitwidth(pseudoMax64);
 
                     // Store the bit width to the meta data.
                     outMeta8[blockIdx] = static_cast<uint8_t>(bw);

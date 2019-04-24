@@ -26,6 +26,8 @@
 
 #include <core/utils/basic_types.h>
 
+#include <limits>
+
 #include <cstdint>
 
 namespace morphstore {
@@ -77,6 +79,23 @@ const size_t bitsPerByte = 8;
 template<typename t_src, typename t_dst>
 constexpr inline size_t convert_size(size_t p_SizeInSrcUnits) {
     return p_SizeInSrcUnits * sizeof(t_src) / sizeof(t_dst);
+}
+
+/**
+ * @brief Calculates the number of effective bits of the given 64-bit value.
+ * 
+ * This is the minimum number of bits required to represent this value. Note
+ * that, by definition, the integer `0` has one effective bit. Thus, this
+ * function's return value is always in the range [1, 64].
+ * 
+ * @param p_Val The 64-bit value.
+ * @return The number of bits required to represent the given value.
+ */
+constexpr inline unsigned effective_bitwidth(uint64_t p_Val) {
+    // Should we ever change the definition such that 0 has 0 effective bits,
+    // then don't forget that the return value of __builtin_clzll is undefined
+    // for 0.
+    return std::numeric_limits<uint64_t>::digits - __builtin_clzll(p_Val | 1);
 }
 
 }

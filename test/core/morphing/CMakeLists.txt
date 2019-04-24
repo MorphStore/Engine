@@ -1,4 +1,7 @@
 if ( CTEST_ALL OR CTEST_MORPHING )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/static_vbp_test_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/dynamic_vbp_test_app )
+	
 	add_executable( static_vbp_test_app static_vbp_test.cpp )
 	target_compile_options( static_vbp_test_app PRIVATE
 	                        -Werror
@@ -9,9 +12,7 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	                        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( static_vbp_test_app PRIVATE "-ldl" )
 	add_test( static_vbp_test static_vbp_test_app )
-endif()
 
-if ( CTEST_ALL OR CTEST_MORPHING )
 	add_executable( dynamic_vbp_test_app dynamic_vbp_test.cpp )
 	target_compile_options( dynamic_vbp_test_app PRIVATE
 	                        -Werror

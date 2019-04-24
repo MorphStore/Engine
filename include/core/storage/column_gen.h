@@ -35,6 +35,7 @@
 #include <random>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 namespace morphstore {
     
@@ -139,18 +140,22 @@ class two_value_distribution {
  * @todo Support also the random distributions returning real values, e.g., 
  * `std::normal_distribution`.
  */
+
 template<template<typename> class t_distr>
 const column<uncompr_f> * generate_with_distr(
         size_t countValues,
         t_distr<uint64_t> distr,
-        bool sorted
+        bool sorted,
+        size_t seed = 0
 ) {
     const size_t allocationSize = countValues * sizeof(uint64_t);
     auto resCol = new column<uncompr_f>(allocationSize);
     uint64_t * const res = resCol->get_data();
-    
+    if( seed == 0 ) {
+       seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    }
     std::default_random_engine generator(
-            std::chrono::high_resolution_clock::now().time_since_epoch().count()
+         seed
     );
     for(unsigned i = 0; i < countValues; i++)
         res[i] = distr(generator);

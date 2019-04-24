@@ -27,7 +27,7 @@
 #if !defined(MSV_NO_LOG) && defined(DEBUG)
 #  include <typeinfo>
 #endif
-
+#include <type_traits>
 namespace morphstore {
 
    struct voidptr_helper {
@@ -47,6 +47,12 @@ namespace morphstore {
       }
    };
    using voidptr_t = voidptr_helper;
+
+
+#  define IMM_INT32(N) std::integral_constant< int32_t, N >()
+#  define IMM_UINT32(N) std::integral_constant< uint32_t, N >()
+#  define IMM_INT64(N) std::integral_constant< int64_t, N >()
+#  define IMM_UINT64(N) std::integral_constant< uint64_t, N >()
 
 }
 #endif //MORPHSTORE_CORE_UTILS_BASIC_TYPES_H

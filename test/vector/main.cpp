@@ -10,14 +10,21 @@
 #include <core/storage/column_gen.h>
 
 #include <vector/general_vector.h>
+
 #include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/compare_sse.h>
+
+#ifdef AVXTWO
+#include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/compare_avx2.h>
+#endif
 
 #ifdef AVX512
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/calc_avx512.h>
+#include <vector/simd/avx512/primitives/compare_avx512.h>
 #endif
 
 #include <iostream>
@@ -35,11 +42,15 @@ int main( void ) {
    const uint64_t* data = (uint64_t*) testDataColumnSorted->get_data();
    
    auto outColumn = new column<uncompr_f>(100);
-   avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(0,0,0,1);
-   sse< v128< uint64_t > >::vector_t gatherTest128 = _mm_set_epi64x(0,1);
    
+   sse< v128< uint64_t > >::vector_t gatherTest128 = _mm_set_epi64x(0,4);
    
-   uint64_t temp=_mm_extract_epi64((load<sse< v128< uint64_t > >, iov::ALIGNED, 128>(data)),0);
+   uint64_t  temp;
+   int temp4;
+   double temp2;
+   float temp3;
+   
+   temp=_mm_extract_epi64((load<sse< v128< uint64_t > >, iov::ALIGNED, 128>(data)),0);
    std::cout << "sse aligned " << temp << "\n";
    
    temp=_mm_extract_epi64((load<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data)),0);
@@ -69,6 +80,57 @@ int main( void ) {
    temp=_mm_extract_epi32((sub<sse< v128< uint32_t > >, 32>(testvec128,gatherTest128)),0);
    std::cout << "sse sub 32 bit " << temp << "\n";
    
+   temp=hadd<sse< v128< uint64_t > >, 64>(testvec128);
+   std::cout << "sse hadd 64 bit " << temp << "\n";
+   
+   temp=hadd<sse< v128< uint32_t > >, 32>(testvec128);
+   std::cout << "sse hadd 32 bit " << temp << "\n";
+   
+   temp3 = hadd<sse< v128< float > >, 32>((__m128)testvec128);
+   std::cout << "sse hadd 32 bit (float) " << temp3 << "\n";
+   
+   temp=_mm_extract_epi64((mul<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
+   std::cout << "sse mul 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((mul<sse< v128< uint32_t > >, 32>(testvec128,gatherTest128)),0);
+   std::cout << "sse mul 32 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi64((div<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
+   std::cout << "sse div 64 bit " << temp << "\n";
+   
+   temp2=_mm_extract_epi64((__m128i)(div<sse< v128< double > >, 64>((__m128d)testvec128,(__m128d)gatherTest128)),0);
+   std::cout << "sse div 64 bit (double) " << temp2 << "\n";
+   
+   temp3=_mm_extract_ps((div<sse< v128< float > >, 32>((__m128)testvec128,(__m128)gatherTest128)),0);
+   std::cout << "sse div 32 bit (float) " << temp3 << "\n";
+   
+   temp=_mm_extract_epi64((mod<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
+   std::cout << "sse mod 64 bit " << _mm_extract_epi64(testvec128,0) << " " << _mm_extract_epi64(gatherTest128,0) << ": " << temp << "\n";
+   
+   
+   temp4=_mm_extract_epi64((inv<sse< v128< uint64_t > >, 64>(testvec128)),0);
+   std::cout << "sse inv 64 bit " << temp4 << "\n";
+   
+   temp2=_mm_extract_epi64((__m128i)(inv<sse< v128< double > >, 64>((__m128d)testvec128)),0);
+   std::cout << "sse inv 64 bit (double) " << temp2 << "\n";
+   
+   temp4=_mm_extract_epi32((inv<sse< v128< uint64_t > >, 32>(testvec128)),0);
+   std::cout << "sse inv 32 bit " << temp4 << "\n";
+   
+   temp3=_mm_extract_ps((inv<sse< v128< float > >, 32>((__m128)testvec128)),0);
+   std::cout << "sse inv 32 bit (float) " << temp3 << "\n";
+   
+   temp=equality<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse equality 64 bit " << temp << "\n";
+   
+   temp=equality<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse equality 32 bit " << temp << "\n";
+   
+   
+   #ifdef AVXTWO
+
+   avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(1,1,1,2);
+
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
 
@@ -86,7 +148,7 @@ int main( void ) {
    testvec128=gather<avx2< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "avx2 gather, 128 bit " << temp << "\n";
-   
+
    testvec256=gather<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data,gatherTest256);
    temp=_mm256_extract_epi64(testvec256,0);
    std::cout << "avx2 gather, 256 bit " << temp << "\n";
@@ -103,9 +165,53 @@ int main( void ) {
    temp=_mm256_extract_epi32((sub<avx2< v256< uint32_t > >, 32>(testvec256,gatherTest256)),0);
    std::cout << "avx2 sub 32 bit " << temp << "\n";
    
+   temp=hadd<avx2< v256< uint64_t > >, 64>(testvec256);
+   std::cout << "avx2 hadd 64 bit " << temp << "\n";
+   
+   temp=hadd<avx2< v256< uint32_t > >, 32>(testvec256);
+   std::cout << "avx2 hadd 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((mul<avx2< v256< uint64_t > >, 64>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 mul 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32((mul<avx2< v256< uint32_t > >, 32>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 mul 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((div<avx2< v256< uint64_t > >, 64>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 div 64 bit " << temp << "\n";
+   
+   temp2=_mm256_extract_epi64((div<avx2< v256< double > >, 64>((__m256d)testvec256,(__m256d)gatherTest256)),0);
+   std::cout << "avx2 div 64 bit (double) " << temp2 << "\n";
+   
+   temp3=_mm256_extract_epi32((div<avx2< v256< float > >, 32>((__m256)testvec256,(__m256)gatherTest256)),0);
+   std::cout << "avx2 div 32 bit (float) " << temp3 << "\n";
+   
+   temp=_mm256_extract_epi64((mod<avx2< v256< uint64_t > >, 64>(testvec256,gatherTest256)),0);
+   std::cout << "avx2 mod 64 bit " << _mm256_extract_epi64(testvec256,0) << " " << _mm256_extract_epi64(gatherTest256,0) << ": " << temp << "\n";
+   
+   temp4=_mm256_extract_epi64((inv<avx2< v256< uint64_t > >, 64>(testvec256)),0);
+   std::cout << "avx2 inv 64 bit " << temp4 << "\n";
+   
+   temp2=_mm256_extract_epi64((inv<avx2< v256< double > >, 64>((__m256d)testvec256)),0);
+   std::cout << "avx2 inv 64 bit (double) " << temp2 << "\n";
+   
+   temp4=_mm256_extract_epi32((inv<avx2< v256< uint64_t > >, 32>(testvec256)),0);
+   std::cout << "avx2 inv 32 bit " << temp4 << "\n";
+   
+   temp3=_mm256_extract_epi32((inv<avx2< v256< float > >, 32>((__m256)testvec256)),0);
+   std::cout << "avx2 inv 32 bit (float) " << temp3 << "\n";
+   
+   temp=equality<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 equality 64 bit " << temp << "\n";
+   
+   temp=equality<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 equality 32 bit " << temp << "\n";
+   #endif
+
+   
    #ifdef AVX512
 
-   avx512< v512< uint64_t > >::vector_t gatherTest512 = _mm512_set_epi64(0,0,0,0,0,0,0,1);
+   avx512< v512< uint64_t > >::vector_t gatherTest512 = _mm512_set_epi64(0,0,0,0,0,0,0,2);
    avx512< v512< uint64_t > >::vector_t testvec512;
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((load<avx512< v512< uint64_t > >, iov::ALIGNED, 512>(data)),0),1);
@@ -133,16 +239,64 @@ int main( void ) {
    std::cout << "avx512 gather " << temp << "\n";
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((add<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 add 64 bit " << temp << "\n";
+   std::cout << "avx512 add 64 bit " << temp << "\n";
    
    temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((add<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 add 32 bit " << temp << "\n";
+   std::cout << "avx512 add 32 bit " << temp << "\n";
    
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((sub<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 sub 64 bit " << temp << "\n";
+   std::cout << "avx512 sub 64 bit " << temp << "\n";
    
    temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((sub<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
-   std::cout << "avx2 sub 32 bit " << temp << "\n";
+   std::cout << "avx512 sub 32 bit " << temp << "\n";
+   
+   temp=hadd<avx512< v512< uint64_t > >, 64>(testvec512);
+   std::cout << "avx512 hadd 64 bit " << temp << "\n";
+   
+   temp2=hadd<avx512< v512< double > >, 64>((__m512d) testvec512);
+   std::cout << "avx512 hadd 64 bit (double) " << temp2 << "\n";
+   
+   temp=hadd<avx512< v512< uint32_t > >, 32>(testvec512);
+   std::cout << "avx512 hadd 32 bit " << temp << "\n";
+   
+   temp3=hadd<avx512< v512< float > >, 32>((__m512) testvec512);
+   std::cout << "avx512 hadd 32 bit (float) " << temp3 << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((mul<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx512 mul 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((mul<avx512< v512< uint32_t > >, 32>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx512 mul 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((div<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx512 div 64 bit " << temp << "\n";
+   
+   temp3=_mm256_extract_epi64(_mm512_extracti64x4_epi64((div<avx512< v512< double > >, 64>((__m512d)testvec512,(__m512d)gatherTest512)),0),0);
+   std::cout << "avx512 div 64 bit (double) " << temp << "\n";
+   
+   temp2=_mm256_extract_epi32(_mm512_extracti64x4_epi64((div<avx512< v512< float > >, 32>((__m512)testvec512,(__m512)gatherTest512)),0),0);
+   std::cout << "avx512 div 32 bit (float) " << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((mod<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0),0);
+   std::cout << "avx512 mod 64 bit " << temp << "\n";
+   
+   temp4=_mm256_extract_epi64(_mm512_extracti64x4_epi64((inv<avx512< v512< uint64_t > >, 64>(testvec512)),0),0);
+   std::cout << "avx512 inv 64 bit " << temp4 << "\n";
+   
+   temp4=_mm256_extract_epi32(_mm512_extracti64x4_epi64((inv<avx512< v512< uint64_t > >, 32>(testvec512)),0),0);
+   std::cout << "avx512 inv 32 bit " << temp4 << "\n";
+   
+   temp3=_mm256_extract_epi64(_mm512_extracti64x4_epi64((inv<avx512< v512< double > >, 64>((__m512d)testvec512)),0),0);
+   std::cout << "avx512 inv 64 bit (double) " << temp3 << "\n";
+   
+   temp2=_mm256_extract_epi32(_mm512_extracti64x4_epi64((inv<avx512< v512< float > >, 32>((__m512)testvec512)),0),0);
+   std::cout << "avx512 inv 32 bit (float) " << temp2 << "\n";
+   
+   temp=equality<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 equality 64 bit " << temp << "\n";
+   
+   temp=equality<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 equality 32 bit " << temp << "\n";
    
    #endif
    

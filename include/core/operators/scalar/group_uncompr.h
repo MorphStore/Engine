@@ -32,6 +32,8 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/processing_style.h>
 
+#include <core/memory/management/allocators/global_scope_allocator.h>
+
 #include <cstdint>
 #include <map>
 #include <stdexcept>
@@ -89,7 +91,13 @@ group<processing_style_t::scalar>(
     // the data items(keys) are mapped to the group-id(value) + 1 .
     if(inGrCol == nullptr) {
         // Unary group-operator.
-        std::unordered_map<uint64_t, uint64_t> groupIds;
+        std::unordered_map<
+           uint64_t,
+           uint64_t,
+           std::hash<uint64_t>,
+           std::equal_to<uint64_t>,
+           global_scope_stdlib_allocator<std::pair<uint64_t, uint64_t >>
+           > groupIds;
         for(unsigned i = 0; i < inDataCount; i++) {
             uint64_t & groupId = groupIds[inData[i]];
             if(!groupId) { // The data item(key) was not found.

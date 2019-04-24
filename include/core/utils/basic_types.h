@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_UTILS_BASIC_TYPES_H
 
 #include <cstddef>
+#include <cstdint>
 
 namespace morphstore {
 
