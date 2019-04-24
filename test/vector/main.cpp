@@ -126,6 +126,29 @@ int main( void ) {
    temp=equality<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
    std::cout << "sse equality 32 bit " << temp << "\n";
    
+   temp=lessthan<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse less than 64 bit " << temp << "\n";
+   
+   temp=lessthan<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse less than 32 bit " << temp << "\n";
+   
+   temp=greaterthan<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse greater than 64 bit " << temp << "\n";
+   
+   temp=greaterthan<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse greater than 32 bit " << temp << "\n";
+   
+   temp=greaterequal<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse greater equal 64 bit " << temp << "\n";
+   
+   temp=greaterequal<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse greater equal 32 bit " << temp << "\n";
+   
+   temp=lessequal<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "sse less equal 64 bit " << temp << "\n";
+   
+   temp=lessequal<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "sse less equal 32 bit " << temp << "\n";
    
    #ifdef AVXTWO
 
@@ -206,6 +229,30 @@ int main( void ) {
    
    temp=equality<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
    std::cout << "avx2 equality 32 bit " << temp << "\n";
+   
+   temp=lessthan<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 less than 64 bit " << temp << "\n";
+   
+   temp=lessthan<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 less than 32 bit " << temp << "\n";
+   
+   temp=greaterthan<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 greater than 64 bit " << temp << "\n";
+   
+   temp=greaterthan<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 greater than 32 bit " << temp << "\n";
+   
+   temp=greaterequal<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 greater equal 64 bit " << temp << "\n";
+   
+   temp=greaterequal<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 greater equal 32 bit " << temp << "\n";
+   
+   temp=lessequal<avx2< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx2 less equal 64 bit " << temp << "\n";
+   
+   temp=lessequal<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx2 less equal 32 bit " << temp << "\n";
    #endif
 
    
@@ -297,6 +344,90 @@ int main( void ) {
    
    temp=equality<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
    std::cout << "avx512 equality 32 bit " << temp << "\n";
+   
+   temp=lessthan<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 less than 64 bit " << temp << "\n";
+   
+   temp=lessthan<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 less than 32 bit " << temp << "\n";
+   
+   temp=greaterthan<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 greater than 64 bit " << temp << "\n";
+   
+   temp=greaterthan<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 greater than 32 bit " << temp << "\n";
+   
+   temp=greaterequal<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 greater equal 64 bit " << temp << "\n";
+   
+   temp=greaterequal<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 greater equal 32 bit " << temp << "\n";
+   
+   temp=lessequal<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);
+   std::cout << "avx512 less equal 64 bit " << temp << "\n";
+   
+   temp=lessequal<avx512< v512< uint64_t > >, 32>(testvec512,testvec512);
+   std::cout << "avx512 less equal 32 bit " << temp << "\n";
+   
+   temp=equality<avx512< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx512 equality 64 bit (v256) " << temp << "\n";
+   
+   temp=equality<avx512< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx512 equality 32 bit (v256) " << temp << "\n";
+   
+   temp=lessthan<avx512< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx512 less than 64 bit (v256) " << temp << "\n";
+   
+   temp=lessthan<avx512< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx512 less than 32 bit (v256) " << temp << "\n";
+   
+   temp=greaterthan<avx512< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx512 greater than 64 bit (v256) " << temp << "\n";
+   
+   temp=greaterthan<avx512< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx512 greater than 32 bit (v256) " << temp << "\n";
+   
+   temp=greaterequal<avx512< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx512 greater equal 64 bit (v256) " << temp << "\n";
+   
+   temp=greaterequal<avx512< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx512 greater equal 32 bit (v256) " << temp << "\n";
+   
+   temp=lessequal<avx512< v256< uint64_t > >, 64>(testvec256,testvec256);
+   std::cout << "avx512 less equal 64 bit (v256) " << temp << "\n";
+   
+   temp=lessequal<avx512< v256< uint64_t > >, 32>(testvec256,testvec256);
+   std::cout << "avx512 less equal 32 bit (v256) " << temp << "\n";
+   
+   temp=equality<avx512< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "avx512 equality 64 bit (v128) " << temp << "\n";
+   
+   temp=equality<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "avx512 equality 32 bit (v128) " << temp << "\n";
+   
+   temp=lessthan<avx512< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "avx512 less than 64 bit (v128) " << temp << "\n";
+   
+   temp=lessthan<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "avx512 less than 32 bit (v128) " << temp << "\n";
+   
+   temp=greaterthan<avx512< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "avx512 greater than 64 bit (v128) " << temp << "\n";
+   
+   temp=greaterthan<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "avx512 greater than 32 bit (v128) " << temp << "\n";
+   
+   temp=greaterequal<avx512< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "avx512 greater equal 64 bit (v128) " << temp << "\n";
+   
+   temp=greaterequal<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "avx512 greater equal 32 bit (v128) " << temp << "\n";
+   
+   temp=lessequal<avx512< v128< uint64_t > >, 64>(testvec128,testvec128);
+   std::cout << "avx512 less equal 64 bit (v128) " << temp << "\n";
+   
+   temp=lessequal<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
+   std::cout << "avx512 less equal 32 bit (v128) " << temp << "\n";
    
    #endif
    
