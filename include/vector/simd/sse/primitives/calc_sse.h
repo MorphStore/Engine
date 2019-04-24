@@ -215,7 +215,7 @@ namespace vector{
         hadd( sse< v128< float > >::vector_t p_vec1) {
             trace( "[VECTOR] - Subtract double values (avx512)" );
             __m128 a=_mm_hadd_ps(p_vec1,p_vec1);    
-            return _mm_extract_ps(a,0)+_mm_extract_epi32(a,1);
+            return _mm_extract_ps(a,0)+_mm_extract_ps(a,1);
 
         }
                 
