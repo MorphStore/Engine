@@ -1,5 +1,5 @@
 if ( CTEST_ALL OR CTEST_MEMORY )
-	message( "Core/Memory" )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/memory_test_app )
 	add_executable( memory_test_app memory_test.cpp )
 	target_compile_options( memory_test_app PRIVATE
 	                        -Werror
