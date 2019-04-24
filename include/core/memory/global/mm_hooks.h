@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
 
 #include <core/utils/preprocessor.h>
+#include <core/memory/management/abstract_mm.h>
 
 //#define MSV_DEBUG_MALLOC
 
@@ -122,6 +123,10 @@ extern "C" {
 void * operator new( size_t p_AllocSize ) {
    return malloc( p_AllocSize );
 }
+
+void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& manager ) {
+    return manager.allocate(p_AllocSize);
+}
 /**
  * @brief Global replacement for operator new[].
  *
@@ -146,6 +151,9 @@ void operator delete( void * p_FreePtr ) noexcept {
    free( p_FreePtr );
 }
 
+void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& manager ) noexcept {
+    manager.deallocate(p_FreePtr);
+}
 /**
  * @brief Global replacement for operator delete.
  *
