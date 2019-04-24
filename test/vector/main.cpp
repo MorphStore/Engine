@@ -14,17 +14,20 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/simd/sse/primitives/manipulate_sse.h>
 
 #ifdef AVXTWO
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
+#include <vector/simd/avx2/primitives/manipulate_avx2.h>
 #endif
 
 #ifdef AVX512
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/calc_avx512.h>
 #include <vector/simd/avx512/primitives/compare_avx512.h>
+#include <vector/simd/avx512/primitives/manipulate_avx512.h>
 #endif
 
 #include <iostream>
@@ -150,6 +153,9 @@ int main( void ) {
    temp=lessequal<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
    std::cout << "sse less equal 32 bit " << temp << "\n";
    
+   temp=_mm_extract_epi64((rotate<sse< v128< uint64_t > >, 64>(testvec128)),0);
+   std::cout << "sse rotate 64 bit " << temp << "\n";
+   
    #ifdef AVXTWO
 
    avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(1,1,1,2);
@@ -253,6 +259,9 @@ int main( void ) {
    
    temp=lessequal<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
    std::cout << "avx2 less equal 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((rotate<avx2< v256< uint64_t > >, 64>(testvec256)),0);
+   std::cout << "avx2 rotate 64 bit " << temp << "\n";
    #endif
 
    
@@ -429,6 +438,11 @@ int main( void ) {
    temp=lessequal<avx512< v128< uint64_t > >, 32>(testvec128,testvec128);
    std::cout << "avx512 less equal 32 bit (v128) " << temp << "\n";
    
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((__m512i)testvec512,0),0);
+   
+   std::cout << "avx512 rotate 64 bit (before)" << temp << "\n";
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((rotate<avx512< v512< uint64_t > >, 64>(testvec512)),0),0);
+   std::cout << "avx512 rotate 64 bit (after)" << temp << "\n";
    #endif
    
    return 0;

@@ -1,0 +1,41 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/* 
+ * File:   manipulate_avx512.h
+ * Author: Annett
+ *
+ * Created on 24. April 2019, 17:17
+ */
+
+#ifndef MANIPULATE_AVX512_H
+#define MANIPULATE_AVX512_H
+
+#include <core/utils/preprocessor.h>
+#include <core/memory/mm_glob.h>
+#include <vector/simd/avx512/extension_avx512.h>
+#include <vector/primitives/manipulate.h>
+
+#include <functional>
+
+namespace vector{
+    template<typename T>
+    struct manipulate<avx512<v512<T>>, 64> {
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static typename avx512< v512< U > >::vector_t
+        rotate( avx512< v512< uint64_t > >::vector_t p_vec ) {
+            trace( "[VECTOR] - Rotate vector (sse)" );
+             
+            return _mm512_permutexvar_epi64(_mm512_set_epi64(6,5,4,3,2,1,0,7),p_vec);
+
+        }
+    };
+}
+
+#endif /* MANIPULATE_AVX512_H */
+
