@@ -1,7 +1,7 @@
 if ( CTEST_ALL OR CTEST_VECTOR )
-    add_executable( vector_test_app main.cpp )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/vector_test_app )
+	add_executable( vector_test_app main.cpp )
 
-   
     target_compile_options( vector_test_app PRIVATE
 #            -Werror
 #            -Wall
