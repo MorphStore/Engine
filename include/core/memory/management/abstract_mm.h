@@ -23,6 +23,8 @@
 
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
+#include <cstddef>
+
 namespace morphstore {
 
 class abstract_memory_manager {
