@@ -130,20 +130,90 @@ struct xxhash< uint64_t > {
    }
 
 // see https://github.com/Cyan4973/xxHash
+// for 8-byte values with seed
    static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values, uint64_t p_seed ) {
-      __m256i v64 = _mm256_xor_si256(
-         _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
-         round64( p_values ) );
-      return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
+      return avalance(
+         _mm256_add_epi64(
+            mul64(
+               rotl64(
+                  _mm256_xor_si256(
+                     _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
+                     round64( p_values )
+                  ),
+                  IMM_INT32(27)
+               ),
+               IMM_UINT64(PRIME64_1)
+            ),
+            _mm256_set1_epi64x(PRIME64_4)
+         )
+      );
    }
-
-// see https://github.com/aappleby/smhasher/wiki/MurmurHash3
-// http://bitsquid.blogspot.com/2011/08/code-snippet-murmur-hash-inverse-pre.html
+// for 16-byte values with seed
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p1_values, __m256i p2_values, uint64_t p_seed ) {
+      return avalance(
+         _mm256_add_epi64(
+            mul64(
+               rotl64(
+                  _mm256_xor_si256(
+                     _mm256_add_epi64(
+                        mul64(
+                           rotl64(
+                              _mm256_xor_si256(
+                                 _mm256_set1_epi64x( p_seed + PRIME64_5 + 8ULL ),
+                                 round64( p1_values )
+                              ),
+                              IMM_INT32(27)
+                           ),
+                           IMM_UINT64(PRIME64_1)
+                        ),
+                        _mm256_set1_epi64x(PRIME64_4)
+                     ),
+                     round64( p2_values )
+                  ),
+                  IMM_INT32(27)
+               ),
+               IMM_UINT64(PRIME64_1)
+            ),
+            _mm256_set1_epi64x(PRIME64_4)
+         )
+      );
+   }
+// for 8-byte values without seed
    static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p_values ) {
       __m256i v64 = _mm256_xor_si256(
          _mm256_set1_epi64x( PRIME64_5 + 8ULL ),
          round64( p_values ) );
       return avalance(_mm256_add_epi64( mul64( rotl64(v64, IMM_INT32(27)), IMM_UINT64(PRIME64_1)), _mm256_set1_epi64x(PRIME64_4) ));
+   }
+// for 16-byte values with seed
+   static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i apply( __m256i p1_values, __m256i p2_values ) {
+      return avalance(
+         _mm256_add_epi64(
+            mul64(
+               rotl64(
+                  _mm256_xor_si256(
+                     _mm256_add_epi64(
+                        mul64(
+                           rotl64(
+                              _mm256_xor_si256(
+                                 _mm256_set1_epi64x( PRIME64_5 + 8ULL ),
+                                 round64( p1_values )
+                              ),
+                              IMM_INT32(27)
+                           ),
+                           IMM_UINT64(PRIME64_1)
+                        ),
+                        _mm256_set1_epi64x(PRIME64_4)
+                     ),
+                     round64( p2_values )
+                  ),
+                  IMM_INT32(27)
+               ),
+               IMM_UINT64(PRIME64_1)
+            ),
+            _mm256_set1_epi64x(PRIME64_4)
+         )
+      );
    }
 };
 
@@ -173,7 +243,6 @@ const std::tuple<
    uint64_t * hashContainerGroupIds = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
 
    uint64_t const * inData = inDataCol->get_data();
-   //uint64_t const * inData = const_cast<uint64_t const *>(inDataC);
 
    uint64_t * tmpHashes = ( uint64_t * ) _mm_malloc( sizeof( __m256i ), sizeof( __m256i ) );
    __m256i const zeroV = _mm256_setzero_si256();
@@ -192,12 +261,14 @@ const std::tuple<
          bool dataFound;
 
          size_t pos = tmpHashes[hashPos] % lastPossibleVectorNumberInHashContainer;
+         size_t pos_new = pos;
          __m256i dataV = _mm256_set1_epi64x(inData[dataPos+hashPos]);
          do {
+            pos = pos_new;
             __m256i groupsV = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(&(hashContainerData[pos])));
             dataFound = false;
 
-            pos = ( pos + sizeof(__m256i) / sizeof(uint64_t) ) % lastPossibleVectorNumberInHashContainer;
+            pos_new = ( pos_new + sizeof(__m256i) / sizeof(uint64_t) ) % lastPossibleVectorNumberInHashContainer;
             searchOffset =
                _mm256_movemask_pd(
                   _mm256_castsi256_pd(
@@ -221,7 +292,7 @@ const std::tuple<
                dataFound = true;
             }
          } while(searchOffset == 0);
-         pos += __builtin_ctz(searchOffset) - sizeof(__m256i) / sizeof(uint64_t);
+         pos += __builtin_ctz(searchOffset) % lastPossibleVectorNumberInHashContainer ;
          if(dataFound) {
             //_bit_scan_forward( searchResult ) SHOULD work... but it doesn't
             *(outGr++) = hashContainerGroupIds[pos]; //BS
@@ -245,6 +316,174 @@ const std::tuple<
    return std::make_tuple(outGrCol, outExtCol);
 }
 
+
+
+template<>
+const std::tuple<
+   const column<uncompr_f> *,
+   const column<uncompr_f> *
+>
+group<processing_style_t::vec256>(
+   const column<uncompr_f> * const inGrCol,
+   const column<uncompr_f> * const inDataCol,
+   const size_t outExtCountEstimate
+) {
+   const size_t inDataCount = inDataCol->get_count_values();
+   const size_t inDataSize = inDataCol->get_size_used_byte();
+
+   if(inDataCount != inGrCol->get_count_values())
+      throw std::runtime_error(
+         "binary group: inGrCol and inDataCol must contain the same "
+         "number of data elements"
+      );
+
+
+   const size_t outCount = bool(outExtCountEstimate) ? (outExtCountEstimate): inDataCount;
+   auto outGrCol = new column<uncompr_f>(inDataSize);
+   auto outExtCol = new column<uncompr_f>( outCount * sizeof( uint64_t ) );
+   uint64_t * outGr = outGrCol->get_data();
+   uint64_t * outExt = outExtCol->get_data();
+   uint64_t * const initOutExt = outExt;
+
+   const size_t hashContainerSize = 1.6 * outCount;
+   const size_t lastPossibleVectorNumberInHashContainer = hashContainerSize - (sizeof( __m256i ) / sizeof( uint64_t ));
+   uint64_t * hashContainerData = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
+   uint64_t * hashContainerInGr = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
+   uint64_t * hashContainerGroupIds = ( uint64_t * ) malloc( hashContainerSize * sizeof( uint64_t ) );
+
+   uint64_t const * const inData = inDataCol->get_data();
+   uint64_t const * const inGr = inGrCol->get_data();
+
+   uint64_t * tmpHashes = ( uint64_t * ) _mm_malloc( sizeof( __m256i ), sizeof( __m256i ) );
+   __m256i const zeroV = _mm256_setzero_si256();
+
+   const size_t elementCount = ( sizeof( __m256i ) / sizeof( uint64_t ) );
+
+   size_t scalarPartCount = inDataCount & (elementCount-1);
+   size_t vectorizedPartCount = inDataCount - scalarPartCount;
+   uint64_t groupId = 0;
+
+   for( size_t dataPos = 0; dataPos < vectorizedPartCount; dataPos += sizeof( __m256i ) / sizeof( uint64_t ) ) {
+      _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes),
+                         xxhash<uint64_t>::apply(
+                            _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inData[dataPos]))),
+                            _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inGr[dataPos]))))
+                         );
+      for(size_t hashPos = 0; hashPos < 4; ++hashPos) {
+         uint32_t searchOffset = 0;
+         bool dataFound;
+         size_t pos = tmpHashes[hashPos] % lastPossibleVectorNumberInHashContainer;
+         size_t pos_new = pos;
+         __m256i dataV = _mm256_set1_epi64x(inData[dataPos+hashPos]);
+         __m256i groupIdV = _mm256_set1_epi64x(inGr[dataPos+hashPos]);
+         do {
+            pos = pos_new;
+            __m256i hashedDataV = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(&(hashContainerData[pos])));
+            __m256i hashGroupIdV = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(&(hashContainerInGr[pos])));
+            dataFound = false;
+
+            pos_new = ( pos_new + sizeof(__m256i) / sizeof(uint64_t) ) % lastPossibleVectorNumberInHashContainer;
+#if MSV_OPTIMIZE_GROUPBY_BINARY_TRANSFER_RESULT==1
+            //immidiate Transfer
+            searchOffset =
+                  _mm256_movemask_pd(
+                     _mm256_castsi256_pd(
+                        _mm256_cmpeq_epi64(
+                           dataV,
+                           groupsV
+                        )
+                     )
+                  )
+               &
+                  _mm256_movemask_pd(
+                     _mm256_castsi256_pd(
+                        _mm256_cmpeq_epi64(
+                           groupV,
+                           groupsIdV
+                        )
+                     )
+                  );
+#else
+            searchOffset =
+               _mm256_movemask_pd(
+                  _mm256_castsi256_pd(
+                     _mm256_and_si256(
+                        _mm256_cmpeq_epi64(
+                           dataV,
+                           hashedDataV
+                        ),
+                        _mm256_cmpeq_epi64(
+                           groupIdV,
+                           hashGroupIdV
+                        )
+                     )
+                  )
+               );
+#endif
+            if(searchOffset == 0) {
+#if MSV_OPTIMIZE_GROUPBY_BINARY_TRANSFER_RESULT==1
+               searchOffset =
+                     _mm256_movemask_pd(
+                        _mm256_castsi256_pd(
+                           _mm256_cmpeq_epi64(
+                              zeroV,
+                              groupsV
+                           )
+                        )
+                     )
+                  &
+                     _mm256_movemask_pd(
+                        _mm256_castsi256_pd(
+                           _mm256_cmpeq_epi64(
+                              zeroV,
+                              groupsIdV
+                           )
+                        )
+                     );
+#else
+               searchOffset =
+                  _mm256_movemask_pd(
+                     _mm256_castsi256_pd(
+                        _mm256_and_si256(
+                           _mm256_cmpeq_epi64(
+                              zeroV,
+                              hashedDataV
+                           ),
+                           _mm256_cmpeq_epi64(
+                              zeroV,
+                              hashGroupIdV
+                           )
+                        )
+                     )
+                  );
+#endif
+            } else {
+               dataFound = true;
+            }
+         } while(searchOffset == 0);
+         //_bit_scan_forward( searchResult ) SHOULD work... but it  doesn't
+         pos += __builtin_ctz(searchOffset) % lastPossibleVectorNumberInHashContainer;
+         if(dataFound) {
+            *(outGr++) = hashContainerGroupIds[pos]; //BS
+         } else {
+            hashContainerData[pos] = inData[dataPos+hashPos];
+            hashContainerInGr[pos] = inGr[dataPos+hashPos];
+            hashContainerGroupIds[pos] = groupId;
+            *(outGr++) = groupId++;
+            *(outExt++) = dataPos + hashPos;
+         }
+      }
+   }
+   for( size_t dataPos = vectorizedPartCount; dataPos < inDataCount; ++dataPos ) {
+
+   }
+
+   const size_t outExtCount = outExt - initOutExt;
+   outGrCol->set_meta_data(inDataCount, inDataSize);
+   outExtCol->set_meta_data(outExtCount, outExtCount * sizeof(uint64_t));
+
+   return std::make_tuple(outGrCol, outExtCol);
+}
 
 
 }
