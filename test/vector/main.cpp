@@ -98,10 +98,10 @@ int main( void ) {
    temp=_mm_extract_epi64((div<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
    std::cout << "sse div 64 bit " << temp << "\n";
    
-   temp2=_mm_extract_epi64((div<sse< v128< double > >, 64>((__m128d)testvec128,(__m128d)gatherTest128)),0);
+   temp2=_mm_extract_epi64((__m128i)(div<sse< v128< double > >, 64>((__m128d)testvec128,(__m128d)gatherTest128)),0);
    std::cout << "sse div 64 bit (double) " << temp2 << "\n";
    
-   temp3=_mm_extract_epi32((div<sse< v128< float > >, 32>((__m128)testvec128,(__m128)gatherTest128)),0);
+   temp3=_mm_extract_ps((div<sse< v128< float > >, 32>((__m128)testvec128,(__m128)gatherTest128)),0);
    std::cout << "sse div 32 bit (float) " << temp3 << "\n";
    
    temp=_mm_extract_epi64((mod<sse< v128< uint64_t > >, 64>(testvec128,gatherTest128)),0);
@@ -111,13 +111,13 @@ int main( void ) {
    temp4=_mm_extract_epi64((inv<sse< v128< uint64_t > >, 64>(testvec128)),0);
    std::cout << "sse inv 64 bit " << temp4 << "\n";
    
-   temp2=_mm_extract_epi64((inv<sse< v128< double > >, 64>((__m128d)testvec128)),0);
+   temp2=_mm_extract_epi64((__m128i)(inv<sse< v128< double > >, 64>((__m128d)testvec128)),0);
    std::cout << "sse inv 64 bit (double) " << temp2 << "\n";
    
    temp4=_mm_extract_epi32((inv<sse< v128< uint64_t > >, 32>(testvec128)),0);
    std::cout << "sse inv 32 bit " << temp4 << "\n";
    
-   temp3=_mm_extract_epi32((inv<sse< v128< float > >, 32>((__m128)testvec128)),0);
+   temp3=_mm_extract_ps((inv<sse< v128< float > >, 32>((__m128)testvec128)),0);
    std::cout << "sse inv 32 bit (float) " << temp3 << "\n";
    
    temp=equality<sse< v128< uint64_t > >, 64>(testvec128,testvec128);
