@@ -9,14 +9,16 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/join_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/merge_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_test_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_benchmark_test_app )
+	
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/select_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operation_lookup_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operation_summation_test_app )
+IF(CAVXTWO OR CAVX512)
+        FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_benchmark_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operations_vector_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/group_unary_vector_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/group_binary_vector_test_app )
-
+ENDIF(CAVXTWO  OR CAVX512)
 	MESSAGE( "Building test, TESTING OPERATORS " )
 	add_executable( agg_sum_group_based_test_app agg_sum_group_based_test.cpp )
 	add_executable( agg_sum_whole_column_test_app agg_sum_whole_column_test.cpp )
@@ -28,13 +30,16 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( join_test_app join_test.cpp )
 	add_executable( merge_test_app merge_test.cpp )
 	add_executable( project_test_app project_test.cpp )
-	add_executable( project_benchmark_test_app project_benchmark_test.cpp )
+	
 	add_executable( select_test_app select_test.cpp )
 	add_executable( operation_lookup_test_app lookup_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
+IF(CAVXTWO  OR CAVX512)
+        add_executable( project_benchmark_test_app project_benchmark_test.cpp )
 	add_executable( operations_vector_test_app vector_test.cpp )
 	add_executable( group_unary_vector_test_app group_unary_vectorized_test.cpp)
 	add_executable( group_binary_vector_test_app group_binary_vectorized_test.cpp)
+ENDIF(CAVXTWO  OR CAVX512)
 	
 	target_compile_options( agg_sum_group_based_test_app PRIVATE
 	        -Werror
@@ -126,15 +131,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( project_test_app PRIVATE "-ldl" )
 
-        target_compile_options( project_benchmark_test_app PRIVATE
-                                -Werror
-                                -Wall
-                                -Wextra
-                                -pedantic
-                                -fstack-protector-all
-                                -msse4.2 -mavx2
-                                $<$<CONFIG:DEBUG>:-DDEBUG> )
-        target_link_libraries( project_benchmark_test_app PRIVATE "-ldl" )
+        
 	
 	target_compile_options( select_test_app PRIVATE
 	        -Werror
@@ -163,6 +160,17 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	        -fstack-protector-all
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( operation_summation_test_app PRIVATE "-ldl" )
+
+IF(CAVXTWO  OR CAVX512)
+        target_compile_options( project_benchmark_test_app PRIVATE
+                                -Werror
+                                -Wall
+                                -Wextra
+                                -pedantic
+                                -fstack-protector-all
+                                -msse4.2 -mavx2
+                                $<$<CONFIG:DEBUG>:-DDEBUG> )
+        target_link_libraries( project_benchmark_test_app PRIVATE "-ldl" )
 
 	target_compile_options( operations_vector_test_app PRIVATE
 	        -Werror
@@ -194,6 +202,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 			-msse4.2 -mavx2
 			$<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( group_binary_vector_test_app PRIVATE "-ldl" )
+ENDIF(CAVXTWO  OR CAVX512)
 
 	add_test( agg_sum_group_based_test agg_sum_group_based_test_app )
 	add_test( agg_sum_whole_column_test agg_sum_whole_column_test_app )
@@ -205,12 +214,15 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_test( join_test join_test_app )
 	add_test( merge_test merge_test_app )
 	add_test( project_test project_test_app )
-	add_test( project_benchmark_test project_benchmark_test_app )
 	add_test( select_test select_test_app )
 	add_test( operation_lookup_test operation_lookup_test_app )
 	add_test( operation_summation_test operation_summation_test_app )
+IF(CAVXTWO  OR CAVX512)
+        add_test( project_benchmark_test project_benchmark_test_app )
 	add_test( operations_vector_test operations_vector_test_app )
 	add_test( group_unary_vector_test group_unary_vector_test_app )
 	add_test( group_binary_vector_test group_binary_vector_test_app )
-endif()
+ENDIF(CAVXTWO  OR CAVX512)
+
+endif( CTEST_ALL OR CTEST_OPERATORS)
 	

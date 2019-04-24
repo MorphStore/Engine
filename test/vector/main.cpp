@@ -10,12 +10,16 @@
 #include <core/storage/column_gen.h>
 
 #include <vector/general_vector.h>
+
 #include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
+
+#ifdef AVXTWO
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
+#endif
 
 #ifdef AVX512
 #include <vector/simd/avx512/primitives/io_avx512.h>
@@ -38,7 +42,7 @@ int main( void ) {
    const uint64_t* data = (uint64_t*) testDataColumnSorted->get_data();
    
    auto outColumn = new column<uncompr_f>(100);
-   avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(1,1,1,2);
+   
    sse< v128< uint64_t > >::vector_t gatherTest128 = _mm_set_epi64x(0,4);
    
    uint64_t  temp;
@@ -122,6 +126,11 @@ int main( void ) {
    temp=equality<sse< v128< uint64_t > >, 32>(testvec128,testvec128);
    std::cout << "sse equality 32 bit " << temp << "\n";
    
+   
+   #ifdef AVXTWO
+
+   avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(1,1,1,2);
+
    temp=_mm256_extract_epi64((load<avx2< v256< uint64_t > >, iov::ALIGNED, 256>(data)),0);
    std::cout << "avx2 aligned " << temp << "\n";
 
@@ -139,7 +148,7 @@ int main( void ) {
    testvec128=gather<avx2< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "avx2 gather, 128 bit " << temp << "\n";
-   
+
    testvec256=gather<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data,gatherTest256);
    temp=_mm256_extract_epi64(testvec256,0);
    std::cout << "avx2 gather, 256 bit " << temp << "\n";
@@ -197,6 +206,8 @@ int main( void ) {
    
    temp=equality<avx2< v256< uint64_t > >, 32>(testvec256,testvec256);
    std::cout << "avx2 equality 32 bit " << temp << "\n";
+   #endif
+
    
    #ifdef AVX512
 

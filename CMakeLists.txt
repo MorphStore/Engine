@@ -40,6 +40,12 @@ ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
 	message( SEND_ERROR "No known build type specified. Use either Debug, Release or HighPerf" )
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+IF(CAVXTWO)
+    morph_flag(-DAVXTWO)
+    morph_flag(-mavx2)
+    message(STATUS "AVX2 support switched on")
+ENDIF(CAVXTWO)
+
 IF(CAVX512)
     morph_flag(-DAVX512)
     morph_flag(-mavx512f)
@@ -47,7 +53,9 @@ IF(CAVX512)
     morph_flag(-mavx512er)
     morph_flag(-mavx512cd)
     morph_flag(-mavx512vl)
-    message(STATUS "AVX512 support switched on")
+    morph_flag(-DAVXTWO)
+    morph_flag(-mavx2)
+    message(STATUS "AVX512 and AVX2 support switched on")
 ENDIF(CAVX512)
 
 # remove build type to allow for custom flag handling

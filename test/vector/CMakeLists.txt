@@ -8,7 +8,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 #            -Wextra
 #            -pedantic
             -fstack-protector-all
-            -msse4.2 -mavx2 -msse2
+            -msse4.2 -msse2
            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl 
            
             $<$<CONFIG:DEBUG>:-DDEBUG> )
