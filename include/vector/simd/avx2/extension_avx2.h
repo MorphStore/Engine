@@ -38,6 +38,27 @@ namespace vector {
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
       using mask_t = uint16_t;
    };
+   
+   template<typename T>
+   struct avx2< v128< T > > {
+      static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
+      using vector_helper_t = v128<T>;
+      using base_t = typename vector_helper_t::base_t;
+	  
+      using vector_t =
+      typename std::conditional<
+         (1==1) == std::is_integral<T>::value,    // if T is integer
+         __m128i,                       //    vector register = __m128i
+         typename std::conditional<
+            (1==1) == std::is_same<float, T>::value, // else if T is float
+            __m128,                       //    vector register = __m128
+            __m128d                       // else [T == double]: vector register = __m128d
+         >::type
+      >::type;
+
+      using size = std::integral_constant<size_t, sizeof(vector_t)>;
+      using mask_t = uint16_t;
+   };
 
 }
 

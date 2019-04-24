@@ -22,6 +22,9 @@
  */
 
 #include <core/storage/column_helper.h>
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <core/memory/management/utils/alignment_helper.h>
+#endif
 #include <core/morphing/format.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
@@ -59,16 +62,23 @@ class column {
       column< F > & operator= ( column< F > && ) = delete;
 
       virtual ~column( ) {
-//         debug( "Uncompressed Storage Container - dtor( ): Freeing", m_Data );
-//         free( const_cast< void * >( static_cast< void const * const >( m_Data ) ) );
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         free( m_DataUnaligned );
+#else
          if( m_PersistenceType == storage_persistence_type::globalScope ) {
             general_memory_manager::get_instance( ).deallocate( m_Data );
          }
+#endif
       }
       
    private:
       column_meta_data m_MetaData;
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+      void * m_DataUnaligned;
+#endif
       voidptr_t m_Data;
+      // @todo Actually, the persistence type only makes sense if we use our
+      // own memory manager.
       storage_persistence_type m_PersistenceType;
       
       column(
@@ -76,15 +86,18 @@ class column {
          size_t p_SizeAllocatedByte
       ) :
          m_MetaData{ 0, 0, p_SizeAllocatedByte },
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         m_DataUnaligned{
+            malloc( get_size_with_alignment_padding( p_SizeAllocatedByte ) )
+         },
+         m_Data{ create_aligned_ptr( m_DataUnaligned ) },
+#else
          m_Data{
-#ifndef MSV_NO_SELFMANAGED_MEMORY
             ( p_PersistenceType == storage_persistence_type::globalScope )
             ? general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
             : malloc( p_SizeAllocatedByte )
-#else
-            malloc( p_SizeAllocatedByte );
-#endif
          },
+#endif
          m_PersistenceType{ p_PersistenceType }
       {
          //
@@ -115,9 +128,13 @@ class column {
       static column< F > * create_global_column(size_t p_SizeAllocByte) {
          return new
             (
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+               malloc( sizeof( column< F > ) )
+#else
                general_memory_manager::get_instance( ).allocate(
                   sizeof( column< F > )
                )
+#endif
             )
             column(
                storage_persistence_type::globalScope,

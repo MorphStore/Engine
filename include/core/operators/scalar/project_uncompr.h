@@ -37,29 +37,37 @@
 namespace morphstore {
     
 template<>
-const column<uncompr_f> *
-project<processing_style_t::scalar>(
-        const column<uncompr_f> * const inDataCol,
-        const column<uncompr_f> * const inPosCol
-) {
-    const size_t inPosCount = inPosCol->get_count_values();
-    const uint64_t * const inData = inDataCol->get_data();
-    const uint64_t * const inPos = inPosCol->get_data();
-    
-    const size_t inPosSize = inPosCol->get_size_used_byte();
-    // Exact allocation size (for uncompressed data).
-    auto outDataCol = new column<uncompr_f>(inPosSize);
-    uint64_t * outData = outDataCol->get_data();
-    
-    for(unsigned i = 0; i < inPosCount; i++) {
-        *outData = inData[inPos[i]];
-        outData++;
+struct project_t<
+        processing_style_t::scalar,
+        uncompr_f,
+        uncompr_f,
+        uncompr_f
+> {
+    static
+    const column<uncompr_f> *
+    apply(
+            const column<uncompr_f> * const inDataCol,
+            const column<uncompr_f> * const inPosCol
+    ) {
+        const size_t inPosCount = inPosCol->get_count_values();
+        const uint64_t * const inData = inDataCol->get_data();
+        const uint64_t * const inPos = inPosCol->get_data();
+
+        const size_t inPosSize = inPosCol->get_size_used_byte();
+        // Exact allocation size (for uncompressed data).
+        auto outDataCol = new column<uncompr_f>(inPosSize);
+        uint64_t * outData = outDataCol->get_data();
+
+        for(unsigned i = 0; i < inPosCount; i++) {
+            *outData = inData[inPos[i]];
+            outData++;
+        }
+
+        outDataCol->set_meta_data(inPosCount, inPosSize);
+
+        return outDataCol;
     }
-    
-    outDataCol->set_meta_data(inPosCount, inPosSize);
-    
-    return outDataCol;
-}
+};
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_PROJECT_UNCOMPR_H

@@ -36,7 +36,7 @@ using namespace morphstore;
 int main( void ) {
     const bool allGood = test_op_2in_1out(
             "Project",
-            &project<processing_style_t::scalar, uncompr_f>,
+            &project<processing_style_t::scalar>,
             make_column({11, 44, 22, 33, 11}),
             make_column({1, 3, 4}),
             "inDataCol",
