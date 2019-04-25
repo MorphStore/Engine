@@ -372,10 +372,10 @@ int main( void ) {
    temp=extract_value<avx512< v512< uint64_t > >, 64>((div<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0);
    std::cout << "avx512 div 64 bit " << temp << "\n";
    
-   temp3=extract_value<avx512< v512< uint64_t > >, 64>((div<avx512< v512< double > >, 64>((__m512d)testvec512,(__m512d)gatherTest512)),0);
+   temp3=extract_value<avx512< v512< uint64_t > >, 64>(((__m512i)div<avx512< v512< double > >, 64>((__m512d)testvec512,(__m512d)gatherTest512)),0);
    std::cout << "avx512 div 64 bit (double) " << temp << "\n";
    
-   temp2=extract_value<avx512< v512< uint64_t > >, 32>((div<avx512< v512< float > >, 32>((__m512)testvec512,(__m512)gatherTest512)),0);
+   temp2=extract_value<avx512< v512< uint64_t > >, 32>(((__m512i)div<avx512< v512< float > >, 32>((__m512)testvec512,(__m512)gatherTest512)),0);
    std::cout << "avx512 div 32 bit (float) " << temp << "\n";
    
    temp=extract_value<avx512< v512< uint64_t > >, 64>((mod<avx512< v512< uint64_t > >, 64>(testvec512,gatherTest512)),0);
@@ -387,10 +387,10 @@ int main( void ) {
    temp4=extract_value<avx512< v512< uint64_t > >, 32>((inv<avx512< v512< uint64_t > >, 32>(testvec512)),0);
    std::cout << "avx512 inv 32 bit " << temp4 << "\n";
    
-   temp3=extract_value<avx512< v512< uint64_t > >, 32>((inv<avx512< v512< double > >, 64>((__m512d)testvec512)),0);
+   temp3=extract_value<avx512< v512< uint64_t > >, 32>(((__m512i)inv<avx512< v512< double > >, 64>((__m512d)testvec512)),0);
    std::cout << "avx512 inv 64 bit (double) " << temp3 << "\n";
    
-   temp2=extract_value<avx512< v512< uint64_t > >, 32>((inv<avx512< v512< float > >, 32>((__m512)testvec512)),0);
+   temp2=extract_value<avx512< v512< uint64_t > >, 32>(((__m512i)inv<avx512< v512< float > >, 32>((__m512)testvec512)),0);
    std::cout << "avx512 inv 32 bit (float) " << temp2 << "\n";
    
    temp=equality<avx512< v512< uint64_t > >, 64>(testvec512,testvec512);

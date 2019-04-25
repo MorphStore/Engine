@@ -98,6 +98,27 @@ intersect_sorted<processing_style_t::vec256>(
         
     }
     
+    uint64_t * inPosL2 = (uint64_t *) inPosL;
+    uint64_t * inPosR2 = (uint64_t *) inPosR;
+    uint64_t * outPos2 = (uint64_t *) outPos;
+    while(inPosL2 < (uint64_t *)endInPosL && inPosR2 < (uint64_t *)endInPosR) {
+        trace( "[DEBUG] - intersect sequential tail" );
+        if(*inPosL2 < *inPosR2)
+            inPosL2++;
+        else if(*inPosR2 < *inPosL2)
+            inPosR2++;
+        else { // *inPosL == *inPosR
+            *outPos2 = *inPosL2;
+            outPos2++;
+            inPosL2++;
+            inPosR2++;
+        }
+    }
+    
+    inPosL = (__m256i *) inPosL2;
+    inPosR = (__m256i *) inPosR2;
+    outPos = (__m256i *) outPos2;
+    
     const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);//How large is our result set?
     
     //Store output size in meta data of the output column

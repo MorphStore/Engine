@@ -97,7 +97,7 @@ struct project_t<
         __m256i buffer;
 
         unsigned i;
-        for(i=0; i < inPosCount; i+=4) {
+        for(i=0; i < inPosCount-4; i+=4) {
             //A gather could be faster here but requires loading a second register with the indexes in every loop
             //->Any opinions about that?
             buffer=_mm256_set_epi64x(inData[inPos[i+3]],inData[inPos[i+2]],inData[inPos[i+1]],inData[inPos[i]]);
@@ -109,7 +109,7 @@ struct project_t<
         unsigned k=i;
         uint64_t* oData=(uint64_t*) outData;
         for(i=k; i < inPosCount; i++) {
-            oData[0] = inData[inPos[i]];
+            *oData = inData[inPos[i]];
             oData++;
         }
 

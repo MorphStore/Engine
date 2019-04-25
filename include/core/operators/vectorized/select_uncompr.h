@@ -382,7 +382,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         uint64_t* oPos=(uint64_t*)outPos;
          for(unsigned j = i; j < inDataCount; j++)
             if(op(((uint64_t*)inData)[j], val)) {
-                *oPos = j;
+                oPos[0] = j;
                 oPos++;
             }
         
