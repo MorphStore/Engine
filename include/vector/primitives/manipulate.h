@@ -30,6 +30,7 @@ namespace vector{
    rotate(typename VectorExtension::vector_t a) {
        return manipulate<VectorExtension,  Granularity>::rotate( a );
    }
+
 }
 
 #endif /* MANIPULATE_H */

@@ -58,6 +58,7 @@ namespace vector {
        return io<VectorExtension, IOVariant, IOGranularity>::gather( a, b);
    }
    
+
    
 }
 #endif //MORPHSTORE_VECTOR_PRIMITIVES_IO_H

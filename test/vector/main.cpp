@@ -15,12 +15,14 @@
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/manipulate_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
 
 #ifdef AVXTWO
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
 #include <vector/simd/avx2/primitives/manipulate_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
 #endif
 
 #ifdef AVX512
@@ -28,6 +30,7 @@
 #include <vector/simd/avx512/primitives/calc_avx512.h>
 #include <vector/simd/avx512/primitives/compare_avx512.h>
 #include <vector/simd/avx512/primitives/manipulate_avx512.h>
+#include <vector/simd/avx512/primitives/create_avx512.h>
 #endif
 
 #include <iostream>
@@ -156,6 +159,24 @@ int main( void ) {
    temp=_mm_extract_epi64((rotate<sse< v128< uint64_t > >, 64>(testvec128)),0);
    std::cout << "sse rotate 64 bit " << temp << "\n";
    
+   temp=_mm_extract_epi64((set1<sse< v128< uint64_t > >, 64>(42)),0);
+   std::cout << "sse set1 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi64((set<sse< v128< uint64_t > >, 64>(44,43)),0);
+   std::cout << "sse set 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((set1<sse< v128< uint64_t > >, 32>(42)),0);
+   std::cout << "sse set1 32 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((set<sse< v128< uint64_t > >, 32>(46,45,44,43)),0);
+   std::cout << "sse set 32 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi64((set_sequence<sse< v128< uint64_t > >, 64>(0,5)),1);
+   std::cout << "sse set_sequence 64 bit " << temp << "\n";
+   
+   temp=_mm_extract_epi32((set_sequence<sse< v128< uint64_t > >, 32>(0,5)),1);
+   std::cout << "sse set_sequence 32 bit " << temp << "\n";
+   
    #ifdef AVXTWO
 
    avx2< v256< uint64_t > >::vector_t gatherTest256 = _mm256_set_epi64x(1,1,1,2);
@@ -262,6 +283,25 @@ int main( void ) {
    
    temp=_mm256_extract_epi64((rotate<avx2< v256< uint64_t > >, 64>(testvec256)),0);
    std::cout << "avx2 rotate 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((set1<avx2< v256< uint64_t > >, 64>(42)),0);
+   std::cout << "avx2 set1 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((set<avx2< v256< uint64_t > >, 64>(46,45,44,43)),0);
+   std::cout << "avx2 set 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32((set1<avx2< v256< uint64_t > >, 32>(42)),0);
+   std::cout << "avx2 set1 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32((set<avx2< v256< uint64_t > >, 32>(50,49,48,47,46,45,44,43)),0);
+   std::cout << "avx2 set 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64((set_sequence<avx2< v256< uint64_t > >, 64>(0,5)),3);
+   std::cout << "avx2 set_sequence 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32((set_sequence<avx2< v256< uint64_t > >, 32>(0,5)),3);
+   std::cout << "avx2 set_sequence 32 bit " << temp << "\n";
+   
    #endif
 
    
@@ -443,6 +483,25 @@ int main( void ) {
    std::cout << "avx512 rotate 64 bit (before)" << temp << "\n";
    temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((rotate<avx512< v512< uint64_t > >, 64>(testvec512)),0),0);
    std::cout << "avx512 rotate 64 bit (after)" << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((set1<avx512< v512< uint64_t > >, 64>(42)),0),0);
+   std::cout << "avx512 set1 64 bit " << temp << "\n";
+
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((set<avx512< v512< uint64_t > >, 64>(49,48,47,46,45,44,43,42)),0),0);
+   std::cout << "avx512 set 64 bit " << temp << "\n";
+
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((set1<avx512< v512< uint64_t > >, 32>(42)),0),0);
+   std::cout << "avx512 set1 32 bit " << temp << "\n";
+
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((set<avx512< v512< uint64_t > >, 32>(57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42)),0),0);
+   std::cout << "avx512 set 32 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi64(_mm512_extracti64x4_epi64((set_sequence<avx512< v512< uint64_t > >, 64>(0,5)),0),3);
+   std::cout << "avx512 set_sequence 64 bit " << temp << "\n";
+   
+   temp=_mm256_extract_epi32(_mm512_extracti64x4_epi64((set_sequence<avx512< v512< uint64_t > >, 32>(0,5)),0),3);
+   std::cout << "avx512 set_sequence 32 bit " << temp << "\n";
+   
    #endif
    
    return 0;
