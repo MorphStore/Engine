@@ -9,7 +9,7 @@
 #define MORPHSTORE_VECTOR_GENERAL_VECTOR_H
 
 #include <cstdint>
-
+#include <vector/preprocessor.h>
 namespace vector {
 
    template<uint16_t BitWidth, typename T>
@@ -20,6 +20,7 @@ namespace vector {
       using size_byte       = std::integral_constant<uint16_t, (BitWidth>>3) >;
       using alignment       = std::integral_constant<size_t, size_byte::value>;
       using element_count   = std::integral_constant<size_t, size_byte::value / sizeof(T)>;
+      using granularity     = std::integral_constant<size_t, sizeof(T)*8>;
    };
 
 
@@ -31,17 +32,17 @@ namespace vector {
    using v512 = vector_view<512, T>;
 
 
-#define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) using vector_element_count = VectorExtension::vector_helper_t::element_count; \
+#define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) \
+   using vector_element_count = typename VectorExtension::vector_helper_t::element_count; \
    using vector_base_t = typename VectorExtension::vector_helper_t::base_t; \
-   using vector_size_bit = VectorExtension::vector_helper_t::size_bit; \
-   using vector_size_byte = VectorExtension::vector_helper_t::size_byte; \
-   using vector_alignment = VectorExtension::vector_helper_t::alignment; \
-   using vector_element_count = VectorExtension::vector_helper_t::element_count; \
-   using vector_t = VectorExtension::vector_t; \
-   using vector_size = VectorExtension::size; \
-   using vector_mask_t = VectorExtension::mask_t; \
-   using size = std::integral_constant<size_t, sizeof(vector_t)>; \
-   using mask_t = uint16_t;
+   using vector_size_bit = typename VectorExtension::vector_helper_t::size_bit; \
+   using vector_size_byte = typename VectorExtension::vector_helper_t::size_byte; \
+   using vector_alignment = typename VectorExtension::vector_helper_t::alignment; \
+   using vector_element_count = typename VectorExtension::vector_helper_t::element_count; \
+   using vector_t = typename VectorExtension::vector_t; \
+   using vector_size = typename VectorExtension::size; \
+   using vector_mask_t = typename VectorExtension::mask_t; \
+   using vector_base_t_granularity = typename VectorExtension::vector_helper_t::granularity;
 
 
 }
