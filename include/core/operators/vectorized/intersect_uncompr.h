@@ -60,7 +60,7 @@ intersect_sorted<processing_style_t::vec256>(
     int mask_greater_than=0;
     left=_mm256_loadu_si256(inPosL); //Load the first 4 values of the left column
     right=_mm256_loadu_si256(inPosR); //Load the first 4 values of the right column
-    
+    int changed_left=0;
    
     //Iterate as long as there are still values left in both columns
     while(inPosL < endInPosL && inPosR < endInPosR){
@@ -86,9 +86,11 @@ intersect_sorted<processing_style_t::vec256>(
         if ((mask | mask_greater_than) == 0) {
            inPosR++;
            right=_mm256_loadu_si256(inPosR);
+           changed_left=0;
         }else{
            inPosL++;
-           left=_mm256_loadu_si256(inPosL); 
+           left=_mm256_loadu_si256(inPosL);
+           changed_left=1;
         }
 
         //Reset all masks for the next iteration
@@ -101,8 +103,15 @@ intersect_sorted<processing_style_t::vec256>(
     uint64_t * inPosL2 = (uint64_t *) inPosL;
     uint64_t * inPosR2 = (uint64_t *) inPosR;
     uint64_t * outPos2 = (uint64_t *) outPos;
+    /*if (inPosL2-4 < (uint64_t *)endInPosL && changed_left==1){
+         inPosL2-=4;
+    }
+    if ( (inPosR2-4 < (uint64_t *)endInPosR) && changed_left==0) {
+        inPosR2-=4;
+    }*/
+
     while(inPosL2 < (uint64_t *)endInPosL && inPosR2 < (uint64_t *)endInPosR) {
-        trace( "[DEBUG] - intersect sequential tail" );
+        if (changed_left) {trace( "[DEBUG] - intersect sequential tail" );}
         if(*inPosL2 < *inPosR2)
             inPosL2++;
         else if(*inPosR2 < *inPosL2)

@@ -252,7 +252,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         uint64_t * outP =  outPosCol->get_data();
         //I know the following is ugly, but _mm_maskstore_epi64 requires a long long (64 bit types are only long on a 64-bit system))
         __m256i * outPos =  reinterpret_cast< __m256i * >(outP);
-        const __m256i * const initOutPos = reinterpret_cast< __m256i * > (outP);
+        const __m256i * const initOutPos = (__m256i *) (outPosCol->get_data());
 
         
         
@@ -353,7 +353,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
                 mask = _mm256_movemask_pd((__m256d)cmpres);
                 compress_store256(outPos,mask,ids);
                 ids=_mm256_add_epi64(ids,add);
-                outPos=(__m256i*)((uint64_t *)outPos+__builtin_popcountl(mask));
+                outPos=(__m256i*)(((uint64_t *)outPos)+__builtin_popcountl(mask));
             }
         }
         
@@ -380,7 +380,7 @@ struct select<t_op, processing_style_t::vec256, uncompr_f, uncompr_f> {
         }
       
         uint64_t* oPos=(uint64_t*)outPos;
-         for(unsigned j = i; j < inDataCount; j++)
+         for(unsigned j = i*4; j < inDataCount; j++)
             if(op(((uint64_t*)inData)[j], val)) {
                 oPos[0] = j;
                 oPos++;
