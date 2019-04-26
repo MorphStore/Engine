@@ -31,7 +31,7 @@ namespace vector{
         rotate( sse< v128< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (sse)" );
              
-            return (__m128i)(_mm_permute_pd(p_vec,1));
+            return (__m128i)(_mm_permute_pd((__m128d)p_vec,1));
 
         }
     };
