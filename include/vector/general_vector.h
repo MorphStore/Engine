@@ -17,9 +17,9 @@ namespace vector {
       vector_view() = delete;
       using base_t          = T;
       using size_bit        = std::integral_constant<uint16_t, BitWidth>;
-      using size_byte       = std::integral_constant<uint16_t, (BitWidth >
-      using alignment       = std::integral_constant<size_t, size_B::value>;
-      using element_count   = std::integral_constant<size_t, size_B::value / sizeof(T)>;
+      using size_byte       = std::integral_constant<uint16_t, (BitWidth>>3) >;
+      using alignment       = std::integral_constant<size_t, size_byte::value>;
+      using element_count   = std::integral_constant<size_t, size_byte::value / sizeof(T)>;
    };
 
 
