@@ -42,7 +42,9 @@ using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-    MONITOR_START_INTERVAL( "operatorTime" + std::to_string( bw ) );
+	MONITORING_CREATE_MONITOR( MONITORING_MAKE_MONITOR(bw), MONITORING_KEY_IDENTS("bitwidth"));
+    
+    MONITORING_START_INTERVAL_FOR( "operatorTime", bw );
     
     // Generate some data.
     const uint64_t minVal = (bw == 1)
@@ -66,14 +68,17 @@ bool test( ) {
     auto comprCol = morph<processing_style_t::vec128, static_vbp_f<bw>>(origCol);
     auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
 #endif
-    
+	MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+	MONITORING_START_INTERVAL_FOR("operatorTime", bw);
+	MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+
     const bool good = equality_check( origCol, decomprCol ).good( );
     std::cout
             << std::setw(2) << bw << " bit: "
             << equality_check::ok_str( good ) << std::endl;
-    MONITOR_END_INTERVAL( "operatorTime" + std::to_string( bw ) );
+	MONITORING_ADD_BOOL_FOR("ok", good, bw);
+	MONITORING_ADD_BOOL_FOR("ok", good, bw);
 
-    MONITOR_ADD_PROPERTY( "operatorParam" + std::to_string( bw ), bw );
     return good;
 }
 
@@ -152,36 +157,8 @@ int main( void ) {
     allGood = allGood && test<64>();
 #endif
 
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_ALL( monitorShellLog, true )
-    
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog );
-
-    std::cout << "#### Testing All Counters with sorting" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog, true );
-
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog );
-
-    std::cout << "#### Testing All Counters with sorting" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog, true );
-
-    std::cout << "#### Testing Single Counter" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog, "operatorTime43" );
-
-    std::cout << "#### Testing All Counter" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog );
-
-    std::cout << "#### Testing Single Parameter" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog, "operatorParam8" );
-
-    std::cout << "#### Testing All Parameters" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog );
-
-    std::cout << "#### Testing Print All" << std::endl;
-    MONITOR_PRINT_ALL( monitorShellLog )
-
+	MONITORING_PRINT_MONITORS(monitorCsvLog);
+	
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 
 #ifdef MSV_USE_MONITORING
