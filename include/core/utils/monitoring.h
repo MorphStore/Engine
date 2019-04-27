@@ -157,6 +157,9 @@ namespace morphstore {
 		}
 
 		std::string getAsString(const size_t idx) const override {
+			if (idx >= lastValue) {
+				throw std::runtime_error("[MONITORING ERROR] Trying to get a parameter with out-of-bounds index. Did you add an uneven amount of parameters/intervals?");
+			}
 			return std::to_string( values[idx] );
 		}
 
@@ -210,6 +213,9 @@ namespace morphstore {
 		}
 
 		std::string getAsString(const size_t idx) const override {
+			if (idx >= lastValue) {
+				throw std::runtime_error("[MONITORING ERROR] Trying to get an interval with out-of-bounds index. Did you add an uneven amount of parameters/intervals?");
+			}
 			return std::to_string( values[idx] );
 		}
 	};
