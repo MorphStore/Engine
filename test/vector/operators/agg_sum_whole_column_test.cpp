@@ -33,6 +33,14 @@
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+
+
+
+#include <vector/simd/sse/extension_sse.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
 
 #include <core/operators/general_vectorized/agg_sum_uncompr.h>
 
@@ -44,9 +52,16 @@ int main( void ) {
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
+   std::cout << "Done...\n";
 
 
    /*const column<uncompr_f> **/ auto result = agg_sum<avx2<v256<uint64_t>>>( testDataColumnSorted );
+   /*const column<uncompr_f> **/ auto result1 = agg_sum<sse<v128<uint64_t>>>( testDataColumnSorted );
+   /*const column<uncompr_f> **/ auto result2 = agg_sum<sse<v512<uint64_t>>>( testDataColumnSorted );
+
+   print_columns(print_buffer_base::decimal, result, "Result");
+   print_columns(print_buffer_base::decimal, result1, "Result");
+   print_columns(print_buffer_base::decimal, result2, "Result");
 
    return 0;
 }

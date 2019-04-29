@@ -8,6 +8,7 @@
 #include <vector/general_vector.h>
 #include <vector/primitives/calc.h>
 #include <vector/primitives/io.h>
+#include <vector/primitives/create.h>
 
 namespace morphstore {
 
@@ -24,24 +25,26 @@ namespace morphstore {
 
       size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
       size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
-      vector_t const * dataVecPtr = p_DataColumn->get_data( );
-      vector_t resultVec;// = setzero<VectorExtension>( );
-
+      vector_base_t const * dataPtr = p_DataColumn->get_data( );
+      vector_t resultVec = set1<VectorExtension,vector_base_type_size_bit::value>(0);// = setzero<VectorExtension>( );
+      alignas(vector_alignment::value) vector_base_t tmp[ vector_element_count::value ];
       for( size_t i = 0; i < vectorCount; ++i ) {
          resultVec = add<VectorExtension, vector_base_t_granularity::value>(
-            resultVec, load<VectorExtension,iov::ALIGNED, vector_size_bit::value>( dataVecPtr++ )
+            resultVec, load<VectorExtension,iov::ALIGNED, vector_size_bit::value>( dataPtr )
          );
+         store<VectorExtension,iov::ALIGNED, vector_size_bit::value>( tmp, resultVec );
+         dataPtr += vector_element_count::value;
       }
 
       alignas(vector_alignment::value) vector_base_t resultArray[ vector_element_count::value ];
-      store<VectorExtension,iov::ALIGNED, vector_size_bit::value>( reinterpret_cast< vector_t * >( &resultArray ), resultVec );
+      store<VectorExtension,iov::ALIGNED, vector_size_bit::value>( resultArray, resultVec );
 
       for( size_t i = 0; i < vector_element_count::value; ++i ) {
          result += resultArray[ i ];
       }
 
       if( remainderCount != 0) {
-         vector_base_t const * remainderPtr = reinterpret_cast< vector_base_t const * >( dataVecPtr );
+         vector_base_t const * remainderPtr = dataPtr;
          for( size_t i = 0; i < remainderCount; ++i ) {
             result += *remainderPtr++;
          }

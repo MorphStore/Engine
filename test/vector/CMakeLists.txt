@@ -34,5 +34,5 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 
     target_link_libraries( agg_sum_app PRIVATE "-ldl" )
 
-    add_test( agg_sum_vecdtorized_test agg_sum_app )
+    add_test( agg_sum_vectorized_test agg_sum_app )
 endif()
