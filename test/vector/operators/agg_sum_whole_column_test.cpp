@@ -57,11 +57,9 @@ int main( void ) {
 
    /*const column<uncompr_f> **/ auto result = agg_sum<avx2<v256<uint64_t>>>( testDataColumnSorted );
    /*const column<uncompr_f> **/ auto result1 = agg_sum<sse<v128<uint64_t>>>( testDataColumnSorted );
-   /*const column<uncompr_f> **/ auto result2 = agg_sum<sse<v512<uint64_t>>>( testDataColumnSorted );
 
    print_columns(print_buffer_base::decimal, result, "Result");
    print_columns(print_buffer_base::decimal, result1, "Result");
-   print_columns(print_buffer_base::decimal, result2, "Result");
 
    return 0;
 }
