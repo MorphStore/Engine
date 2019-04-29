@@ -255,7 +255,7 @@ public:
         if ( offset_from_alignment != IDEAL_OFFSET) {
             // align
             aligned_ptr = given_ptr - offset_from_alignment + ALLOCATION_SIZE;
-            unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr);
+            unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr - sizeof(ChunkHeader));
             unneeded_memory_end   = end_of_region - aligned_ptr - ALLOCATION_SIZE;
 
             munmap(given_ptr, unneeded_memory_start);
