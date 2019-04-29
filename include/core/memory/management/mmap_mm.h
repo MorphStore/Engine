@@ -194,6 +194,8 @@ public:
                 continuousPageCounter = 0;
             }
         }
+
+	return nullptr;
     }
 
     char bitmap[LINUX_PAGE_SIZE];
@@ -255,7 +257,7 @@ public:
         if ( offset_from_alignment != IDEAL_OFFSET) {
             // align
             aligned_ptr = given_ptr - offset_from_alignment + ALLOCATION_SIZE;
-            unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr);
+            unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr - sizeof(ChunkHeader));
             unneeded_memory_end   = end_of_region - aligned_ptr - ALLOCATION_SIZE;
 
             munmap(given_ptr, unneeded_memory_start);
@@ -288,9 +290,29 @@ public:
         return ptr;
     }
 
-    void* allocatePages(size_t /*size*/, void* /*chunk_location*/)
+    void* allocatePages(size_t size, void* chunk_location)
     {
-        return nullptr;
+	ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
+        void* ptr = header->findNextAllocatableSlot(size);
+	header->setAllocated(ptr, size);
+        return ptr;
+    }
+
+    void* allocate(size_t size, void* chunk_location) 
+    {
+        if (size > ALLOCATION_SIZE) {
+            return allocateLarge(size);
+        }
+        else {
+            // TODO: concurrency
+	    if (chunk_location != nullptr) {
+	        return allocatePages(size, chunk_location);
+            }
+            else if (m_current_chunk == nullptr) {
+                m_current_chunk = allocateContinuous();
+	    }
+	    return allocatePages(size, m_current_chunk);
+        }
     }
 
     void* allocate(size_t size) override
@@ -302,7 +324,7 @@ public:
             // TODO: concurrency
             if (m_current_chunk == nullptr)
                 m_current_chunk = allocateContinuous();
-            return allocatePages(size, m_current_chunk);
+	    return allocatePages(size, m_current_chunk);
         }
     }
 
