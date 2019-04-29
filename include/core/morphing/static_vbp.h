@@ -20,6 +20,7 @@
  * @brief A compressed format using the vertical bit-packed layout with a fixed
  *        bit width for an entire column and the corresponding morph operators
  *        for compression and decompression.
+ * @todo Documentation.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
@@ -38,39 +39,62 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 namespace morphstore {
     
     // The vertical bit packed format with a static bit width.
-    template<unsigned bw>
+    template<unsigned t_bw, unsigned t_step>
     struct static_vbp_f : public format {
         static_assert(
-           (1 <= bw) && (bw <= std::numeric_limits<uint64_t>::digits),
-           "static_vbp: template parameter bw must satisfy 1 <= bw <= 64"
+                (1 <= t_bw) && (t_bw <= std::numeric_limits<uint64_t>::digits),
+                "static_vbp: template parameter t_bw must satisfy 1 <= t_bw <= 64"
+        );
+        static_assert(
+                t_step > 0,
+                "static_vbp: template parameter t_step must be greater than 0"
         );
         
         static void check_count_values(size_t p_CountValues) {
             // @todo Support arbitrary numbers of data elements.
-            if(p_CountValues % (sizeof(__m128i) * bitsPerByte))
-                throw std::runtime_error(
-                    "static_vbp_f: the number of data elements must be a "
-                    "multiple of the number of bits in a vector register"
-                );
+            const size_t bitsPerReg = t_step * sizeof(uint64_t) * bitsPerByte;
+            if(p_CountValues % bitsPerReg) {
+                std::stringstream s;
+                s
+                        << "static_vbp_f: the number of data elements ("
+                        << p_CountValues << ") must be a mutliple of the "
+                           "number of bits per (vector-)register ("
+                        << bitsPerReg << ')';
+                throw std::runtime_error(s.str());
+            }
         }
         
         static size_t get_size_max_byte(size_t p_CountValues) {
             check_count_values(p_CountValues);
-            return p_CountValues * bw / bitsPerByte;
+            return p_CountValues * t_bw / bitsPerByte;
         }
     };
     
-    template<unsigned bw>
+    /**
+     * @brief Morph-operator for the compression to the vertical bit-packed
+     * layout with a static bit width.
+     * 
+     * This operator is completely generic with respect to the configuration of
+     * its template parameters. However, invalid combinations will lack a
+     * template specialization of the `pack`-function and can, thus, be
+     * detected at compile-time.
+     */
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
     struct morph_t<
-            processing_style_t::vec128,
-            static_vbp_f<bw>,
+            t_ps,
+            static_vbp_f<t_bw, t_step>,
             uncompr_f
     > {
-        using out_f = static_vbp_f<bw>;
+        using out_f = static_vbp_f<t_bw, t_step>;
         using in_f = uncompr_f;
         
         static
@@ -78,56 +102,55 @@ namespace morphstore {
         apply(const column<in_f> * inCol) {
             const size_t count64 = inCol->get_count_values();
             out_f::check_count_values(count64);
-            const __m128i * in128 = inCol->get_data();
+            const uint8_t * in8 = inCol->get_data();
             
             auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
-            __m128i * out128 = outCol->get_data();
-            const __m128i * const initOut128 = out128;
+            uint8_t * out8 = outCol->get_data();
+            const uint8_t * const initOut8 = out8;
 
-            pack<bw>(
-                    in128,
-                    convert_size<uint64_t, __m128i>(count64),
-                    out128
-            );
+            pack<t_ps, t_bw, t_step>(in8, count64, out8);
 
-            outCol->set_meta_data(
-                    count64,
-                    convert_size<__m128i, uint8_t>(out128 - initOut128)
-            );
+            outCol->set_meta_data(count64, out8 - initOut8);
             
             return outCol;
         }
     };
     
-    template<unsigned bw>
+    /**
+     * @brief Morph-operator for the decompression from the vertical bit-packed
+     * layout with a static bit width.
+     * 
+     * This operator is completely generic with respect to the configuration of
+     * its template parameters. However, invalid combinations will lack a
+     * template specialization of the `unpack`-function and can, thus, be
+     * detected at compile-time.
+     */
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
     struct morph_t<
-            processing_style_t::vec128,
+            t_ps,
             uncompr_f,
-            static_vbp_f<bw>
+            static_vbp_f<t_bw, t_step>
     > {
         using out_f = uncompr_f;
-        using in_f = static_vbp_f<bw>;
+        using in_f = static_vbp_f<t_bw, t_step>;
         
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
             const size_t count64 = inCol->get_count_values();
-            const __m128i * in128 = inCol->get_data();
+            const uint8_t * in8 = inCol->get_data();
             
             auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
-            __m128i * out128 = outCol->get_data();
-            const __m128i * const initOut128 = out128;
+            uint8_t * out8 = outCol->get_data();
+            const uint8_t * const initOut8 = out8;
 
-            unpack<bw>(
-                    in128,
-                    out128,
-                    convert_size<uint64_t, __m128i>(count64)
-            );
-
-            outCol->set_meta_data(
-                    count64,
-                    convert_size<__m128i, uint8_t>(out128 - initOut128)
-            );
+            unpack<t_ps, t_bw, t_step>(in8, out8, count64);
+            
+            outCol->set_meta_data(count64, out8 - initOut8);
 
             return outCol;
         }

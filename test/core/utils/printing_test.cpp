@@ -30,6 +30,7 @@
 #include <core/utils/processing_style.h>
 
 #include <cstdint>
+#include <immintrin.h>
 #include <unordered_map>
 
 using namespace morphstore;
@@ -39,7 +40,10 @@ using namespace morphstore;
  */
 void small_example( ) {
     auto origCol = generate_sorted_unique(128);
-    auto comprCol = morph<processing_style_t::vec128, static_vbp_f<8> >(origCol);
+    auto comprCol = morph<
+            processing_style_t::vec128,
+            static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
+    >(origCol);
     auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
     
     print_columns(
@@ -92,6 +96,8 @@ void systematic_test_internal(
  * etc..
  */
 void systematic_test( ) {
+    // @todo use columngen here
+    
     const size_t countValues1 = 10;
     const size_t sizeByte1 = countValues1 * sizeof( uint64_t );
     auto col1 = new column< uncompr_f >( sizeByte1 );

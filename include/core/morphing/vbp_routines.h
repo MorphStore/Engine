@@ -22,12 +22,19 @@
  * @todo Somehow include the name of the layout into the way to access these
  *       routines (namespace, struct, name prefix, ...), because we will have
  *       other layouts in the future.
+ * @todo It would be great if we could derive the vector datatype (e.g.
+ *       __m128i) from the processing style. Then we would not require uint8_t*
+ *       parameters and it would also be easier for the callers.
+ * @todo Documentation.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
 #define MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
 
 #include <core/utils/basic_types.h>
+#include <core/utils/math.h>
+#include <core/utils/preprocessor.h>
+#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <immintrin.h>
@@ -35,268 +42,407 @@
 
 namespace morphstore {
     
-    // @todo efficient implementation (for now, it must merely work)
-    template< unsigned bw >
-    inline void pack( const __m128i * & in128, size_t countIn128, __m128i * & out128 ) {
-        __m128i tmp = _mm_setzero_si128( );
-        unsigned bitpos = 0;
-        const __m128i * const endIn128 = in128 + countIn128;
-        const size_t countBits = std::numeric_limits< uint64_t >::digits;
-        while( in128 < endIn128 ) {
-            while( bitpos + bw <= countBits ) { // as long as the next vector still fits
-                tmp = _mm_or_si128( tmp, _mm_slli_epi64( _mm_load_si128( in128++ ), bitpos ) );
-                bitpos += bw;
+    // ************************************************************************
+    // Packing routines
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Interfaces
+    // ------------------------------------------------------------------------
+    
+    // Struct for partial template specialization.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    struct pack_t {
+        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+                const uint8_t * & in8,
+                size_t countIn64,
+                uint8_t * & out8
+        ) = delete;
+    };
+    
+    // Convenience function.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack(
+            const uint8_t * & in8,
+            size_t countIn64,
+            uint8_t * & out8
+    ) {
+        pack_t<t_ps, t_bw, t_step>::apply(in8, countIn64, out8);
+    }
+    
+    
+    // ------------------------------------------------------------------------
+    // Template specializations.
+    // ------------------------------------------------------------------------
+    
+    template<unsigned t_bw>
+    struct pack_t<
+            processing_style_t::vec128,
+            t_bw,
+            sizeof(__m128i) / sizeof(uint64_t)
+    > {
+        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+                const uint8_t * & in8,
+                size_t countIn64,
+                uint8_t * & out8
+        ) {
+            const __m128i * in128 = reinterpret_cast<const __m128i *>(in8);
+            const size_t countIn128 = convert_size<uint64_t, __m128i>(countIn64);
+            __m128i * out128 = reinterpret_cast<__m128i *>(out8);
+
+            __m128i tmp = _mm_setzero_si128();
+            unsigned bitpos = 0;
+            const __m128i * const endIn128 = in128 + countIn128;
+            const size_t countBits = std::numeric_limits<uint64_t>::digits;
+            while(in128 < endIn128) {
+                while(bitpos + t_bw <= countBits) { // as long as the next vector still fits
+                    tmp = _mm_or_si128(
+                            tmp,
+                            _mm_slli_epi64(
+                                    _mm_load_si128(in128++),
+                                    bitpos
+                            )
+                    );
+                    bitpos += t_bw;
+                }
+                if(bitpos == countBits) {
+                    _mm_store_si128(out128++, tmp);
+                    tmp = _mm_setzero_si128();
+                    bitpos = 0;
+                }
+                else { // bitpos < countBits
+                    const __m128i tmp2 = _mm_load_si128(in128++);
+                    tmp = _mm_or_si128(tmp, _mm_slli_epi64(tmp2, bitpos));
+                    _mm_store_si128(out128++, tmp);
+                    tmp = _mm_srli_epi64(tmp2, countBits - bitpos);
+                    bitpos = bitpos + t_bw - countBits;
+                }
             }
-            if( bitpos == countBits ) {
-                _mm_store_si128( out128++, tmp );
-                tmp = _mm_setzero_si128( );
-                bitpos = 0;
-            }
-            else { // bitpos < countBits
-                const __m128i tmp2 = _mm_load_si128( in128++ );
-                tmp = _mm_or_si128( tmp, _mm_slli_epi64( tmp2, bitpos ) );
-                _mm_store_si128( out128++, tmp );
-                tmp = _mm_srli_epi64( tmp2, countBits - bitpos );
-                bitpos = bitpos + bw - countBits;
-            }
+
+            in8 = reinterpret_cast<const uint8_t *>(in128);
+            out8 = reinterpret_cast<uint8_t *>(out128);
+        };
+    };
+    
+    
+    // ------------------------------------------------------------------------
+    // Selection of the right routine at run-time.
+    // ------------------------------------------------------------------------
+    
+    template<
+            processing_style_t t_ps,
+            unsigned t_step
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack_switch(
+            unsigned bitwidth,
+            const uint8_t * & in8,
+            size_t inCount64,
+            uint8_t * & out8
+    ) {
+        switch(bitwidth) {
+            // Generated with Python:
+            // for bw in range(1, 64+1):
+            //   print("case {: >2}: pack<t_ps, {: >2}, t_step>(in8, inCount64, out8); break;".format(bw, bw))
+            case  1: pack<t_ps,  1, t_step>(in8, inCount64, out8); break;
+            case  2: pack<t_ps,  2, t_step>(in8, inCount64, out8); break;
+            case  3: pack<t_ps,  3, t_step>(in8, inCount64, out8); break;
+            case  4: pack<t_ps,  4, t_step>(in8, inCount64, out8); break;
+            case  5: pack<t_ps,  5, t_step>(in8, inCount64, out8); break;
+            case  6: pack<t_ps,  6, t_step>(in8, inCount64, out8); break;
+            case  7: pack<t_ps,  7, t_step>(in8, inCount64, out8); break;
+            case  8: pack<t_ps,  8, t_step>(in8, inCount64, out8); break;
+            case  9: pack<t_ps,  9, t_step>(in8, inCount64, out8); break;
+            case 10: pack<t_ps, 10, t_step>(in8, inCount64, out8); break;
+            case 11: pack<t_ps, 11, t_step>(in8, inCount64, out8); break;
+            case 12: pack<t_ps, 12, t_step>(in8, inCount64, out8); break;
+            case 13: pack<t_ps, 13, t_step>(in8, inCount64, out8); break;
+            case 14: pack<t_ps, 14, t_step>(in8, inCount64, out8); break;
+            case 15: pack<t_ps, 15, t_step>(in8, inCount64, out8); break;
+            case 16: pack<t_ps, 16, t_step>(in8, inCount64, out8); break;
+            case 17: pack<t_ps, 17, t_step>(in8, inCount64, out8); break;
+            case 18: pack<t_ps, 18, t_step>(in8, inCount64, out8); break;
+            case 19: pack<t_ps, 19, t_step>(in8, inCount64, out8); break;
+            case 20: pack<t_ps, 20, t_step>(in8, inCount64, out8); break;
+            case 21: pack<t_ps, 21, t_step>(in8, inCount64, out8); break;
+            case 22: pack<t_ps, 22, t_step>(in8, inCount64, out8); break;
+            case 23: pack<t_ps, 23, t_step>(in8, inCount64, out8); break;
+            case 24: pack<t_ps, 24, t_step>(in8, inCount64, out8); break;
+            case 25: pack<t_ps, 25, t_step>(in8, inCount64, out8); break;
+            case 26: pack<t_ps, 26, t_step>(in8, inCount64, out8); break;
+            case 27: pack<t_ps, 27, t_step>(in8, inCount64, out8); break;
+            case 28: pack<t_ps, 28, t_step>(in8, inCount64, out8); break;
+            case 29: pack<t_ps, 29, t_step>(in8, inCount64, out8); break;
+            case 30: pack<t_ps, 30, t_step>(in8, inCount64, out8); break;
+            case 31: pack<t_ps, 31, t_step>(in8, inCount64, out8); break;
+            case 32: pack<t_ps, 32, t_step>(in8, inCount64, out8); break;
+            case 33: pack<t_ps, 33, t_step>(in8, inCount64, out8); break;
+            case 34: pack<t_ps, 34, t_step>(in8, inCount64, out8); break;
+            case 35: pack<t_ps, 35, t_step>(in8, inCount64, out8); break;
+            case 36: pack<t_ps, 36, t_step>(in8, inCount64, out8); break;
+            case 37: pack<t_ps, 37, t_step>(in8, inCount64, out8); break;
+            case 38: pack<t_ps, 38, t_step>(in8, inCount64, out8); break;
+            case 39: pack<t_ps, 39, t_step>(in8, inCount64, out8); break;
+            case 40: pack<t_ps, 40, t_step>(in8, inCount64, out8); break;
+            case 41: pack<t_ps, 41, t_step>(in8, inCount64, out8); break;
+            case 42: pack<t_ps, 42, t_step>(in8, inCount64, out8); break;
+            case 43: pack<t_ps, 43, t_step>(in8, inCount64, out8); break;
+            case 44: pack<t_ps, 44, t_step>(in8, inCount64, out8); break;
+            case 45: pack<t_ps, 45, t_step>(in8, inCount64, out8); break;
+            case 46: pack<t_ps, 46, t_step>(in8, inCount64, out8); break;
+            case 47: pack<t_ps, 47, t_step>(in8, inCount64, out8); break;
+            case 48: pack<t_ps, 48, t_step>(in8, inCount64, out8); break;
+            case 49: pack<t_ps, 49, t_step>(in8, inCount64, out8); break;
+            case 50: pack<t_ps, 50, t_step>(in8, inCount64, out8); break;
+            case 51: pack<t_ps, 51, t_step>(in8, inCount64, out8); break;
+            case 52: pack<t_ps, 52, t_step>(in8, inCount64, out8); break;
+            case 53: pack<t_ps, 53, t_step>(in8, inCount64, out8); break;
+            case 54: pack<t_ps, 54, t_step>(in8, inCount64, out8); break;
+            case 55: pack<t_ps, 55, t_step>(in8, inCount64, out8); break;
+            case 56: pack<t_ps, 56, t_step>(in8, inCount64, out8); break;
+            case 57: pack<t_ps, 57, t_step>(in8, inCount64, out8); break;
+            case 58: pack<t_ps, 58, t_step>(in8, inCount64, out8); break;
+            case 59: pack<t_ps, 59, t_step>(in8, inCount64, out8); break;
+            case 60: pack<t_ps, 60, t_step>(in8, inCount64, out8); break;
+            case 61: pack<t_ps, 61, t_step>(in8, inCount64, out8); break;
+            case 62: pack<t_ps, 62, t_step>(in8, inCount64, out8); break;
+            case 63: pack<t_ps, 63, t_step>(in8, inCount64, out8); break;
+            case 64: pack<t_ps, 64, t_step>(in8, inCount64, out8); break;
         }
     }
+    
+    
+    
+    // ************************************************************************
+    // Unpacking routines
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Interfaces
+    // ------------------------------------------------------------------------
+    
+    // Struct for partial template specialization.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    struct unpack_t {
+        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+                const uint8_t * & in8,
+                uint8_t * & out8,
+                size_t countOut64
+        ) = delete;
+    };
+    
+    // Convenience function.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack(
+            const uint8_t * & in8,
+            uint8_t * & out8,
+            size_t countOut64
+    ) {
+        unpack_t<t_ps, t_bw, t_step>::apply(in8, out8, countOut64);
+    }
+    
+    
+    // ------------------------------------------------------------------------
+    // Template specializations.
+    // ------------------------------------------------------------------------
+    
+    template<unsigned t_bw>
+    struct unpack_t<
+            processing_style_t::vec128,
+            t_bw,
+            sizeof(__m128i) / sizeof(uint64_t)
+    > {
+        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+                const uint8_t * & in8,
+                uint8_t * & out8,
+                size_t countOut64
+        ) {
+            const __m128i * in128 = reinterpret_cast<const __m128i *>(in8);
+            __m128i * out128 = reinterpret_cast<__m128i *>(out8);
+            const size_t countOut128 = convert_size<uint64_t, __m128i>(countOut64);
 
-    // @todo efficient implementation (for now, it must merely work)
-    template< unsigned bw >
-    inline void unpack( const __m128i * & in128, __m128i * & out128, size_t countOut128 ) {
-        const size_t countBits = std::numeric_limits< uint64_t >::digits;
-        const __m128i mask = _mm_set1_epi64x(
-            ( bw == countBits )
-            ? std::numeric_limits< uint64_t >::max( )
-            : ( static_cast< uint64_t>( 1 ) << bw ) - 1
-        );
+            const size_t countBits = std::numeric_limits<uint64_t>::digits;
+            const __m128i mask = _mm_set1_epi64x(
+                (t_bw == countBits)
+                ? std::numeric_limits<uint64_t>::max()
+                : (static_cast<uint64_t>(1) << t_bw) - 1
+            );
 
 #if 0
-        // This variant uses a store instruction at two points.
-        __m128i tmp;
-        unsigned bitpos = countBits;
-        const __m128i * const endOut128 = out128 + countOut128;
-        while( out128 < endOut128 ) {
-            if( bitpos == countBits ) {
-                tmp = _mm_load_si128( in128++ );
-                bitpos = 0;
+            // This variant uses a store instruction at two points.
+            __m128i tmp;
+            unsigned bitpos = countBits;
+            const __m128i * const endOut128 = out128 + countOut128;
+            while(out128 < endOut128) {
+                if(bitpos == countBits) {
+                    tmp = _mm_load_si128(in128++);
+                    bitpos = 0;
+                }
+                else { // bitpos < countBits
+                    const __m128i tmp2 = _mm_load_si128(in128++);
+                    _mm_store_si128(
+                        out128++,
+                        _mm_and_si128(
+                            mask,
+                            _mm_or_si128(
+                                _mm_slli_epi64(tmp2, countBits - bitpos),
+                                _mm_srli_epi64(tmp, bitpos)
+                            )
+                        )
+                    );
+                    tmp = tmp2;
+                    bitpos = bitpos + t_bw - countBits;
+                }
+                while(bitpos + t_bw <= countBits) {
+                    _mm_store_si128(
+                        out128++,
+                        _mm_and_si128(
+                            mask,
+                            _mm_srli_epi64(tmp, bitpos)
+                        )
+                    );
+                    bitpos += t_bw;
+                }
             }
-            else { // bitpos < countBits
-                const __m128i tmp2 = _mm_load_si128( in128++ );
-                _mm_store_si128(
-                    out128++,
-                    _mm_and_si128(
+#else
+            // This variant uses a store instruction at only one point.
+            __m128i nextOut = _mm_setzero_si128();
+            unsigned bitpos = countBits + t_bw;
+            const __m128i * const endOut128 = out128 + countOut128;
+            while(out128 < endOut128) {
+                __m128i tmp;
+                if(bitpos == countBits + t_bw) {
+                    tmp = _mm_load_si128(in128++);
+                    nextOut = _mm_and_si128(mask, tmp);
+                    bitpos = t_bw;
+                }
+                else { // bitpos > countBits && bitpos < countBits + t_bw
+                    tmp = _mm_load_si128(in128++);
+                    nextOut = _mm_and_si128(
                         mask,
                         _mm_or_si128(
-                            _mm_slli_epi64( tmp2, countBits - bitpos ),
-                            _mm_srli_epi64( tmp, bitpos )
+                            _mm_slli_epi64(tmp, countBits - bitpos + t_bw),
+                            nextOut
                         )
-                    )
-                );
-                tmp = tmp2;
-                bitpos = bitpos + bw - countBits;
-            }
-            while( bitpos + bw <= countBits ) {
-                _mm_store_si128(
-                    out128++,
-                    _mm_and_si128(
+                    );
+                    bitpos = bitpos - countBits;
+                }
+                while(bitpos <= countBits) {
+                    _mm_store_si128(out128++, nextOut);
+                    nextOut = _mm_and_si128(
                         mask,
-                        _mm_srli_epi64( tmp, bitpos )
-                    )
-                );
-                bitpos += bw;
+                        _mm_srli_epi64(tmp, bitpos)
+                    );
+                    bitpos += t_bw;
+                }
             }
-        }
-#else
-        // This variant uses a store instruction at only one point.
-        __m128i nextOut = _mm_setzero_si128( );
-        unsigned bitpos = countBits + bw;
-        const __m128i * const endOut128 = out128 + countOut128;
-        while( out128 < endOut128 ) {
-            __m128i tmp;
-            if( bitpos == countBits + bw ) {
-                tmp = _mm_load_si128( in128++ );
-                nextOut = _mm_and_si128( mask, tmp );
-                bitpos = bw;
-            }
-            else { // bitpos > countBits && bitpos < countBits + bw
-                tmp = _mm_load_si128( in128++ );
-                nextOut = _mm_and_si128(
-                    mask,
-                    _mm_or_si128(
-                        _mm_slli_epi64( tmp, countBits - bitpos + bw ),
-                        nextOut
-                    )
-                );
-                bitpos = bitpos - countBits;
-            }
-            while( bitpos <= countBits ) {
-                _mm_store_si128( out128++, nextOut );
-                nextOut = _mm_and_si128(
-                    mask,
-                    _mm_srli_epi64( tmp, bitpos )
-                );
-                bitpos += bw;
-            }
-        }
 #endif
-    }
+
+            in8 = reinterpret_cast<const uint8_t *>(in128);
+            out8 = reinterpret_cast<uint8_t *>(out128);
+        }
+    };
     
-    inline void pack_switch(
+    
+    // ------------------------------------------------------------------------
+    // Selection of the right routine at run-time.
+    // ------------------------------------------------------------------------
+    
+    template<
+            processing_style_t t_ps,
+            unsigned t_step
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_switch(
             unsigned bitwidth,
-            const __m128i * & in128,
-            size_t inCount128,
-            __m128i * & out128
+            const uint8_t * & in8,
+            uint8_t * & out8,
+            size_t outCount64
     ) {
         switch(bitwidth) {
             // Generated with Python:
             // for bw in range(1, 64+1):
-            //   print("case {: >2}: pack<{: >2}>(in128, inCount128, out128); break;".format(bw, bw))
-            case  1: pack< 1>(in128, inCount128, out128); break;
-            case  2: pack< 2>(in128, inCount128, out128); break;
-            case  3: pack< 3>(in128, inCount128, out128); break;
-            case  4: pack< 4>(in128, inCount128, out128); break;
-            case  5: pack< 5>(in128, inCount128, out128); break;
-            case  6: pack< 6>(in128, inCount128, out128); break;
-            case  7: pack< 7>(in128, inCount128, out128); break;
-            case  8: pack< 8>(in128, inCount128, out128); break;
-            case  9: pack< 9>(in128, inCount128, out128); break;
-            case 10: pack<10>(in128, inCount128, out128); break;
-            case 11: pack<11>(in128, inCount128, out128); break;
-            case 12: pack<12>(in128, inCount128, out128); break;
-            case 13: pack<13>(in128, inCount128, out128); break;
-            case 14: pack<14>(in128, inCount128, out128); break;
-            case 15: pack<15>(in128, inCount128, out128); break;
-            case 16: pack<16>(in128, inCount128, out128); break;
-            case 17: pack<17>(in128, inCount128, out128); break;
-            case 18: pack<18>(in128, inCount128, out128); break;
-            case 19: pack<19>(in128, inCount128, out128); break;
-            case 20: pack<20>(in128, inCount128, out128); break;
-            case 21: pack<21>(in128, inCount128, out128); break;
-            case 22: pack<22>(in128, inCount128, out128); break;
-            case 23: pack<23>(in128, inCount128, out128); break;
-            case 24: pack<24>(in128, inCount128, out128); break;
-            case 25: pack<25>(in128, inCount128, out128); break;
-            case 26: pack<26>(in128, inCount128, out128); break;
-            case 27: pack<27>(in128, inCount128, out128); break;
-            case 28: pack<28>(in128, inCount128, out128); break;
-            case 29: pack<29>(in128, inCount128, out128); break;
-            case 30: pack<30>(in128, inCount128, out128); break;
-            case 31: pack<31>(in128, inCount128, out128); break;
-            case 32: pack<32>(in128, inCount128, out128); break;
-            case 33: pack<33>(in128, inCount128, out128); break;
-            case 34: pack<34>(in128, inCount128, out128); break;
-            case 35: pack<35>(in128, inCount128, out128); break;
-            case 36: pack<36>(in128, inCount128, out128); break;
-            case 37: pack<37>(in128, inCount128, out128); break;
-            case 38: pack<38>(in128, inCount128, out128); break;
-            case 39: pack<39>(in128, inCount128, out128); break;
-            case 40: pack<40>(in128, inCount128, out128); break;
-            case 41: pack<41>(in128, inCount128, out128); break;
-            case 42: pack<42>(in128, inCount128, out128); break;
-            case 43: pack<43>(in128, inCount128, out128); break;
-            case 44: pack<44>(in128, inCount128, out128); break;
-            case 45: pack<45>(in128, inCount128, out128); break;
-            case 46: pack<46>(in128, inCount128, out128); break;
-            case 47: pack<47>(in128, inCount128, out128); break;
-            case 48: pack<48>(in128, inCount128, out128); break;
-            case 49: pack<49>(in128, inCount128, out128); break;
-            case 50: pack<50>(in128, inCount128, out128); break;
-            case 51: pack<51>(in128, inCount128, out128); break;
-            case 52: pack<52>(in128, inCount128, out128); break;
-            case 53: pack<53>(in128, inCount128, out128); break;
-            case 54: pack<54>(in128, inCount128, out128); break;
-            case 55: pack<55>(in128, inCount128, out128); break;
-            case 56: pack<56>(in128, inCount128, out128); break;
-            case 57: pack<57>(in128, inCount128, out128); break;
-            case 58: pack<58>(in128, inCount128, out128); break;
-            case 59: pack<59>(in128, inCount128, out128); break;
-            case 60: pack<60>(in128, inCount128, out128); break;
-            case 61: pack<61>(in128, inCount128, out128); break;
-            case 62: pack<62>(in128, inCount128, out128); break;
-            case 63: pack<63>(in128, inCount128, out128); break;
-            case 64: pack<64>(in128, inCount128, out128); break;
+            //   print("case {: >2}: unpack<t_ps, {: >2}, t_step>(in8, out8, outCount64); break;".format(bw, bw))
+            case  1: unpack<t_ps,  1, t_step>(in8, out8, outCount64); break;
+            case  2: unpack<t_ps,  2, t_step>(in8, out8, outCount64); break;
+            case  3: unpack<t_ps,  3, t_step>(in8, out8, outCount64); break;
+            case  4: unpack<t_ps,  4, t_step>(in8, out8, outCount64); break;
+            case  5: unpack<t_ps,  5, t_step>(in8, out8, outCount64); break;
+            case  6: unpack<t_ps,  6, t_step>(in8, out8, outCount64); break;
+            case  7: unpack<t_ps,  7, t_step>(in8, out8, outCount64); break;
+            case  8: unpack<t_ps,  8, t_step>(in8, out8, outCount64); break;
+            case  9: unpack<t_ps,  9, t_step>(in8, out8, outCount64); break;
+            case 10: unpack<t_ps, 10, t_step>(in8, out8, outCount64); break;
+            case 11: unpack<t_ps, 11, t_step>(in8, out8, outCount64); break;
+            case 12: unpack<t_ps, 12, t_step>(in8, out8, outCount64); break;
+            case 13: unpack<t_ps, 13, t_step>(in8, out8, outCount64); break;
+            case 14: unpack<t_ps, 14, t_step>(in8, out8, outCount64); break;
+            case 15: unpack<t_ps, 15, t_step>(in8, out8, outCount64); break;
+            case 16: unpack<t_ps, 16, t_step>(in8, out8, outCount64); break;
+            case 17: unpack<t_ps, 17, t_step>(in8, out8, outCount64); break;
+            case 18: unpack<t_ps, 18, t_step>(in8, out8, outCount64); break;
+            case 19: unpack<t_ps, 19, t_step>(in8, out8, outCount64); break;
+            case 20: unpack<t_ps, 20, t_step>(in8, out8, outCount64); break;
+            case 21: unpack<t_ps, 21, t_step>(in8, out8, outCount64); break;
+            case 22: unpack<t_ps, 22, t_step>(in8, out8, outCount64); break;
+            case 23: unpack<t_ps, 23, t_step>(in8, out8, outCount64); break;
+            case 24: unpack<t_ps, 24, t_step>(in8, out8, outCount64); break;
+            case 25: unpack<t_ps, 25, t_step>(in8, out8, outCount64); break;
+            case 26: unpack<t_ps, 26, t_step>(in8, out8, outCount64); break;
+            case 27: unpack<t_ps, 27, t_step>(in8, out8, outCount64); break;
+            case 28: unpack<t_ps, 28, t_step>(in8, out8, outCount64); break;
+            case 29: unpack<t_ps, 29, t_step>(in8, out8, outCount64); break;
+            case 30: unpack<t_ps, 30, t_step>(in8, out8, outCount64); break;
+            case 31: unpack<t_ps, 31, t_step>(in8, out8, outCount64); break;
+            case 32: unpack<t_ps, 32, t_step>(in8, out8, outCount64); break;
+            case 33: unpack<t_ps, 33, t_step>(in8, out8, outCount64); break;
+            case 34: unpack<t_ps, 34, t_step>(in8, out8, outCount64); break;
+            case 35: unpack<t_ps, 35, t_step>(in8, out8, outCount64); break;
+            case 36: unpack<t_ps, 36, t_step>(in8, out8, outCount64); break;
+            case 37: unpack<t_ps, 37, t_step>(in8, out8, outCount64); break;
+            case 38: unpack<t_ps, 38, t_step>(in8, out8, outCount64); break;
+            case 39: unpack<t_ps, 39, t_step>(in8, out8, outCount64); break;
+            case 40: unpack<t_ps, 40, t_step>(in8, out8, outCount64); break;
+            case 41: unpack<t_ps, 41, t_step>(in8, out8, outCount64); break;
+            case 42: unpack<t_ps, 42, t_step>(in8, out8, outCount64); break;
+            case 43: unpack<t_ps, 43, t_step>(in8, out8, outCount64); break;
+            case 44: unpack<t_ps, 44, t_step>(in8, out8, outCount64); break;
+            case 45: unpack<t_ps, 45, t_step>(in8, out8, outCount64); break;
+            case 46: unpack<t_ps, 46, t_step>(in8, out8, outCount64); break;
+            case 47: unpack<t_ps, 47, t_step>(in8, out8, outCount64); break;
+            case 48: unpack<t_ps, 48, t_step>(in8, out8, outCount64); break;
+            case 49: unpack<t_ps, 49, t_step>(in8, out8, outCount64); break;
+            case 50: unpack<t_ps, 50, t_step>(in8, out8, outCount64); break;
+            case 51: unpack<t_ps, 51, t_step>(in8, out8, outCount64); break;
+            case 52: unpack<t_ps, 52, t_step>(in8, out8, outCount64); break;
+            case 53: unpack<t_ps, 53, t_step>(in8, out8, outCount64); break;
+            case 54: unpack<t_ps, 54, t_step>(in8, out8, outCount64); break;
+            case 55: unpack<t_ps, 55, t_step>(in8, out8, outCount64); break;
+            case 56: unpack<t_ps, 56, t_step>(in8, out8, outCount64); break;
+            case 57: unpack<t_ps, 57, t_step>(in8, out8, outCount64); break;
+            case 58: unpack<t_ps, 58, t_step>(in8, out8, outCount64); break;
+            case 59: unpack<t_ps, 59, t_step>(in8, out8, outCount64); break;
+            case 60: unpack<t_ps, 60, t_step>(in8, out8, outCount64); break;
+            case 61: unpack<t_ps, 61, t_step>(in8, out8, outCount64); break;
+            case 62: unpack<t_ps, 62, t_step>(in8, out8, outCount64); break;
+            case 63: unpack<t_ps, 63, t_step>(in8, out8, outCount64); break;
+            case 64: unpack<t_ps, 64, t_step>(in8, out8, outCount64); break;
         }
     }
-    
-    inline void unpack_switch(
-            unsigned bitwidth,
-            const __m128i * & in128,
-            __m128i * & out128,
-            size_t outCount128
-    ) {
-        switch(bitwidth) {
-            // Generated with Python:
-            // for bw in range(1, 64+1):
-            //   print("case {: >2}: unpack<{: >2}>(in128, out128, outCount128); break;".format(bw, bw))
-            case  1: unpack< 1>(in128, out128, outCount128); break;
-            case  2: unpack< 2>(in128, out128, outCount128); break;
-            case  3: unpack< 3>(in128, out128, outCount128); break;
-            case  4: unpack< 4>(in128, out128, outCount128); break;
-            case  5: unpack< 5>(in128, out128, outCount128); break;
-            case  6: unpack< 6>(in128, out128, outCount128); break;
-            case  7: unpack< 7>(in128, out128, outCount128); break;
-            case  8: unpack< 8>(in128, out128, outCount128); break;
-            case  9: unpack< 9>(in128, out128, outCount128); break;
-            case 10: unpack<10>(in128, out128, outCount128); break;
-            case 11: unpack<11>(in128, out128, outCount128); break;
-            case 12: unpack<12>(in128, out128, outCount128); break;
-            case 13: unpack<13>(in128, out128, outCount128); break;
-            case 14: unpack<14>(in128, out128, outCount128); break;
-            case 15: unpack<15>(in128, out128, outCount128); break;
-            case 16: unpack<16>(in128, out128, outCount128); break;
-            case 17: unpack<17>(in128, out128, outCount128); break;
-            case 18: unpack<18>(in128, out128, outCount128); break;
-            case 19: unpack<19>(in128, out128, outCount128); break;
-            case 20: unpack<20>(in128, out128, outCount128); break;
-            case 21: unpack<21>(in128, out128, outCount128); break;
-            case 22: unpack<22>(in128, out128, outCount128); break;
-            case 23: unpack<23>(in128, out128, outCount128); break;
-            case 24: unpack<24>(in128, out128, outCount128); break;
-            case 25: unpack<25>(in128, out128, outCount128); break;
-            case 26: unpack<26>(in128, out128, outCount128); break;
-            case 27: unpack<27>(in128, out128, outCount128); break;
-            case 28: unpack<28>(in128, out128, outCount128); break;
-            case 29: unpack<29>(in128, out128, outCount128); break;
-            case 30: unpack<30>(in128, out128, outCount128); break;
-            case 31: unpack<31>(in128, out128, outCount128); break;
-            case 32: unpack<32>(in128, out128, outCount128); break;
-            case 33: unpack<33>(in128, out128, outCount128); break;
-            case 34: unpack<34>(in128, out128, outCount128); break;
-            case 35: unpack<35>(in128, out128, outCount128); break;
-            case 36: unpack<36>(in128, out128, outCount128); break;
-            case 37: unpack<37>(in128, out128, outCount128); break;
-            case 38: unpack<38>(in128, out128, outCount128); break;
-            case 39: unpack<39>(in128, out128, outCount128); break;
-            case 40: unpack<40>(in128, out128, outCount128); break;
-            case 41: unpack<41>(in128, out128, outCount128); break;
-            case 42: unpack<42>(in128, out128, outCount128); break;
-            case 43: unpack<43>(in128, out128, outCount128); break;
-            case 44: unpack<44>(in128, out128, outCount128); break;
-            case 45: unpack<45>(in128, out128, outCount128); break;
-            case 46: unpack<46>(in128, out128, outCount128); break;
-            case 47: unpack<47>(in128, out128, outCount128); break;
-            case 48: unpack<48>(in128, out128, outCount128); break;
-            case 49: unpack<49>(in128, out128, outCount128); break;
-            case 50: unpack<50>(in128, out128, outCount128); break;
-            case 51: unpack<51>(in128, out128, outCount128); break;
-            case 52: unpack<52>(in128, out128, outCount128); break;
-            case 53: unpack<53>(in128, out128, outCount128); break;
-            case 54: unpack<54>(in128, out128, outCount128); break;
-            case 55: unpack<55>(in128, out128, outCount128); break;
-            case 56: unpack<56>(in128, out128, outCount128); break;
-            case 57: unpack<57>(in128, out128, outCount128); break;
-            case 58: unpack<58>(in128, out128, outCount128); break;
-            case 59: unpack<59>(in128, out128, outCount128); break;
-            case 60: unpack<60>(in128, out128, outCount128); break;
-            case 61: unpack<61>(in128, out128, outCount128); break;
-            case 62: unpack<62>(in128, out128, outCount128); break;
-            case 63: unpack<63>(in128, out128, outCount128); break;
-            case 64: unpack<64>(in128, out128, outCount128); break;
-        }
-    }
-    
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H

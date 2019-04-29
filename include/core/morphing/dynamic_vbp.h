@@ -173,12 +173,14 @@ namespace morphstore {
                     outMeta8[blockIdx] = static_cast<uint8_t>(bw);
 
                     // Pack the data with that bit width.
-                    pack_switch(
-                            bw,
-                            in128,
-                            convert_size<uint64_t, __m128i>(t_BlockSize64),
-                            out128
-                    );
+                    const uint8_t * in8 = reinterpret_cast<const uint8_t *>(in128);
+                    uint8_t * out8 = reinterpret_cast<uint8_t *>(out128);
+                    pack_switch<
+                            processing_style_t::vec128,
+                            sizeof(__m128i) / sizeof(uint64_t)
+                    >(bw, in8, t_BlockSize64, out8);
+                    in128 = reinterpret_cast<const __m128i *>(in8);
+                    out128 = reinterpret_cast<__m128i *>(out8);
                 }
             }
 
@@ -229,13 +231,16 @@ namespace morphstore {
                         unsigned blockIdx = 0;
                         blockIdx < t_PageSizeBlocks;
                         blockIdx++
-                )
-                    unpack_switch(
-                            inMeta8[blockIdx],
-                            in128,
-                            out128,
-                            convert_size<uint64_t, __m128i>(t_BlockSize64)
-                    );
+                ) {
+                    const uint8_t * in8 = reinterpret_cast<const uint8_t *>(in128);
+                    uint8_t * out8 = reinterpret_cast<uint8_t *>(out128);
+                    unpack_switch<
+                            processing_style_t::vec128,
+                            sizeof(__m128i) / sizeof(uint64_t)
+                    >(inMeta8[blockIdx], in8, out8, t_BlockSize64);
+                    in128 = reinterpret_cast<const __m128i *>(in8);
+                    out128 = reinterpret_cast<__m128i *>(out8);
+                }
             }
 
             outCol->set_meta_data(

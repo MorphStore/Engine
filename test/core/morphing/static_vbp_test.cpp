@@ -34,6 +34,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <immintrin.h>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -42,7 +43,7 @@ using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-	MONITORING_CREATE_MONITOR( MONITORING_MAKE_MONITOR(bw), MONITORING_KEY_IDENTS("bitwidth"));
+    MONITORING_CREATE_MONITOR( MONITORING_MAKE_MONITOR(bw), MONITORING_KEY_IDENTS("bitwidth"));
     
     MONITORING_START_INTERVAL_FOR( "operatorTime", bw );
     
@@ -61,11 +62,22 @@ bool test( ) {
 
 #if 0
     // Using the morph_t structs directly.
-    auto comprCol = morph_t<processing_style_t::vec128, static_vbp_f<bw>, uncompr_f>::apply(origCol);
-    auto decomprCol = morph_t<processing_style_t::vec128, uncompr_f, static_vbp_f<bw> >::apply(comprCol);
+    auto comprCol = morph_t<
+            processing_style_t::vec128,
+            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>,
+            uncompr_f
+    >::apply(origCol);
+    auto decomprCol = morph_t<
+            processing_style_t::vec128,
+            uncompr_f,
+            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
+    >::apply(comprCol);
 #else
     // Using the convenience function wrapping the morph_t structs.
-    auto comprCol = morph<processing_style_t::vec128, static_vbp_f<bw>>(origCol);
+    auto comprCol = morph<
+            processing_style_t::vec128,
+            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
+    >(origCol);
     auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
 #endif
 	MONITORING_END_INTERVAL_FOR("operatorTime", bw);
@@ -157,7 +169,7 @@ int main( void ) {
     allGood = allGood && test<64>();
 #endif
 
-	MONITORING_PRINT_MONITORS(monitorCsvLog);
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
 	
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 

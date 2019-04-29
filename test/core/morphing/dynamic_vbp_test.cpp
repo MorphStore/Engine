@@ -144,6 +144,8 @@ int main( void ) {
     allGood = allGood && test<63>();
     allGood = allGood && test<64>();
 #endif
+    
+    std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 
     return !allGood;
 }
