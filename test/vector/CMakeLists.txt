@@ -1,3 +1,4 @@
+#[[
 if ( CTEST_ALL OR CTEST_VECTOR )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/vector_test_app )
 	add_executable( vector_test_app main.cpp )
@@ -16,4 +17,22 @@ if ( CTEST_ALL OR CTEST_VECTOR )
     target_link_libraries( vector_test_app PRIVATE "-ldl" )
     
     add_test( vector_test vector_test_app )
+endif()]]
+if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/agg_sum_app )
+    add_executable( agg_sum_app operators/agg_sum_whole_column_test.cpp )
+
+    target_compile_options( agg_sum_app PRIVATE
+                        -Wall
+                        -Wextra
+                        -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( agg_sum_app PRIVATE "-ldl" )
+
+    add_test( agg_sum_vectorized_test agg_sum_app )
 endif()

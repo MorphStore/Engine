@@ -16,6 +16,7 @@ namespace vector {
    struct vector_view {
       vector_view() = delete;
       using base_t          = T;
+      using base_type_size_bit = std::integral_constant<uint16_t, sizeof(T)<<3>;
       using size_bit        = std::integral_constant<uint16_t, BitWidth>;
       using size_byte       = std::integral_constant<uint16_t, (BitWidth>>3) >;
       using alignment       = std::integral_constant<size_t, size_byte::value>;
@@ -35,6 +36,7 @@ namespace vector {
 #define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) \
    using vector_element_count = typename VectorExtension::vector_helper_t::element_count; \
    using vector_base_t = typename VectorExtension::vector_helper_t::base_t; \
+   using vector_base_type_size_bit = typename VectorExtension::vector_helper_t::base_type_size_bit; \
    using vector_size_bit = typename VectorExtension::vector_helper_t::size_bit; \
    using vector_size_byte = typename VectorExtension::vector_helper_t::size_byte; \
    using vector_alignment = typename VectorExtension::vector_helper_t::alignment; \
