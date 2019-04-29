@@ -60,38 +60,50 @@ bool test( ) {
             false
     );
 
-#if 0
-    // Using the morph_t structs directly.
-    auto comprCol = morph_t<
-            processing_style_t::vec128,
-            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>,
-            uncompr_f
-    >::apply(origCol);
-    auto decomprCol = morph_t<
-            processing_style_t::vec128,
-            uncompr_f,
+    // Compress the data (using the scalar and the vec128 morph-operator).
+    auto comprColScalar = morph<
+            processing_style_t::scalar,
             static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
-    >::apply(comprCol);
-#else
-    // Using the convenience function wrapping the morph_t structs.
-    auto comprCol = morph<
+    >(origCol);
+    auto comprColVec128 = morph<
             processing_style_t::vec128,
             static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
     >(origCol);
-    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
-#endif
-	MONITORING_END_INTERVAL_FOR("operatorTime", bw);
-	MONITORING_START_INTERVAL_FOR("operatorTime", bw);
-	MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+    
+    // Comparison of the compressed columns.
+    const bool equalCompr = equality_check(
+            comprColScalar, comprColVec128
+    ).good();
+    
+    // Decompress the data (using the scalar and the vec128 morph-operator).
+    auto decomprColScalar = morph<processing_style_t::scalar, uncompr_f>(
+            comprColScalar
+    );
+    auto decomprColVec128 = morph<processing_style_t::vec128, uncompr_f>(
+            comprColVec128
+    );
+    
+    // Comparison of the decompressed columns.
+    const bool equalDecompr = equality_check(
+            decomprColScalar, decomprColVec128
+    ).good();
+    
+    MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+    MONITORING_START_INTERVAL_FOR("operatorTime", bw);
+    MONITORING_END_INTERVAL_FOR("operatorTime", bw);
 
-    const bool good = equality_check( origCol, decomprCol ).good( );
+    // Comparison of the decompressed and the original data.
+    const bool goodDecompr = equality_check(origCol, decomprColScalar).good();
+    
+    // Overall check.
+    const bool allGood = equalCompr && equalDecompr && goodDecompr;
     std::cout
             << std::setw(2) << bw << " bit: "
-            << equality_check::ok_str( good ) << std::endl;
-	MONITORING_ADD_BOOL_FOR("ok", good, bw);
-	MONITORING_ADD_BOOL_FOR("ok", good, bw);
+            << equality_check::ok_str(allGood) << std::endl;
+    MONITORING_ADD_BOOL_FOR("ok", allGood, bw);
+    MONITORING_ADD_BOOL_FOR("ok", allGood, bw);
 
-    return good;
+    return allGood;
 }
 
 int main( void ) {
