@@ -11,4 +11,3 @@ Dockerfile
 .DS_Store
 doc/doxygen/latex
 doc/doxygen/html
-test
