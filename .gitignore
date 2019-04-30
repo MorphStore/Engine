@@ -10,4 +10,5 @@ recentMorphStoreProjectConf.log
 Dockerfile
 .DS_Store
 doc/doxygen/latex
-doc/doxygen/html   
+doc/doxygen/html
+test
