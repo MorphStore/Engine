@@ -58,8 +58,10 @@ int main( void ) {
    /*const column<uncompr_f> **/ auto result = agg_sum<avx2<v256<uint64_t>>>( testDataColumnSorted );
    /*const column<uncompr_f> **/ auto result1 = agg_sum<sse<v128<uint64_t>>>( testDataColumnSorted );
 
-   print_columns(print_buffer_base::decimal, result, "Result");
-   print_columns(print_buffer_base::decimal, result1, "Result");
+   const bool allGood =
+      ( ((uint64_t*)result->get_data())[0] == ((TEST_DATA_COUNT*TEST_DATA_COUNT + TEST_DATA_COUNT ) / 2)) &&
+      ( ((uint64_t*)result1->get_data())[0] == ((TEST_DATA_COUNT*TEST_DATA_COUNT + TEST_DATA_COUNT ) / 2));
 
-   return 0;
+
+   return !allGood;
 }

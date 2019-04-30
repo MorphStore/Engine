@@ -32,7 +32,9 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/processing_style.h>
 
+#ifndef MSV_NO_SELFMANAGED_MEMORY
 #include <core/memory/management/allocators/global_scope_allocator.h>
+#endif
 
 #include <cstdint>
 #include <map>
@@ -92,12 +94,14 @@ group<processing_style_t::scalar>(
     if(inGrCol == nullptr) {
         // Unary group-operator.
         std::unordered_map<
-           uint64_t,
-           uint64_t,
-           std::hash<uint64_t>,
-           std::equal_to<uint64_t>,
-           global_scope_stdlib_allocator<std::pair<uint64_t, uint64_t >>
-           > groupIds;
+            uint64_t,
+            uint64_t
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+            , std::hash<uint64_t>
+            , std::equal_to<uint64_t>
+            , global_scope_stdlib_allocator<std::pair<uint64_t, uint64_t >>
+#endif
+            > groupIds;
         for(unsigned i = 0; i < inDataCount; i++) {
             uint64_t & groupId = groupIds[inData[i]];
             if(!groupId) { // The data item(key) was not found.
