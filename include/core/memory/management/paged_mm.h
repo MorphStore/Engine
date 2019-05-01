@@ -97,6 +97,9 @@ public:
                 current_page = reinterpret_cast<Page*>(loc);
                 return current_page->allocate(size);
             }
+            else {
+                return loc;
+            }
         }
         
         return nullptr;
