@@ -35,6 +35,46 @@ namespace vector{
             return _mm256_movemask_pd((__m256d)_mm256_cmpeq_epi64(p_vec1,p_vec2));
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx2)" );
+             
+            return _mm256_movemask_pd((__m256d)_mm256_cmpgt_epi64(p_vec1,p_vec2));
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx2)" );
+             
+            return _mm256_movemask_pd((__m256d)_mm256_cmpgt_epi64(p_vec2,p_vec1));
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_movemask_pd((__m256d)(_mm256_or_si256(_mm256_cmpeq_epi64(p_vec1,p_vec2),_mm256_cmpgt_epi64(p_vec1,p_vec2))));
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_movemask_pd((__m256d)(_mm256_or_si256(_mm256_cmpeq_epi64(p_vec1,p_vec2),_mm256_cmpgt_epi64(p_vec2,p_vec1))));
+
+        }
     };
     
     template<typename T>
@@ -47,6 +87,46 @@ namespace vector{
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx2)" );
              
             return _mm256_movemask_ps((__m256)_mm256_cmpeq_epi32(p_vec1,p_vec2));
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx2)" );
+             
+            return _mm256_movemask_ps((__m256)_mm256_cmpgt_epi32(p_vec1,p_vec2));
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx2)" );
+             
+            return _mm256_movemask_ps((__m256)_mm256_cmpgt_epi32(p_vec2,p_vec1));
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_movemask_ps((__m256)(_mm256_or_si256(_mm256_cmpeq_epi32(p_vec1,p_vec2),_mm256_cmpgt_epi32(p_vec1,p_vec2))));
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx2< v256< uint64_t > >::vector_t p_vec1,  avx2< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_movemask_ps((__m256)(_mm256_or_si256(_mm256_cmpeq_epi32(p_vec1,p_vec2),_mm256_cmpgt_epi32(p_vec2,p_vec1))));
 
         }
     };

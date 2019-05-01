@@ -34,6 +34,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <immintrin.h>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -42,7 +43,9 @@ using namespace morphstore;
 
 template< unsigned bw >
 bool test( ) {
-    MONITOR_START_INTERVAL( "operatorTime" + std::to_string( bw ) );
+    MONITORING_CREATE_MONITOR( MONITORING_MAKE_MONITOR(bw), MONITORING_KEY_IDENTS("bitwidth"));
+    
+    MONITORING_START_INTERVAL_FOR( "operatorTime", bw );
     
     // Generate some data.
     const uint64_t minVal = (bw == 1)
@@ -57,24 +60,50 @@ bool test( ) {
             false
     );
 
-#if 0
-    // Using the morph_t structs directly.
-    auto comprCol = morph_t<processing_style_t::vec128, static_vbp_f<bw>, uncompr_f>::apply(origCol);
-    auto decomprCol = morph_t<processing_style_t::vec128, uncompr_f, static_vbp_f<bw> >::apply(comprCol);
-#else
-    // Using the convenience function wrapping the morph_t structs.
-    auto comprCol = morph<processing_style_t::vec128, static_vbp_f<bw>>(origCol);
-    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
-#endif
+    // Compress the data (using the scalar and the vec128 morph-operator).
+    auto comprColScalar = morph<
+            processing_style_t::scalar,
+            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
+    >(origCol);
+    auto comprColVec128 = morph<
+            processing_style_t::vec128,
+            static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
+    >(origCol);
     
-    const bool good = equality_check( origCol, decomprCol ).good( );
+    // Comparison of the compressed columns.
+    const bool equalCompr = equality_check(
+            comprColScalar, comprColVec128
+    ).good();
+    
+    // Decompress the data (using the scalar and the vec128 morph-operator).
+    auto decomprColScalar = morph<processing_style_t::scalar, uncompr_f>(
+            comprColScalar
+    );
+    auto decomprColVec128 = morph<processing_style_t::vec128, uncompr_f>(
+            comprColVec128
+    );
+    
+    // Comparison of the decompressed columns.
+    const bool equalDecompr = equality_check(
+            decomprColScalar, decomprColVec128
+    ).good();
+    
+    MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+    MONITORING_START_INTERVAL_FOR("operatorTime", bw);
+    MONITORING_END_INTERVAL_FOR("operatorTime", bw);
+
+    // Comparison of the decompressed and the original data.
+    const bool goodDecompr = equality_check(origCol, decomprColScalar).good();
+    
+    // Overall check.
+    const bool allGood = equalCompr && equalDecompr && goodDecompr;
     std::cout
             << std::setw(2) << bw << " bit: "
-            << equality_check::ok_str( good ) << std::endl;
-    MONITOR_END_INTERVAL( "operatorTime" + std::to_string( bw ) );
+            << equality_check::ok_str(allGood) << std::endl;
+    MONITORING_ADD_BOOL_FOR("ok", allGood, bw);
+    MONITORING_ADD_BOOL_FOR("ok", allGood, bw);
 
-    MONITOR_ADD_PROPERTY( "operatorParam" + std::to_string( bw ), bw );
-    return good;
+    return allGood;
 }
 
 int main( void ) {
@@ -152,36 +181,8 @@ int main( void ) {
     allGood = allGood && test<64>();
 #endif
 
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_ALL( monitorShellLog, true )
-    
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog );
-
-    std::cout << "#### Testing All Counters with sorting" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog, true );
-
-    std::cout << "#### Testing All Counters not sorted" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog );
-
-    std::cout << "#### Testing All Counters with sorting" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog, true );
-
-    std::cout << "#### Testing Single Counter" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog, "operatorTime43" );
-
-    std::cout << "#### Testing All Counter" << std::endl;
-    MONITOR_PRINT_COUNTERS( monitorShellLog );
-
-    std::cout << "#### Testing Single Parameter" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog, "operatorParam8" );
-
-    std::cout << "#### Testing All Parameters" << std::endl;
-    MONITOR_PRINT_PROPERTIES( monitorShellLog );
-
-    std::cout << "#### Testing Print All" << std::endl;
-    MONITOR_PRINT_ALL( monitorShellLog )
-
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
+	
     std::cout << "overall: " << equality_check::ok_str(allGood) << std::endl;
 
 #ifdef MSV_USE_MONITORING

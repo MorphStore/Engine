@@ -35,6 +35,48 @@ namespace vector{
             return _mm512_cmpeq_epi64_mask(p_vec1,p_vec2);
 
         }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmplt_epi64_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmpgt_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmpge_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmple_epi64_mask(p_vec1,p_vec2);
+
+        }
+                
+        
     };
     
     template<typename T>
@@ -47,6 +89,259 @@ namespace vector{
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
              
             return _mm512_cmpeq_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmplt_epi32_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmpgt_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmpge_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm512_cmple_epi32_mask(p_vec1,p_vec2);
+
+        }
+    };
+    
+    template<typename T>
+    struct compare<avx512<v256<T>>, 64> {
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        equality( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx512)" );
+             
+            return _mm256_cmpeq_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmplt_epi64_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmpgt_epi64_mask(p_vec1,p_vec2);
+
+        } 
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmpge_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmple_epi64_mask(p_vec1,p_vec2);
+
+        }
+    };
+     
+    template<typename T>
+    struct compare<avx512<v128<T>>, 64> {
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        equality( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx512)" );
+             
+            return _mm_cmpeq_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm_cmplt_epi64_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm_cmpgt_epi64_mask(p_vec1,p_vec2);
+
+        } 
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm_cmpge_epi64_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
+             
+            return _mm_cmple_epi64_mask(p_vec1,p_vec2);
+
+        }
+    };
+    
+    
+    template<typename T>
+    struct compare<avx512<v256<T>>, 32> {
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        equality( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
+             
+            return _mm256_cmpeq_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmplt_epi32_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmpgt_epi32_mask(p_vec1,p_vec2);
+
+        } 
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmpge_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm256_cmple_epi32_mask(p_vec1,p_vec2);
+
+        }
+    };
+     
+    template<typename T>
+    struct compare<avx512<v128<T>>, 32> {
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        equality( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
+             
+            return _mm_cmpeq_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm_cmplt_epi32_mask(p_vec1,p_vec2);
+
+        }
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm_cmpgt_epi32_mask(p_vec1,p_vec2);
+
+        } 
+                
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        greaterequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm_cmpge_epi32_mask(p_vec1,p_vec2);
+
+        }
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_INLINE
+        static int
+        lessequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
+            trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
+             
+            return _mm_cmple_epi32_mask(p_vec1,p_vec2);
 
         }
     };

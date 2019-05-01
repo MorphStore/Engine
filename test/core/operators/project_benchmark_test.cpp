@@ -37,11 +37,20 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <tuple>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 using namespace morphstore;
+
+#ifdef MSV_USE_MONITORING
+const std::string colInDataCount    ("inDataCount");
+const std::string colInPosCount     ("inPosCount");
+const std::string colProcessingStyle("processingStyle");
+const std::string colInPosFormat    ("inPosFormat");
+const std::string colRuntime        ("runtime[µs]");
+const std::string colCheck          ("check");
+#endif
 
 /**
  * @brief A wrapper for calling a template specialization of the
@@ -65,7 +74,8 @@ using namespace morphstore;
  * @param p_InDataCol The project-operator's uncompressed input data column.
  * @param p_InPosCol The project-operator's uncompressed input positions
  * column.
- * @param p_CounterName The name of the monitoring counter to use.
+ * @param p_ProcessingStyle The name of the processing style to use.
+ * @param p_InPosFormat The name of the input positions format to use.
  * @return The project-operator's uncompressed output data column.
  */
 template<
@@ -77,28 +87,27 @@ const column<uncompr_f> *
 measure_project(
         const column<uncompr_f> * const p_InDataCol,
         const column<uncompr_f> * const p_InPosCol,
-        const std::string & p_CounterName
+        MSV_CXX_ATTRIBUTE_PPUNUSED const std::string & p_ProcessingStyle,
+        MSV_CXX_ATTRIBUTE_PPUNUSED const std::string & p_InPosFormat
 ) {
     // Note that this is a no-op if t_in_pos_f is uncompr_f, i.e., if the
     // operator variant expects its input positions in the uncompressed format.
     auto inPosColMorphed = morph<t_ps_morph, t_in_pos_f>(p_InPosCol);
     
-#ifndef MSV_USE_MONITORING
-    // @todo This is ugly.
-    // p_CounterName would only be used if monitoring is enabled. To prevent a
-    // compiler error due to an unused variable, we must do something with it
-    // even if monitoring is disabled.
-    std::cout
-            << "(the monitoring counter's name would have been '"
-            << p_CounterName << "') ";
-#endif
-    
     // Execution of the operator, wrapped into runtime measurement.
-    MONITOR_START_INTERVAL(p_CounterName)
+#ifdef MSV_USE_MONITORING
+    const size_t inDataCount = p_InDataCol->get_count_values();
+    const size_t inPosCount = p_InPosCol->get_count_values();
+#endif
+    MONITORING_START_INTERVAL_FOR(
+        colRuntime, inDataCount, inPosCount, p_ProcessingStyle, p_InPosFormat
+    );
     auto outPosCol = project<t_ps_project, uncompr_f, uncompr_f, t_in_pos_f>(
             p_InDataCol, inPosColMorphed
     );
-    MONITOR_END_INTERVAL(p_CounterName)
+    MONITORING_END_INTERVAL_FOR(
+        colRuntime, inDataCount, inPosCount, p_ProcessingStyle, p_InPosFormat
+    );
             
     // The morphed input positions can be freed if the morph-operator was a
     // no-op.
@@ -116,25 +125,28 @@ typedef const column<uncompr_f> *
 (*project_fp_t) (
         const column<uncompr_f> * const,
         const column<uncompr_f> * const,
+        const std::string &,
         const std::string &
 );
 
 // @todo Not sure if macros can be documented this way.
 /**
- * @brief Expands to an initializer list for a pair consisting of a function
- * pointer to (the wrapper of) the specified project-operator variant and a
- * suitable textual representation, i.e., name, of the variant.
+ * @brief Expands to an initializer list for a tuple consisting of a function
+ * pointer to (the wrapper of) the specified project-operator variant and
+ * textual representations of the processing style and input position column
+ * format to use.
  * 
  * This macro's parameters are the template parameters of the function
  * `measure_project` above.
  */
-#define PTR_AND_NAME(t_ps_morph, t_ps_project, t_in_pos_f) { \
+#define MAKE_VARIANT(t_ps_morph, t_ps_project, t_in_pos_f) { \
     &measure_project< \
             processing_style_t::t_ps_morph, \
             processing_style_t::t_ps_project, \
             t_in_pos_f \
     >, \
-    #t_ps_project ", " #t_in_pos_f \
+    #t_ps_project, \
+    #t_in_pos_f \
 }
 
 /**
@@ -153,7 +165,7 @@ typedef const column<uncompr_f> *
  * otherwise.
  */
 bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
-    std::cout
+    std::cerr
             << "Setting" << std::endl
             << "\tParameters" << std::endl
             << "\t\tinDataCount:\t " << p_InDataCount << std::endl
@@ -162,10 +174,10 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
     // ------------------------------------------------------------------------
     // Data generation.
     // ------------------------------------------------------------------------
-    std::cout
+    std::cerr
             << "\tData generation" << std::endl
             << "\t\tstarted... ";
-    std::cout.flush();
+    std::cerr.flush();
     auto inDataCol = generate_with_distr(
             p_InDataCount,
             std::uniform_int_distribution<uint64_t>(123, 456),
@@ -176,7 +188,7 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
             std::uniform_int_distribution<uint64_t>(0, p_InDataCount - 1),
             false
     );
-    std::cout << "done" << std::endl;
+    std::cerr << "done" << std::endl;
     
     // ------------------------------------------------------------------------
     // Variant specification.
@@ -184,15 +196,17 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
     // Each variant is a pair. The first element is a pointer to the function
     // to call, the second element is the name of the variant (to be used as
     // the monitoring counter name).
-    std::vector<std::pair<project_fp_t, std::string> > variants = {
-        PTR_AND_NAME(scalar, scalar, uncompr_f),
-        PTR_AND_NAME(scalar, vec128, uncompr_f),
-        PTR_AND_NAME(scalar, vec256, uncompr_f)
+    std::vector<
+            std::tuple<project_fp_t, std::string, std::string>
+    > variants = {
+        MAKE_VARIANT(scalar, scalar, uncompr_f),
+        MAKE_VARIANT(scalar, vec128, uncompr_f),
+        MAKE_VARIANT(scalar, vec256, uncompr_f)
     };
     // Just for the sake of a nicely formatted output.
     size_t maxLen = 0;
     for(auto v : variants) {
-        const size_t len = v.second.length();
+        const size_t len = std::get<1>(v).size() + 2 + std::get<2>(v).size();
         if(len > maxLen)
             maxLen = len;
     }
@@ -204,22 +218,45 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
     const column<uncompr_f> * outDataCol_ref = nullptr;
     // Whether so far all variants yielded exactly the same output.
     bool allGood = true;
-    std::cout
+    std::cerr
             << "\tVariant execution" << std::endl;
     for(auto v : variants) {
-        std::cout
-                << "\t\t" << std::setw(maxLen) << std::left << v.second
-                << " started... "; 
-        std::cout.flush();
+        const std::string & vProcessingStyle = std::get<1>(v);
+        const std::string & vInPosFormat = std::get<2>(v);
+        
+        MONITORING_CREATE_MONITOR(
+                MONITORING_MAKE_MONITOR(
+                        p_InDataCount,
+                        p_InPosCount,
+                        vProcessingStyle,
+                        vInPosFormat
+                ),
+                MONITORING_KEY_IDENTS(
+                        colInDataCount,
+                        colInPosCount,
+                        colProcessingStyle,
+                        colInPosFormat
+                )
+        );
+        std::cerr
+                << "\t\t" << std::setw(maxLen) << std::left
+                << (vProcessingStyle + ", " + vInPosFormat) << " started... ";
+        std::cerr.flush();
         // Calling the function of the variant.
-        auto outDataCol = (*(v.first))(inDataCol, inPosCol, v.second);
-        std::cout << "done -> ";
+        auto outDataCol = (*(std::get<0>(v)))(
+                inDataCol, inPosCol, vProcessingStyle, vInPosFormat
+        );
+        std::cerr << "done -> ";
         if(outDataCol_ref == nullptr) {
             // The first variant serves as the reference (w.r.t. correctness)
             // for all following variants. Thus, we have to keep its output
             // till the end.
             outDataCol_ref = outDataCol;
-            std::cout << "reference" << std::endl;
+            std::cerr << "reference" << std::endl;
+            MONITORING_ADD_INT_FOR(
+                    colCheck, -1,
+                    p_InDataCount, p_InPosCount, vProcessingStyle, vInPosFormat
+            );
         }
         else {
             // All following variants are compared to the reference.
@@ -229,13 +266,17 @@ bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
             // Print if this variant yielded exactly the same output as the
             // reference.
             const bool good = ec.good();
-            std::cout << equality_check::ok_str(good) << std::endl;
+            std::cerr << equality_check::ok_str(good) << std::endl;
             if(!good)
-                std::cout
+                std::cerr
                         << std::endl
                         << "\t\t\tdetails:" << std::endl
                         << ec << std::endl;
             allGood = allGood && good;
+            MONITORING_ADD_INT_FOR(
+                    colCheck, good,
+                    p_InDataCount, p_InPosCount, vProcessingStyle, vInPosFormat
+            );
         }
     }
     // Now we can free the reference output.
@@ -265,16 +306,13 @@ int main(void) {
     curGood = evaluate_variants(1000 * 1000, 128 * 1000);
     allGood = allGood && curGood;
     
-    // Output of the runtimes.
-    // @todo These should be listed above, but the monitoring does not support
-    // this at the moment.
-    std::cout << "Runtimes [µs]" << std::endl;
-    MONITOR_PRINT_ALL(monitorShellLog, true)
-    
     // Summary.
-    std::cout
+    std::cerr
             << "Summary" << std::endl
             << '\t' << (allGood ? "all ok" : "some NOT OK") << std::endl;
+    
+    // Output of the runtimes.
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
     
     return !allGood;
 #else

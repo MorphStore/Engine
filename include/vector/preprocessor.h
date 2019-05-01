@@ -1,0 +1,10 @@
+//
+// Created by jpietrzyk on 26.04.19.
+//
+
+#ifndef MORPHSTORE_VECTOR_PREPROCESSOR_H
+#define MORPHSTORE_VECTOR_PREPROCESSOR_H
+
+#define VECTORLIB_CXX_ATTRIBUTE_PPUNUSED __attribute__((unused))
+
+#endif //MORPHSTORE_VECTOR_PREPROCESSOR_H

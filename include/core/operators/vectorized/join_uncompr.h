@@ -19,6 +19,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/processing_style.h>
+#include <core/operators/vectorized/select_uncompr.h>
 
 #include <cstdint>
 #include <tuple>
@@ -43,7 +44,7 @@ nested_loop_join<processing_style_t::vec256>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                processing_style_t::scalar,
+                processing_style_t::vec256,
                 uncompr_f,
                 uncompr_f
         >(
@@ -121,6 +122,7 @@ nested_loop_join<processing_style_t::vec256>(
         //Increase IDs for the left relation
         leftIDs=_mm256_add_epi64(leftIDs,add);
     }
+    
     const size_t outSize = iOut * sizeof(uint64_t);//How large is our result set?
     
     //Store output size in meta data of the output columns

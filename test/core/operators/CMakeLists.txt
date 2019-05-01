@@ -11,7 +11,6 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_test_app )
 	
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/select_test_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operation_lookup_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operation_summation_test_app )
 IF(CAVXTWO OR CAVX512)
         FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_benchmark_test_app )
@@ -32,7 +31,6 @@ ENDIF(CAVXTWO  OR CAVX512)
 	add_executable( project_test_app project_test.cpp )
 	
 	add_executable( select_test_app select_test.cpp )
-	add_executable( operation_lookup_test_app lookup_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
 IF(CAVXTWO  OR CAVX512)
         add_executable( project_benchmark_test_app project_benchmark_test.cpp )
@@ -142,16 +140,7 @@ ENDIF(CAVXTWO  OR CAVX512)
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( select_test_app PRIVATE "-ldl" )
 	
-	target_compile_options( operation_lookup_test_app PRIVATE
-	        -Werror
-	        -Wall
-	        -Wextra
-	        -pedantic
-	        -fstack-protector-all
-	        $<$<CONFIG:DEBUG>:-DDEBUG> )
-	target_link_libraries( operation_lookup_test_app PRIVATE "-ldl" )
-	
-	
+
 	target_compile_options( operation_summation_test_app PRIVATE
 	        -Werror
 	        -Wall
@@ -215,7 +204,6 @@ ENDIF(CAVXTWO  OR CAVX512)
 	add_test( merge_test merge_test_app )
 	add_test( project_test project_test_app )
 	add_test( select_test select_test_app )
-	add_test( operation_lookup_test operation_lookup_test_app )
 	add_test( operation_summation_test operation_summation_test_app )
 IF(CAVXTWO  OR CAVX512)
         add_test( project_benchmark_test project_benchmark_test_app )
