@@ -105,9 +105,9 @@ public:
         return nullptr;
     }
     
-    void deallocate(void* /*addr*/) override
+    void deallocate(void* addr) override
     {
-        //TODO:
+        mmap_memory_manager::getInstance().deallocate(addr);
     } 
    
     //TODO: set protected and only available to test 

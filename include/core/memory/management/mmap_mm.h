@@ -120,14 +120,14 @@ public:
     void setDeallocated(void* address)
     {
         // TODO: just do it
-        uint64_t location_this = reinterpret_cast<uint64_t>(this);
-        uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) - (location_this + sizeof(ChunkHeader));
+        uint64_t location_chunk = reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1);
+        uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) - (location_chunk );
         location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
 
         // Calculate precise location in bitmap
         uint64_t bit_offset = ALLOC_BITS * location_in_chunk;
-        uint64_t word_aligned_pos_in_bitmap = bit_offset >> 5;
-        uint64_t bit_offset_in_word = bit_offset & 0x1fl;
+        uint64_t word_aligned_pos_in_bitmap = bit_offset >> 6;
+        uint64_t bit_offset_in_word = bit_offset & 0x3fl;
 
         // Find out length of allocated word
         //TODO: rest
@@ -144,8 +144,9 @@ public:
         bool endFound = false;
 
         for (uint64_t i = bit_offset_in_word + ALLOC_BITS; !endFound; i += ALLOC_BITS) {
-            uint64_t* word = reinterpret_cast<uint64_t*>(i >> 5);
-            if ( ((*word >> bit_offset_in_word) & 0b11) == 0b11 )
+            uint64_t* word = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(bitmap) + word_aligned_pos_in_bitmap + (i>>6));
+            uint64_t offset = i & 0x3fl;
+            if ( ((*word >> offset) & 0b11) == 0b11 )
                 *word = *word & ~(0l + (0b11 << bit_offset_in_word));
             else
                 endFound = true;
@@ -328,9 +329,11 @@ public:
         }
     }
 
-    void deallocate(void* const /*ptr*/) override
+    void deallocate(void* const ptr) override
     {
-
+        uint64_t chunk_ptr = reinterpret_cast<uint64_t>(ptr) & ~(ALLOCATION_SIZE - 1);
+        ChunkHeader* header = reinterpret_cast<ChunkHeader*>( chunk_ptr - sizeof(ChunkHeader) );  
+        header->setDeallocated(ptr);
     }
 
     void deallocateAll()
