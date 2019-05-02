@@ -21,8 +21,23 @@ int main(int /*argc*/, char** /*argv*/) {
     std::cout << "got address: " << ptr << std::endl;
 
     morphstore::paged_memory_manager& page_instance = morphstore::paged_memory_manager::getGlobalInstance();
-    void* page_ptr = page_instance.allocate(4000);
-    std::cout << "got address for small object: " << page_ptr << std::endl;
-        
+    page_instance.setCurrentChunk(ptr);
+    
+    const uint32_t ARRAY_LENGTH = 10000;
+    void* ptrs[ARRAY_LENGTH];
+
+    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+        ptrs[i] = page_instance.allocate(4096);
+        if (ptrs[i] == nullptr)
+            std::cerr << "Pointer " << i << " got returned as zero" << std::endl;
+    }
+
+    std::cout << "Beginning deallocation" << std::endl;
+
+    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
+        std::cout << "it: " << i << std::endl;
+        page_instance.deallocate(ptrs[i]);
+    }
+
     return 0;
 }
