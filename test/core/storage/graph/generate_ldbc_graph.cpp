@@ -23,10 +23,222 @@
 
 #include <core/storage/graph.h>
 
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <fstream>
+
+using namespace std;
+
+struct Relation{
+    unsigned long int fromID;
+    unsigned long int toID;
+    int relID;
+};
+
+void importDataLookup(string address, unordered_map<int, string> &rLookup){
+    cout << "Reading Lookups from " << address;
+    std::cout.flush();
+
+    char* buffer;
+    ifstream data(address, std::ios::binary | std::ios::ate ); // 'ate' means: open and seek to end immediately after opening
+    uint64_t fileSize = 0;
+
+    if(!data){
+        cerr << "\nError, opening file. ";
+        exit(EXIT_FAILURE);
+    }
+
+    if (data.is_open()) {
+        fileSize = data.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+        data.clear();
+        data.seekg( 0, std::ios::beg ); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+    }
+
+    // allocate memory with the filesize and the char size
+    buffer = (char*) malloc( fileSize * sizeof( char ) );
+    data.read(buffer, fileSize); // read data as one big block
+    size_t start = 0;
+    string delimiter = "\t";
+
+    for(size_t i = 0; i < fileSize; ++i){
+        if(buffer[i] == '\n'){
+
+            // get a row into string form buffer with start- and end-point and do stuff ...
+            string row(&buffer[start], &buffer[i]);
+
+            // remove unnecessary '\n' at the beginning of a string
+            if(row.find('\n') != string::npos){
+                row.erase(0,1);
+            }
+
+            string relationName = row.substr(0, row.find(delimiter));
+            row.erase(0, row.find(delimiter) + delimiter.length());
+            string relID_str = row.substr(0, row.find(delimiter));
+
+            // convert string data to needed types
+            int relID = stoi(relID_str, nullptr, 10);
+
+            // put into lookup data structure
+            rLookup.insert(make_pair(relID, relationName));
+
+            start = i; // set new starting point (otherwise it's concatenated)
+        }
+    }
+
+    delete[] buffer; // free memory
+    data.close();
+
+    cout << " --> DONE" << endl;
+}
+
+void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<int, unsigned long int >> &vDict, unordered_map<int, string> &eLookup){
+
+    cout << "Reading Vertices from " << vertexFile;
+    std::cout.flush();
+
+    char* buffer;
+    ifstream graph(vertexFile, std::ios::binary | std::ios::ate ); // 'ate' means: open and seek to end immediately after opening
+    uint64_t fileSize = 0;
+
+    if(!graph){
+        cerr << "Error, opening file. ";
+        exit(EXIT_FAILURE);
+    }
+
+    if (graph.is_open()) {
+        fileSize = graph.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+        graph.clear();
+        graph.seekg( 0, std::ios::beg ); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+    }
+
+    // allocate memory with the filesize and the char size
+    buffer = (char*) malloc( fileSize * sizeof( char ) );
+    graph.read(buffer, fileSize); // read data as one big block
+    size_t start = 0;
+    string delimiter = "\t";
+    int entityIndex = 0;
+
+    for(size_t i = 0; i < fileSize; ++i){
+        if(buffer[i] == '\n'){
+            // get a row into string form buffer with start- and end-point and do stuff ...
+            string row(&buffer[start], &buffer[i]);
+
+            // remove unnecessary '\n' at the beginning of a string
+            if(row.find('\n') != string::npos){
+                row.erase(0,1);
+            }
+
+            // for entities we have to look that there is NO '\t' in the string
+            if(row.find(delimiter) == string::npos){
+                eLookup.insert(make_pair(entityIndex, row));
+                entityIndex++;
+            }else{
+
+                // acutal data: first is ldbc_id and second global_id
+                string ldbc_str = row.substr(0, row.find(delimiter));
+                string global_str = row.erase(0, row.find(delimiter) + delimiter.length()); // erase from row (...)\t[data]
+
+                // convert string to long int
+                unsigned long int ldbc_id = stol(ldbc_str,nullptr,10);
+                unsigned long int global_id = stol(global_str,nullptr,10);
+
+                vDict.insert({global_id, make_pair(entityIndex-1, ldbc_id)});
+
+            }
+            start = i; // set new starting point (otherwise it's concatenated)
+        }
+    }
+
+    delete[] buffer; // free memory
+    graph.close();
+
+    cout << " --> DONE" << endl;
+}
+
+void importDataRelations(string relationsFile, vector<Relation> &rList){
+
+    cout << "Reading Relations from " << relationsFile;
+    std::cout.flush();
+
+    char* buffer;
+    ifstream graph(relationsFile, std::ios::binary | std::ios::ate ); // 'ate' means: open and seek to end immediately after opening
+    uint64_t fileSize = 0;
+
+    if(!graph){
+        cerr << "Error, opening file. ";
+        exit(EXIT_FAILURE);
+    }
+
+    if (graph.is_open()) {
+        fileSize = graph.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+        graph.clear();
+        graph.seekg( 0, std::ios::beg ); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+    }
+
+    // allocate memory with the filesize and the char size
+    buffer = (char*) malloc( fileSize * sizeof( char ) );
+    graph.read(buffer, fileSize); // read data as one big block
+    size_t start = 0;
+    string delimiter = "\t";
+
+    for(size_t i = 0; i < fileSize; ++i){
+        if(buffer[i] == '\n'){
+
+            // get a row into string form buffer with start- and end-point and do stuff ...
+            string row(&buffer[start], &buffer[i]);
+
+            string fromID_str = row.substr(0, row.find(delimiter));
+            row.erase(0, row.find(delimiter) + delimiter.length());
+            string toID_str = row.substr(0, row.find(delimiter));
+            string relID_str = row.erase(0, row.find(delimiter) + delimiter.length());
+
+            // convert string data to needed types
+            unsigned long int fromID = stol(fromID_str,nullptr,10);
+            if(toID_str == "-1") toID_str = fromID_str; // if the toID is -1 --> loop to itself; refers to the multiple attributes
+            unsigned long int toID = stol(toID_str,nullptr,10);
+            int relID = stoi(relID_str, nullptr, 10);
+
+            // write to relationDict data structure
+            Relation r;
+            r.fromID = fromID;
+            r.toID = toID;
+            r.relID = relID;
+            rList.push_back(r);
+
+            start = i; // set new starting point (otherwise it's concatenated)
+        }
+    }
+
+    delete[] buffer; // free memory
+    graph.close();
+
+    cout << " --> DONE" << endl;
+}
+
 int main( void ){
 
-    std::cout << "Generating LDBC social network ..." << endl;
-    std::cout.flush();
-    
+    // -------------------------------- Reading data from LDBC-tsv-files --------------------------------
+
+    // TODO: change intermediate results[] tsv -> [dicts] -> vertices to direct computation?
+    // Lookups for entity and relation: (e.g. (0 -> knows), (1 -> isLocatedIn), ... )
+    unordered_map<int, string> entityLookup;
+    unordered_map<int, string> relationLookup;
+
+    // Vertex data from tsv-files: unordered_map { global_id -> (entity.id, ldbc.id) }
+    unordered_map<unsigned long int, pair<int, unsigned long int  >> vertexDict;
+
+    // Relationship data from tsv-files: vector of struct Relation (fromID, ToID, rel.id)
+    vector<Relation> relationDict;
+
+    // TODO: get base directory with cin -> user input
+    string base = "/home/tim/Documents/TUD/(8) Informatik SS 2019/LDBC_Graph_Generating/LDBC_Python_Files/";
+
+    importDataLookup(base + "relationLookup.tsv", relationLookup);
+    importDataVertex(base + "entityDict.tsv", vertexDict, entityLookup); // entityLookup is built within the function automatically
+    importDataRelations(base + "relationDict.tsv", relationDict);
+
+    // --------------------------------------- Generating the graph ---------------------------------------
+
     return 0;
 }

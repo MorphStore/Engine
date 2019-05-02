@@ -33,10 +33,10 @@ namespace graph{
     struct Edge;
 
     struct Vertex{
-        uint64_t id;
-        uint64_t ldbc_id;
+        unsigned long int id;
+        unsigned long int ldbc_id;
         int entity;
-        vector<Edge> adjList;
+        std::vector<Edge> adjList;
     };
 
     struct Edge{
@@ -45,9 +45,9 @@ namespace graph{
     };
 
     struct graph{
-        unordered_map<unint64_t, Vertex> vertices;
+        std::unordered_map<unsigned long int, Vertex> vertices;
         void addVertex();
-        void addEdge;
+        void addEdge();
     };
 
 }
