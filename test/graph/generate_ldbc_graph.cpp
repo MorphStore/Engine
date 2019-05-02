@@ -27,5 +27,6 @@ int main( void ){
 
     std::cout << "Generating LDBC social network ..." << endl;
     std::cout.flush();
+    
     return 0;
 }
