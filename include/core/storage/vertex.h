@@ -17,20 +17,25 @@
 
 /**
  * @file vertex.h
- * @brief vertex class and its functions
+ * @brief vertex class and its functions + Edge struct
  * @todo Add data structure for properties
 */
 
 #ifndef MORPHSTORE_VERTEX_H
 #define MORPHSTORE_VERTEX_H
 
-#include <core/storage/edge.h>
-
 #include <vector>
 #include <iostream>
 
 
 namespace graph{
+
+    class Vertex;
+
+    struct Edge{
+        Vertex* target;
+        int relation;
+    };
 
     class Vertex{
 
@@ -79,8 +84,15 @@ namespace graph{
             return false;
         }
 
-        void addEdge(Edge e){
+        void addEdge(Vertex* target, int rel){
+            Edge e;
+            e.relation = rel;
+            e.target = target;
             this->adjList.push_back(e);
+        }
+
+        int getNumberOfEdges(){
+            return adjList.size();
         }
     };
 }

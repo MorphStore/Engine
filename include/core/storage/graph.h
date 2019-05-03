@@ -55,10 +55,9 @@ namespace graph{
             if(existID(vertices, sourceID) && existID(vertices, targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
-                Edge e(targetV, relation);
-                sourceV->addEdge(e);
+                sourceV->addEdge(targetV, relation);
             }else{
-                std::cout << "Source-/Target-Vertex-ID do not exist!";
+                std::cout << "Source-/Target-Vertex-ID does not exist!";
             }
         }
 
@@ -73,7 +72,7 @@ namespace graph{
         int getTotalNumberOfEdges(){
             int totalNumberEdges = 0;
             for(std::unordered_map<unsigned long int, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
-                totalNumberEdges += it->second.getAdjList().size();
+                totalNumberEdges += it->second.getNumberOfEdges();
             }
             return totalNumberEdges;
         }
@@ -86,17 +85,17 @@ namespace graph{
         }
 
         void printVertexByID(unsigned long int id){
+            std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
-            std::cout << "Vertex-ID: "<< v->getId() << std::endl;
-            std::cout << "  LDBC-ID: "<< v->getLDBC_Id() << std::endl;
-            std::cout << "  Entity-ID: "<< v->getEntity() << std::endl;
-            std::cout << "  #Edges: " << v->getAdjList().size() << std::endl;
-            std::cout << "  Adj.List: ";
+            std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
+            std::cout << "LDBC-ID: \t"<< v->getLDBC_Id() << std::endl;
+            std::cout << "Entity-ID: \t"<< v->getEntity() << std::endl;
+            std::cout << "#Edges: \t" << v->getAdjList().size() << std::endl;
+            std::cout << "Adj.List: ";
 
             const std::vector<Edge>& adjList = v->getAdjList();
             for(const auto& e : adjList){
-                // TODO: print edges of vertex: (target, rel.id) -> Problem: (SEGFAULT) when doing e.getTarget()->getId() -> No access to target
-                std::cout << "(" << /* e.getTarget()->getId() << "," <<*/ e.getRelation() << ") ";
+                std::cout << "(" << e.target->getId() << "," << e.relation << ") ";
             }
             std::cout << "\n";
         }

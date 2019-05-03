@@ -272,7 +272,8 @@ int main( void ){
     graph::Graph ldbc_graph;
     generateVertices(vertexDict, ldbc_graph);
     generateEdges(relationDict, ldbc_graph);
-    ldbc_graph.printVertexByID(90563);
+
+    //ldbc_graph.printVertexByID(90563);
     ldbc_graph.statistics();
 
     return 0;
