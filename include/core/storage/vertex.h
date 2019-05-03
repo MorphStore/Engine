@@ -32,6 +32,7 @@ namespace graph{
 
     class Vertex;
 
+    // this struct represents a relation to a target vertex; relation is the number in the lookup table
     struct Edge{
         Vertex* target;
         int relation;
@@ -40,6 +41,7 @@ namespace graph{
     class Vertex{
 
     private:
+        // Vertex contains a (global) id; (old) ldbc id; entity number for lookup; vector adjList for the adjacency List
         unsigned long int id;
         unsigned long int ldbc_id;
         int entity;
@@ -47,6 +49,7 @@ namespace graph{
 
     public:
 
+        // constrcutor without the adjList (Vertex can contain no edges int the graph)
         Vertex(unsigned long int id, unsigned long int ldbc_id, int entity){
             SetVertex(id, ldbc_id, entity);
         }
@@ -69,6 +72,7 @@ namespace graph{
             return entity;
         }
 
+        // returns a reference (read-only) of the adjacency list
         const std::vector<Edge>& getAdjList() const{
             return adjList;
         }
@@ -78,12 +82,7 @@ namespace graph{
             entity = newEntity;
         }
 
-        bool deleteAdjList(){
-            adjList.clear();
-            if(adjList.size() == 0) return true;
-            return false;
-        }
-
+        // function to add new neighbor vertex
         void addEdge(Vertex* target, int rel){
             Edge e;
             e.relation = rel;

@@ -36,14 +36,15 @@ namespace graph{
     class Graph{
 
     private:
-        // mapping global id -> vertex
+        // main data structure: mapping global id -> vertex
         std::unordered_map<unsigned long int, Vertex> vertices;
 
     public:
 
+        // function to add a new (ldbc) vertex to the graph
         void addVertex(unsigned long int id, unsigned long int ldbc_id, int entity){
             // if key is not present -> create vertex
-            if(vertices.find(id) == vertices.end()){
+            if(existID(id)){
                 Vertex v(id, ldbc_id, entity);
                 vertices.insert(std::make_pair(id, v));
             }else{
@@ -51,8 +52,9 @@ namespace graph{
             }
         }
 
+        // function that creates a new relation/edge between two (existing) vertices
         void addEdge(unsigned long int sourceID, unsigned long int targetID, int relation){
-            if(existID(vertices, sourceID) && existID(vertices, targetID)){
+            if(existID(sourceID) && existID(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
                 sourceV->addEdge(targetV, relation);
@@ -61,14 +63,15 @@ namespace graph{
             }
         }
 
-        // Function to check if the ID is present or not
-        bool existID(std::unordered_map<unsigned long int, Vertex>& v, unsigned long int id){
-            if(v.find(id) == v.end()){
+        // function to check if the ID is present or not
+        bool existID(unsigned long int id){
+            if(vertices.find(id) == vertices.end()){
                 return false;
             }
             return true;
         }
 
+        // this function returns the total number of edges in the graph
         int getTotalNumberOfEdges(){
             int totalNumberEdges = 0;
             for(std::unordered_map<unsigned long int, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
@@ -77,6 +80,7 @@ namespace graph{
             return totalNumberEdges;
         }
 
+        // for debbuging
         void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
             std::cout << "Number of vertices: " << vertices.size() << std::endl;
@@ -84,6 +88,7 @@ namespace graph{
             std::cout << "--------------------------------------------" << std::endl;
         }
 
+        // for debugging
         void printVertexByID(unsigned long int id){
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
