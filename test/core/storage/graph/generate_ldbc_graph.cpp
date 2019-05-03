@@ -89,7 +89,7 @@ void importDataLookup(string address, unordered_map<int, string> &rLookup){
     delete[] buffer; // free memory
     data.close();
 
-    cout << " --> DONE" << endl;
+    cout << " --> done" << endl;
 }
 
 void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<int, unsigned long int >> &vDict, unordered_map<int, string> &eLookup){
@@ -153,7 +153,7 @@ void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<
     delete[] buffer; // free memory
     graph.close();
 
-    cout << " --> DONE" << endl;
+    cout << " --> done" << endl;
 }
 
 void importDataRelations(string relationsFile, vector<Relation> &rList){
@@ -213,7 +213,36 @@ void importDataRelations(string relationsFile, vector<Relation> &rList){
     delete[] buffer; // free memory
     graph.close();
 
-    cout << " --> DONE" << endl;
+    cout << " --> done" << endl;
+}
+
+void generateVertices(unordered_map<unsigned long int, pair<int, unsigned long int>>& vertexDict, graph::Graph& g){
+
+    cout << "Generating Vertices ...";
+    std::cout.flush();
+
+    // iterate through vertex-dict. and generate the vertices (objects) in the graph
+    for(std::unordered_map<unsigned long int, pair<int, unsigned long int>>::iterator it = vertexDict.begin(); it != vertexDict.end(); ++it){
+        unsigned long int id = it->first;
+        unsigned long int ldbc_id = it->second.second;
+        int entity = it->second.first;
+        g.addVertex(id, ldbc_id, entity);
+    }
+
+    cout << " --> done" << endl;
+}
+
+void generateEdges(vector<Relation>& rDict, graph::Graph& g){
+
+    cout << "Generating Relations ...";
+    std::cout.flush();
+
+    // iterate through relationDict and add (target.id, rel.id) to the vertex adj.-list
+    for(std::vector<Relation>::iterator it = rDict.begin(); it != rDict.end(); ++it){
+        g.addEdge(it->fromID, it->toID, it->relID);
+    }
+
+    cout << " --> done" << endl;
 }
 
 int main( void ){
@@ -226,7 +255,7 @@ int main( void ){
     unordered_map<int, string> relationLookup;
 
     // Vertex data from tsv-files: unordered_map { global_id -> (entity.id, ldbc.id) }
-    unordered_map<unsigned long int, pair<int, unsigned long int  >> vertexDict;
+    unordered_map<unsigned long int, pair<int, unsigned long int>> vertexDict;
 
     // Relationship data from tsv-files: vector of struct Relation (fromID, ToID, rel.id)
     vector<Relation> relationDict;
@@ -239,6 +268,12 @@ int main( void ){
     importDataRelations(base + "relationDict.tsv", relationDict);
 
     // --------------------------------------- Generating the graph ---------------------------------------
+
+    graph::Graph ldbc_graph;
+    generateVertices(vertexDict, ldbc_graph);
+    generateEdges(relationDict, ldbc_graph);
+    ldbc_graph.printVertexByID(90563);
+    ldbc_graph.statistics();
 
     return 0;
 }

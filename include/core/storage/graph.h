@@ -24,30 +24,83 @@
 #ifndef MORPHSTORE_GRAPH_H
 #define MORPHSTORE_GRAPH_H
 
+#include <core/storage/vertex.h>
+
 #include <unordered_map>
 #include <vector>
+#include <iostream>
+
 
 namespace graph{
 
-    struct Vertex;
-    struct Edge;
+    class Graph{
 
-    struct Vertex{
-        unsigned long int id;
-        unsigned long int ldbc_id;
-        int entity;
-        std::vector<Edge> adjList;
-    };
-
-    struct Edge{
-        Vertex* target;
-        int relation;
-    };
-
-    struct graph{
+    private:
+        // mapping global id -> vertex
         std::unordered_map<unsigned long int, Vertex> vertices;
-        void addVertex();
-        void addEdge();
+
+    public:
+
+        void addVertex(unsigned long int id, unsigned long int ldbc_id, int entity){
+            // if key is not present -> create vertex
+            if(vertices.find(id) == vertices.end()){
+                Vertex v(id, ldbc_id, entity);
+                vertices.insert(std::make_pair(id, v));
+            }else{
+                std::cout << "Vertex with ID " << id << " already exists!";
+            }
+        }
+
+        void addEdge(unsigned long int sourceID, unsigned long int targetID, int relation){
+            if(existID(vertices, sourceID) && existID(vertices, targetID)){
+                Vertex* sourceV = &vertices.at(sourceID);
+                Vertex* targetV = &vertices.at(targetID);
+                Edge e(targetV, relation);
+                sourceV->addEdge(e);
+            }else{
+                std::cout << "Source-/Target-Vertex-ID do not exist!";
+            }
+        }
+
+        // Function to check if the ID is present or not
+        bool existID(std::unordered_map<unsigned long int, Vertex>& v, unsigned long int id){
+            if(v.find(id) == v.end()){
+                return false;
+            }
+            return true;
+        }
+
+        int getTotalNumberOfEdges(){
+            int totalNumberEdges = 0;
+            for(std::unordered_map<unsigned long int, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
+                totalNumberEdges += it->second.getAdjList().size();
+            }
+            return totalNumberEdges;
+        }
+
+        void statistics(){
+            std::cout << "---------------- Statistics ----------------" << std::endl;
+            std::cout << "Number of vertices: " << vertices.size() << std::endl;
+            std::cout << "Number of relations/edges: " << getTotalNumberOfEdges() << std::endl;
+            std::cout << "--------------------------------------------" << std::endl;
+        }
+
+        void printVertexByID(unsigned long int id){
+            Vertex* v = &vertices.at(id);
+            std::cout << "Vertex-ID: "<< v->getId() << std::endl;
+            std::cout << "  LDBC-ID: "<< v->getLDBC_Id() << std::endl;
+            std::cout << "  Entity-ID: "<< v->getEntity() << std::endl;
+            std::cout << "  #Edges: " << v->getAdjList().size() << std::endl;
+            std::cout << "  Adj.List: ";
+
+            const std::vector<Edge>& adjList = v->getAdjList();
+            for(const auto& e : adjList){
+                // TODO: print edges of vertex: (target, rel.id) -> Problem: (SEGFAULT) when doing e.getTarget()->getId() -> No access to target
+                std::cout << "(" << /* e.getTarget()->getId() << "," <<*/ e.getRelation() << ") ";
+            }
+            std::cout << "\n";
+        }
+
     };
 
 }
