@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 26.04.19.
 //
 
-#ifndef MORPHSTORE_AGG_SUM_UNCOMPR_H
-#define MORPHSTORE_AGG_SUM_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
 
 #include <vector/general_vector.h>
 #include <vector/primitives/calc.h>
@@ -61,5 +61,5 @@ namespace morphstore {
 
 
 
-#endif //MORPHSTORE_AGG_SUM_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
 
