@@ -42,29 +42,30 @@ namespace graph{
 
     private:
         // Vertex contains a (global) id; (old) ldbc id; entity number for lookup; vector adjList for the adjacency List
-        unsigned long int id;
-        unsigned long int ldbc_id;
+        size_t id;
+        // TODO: remove ldbc_id from Vertex schema (to get more general structure without ldbc-dependency)
+        size_t ldbc_id;
         int entity;
         std::vector<Edge> adjList;
 
     public:
 
         // constrcutor without the adjList (Vertex can contain no edges int the graph)
-        Vertex(unsigned long int id, unsigned long int ldbc_id, int entity){
+        Vertex(size_t id, size_t ldbc_id, int entity){
             SetVertex(id, ldbc_id, entity);
         }
 
-        void SetVertex(unsigned long int id, unsigned long int ldbc_id, int entity){
+        void SetVertex(size_t id, size_t ldbc_id, int entity){
             this->id = id;
             this->ldbc_id = ldbc_id;
             this->entity = entity;
         }
 
-        unsigned long int getId() const{
+        size_t getId() const{
             return id;
         }
 
-        unsigned long int getLDBC_Id(){
+        size_t getLDBC_Id(){
             return ldbc_id;
         }
 

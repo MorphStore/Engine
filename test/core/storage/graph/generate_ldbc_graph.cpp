@@ -27,17 +27,18 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
+#include <stdio.h>
 
 using namespace std;
 
 struct Relation{
-    unsigned long int fromID;
-    unsigned long int toID;
+    size_t fromID;
+    size_t toID;
     int relID;
 };
 
 void importDataLookup(string address, unordered_map<int, string> &rLookup){
-    cout << "Reading Lookups from " << address;
+    cout << "Reading LDBC-Lookups ...";
     std::cout.flush();
 
     char* buffer;
@@ -92,9 +93,9 @@ void importDataLookup(string address, unordered_map<int, string> &rLookup){
     cout << " --> done" << endl;
 }
 
-void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<int, unsigned long int >> &vDict, unordered_map<int, string> &eLookup){
+void importDataVertex(string vertexFile, unordered_map<size_t , pair<int, size_t>> &vDict, unordered_map<int, string> &eLookup){
 
-    cout << "Reading Vertices from " << vertexFile;
+    cout << "Reading LDBC-Vertices ...";
     std::cout.flush();
 
     char* buffer;
@@ -139,9 +140,9 @@ void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<
                 string ldbc_str = row.substr(0, row.find(delimiter));
                 string global_str = row.erase(0, row.find(delimiter) + delimiter.length()); // erase from row (...)\t[data]
 
-                // convert string to long int
-                unsigned long int ldbc_id = stol(ldbc_str,nullptr,10);
-                unsigned long int global_id = stol(global_str,nullptr,10);
+                // convert string to long int // TODO: is stoul enough for string -> size_t
+                size_t ldbc_id = stoul(ldbc_str,nullptr,10);
+                size_t global_id = stoul(global_str,nullptr,10);
 
                 vDict.insert({global_id, make_pair(entityIndex-1, ldbc_id)});
 
@@ -158,7 +159,7 @@ void importDataVertex(string vertexFile, unordered_map<unsigned long int , pair<
 
 void importDataRelations(string relationsFile, vector<Relation> &rList){
 
-    cout << "Reading Relations from " << relationsFile;
+    cout << "Reading LDBC-Relations ...";
     std::cout.flush();
 
     char* buffer;
@@ -194,9 +195,9 @@ void importDataRelations(string relationsFile, vector<Relation> &rList){
             string relID_str = row.erase(0, row.find(delimiter) + delimiter.length());
 
             // convert string data to needed types
-            unsigned long int fromID = stol(fromID_str,nullptr,10);
+            size_t fromID = stoul(fromID_str,nullptr,10);
             if(toID_str == "-1") toID_str = fromID_str; // if the toID is -1 --> loop to itself; refers to the multiple attributes
-            unsigned long int toID = stol(toID_str,nullptr,10);
+            size_t toID = stoul(toID_str,nullptr,10);
             int relID = stoi(relID_str, nullptr, 10);
 
             // write to relationDict data structure
@@ -216,15 +217,15 @@ void importDataRelations(string relationsFile, vector<Relation> &rList){
     cout << " --> done" << endl;
 }
 
-void generateVertices(unordered_map<unsigned long int, pair<int, unsigned long int>>& vertexDict, graph::Graph& g){
+void generateVertices(unordered_map<size_t, pair<int, size_t>>& vertexDict, graph::Graph& g){
 
     cout << "Generating Vertices ...";
     std::cout.flush();
 
     // iterate through vertex-dict. and generate the vertices (objects) in the graph
-    for(std::unordered_map<unsigned long int, pair<int, unsigned long int>>::iterator it = vertexDict.begin(); it != vertexDict.end(); ++it){
-        unsigned long int id = it->first;
-        unsigned long int ldbc_id = it->second.second;
+    for(std::unordered_map<size_t, pair<int, size_t>>::iterator it = vertexDict.begin(); it != vertexDict.end(); ++it){
+        size_t id = it->first;
+        size_t ldbc_id = it->second.second;
         int entity = it->second.first;
         g.addVertex(id, ldbc_id, entity);
     }
@@ -249,13 +250,13 @@ int main( void ){
 
     // -------------------------------- Reading data from LDBC-tsv-files --------------------------------
 
-    // TODO: change intermediate results[] tsv -> [dicts] -> vertices to direct computation?
+    // TODO: change intermediate results[] tsv -> [dicts] -> vertices to direct computation? (but then we lose the ldbc_id, if we remove it in Vertex class)
     // Lookups for entity and relation: (e.g. (0 -> knows), (1 -> isLocatedIn), ... )
     unordered_map<int, string> entityLookup;
     unordered_map<int, string> relationLookup;
 
     // Vertex data from tsv-files: unordered_map { global_id -> (entity.id, ldbc.id) }
-    unordered_map<unsigned long int, pair<int, unsigned long int>> vertexDict;
+    unordered_map<size_t, pair<int, size_t>> vertexDict;
 
     // Relationship data from tsv-files: vector of struct Relation (fromID, ToID, rel.id)
     vector<Relation> relationDict;
