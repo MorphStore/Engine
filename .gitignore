@@ -12,3 +12,4 @@ Dockerfile
 doc/doxygen/latex
 doc/doxygen/html   
 *.swp
+*.swo
