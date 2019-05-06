@@ -5,12 +5,14 @@
 #  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before mmap memory manager."
 #endif
 
+//#include <core/utils/logger.h>
 #include <core/memory/management/abstract_mm.h>
 
 #include <mutex>
 #include <sys/mman.h>
 #include <string.h>
 
+#include <iostream>
 #include <cassert>
 
 namespace morphstore {
@@ -23,18 +25,30 @@ const size_t ALLOCATION_OFFSET = 27;
 
 enum StorageType : uint64_t {
     CONTINUOUS,
-    LARGE
+    LARGE,
+    PAGE
+};
+
+struct ObjectInfo {
+    ObjectInfo(StorageType allocType, size_t allocSize)
+    {
+        type = static_cast<uint64_t>(allocType);
+        size = allocSize;
+    }
+
+    uint64_t type : 8;
+    uint64_t size : 56;
 };
 
 class ChunkHeader;
 
 class AllocationStatus {
 public:
-AllocationStatus() : next(nullptr), curr_offset(0), type(StorageType::CONTINUOUS) {}
+AllocationStatus(size_t alloc_size) : next(nullptr), curr_offset(0), info((StorageType::CONTINUOUS), alloc_size) {}
     ChunkHeader* next;
     uint64_t curr_offset;
     std::mutex sema;
-    StorageType type;
+    ObjectInfo info;
 };
 
 class InfoHeader {
@@ -60,7 +74,8 @@ public:
     {
         info.status.next = nullptr;
         info.status.curr_offset = 0;
-        info.status.type = type;
+        info.status.info.type = (type);
+        info.status.info.size = ALLOCATION_SIZE;
     }
 
     void reset()
@@ -172,11 +187,14 @@ public:
         uint64_t bit_start = 0;
 
         while (reinterpret_cast<char*>(loc) < bitmap + LINUX_PAGE_SIZE) {
+            //First check if space is not full
             if (*loc < ~(0x8l << 60)) {
                 uint64_t bit_offset = 0;
 
+                // check within one word
                 while (bit_offset < 64) {
                     uint8_t bits = *loc >> (64 - bit_offset) & 0b11l;
+                    // space is available
                     if (bits == 0) {
                         //runningContinuous = true;
                         //uint64_t bit_start = reinterpret_cast<char*>(loc) - bitmap + bit_offset;
@@ -196,7 +214,7 @@ public:
             }
         }
 
-	return nullptr;
+        return nullptr;
     }
 
     char bitmap[LINUX_PAGE_SIZE];
@@ -293,9 +311,11 @@ public:
 
     void* allocatePages(size_t size, void* chunk_location)
     {
-	ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
+        ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
         void* ptr = header->findNextAllocatableSlot(size);
-	header->setAllocated(ptr, size);
+        //trace( "header found next allocatable slot as ", ptr);
+        header->setAllocated(ptr, size);
+
         return ptr;
     }
 
@@ -306,13 +326,14 @@ public:
         }
         else {
             // TODO: concurrency
-	    if (chunk_location != nullptr) {
-	        return allocatePages(size, chunk_location);
+            if (chunk_location != nullptr) {
+                return allocatePages(size, chunk_location);
             }
             else if (m_current_chunk == nullptr) {
                 m_current_chunk = allocateContinuous();
-	    }
-	    return allocatePages(size, m_current_chunk);
+            }
+
+            return allocatePages(size, m_current_chunk);
         }
     }
 
