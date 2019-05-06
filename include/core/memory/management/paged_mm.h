@@ -77,32 +77,42 @@ public:
     void* allocate(size_t size) override
     {
         //TODO: throw exception
-        assert(size < PAGE_SIZE - sizeof(PageHeader));
+        assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
         auto& manager = mmap_memory_manager::getInstance();
+        size += sizeof(ObjectInfo); // Additional space for type and allocation information
 
-        void* loc = nullptr;
+        void* object_loc = nullptr;
+        void* page_loc = nullptr;
+
         if (current_page != nullptr)
-            loc = current_page->allocate(size);
-	
-        if (loc == nullptr) {
+            object_loc = current_page->allocate(size);
+
+        //current page was (probably) full    
+        if (object_loc == nullptr) {
             // TODO: handle next page allocation from chunk
             if (current_chunk == nullptr)
                 current_chunk = manager.allocateContinuous();
             //ChunkHeader* header = reinterpret_cast<uint64_t>(current_chunk) - sizeof(ChunkHeader);
-            loc = manager.allocate(PAGE_SIZE, current_chunk);
-            if (loc == nullptr) {
+            page_loc = manager.allocate(PAGE_SIZE, current_chunk);
+
+            if (page_loc == nullptr) {
                 //TODO: handle concurrency
                 current_chunk = manager.allocateContinuous();
-                loc = manager.allocate(PAGE_SIZE, current_chunk);
-                current_page = reinterpret_cast<Page*>(loc);
+                page_loc = manager.allocate(PAGE_SIZE, current_chunk);
+                current_page = reinterpret_cast<Page*>(page_loc);
                 return current_page->allocate(size);
             }
             else {
-                return loc;
+                Page* page = reinterpret_cast<Page*>(page_loc);
+                current_page = page;
+                object_loc = page->allocate(size);
+
+                return object_loc;
             }
         }
-        
-        return nullptr;
+        else {
+            return object_loc;
+        }
     }
     
     void deallocate(void* addr) override
