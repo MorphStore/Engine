@@ -121,6 +121,12 @@ extern "C" {
  * @return Pointer to allocated memory.
  */
 void * operator new( size_t p_AllocSize ) {
+    /*if (p_AllocSize > 128_MB)
+        return morphstore::mmap_memory_manager::getInstance().allocateLarge(p_AllocSize);
+    else if (p_AllocSize > (( 1<<14 ) - sizeof(morphstore::PageHeader) )
+        return morphstore::mmap_memory_manager::getInstance().allocate(p_AllocSize);
+    else
+        return morphstore::paged_memory_manager::getGlobalInstance().allocate(p_AllocSize);*/
    return malloc( p_AllocSize );
 }
 
