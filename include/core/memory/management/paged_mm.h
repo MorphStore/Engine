@@ -1,6 +1,10 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 
+/*#include <core/memory/global/mm_hooks.h>
+#include <core/memory/management/allocators/global_scope_allocator.h>
+#include <core/utils/logger.h>*/
+
 #include "core/memory/management/abstract_mm.h"
 #include "core/memory/management/mmap_mm.h"
 
@@ -29,7 +33,9 @@ public:
 
     void* allocate(size_t size)
     {
-        if (size <= PAGE_SIZE - static_cast<uint32_t>(header.m_currOffset)) {
+        trace("Trying to allocate ", std::hex, size, " bytes in Page");
+        trace("Current offset ", std::hex, header.m_currOffset, " out of ", std::hex, PAGE_SIZE);
+        if (size <= PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_currOffset += size;
             header.m_sumOffset += header.m_currOffset;
@@ -77,6 +83,7 @@ public:
     void* allocate(size_t size) override
     {
         //TODO: throw exception
+        trace("Allocation called");
         assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
         auto& manager = mmap_memory_manager::getInstance();
         size += sizeof(ObjectInfo); // Additional space for type and allocation information
@@ -84,33 +91,43 @@ public:
         void* object_loc = nullptr;
         void* page_loc = nullptr;
 
-        if (current_page != nullptr)
+        if (current_page != nullptr) {
             object_loc = current_page->allocate(size);
+            //trace("[PAGED_MM] Allocated memory on spot ", object_loc, " from page ", current_page);
+        }
 
         //current page was (probably) full    
         if (object_loc == nullptr) {
             // TODO: handle next page allocation from chunk
-            if (current_chunk == nullptr)
+            if (current_chunk == nullptr) {
                 current_chunk = manager.allocateContinuous();
+                //trace("[PAGED_MM] Allocated new chunk on ", current_chunk);
+            }
+        
             //ChunkHeader* header = reinterpret_cast<uint64_t>(current_chunk) - sizeof(ChunkHeader);
             page_loc = manager.allocate(PAGE_SIZE, current_chunk);
+            //trace("[PAGED_MM] Allocated new page on ", page_loc);
 
             if (page_loc == nullptr) {
                 //TODO: handle concurrency
+                //FIXME: not necessary
                 current_chunk = manager.allocateContinuous();
                 page_loc = manager.allocate(PAGE_SIZE, current_chunk);
                 current_page = reinterpret_cast<Page*>(page_loc);
-                return current_page->allocate(size);
+                object_loc = current_page->allocate(size);
+                //1trace("[PAGED_MM] Allocated object on ", object_loc);
+                return object_loc;
             }
             else {
                 Page* page = reinterpret_cast<Page*>(page_loc);
                 current_page = page;
                 object_loc = page->allocate(size);
-
+                //trace("Allocated object on ", object_loc, " with size ", std::hex, size);
                 return object_loc;
             }
         }
         else {
+            trace( "[PAGED_MM] Found object allocation spot in current page ", current_page);
             return object_loc;
         }
     }
