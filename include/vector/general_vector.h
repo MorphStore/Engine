@@ -35,7 +35,7 @@ namespace vector {
 
 #define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) \
    using vector_element_count = typename VectorExtension::vector_helper_t::element_count; \
-   using vector_base_t = typename VectorExtension::vector_helper_t::base_t; \
+   using base_t = typename VectorExtension::vector_helper_t::base_t; \
    using vector_base_type_size_bit = typename VectorExtension::vector_helper_t::base_type_size_bit; \
    using vector_size_bit = typename VectorExtension::vector_helper_t::size_bit; \
    using vector_size_byte = typename VectorExtension::vector_helper_t::size_byte; \
