@@ -10,7 +10,7 @@
 
 namespace morphstore {
 
-static const size_t PAGE_SIZE = 1 << 14;
+static const size_t PAGE_SIZE = 1 << 15;
 
 class paged_memory_manager;
 

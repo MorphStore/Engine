@@ -21,7 +21,7 @@
 namespace morphstore {
 
 const size_t LINUX_PAGE_SIZE = 1 << 12;
-const size_t DB_PAGE_SIZE = 1 << 14;
+const size_t DB_PAGE_SIZE = 1 << 15;
 const size_t DB_PAGE_OFFSET = 14;
 const size_t ALLOCATION_SIZE = 1l << 27;
 const size_t ALLOCATION_OFFSET = 27;
@@ -203,7 +203,7 @@ public:
                     //trace( "Bits are ", std::hex, static_cast<uint32_t>(bits));
                     // space is available
                     if (bits == 0) {
-                        bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 64 + bit_offset - ALLOC_BITS;
+                        bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
                         //runningContinuous = true;
                         //uint64_t bit_start = reinterpret_cast<char*>(loc) - bitmap + bit_offset;
                         ++continuousPageCounter;
@@ -211,19 +211,20 @@ public:
                             trace( "Returning blocks with offset ", bit_start/2, ", this ", this, " chunkheader ", std::hex, sizeof(ChunkHeader));
                             void* addr = reinterpret_cast<void*>(
                                     reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader) + DB_PAGE_SIZE * (bit_start / 2));
+                            assert(reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader) + ALLOCATION_SIZE > reinterpret_cast<uint64_t>(addr));
                             return addr; 
                         }
                     }
                     bit_offset += 2;
                 }
-                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
             }
             else {
                 //runningContinuous = false;
                 bit_start = 0;
                 continuousPageCounter = 0;
-                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
             }
+            loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+            trace( "loc moved forward to ", loc);
         }
 
         return nullptr;
@@ -249,7 +250,7 @@ public:
             state = state | ((i == startOffset && isStart ? 0b10ul : 0b11ul) << (64 - i));
             --count_blocks;
             i+=ALLOC_BITS; 
-            trace(std::hex, state);
+            //trace(std::hex, state);
         }
 
         return state;
@@ -262,10 +263,10 @@ public:
         uint32_t cycles = 0;
 
         while (bitmap_pos < bitmap_end) {
-            uint64_t* bitmap_value = reinterpret_cast<uint64_t*>(bitmap_pos);
-            std::cout << std::hex << *bitmap_value << " ";
-            if (cycles % 8 == 0)
-                std::cout << std::endl;
+            //uint64_t* bitmap_value = reinterpret_cast<uint64_t*>(bitmap_pos);
+            //std::cout << std::hex << *bitmap_value << " ";
+            //if (cycles % 8 == 0)
+            //    std::cout << std::endl;
             bitmap_pos += sizeof(uint64_t);
             ++cycles;
 
