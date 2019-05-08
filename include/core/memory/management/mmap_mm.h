@@ -21,8 +21,8 @@
 namespace morphstore {
 
 const size_t LINUX_PAGE_SIZE = 1 << 12;
-const size_t DB_PAGE_SIZE = 1 << 15;
-const size_t DB_PAGE_OFFSET = 14;
+const size_t DB_PAGE_OFFSET = 15;
+const size_t DB_PAGE_SIZE = 1 << DB_PAGE_OFFSET;
 const size_t ALLOCATION_SIZE = 1l << 27;
 const size_t ALLOCATION_OFFSET = 27;
 
@@ -120,7 +120,9 @@ public:
 
         long allocate_in_word = 32 - bit_offset_in_word / 2;
         
-        uint64_t* word_in_bitmap = reinterpret_cast<uint64_t*>(bitmap + word_aligned_pos_in_bitmap);
+        uint64_t* word_in_bitmap = reinterpret_cast<uint64_t*>(bitmap + sizeof(uint64_t) * word_aligned_pos_in_bitmap);
+        trace("Bit offset in word: ", bit_offset_in_word);
+        trace("word aligned pos in bitmap: ", word_aligned_pos_in_bitmap);
         uint64_t state = getAllocBits64(bit_offset_in_word, needed_blocks);
 
         *word_in_bitmap |= state;
@@ -185,7 +187,7 @@ public:
     {
         // TODO: replace with strategy pattern
         uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
-        uint64_t slots_needed = (size >> DB_PAGE_OFFSET) + ( ((size % DB_PAGE_SIZE) == 0) ? 0 : 1);
+        const uint64_t slots_needed = (size >> DB_PAGE_OFFSET) + ( ((size % DB_PAGE_SIZE) == 0) ? 0 : 1);
 
         uint64_t continuousPageCounter = 0;
         //bool runningContinuous = false;
@@ -193,13 +195,13 @@ public:
 
         while (reinterpret_cast<uint64_t>(loc) < reinterpret_cast<uint64_t>(bitmap) + LINUX_PAGE_SIZE) {
             //First check if space is not full
-            //trace( std::hex, *loc, " allocation map for 8 bytes on ", loc);
             if (*loc < ~(0x4ul << 60)) {
+                //trace( std::hex, *loc, " allocation map for 8 bytes on ", loc);
                 uint64_t bit_offset = ALLOC_BITS;
 
                 // check within one word
                 while (bit_offset <= 64) {
-                    uint8_t bits = *loc >> (64 - bit_offset) & 0b11ul;
+                    uint8_t bits = (*loc >> (64 - bit_offset)) & 0b11ul;
                     //trace( "Bits are ", std::hex, static_cast<uint32_t>(bits));
                     // space is available
                     if (bits == 0) {
@@ -215,6 +217,10 @@ public:
                             return addr; 
                         }
                     }
+                    else {
+                        bit_start = 0;
+                        continuousPageCounter = 0;
+                    }
                     bit_offset += 2;
                 }
             }
@@ -222,9 +228,10 @@ public:
                 //runningContinuous = false;
                 bit_start = 0;
                 continuousPageCounter = 0;
+                trace("set bit_start and continuous page counter to 0");
             }
             loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
-            trace( "loc moved forward to ", loc);
+            //trace( "loc moved forward to ", loc);
         }
 
         return nullptr;
@@ -263,8 +270,10 @@ public:
         uint32_t cycles = 0;
 
         while (bitmap_pos < bitmap_end) {
-            //uint64_t* bitmap_value = reinterpret_cast<uint64_t*>(bitmap_pos);
-            //std::cout << std::hex << *bitmap_value << " ";
+            uint64_t* bitmap_value = reinterpret_cast<uint64_t*>(bitmap_pos);
+            //unused warning
+            (void) bitmap_value;
+            trace( std::hex, *bitmap_value, " ")
             //if (cycles % 8 == 0)
             //    std::cout << std::endl;
             bitmap_pos += sizeof(uint64_t);
