@@ -36,7 +36,7 @@ namespace morphstore {
    struct select_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
-         base_t const * p_DataPtr,
+         base_t const *& p_DataPtr,
          base_t const p_Predicate,
          base_t *& p_OutPtr,
          size_t const p_Count
@@ -71,16 +71,8 @@ namespace morphstore {
          const size_t outPosCountEstimate = 0
       ) {
 
-
-         uint64_t * outP =  outPosCol->get_data();
-         //I know the following is ugly, but _mm_maskstore_epi64 requires a long long (64 bit types are only long on a 64-bit system))
-         __m256i * outPos =  reinterpret_cast< __m256i * >(outP);
-         const __m256i * const initOutPos = (__m256i *) (outPosCol->get_data());
-
-
-
          size_t const inDataCount = p_DataColumn->get_count_values();
-         base_t const * const inDataPtr = p_DataColumn->get_data( );
+         base_t const * inDataPtr = p_DataColumn->get_data( );
          size_t const sizeByte =
             bool(outPosCountEstimate)
             ? (outPosCountEstimate * sizeof(base_t))
@@ -92,11 +84,6 @@ namespace morphstore {
 
          size_t const vectorCount = inPosCount / vector_element_count::value;
          size_t const remainderCount = inPosCount % vector_element_count::value;
-
-         base_t const * p_DataPtr,
-         base_t const p_Predicate,
-         base_t *& p_OutPtr,
-         size_t const p_Count
 
          select_batch<VectorExtension, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
          select_batch<vector::scalar<base_t>, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount);
