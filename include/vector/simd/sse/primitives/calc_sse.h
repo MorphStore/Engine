@@ -27,10 +27,10 @@ namespace vector{
    struct add<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1,
-         typename sse<v128<uint64_>>::vector_t const & p_vec2
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Add 64 bit integer values from two registers (sse)" );
          return _mm_add_epi64( p_vec1, p_vec2);
@@ -40,10 +40,10 @@ namespace vector{
    struct sub<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1,
-         typename sse<v128<uint64_>>::vector_t const & p_vec2
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Subtract 64 bit integer values from two registers (sse)" );
          return _mm_sub_epi64( p_vec1, p_vec2);
@@ -53,9 +53,9 @@ namespace vector{
    struct hadd<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::base_t
+      typename sse<v128<uint64_t>>::base_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1
       ){
          trace( "[VECTOR] - Horizontally add 64 bit integer values one register (sse)" );
          return
@@ -74,10 +74,10 @@ namespace vector{
    struct mul<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1,
-         typename sse<v128<uint64_>>::vector_t const & p_vec2
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (sse)" );
          warn( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
@@ -89,10 +89,10 @@ namespace vector{
    struct div<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const &p_vec1,
-         typename sse<v128<uint64_>>::vector_t const &p_vec2
+         typename sse<v128<uint64_t>>::vector_t const &p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const &p_vec2
       ) {
          trace("[VECTOR] - Divide 64 bit integer values from two registers (sse)");
          __m128d intermediate;
@@ -120,10 +120,10 @@ namespace vector{
    struct mod<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1,
-         typename sse<v128<uint64_>>::vector_t const & p_vec2
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (sse)" );
          warn( "[VECTOR] - MODULO IS A WORKAROUND" );
@@ -156,9 +156,9 @@ namespace vector{
    struct inv<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename sse<v128<uint64_>>::vector_t
+      typename sse<v128<uint64_t>>::vector_t
       apply(
-         typename sse<v128<uint64_>>::vector_t const & p_vec1
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1
       ){
          trace( "[VECTOR] - Additive inverting 64 bit integer values of one register (sse)" );
          return _mm_sub_epi64( _mm_set1_epi64x(0), p_vec1);

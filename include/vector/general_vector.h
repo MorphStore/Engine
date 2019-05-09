@@ -23,6 +23,8 @@ namespace vector {
       using granularity     = std::integral_constant<size_t, sizeof(T)<<3>;
    };
 
+   template<typename T>
+   using v1 = vector_view<(sizeof(T)<<3), T>;
 
    template<typename T>
    using v128 = vector_view<128, T>;
