@@ -96,15 +96,13 @@ namespace morphstore {
 
    template<class VectorExtension>
    struct agg_sum {
-
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       const column<uncompr_f> *
       apply(
          column< uncompr_f > const * const p_DataColumn
       ) {
-         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
          typename agg_sum_processing_unit<VectorExtension>::state_t vectorState;
-
          size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
