@@ -17,7 +17,62 @@
 #include <vector/general_vector.h>
 
 namespace vector{
-    
+
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct equal {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct less {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct lessequal {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct greater {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct greaterequal {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
    
    template<class VectorExtension, int IOGranularity>
    struct compare;
