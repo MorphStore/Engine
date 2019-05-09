@@ -24,28 +24,28 @@ namespace morphstore {
 
       size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
       size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
-      vector_base_t const * dataPtr = p_DataColumn->get_data( );
-      vector_t resultVec = set1<VectorExtension,vector_base_type_size_bit::value>(0);// = setzero<VectorExtension>( );
+      base_t const * dataPtr = p_DataColumn->get_data( );
+      vector_t resultVec = set1<VectorExtension,base_type_size_bit::value>(0);// = setzero<VectorExtension>( );
       for( size_t i = 0; i < vectorCount; ++i ) {
-         resultVec = add<VectorExtension, vector_base_t_granularity::value>(
+         resultVec = add<VectorExtension, base_t_granularity::value>(
             resultVec, load<VectorExtension,iov::ALIGNED, vector_size_bit::value>( dataPtr )
          );
          dataPtr += vector_element_count::value;
       }
 
-      vector_base_t result = hadd<VectorExtension,vector_base_type_size_bit::value>( resultVec );
+      base_t result = hadd<VectorExtension,vector_base_type_size_bit::value>( resultVec );
 
       if( remainderCount != 0) {
-         vector_base_t const * remainderPtr = dataPtr;
+         base_t const * remainderPtr = dataPtr;
          for( size_t i = 0; i < remainderCount; ++i ) {
             result += *remainderPtr++;
          }
       }
 
-      auto outDataCol = new column<uncompr_f>(sizeof(vector_base_t));
-      vector_base_t * const outData = outDataCol->get_data();
+      auto outDataCol = new column<uncompr_f>(sizeof(base_t));
+      base_t * const outData = outDataCol->get_data();
       *outData=result;
-      outDataCol->set_meta_data(1, sizeof(vector_base_t));
+      outDataCol->set_meta_data(1, sizeof(base_t));
       return outDataCol;
    }*/
 
@@ -76,17 +76,16 @@ namespace morphstore {
    struct agg_sum_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
-      typename VectorExtension::base_t
+      base_t
       apply(
-         typename VectorExtension::base_t *&p_DataPtr,
+         base_t *&p_DataPtr,
          size_t const p_Count,
          typename agg_sum_processing_unit<VectorExtension>::state_t &p_State
       ) {
-         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
          for(size_t i = 0; i < p_Count; ++i) {
-            vector_t data = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
+            vector_t dataVector = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
             agg_sum_processing_unit<VectorExtension>::apply(
-               data,
+               dataVector,
                p_State
             );
             p_DataPtr += vector_element_count::value;
@@ -105,20 +104,22 @@ namespace morphstore {
       ) {
          IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
          agg_sum_core<VectorExtension>::state_t vectorState;
-         agg_sum_processing_unit<vector::scalar<vector_base_t>>::state_t scalarState;
+
          size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
-         vector_base_t const * dataPtr = p_DataColumn->get_data( );
+         base_t const * dataPtr = p_DataColumn->get_data( );
 
-         scalarState.resultVec = agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState )
+         agg_sum_processing_unit<vector::scalar<base_t>>::state_t scalarState(
+            agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState )
+         );
 
-         vector::scalar<vector_base_t>::vector_base_t result =
+         vector::scalar<base_t>::base_t result =
             agg_sum_batch<vector::scalar<base_t>>::apply( dataPtr, remainderCount, scalarState );
 
-         auto outDataCol = new column<uncompr_f>(sizeof(vector_base_t));
-         vector_base_t * const outData = outDataCol->get_data();
+         auto outDataCol = new column<uncompr_f>(sizeof(base_t));
+         base_t * const outData = outDataCol->get_data();
          *outData = result;
-         outDataCol->set_meta_data(1, sizeof(vector_base_t));
+         outDataCol->set_meta_data(1, sizeof(base_t));
          return outDataCol;
       }
    };
