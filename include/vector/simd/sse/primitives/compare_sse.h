@@ -22,6 +22,99 @@
 #include <functional>
 
 namespace vector{
+   template<>
+   struct equal<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint64_t>>::mask_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (sse)" );
+         return
+            _mm_movemask_pd(
+               _mm_castsi128_pd(
+                  _mm_cmpeq_epi64(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct less<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint64_t>>::mask_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (sse)" );
+         return
+            _mm_movemask_pd(
+               _mm_castsi128_pd(
+                  _mm_cmpgt_epi64(p_vec2, p_vec1)
+               )
+            );
+      }
+   };
+   template<>
+   struct lessequal<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint64_t>>::mask_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (sse)" );
+         return
+            _mm_movemask_pd(
+               _mm_castsi128_pd(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi64(p_vec1, p_vec2),
+                     _mm_cmpgt_epi64(p_vec2, p_vec1)
+                  )
+               )
+            );
+      }
+   };
+
+   template<>
+   struct greater<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint64_t>>::mask_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (sse)" );
+         return
+            _mm_movemask_pd(
+               _mm_castsi128_pd(
+                  _mm_cmpgt_epi64(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct greaterequal<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint64_t>>::mask_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (sse)" );
+         return
+            _mm_movemask_pd(
+               _mm_castsi128_pd(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi64(p_vec1, p_vec2),
+                     _mm_cmpgt_epi64(p_vec1, p_vec2)
+                  )
+               )
+            );
+      }
+   };
+
     template<typename T>
     struct compare<sse<v128<T>>, 64> {
         
