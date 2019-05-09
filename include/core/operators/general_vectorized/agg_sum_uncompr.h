@@ -54,21 +54,21 @@ namespace morphstore {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
          vector_t resultVec;
-         state_t(void): resultVec{ vector::set1( 0 ) } { }
+         state_t(void): resultVec{ vector::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) } { }
          state_t(vector_t const & p_Data): resultVec{ p_Data } { }
       };
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
-         p_State = vector::add<VectorExtension, base_t_granularity::value>(
+         p_State = vector::add<VectorExtension, vector_base_t_granularity::value>(
             p_State.resultVec, p_DataVector
          );
       }
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static base_t finalize(
          state_t const & p_State
       ) {
-         return vector::hadd<VectorExtension,vector_base_type_size_bit::value>( p_State.resultVec );
+         return vector::hadd<VectorExtension,vector_base_t_granularity::value>( p_State.resultVec );
       }
    };
 
@@ -83,7 +83,7 @@ namespace morphstore {
          typename agg_sum_processing_unit<VectorExtension>::state_t &p_State
       ) {
          for(size_t i = 0; i < p_Count; ++i) {
-            vector_t dataVector = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
+            vector_t dataVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
             agg_sum_processing_unit<VectorExtension>::apply(
                dataVector,
                p_State
@@ -103,13 +103,13 @@ namespace morphstore {
          column< uncompr_f > const * const p_DataColumn
       ) {
          IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-         agg_sum_core<VectorExtension>::state_t vectorState;
+         typename agg_sum_processing_unit<VectorExtension>::state_t vectorState;
 
          size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
 
-         agg_sum_processing_unit<vector::scalar<base_t>>::state_t scalarState(
+         typename agg_sum_processing_unit<vector::scalar<base_t>>::state_t scalarState(
             agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState )
          );
 
