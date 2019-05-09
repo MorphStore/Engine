@@ -61,14 +61,14 @@ namespace morphstore {
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
-         p_State = vector::add<VectorExtension, vector_base_t_granularity::value>(
+         p_State = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(
             p_State.resultVec, p_DataVector
          );
       }
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static base_t finalize(
          state_t const & p_State
       ) {
-         return vector::hadd<VectorExtension,vector_base_t_granularity::value>( p_State.resultVec );
+         return vector::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
 
