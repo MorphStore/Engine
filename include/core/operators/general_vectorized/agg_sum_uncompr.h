@@ -78,7 +78,7 @@ namespace morphstore {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       base_t
       apply(
-         base_t *&p_DataPtr,
+         base_t const *& p_DataPtr,
          size_t const p_Count,
          typename agg_sum_processing_unit<VectorExtension>::state_t &p_State
       ) {

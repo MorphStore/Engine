@@ -60,7 +60,7 @@ namespace morphstore {
          size_t const vectorCount = inPosCount / vector_element_count::value;
          size_t const remainderCount = inPosCount % vector_element_count::value;
          base_t const * const inDataPtr = p_DataColumn->get_data( );
-         base_t const * const inPosPtr = p_PosColumn->get_data( );
+         base_t const * inPosPtr = p_PosColumn->get_data( );
          auto outDataCol = new column<uncompr_f>(inUsedBytes);
          base_t * outDataPtr = outDataCol->get_data( );
          project_t_batch<VectorExtension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
