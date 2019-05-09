@@ -28,10 +28,10 @@ namespace vector{
    struct add<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1,
-         typename avx512<v512<uint64_>>::vector_t const & p_vec2
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm512_add_epi64( p_vec1, p_vec2);
@@ -41,10 +41,10 @@ namespace vector{
    struct sub<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1,
-         typename avx512<v512<uint64_>>::vector_t const & p_vec2
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Subtract 64 bit integer values from two registers (avx512)" );
          return _mm512_sub_epi64( p_vec1, p_vec2);
@@ -54,9 +54,9 @@ namespace vector{
    struct hadd<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::base_t
+      typename avx512<v512<uint64_t>>::base_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1
       ){
          trace( "[VECTOR] - Horizontally add 64 bit integer values one register (avx512)" );
          return _mm512_reduce_add_epi64(p_vec1);
@@ -66,10 +66,10 @@ namespace vector{
    struct mul<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1,
-         typename avx512<v512<uint64_>>::vector_t const & p_vec2
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
          warn( "[VECTOR] - _mm512_mul_epu32 is called (only the lower 32 bit are actually processed" );
@@ -80,10 +80,10 @@ namespace vector{
    struct div<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1,
-         typename avx512<v512<uint64_>>::vector_t const & p_vec2
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Divide 64 bit integer values from two registers (avx512)" );
          __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
@@ -108,10 +108,10 @@ namespace vector{
    struct mod<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1,
-         typename avx512<v512<uint64_>>::vector_t const & p_vec2
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx512)" );
          warn( "[VECTOR] - MODULO IS A WORKAROUND" );
@@ -143,9 +143,9 @@ namespace vector{
    struct inv<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<uint64_>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       apply(
-         typename avx512<v512<uint64_>>::vector_t const & p_vec1
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1
       ){
          trace( "[VECTOR] - Additive inverting 64 bit integer values of one register (avx512)" );
          return _mm512_sub_epi64( _mm512_set1_epi64(0), p_vec1);
