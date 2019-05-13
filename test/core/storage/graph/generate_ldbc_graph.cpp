@@ -21,7 +21,7 @@
  * @todo TODOS?
  */
 
-#include <core/storage/graph.h>
+#include <core/storage/graph/graph.h>
 
 #include <iostream>
 #include <unordered_map>

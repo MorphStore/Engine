@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_GRAPH_H
 #define MORPHSTORE_GRAPH_H
 
-#include <core/storage/vertex.h>
+#include <core/storage/graph/vertex.h>
 
 #include <unordered_map>
 #include <vector>
