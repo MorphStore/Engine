@@ -31,18 +31,18 @@
 #include <iostream>
 
 
-namespace graph{
+namespace morphstore{
 
     class Graph{
 
     private:
         // main data structure: mapping global id -> vertex
-        std::unordered_map<size_t, Vertex> vertices;
+        std::unordered_map<uint64_t, Vertex> vertices;
 
     public:
 
         // function to add a new (ldbc) vertex to the graph
-        void addVertex(size_t id, size_t ldbc_id, int entity){
+        void addVertex(uint64_t id, uint64_t ldbc_id, int entity){
             // if key is not present -> create vertex
             if(!existID(id)){
                 Vertex v(id, ldbc_id, entity);
@@ -53,7 +53,7 @@ namespace graph{
         }
 
         // function that creates a new relation/edge between two (existing) vertices
-        void addEdge(size_t sourceID, size_t targetID, int relation){
+        void addEdge(uint64_t sourceID, uint64_t targetID, int relation){
             if(existID(sourceID) && existID(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
@@ -64,7 +64,7 @@ namespace graph{
         }
 
         // function to check if the ID is present or not
-        bool existID(size_t id){
+        bool existID(uint64_t id){
             if(vertices.find(id) == vertices.end()){
                 return false;
             }
@@ -73,8 +73,8 @@ namespace graph{
 
         // this function returns the total number of edges in the graph
         int getTotalNumberOfEdges(){
-            size_t totalNumberEdges = 0;
-            for(std::unordered_map<size_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
+            uint64_t totalNumberEdges = 0;
+            for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 totalNumberEdges += it->second.getNumberOfEdges();
             }
             return totalNumberEdges;
@@ -89,7 +89,7 @@ namespace graph{
         }
 
         // for debugging
-        void printVertexByID(size_t id){
+        void printVertexByID(uint64_t id){
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;

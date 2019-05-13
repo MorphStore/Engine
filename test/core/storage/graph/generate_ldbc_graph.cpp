@@ -32,8 +32,8 @@
 using namespace std;
 
 struct Relation{
-    size_t fromID;
-    size_t toID;
+    uint64_t fromID;
+    uint64_t toID;
     int relID;
 };
 
@@ -93,7 +93,7 @@ void importDataLookup(string address, unordered_map<int, string> &rLookup){
     cout << " --> done" << endl;
 }
 
-void importDataVertex(string vertexFile, unordered_map<size_t , pair<int, size_t>> &vDict, unordered_map<int, string> &eLookup){
+void importDataVertex(string vertexFile, unordered_map<uint64_t , pair<int, uint64_t>> &vDict, unordered_map<int, string> &eLookup){
 
     cout << "Reading LDBC-Vertices ...";
     std::cout.flush();
@@ -141,8 +141,8 @@ void importDataVertex(string vertexFile, unordered_map<size_t , pair<int, size_t
                 string global_str = row.erase(0, row.find(delimiter) + delimiter.length()); // erase from row (...)\t[data]
 
                 // convert string to long int // TODO: is stoul enough for string -> size_t
-                size_t ldbc_id = stoul(ldbc_str,nullptr,10);
-                size_t global_id = stoul(global_str,nullptr,10);
+                uint64_t ldbc_id = stoul(ldbc_str,nullptr,10);
+                uint64_t global_id = stoul(global_str,nullptr,10);
 
                 vDict.insert({global_id, make_pair(entityIndex-1, ldbc_id)});
 
@@ -195,9 +195,9 @@ void importDataRelations(string relationsFile, vector<Relation> &rList){
             string relID_str = row.erase(0, row.find(delimiter) + delimiter.length());
 
             // convert string data to needed types
-            size_t fromID = stoul(fromID_str,nullptr,10);
+            uint64_t fromID = stoul(fromID_str,nullptr,10);
             if(toID_str == "-1") toID_str = fromID_str; // if the toID is -1 --> loop to itself; refers to the multiple attributes
-            size_t toID = stoul(toID_str,nullptr,10);
+            uint64_t toID = stoul(toID_str,nullptr,10);
             int relID = stoi(relID_str, nullptr, 10);
 
             // write to relationDict data structure
@@ -217,15 +217,15 @@ void importDataRelations(string relationsFile, vector<Relation> &rList){
     cout << " --> done" << endl;
 }
 
-void generateVertices(unordered_map<size_t, pair<int, size_t>>& vertexDict, graph::Graph& g){
+void generateVertices(unordered_map<uint64_t, pair<int, uint64_t>>& vertexDict, morphstore::Graph& g){
 
     cout << "Generating Vertices ...";
     std::cout.flush();
 
     // iterate through vertex-dict. and generate the vertices (objects) in the graph
-    for(std::unordered_map<size_t, pair<int, size_t>>::iterator it = vertexDict.begin(); it != vertexDict.end(); ++it){
-        size_t id = it->first;
-        size_t ldbc_id = it->second.second;
+    for(std::unordered_map<uint64_t, pair<int, uint64_t>>::iterator it = vertexDict.begin(); it != vertexDict.end(); ++it){
+        uint64_t id = it->first;
+        uint64_t ldbc_id = it->second.second;
         int entity = it->second.first;
         g.addVertex(id, ldbc_id, entity);
     }
@@ -233,7 +233,7 @@ void generateVertices(unordered_map<size_t, pair<int, size_t>>& vertexDict, grap
     cout << " --> done" << endl;
 }
 
-void generateEdges(vector<Relation>& rDict, graph::Graph& g){
+void generateEdges(vector<Relation>& rDict, morphstore::Graph& g){
 
     cout << "Generating Relations ...";
     std::cout.flush();
@@ -256,7 +256,7 @@ int main( void ){
     unordered_map<int, string> relationLookup;
 
     // Vertex data from tsv-files: unordered_map { global_id -> (entity.id, ldbc.id) }
-    unordered_map<size_t, pair<int, size_t>> vertexDict;
+    unordered_map<uint64_t, pair<int, uint64_t>> vertexDict;
 
     // Relationship data from tsv-files: vector of struct Relation (fromID, ToID, rel.id)
     vector<Relation> relationDict;
@@ -270,7 +270,7 @@ int main( void ){
 
     // --------------------------------------- Generating the graph ---------------------------------------
 
-    graph::Graph ldbc_graph;
+    morphstore::Graph ldbc_graph;
     generateVertices(vertexDict, ldbc_graph);
     generateEdges(relationDict, ldbc_graph);
 
