@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 
 namespace morphstore{
@@ -47,6 +48,9 @@ namespace morphstore{
         uint64_t ldbc_id;
         int entity;
         std::vector<Edge> adjList;
+
+        // properties
+        std::unordered_map<std::string, std::string> properties;
 
     public:
 
@@ -84,14 +88,14 @@ namespace morphstore{
         }
 
         // function to add new neighbor vertex
-        void addEdge(Vertex* target, int rel){
+        void add_edge(Vertex *target, int rel){
             Edge e;
             e.relation = rel;
             e.target = target;
             this->adjList.push_back(e);
         }
 
-        int getNumberOfEdges(){
+        int get_number_of_edges(){
             return adjList.size();
         }
     };

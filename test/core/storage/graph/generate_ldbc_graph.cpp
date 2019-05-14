@@ -22,6 +22,7 @@
  */
 
 #include <core/storage/graph/graph.h>
+#include <core/storage/graph/ldbc_import.h>
 
 #include <iostream>
 #include <unordered_map>
@@ -30,6 +31,7 @@
 #include <stdio.h>
 
 using namespace std;
+
 
 struct Relation{
     uint64_t fromID;
@@ -227,7 +229,7 @@ void generateVertices(unordered_map<uint64_t, pair<int, uint64_t>>& vertexDict, 
         uint64_t id = it->first;
         uint64_t ldbc_id = it->second.second;
         int entity = it->second.first;
-        g.addVertex(id, ldbc_id, entity);
+        g.add_vertex(id, ldbc_id, entity);
     }
 
     cout << " --> done" << endl;
@@ -240,7 +242,7 @@ void generateEdges(vector<Relation>& rDict, morphstore::Graph& g){
 
     // iterate through relationDict and add (target.id, rel.id) to the vertex adj.-list
     for(std::vector<Relation>::iterator it = rDict.begin(); it != rDict.end(); ++it){
-        g.addEdge(it->fromID, it->toID, it->relID);
+        g.add_edge(it->fromID, it->toID, it->relID);
     }
 
     cout << " --> done" << endl;
@@ -276,6 +278,11 @@ int main( void ){
 
     //ldbc_graph.printVertexByID(90563);
     ldbc_graph.statistics();
+
+    // NEW LDBC-IMPORT TEST
+    morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
+    ldbcImport.print_file_names();
+
 
     return 0;
 }
