@@ -38,6 +38,7 @@
 #include <inttypes.h>
 
 #include <core/utils/logger.h>
+#include <core/utils/preprocessor.h>
 
 namespace morphstore {
 
