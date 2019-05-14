@@ -244,7 +244,7 @@ namespace morphstore {
 		virtual ~SuperMon() {};
 
 		virtual std::string getTupleAsString(char delim) const = 0;
-		virtual void addHeadKeys(std::vector< std::string >& hKeys) = 0;
+		virtual void addHeadKeys(const std::vector< std::string >& hKeys) = 0;
 
 		void startInterval(const std::string& ident) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
@@ -655,7 +655,7 @@ public:
 		//return print::printTuple(delim, key);
 	}
 
-	void addHeadKeys(std::vector< std::string >& hKeys) override {
+	void addHeadKeys(const std::vector< std::string >& hKeys) override {
 		for (const std::string& s : hKeys) {
 			keyHeads.push_back(s);
 		}
@@ -733,7 +733,7 @@ public:
 		}
 	}*/
 
-	void create(SuperMon* mon, std::vector< std::string > headKeys) {
+	void create(SuperMon* mon, const std::vector< std::string >& headKeys) {
 		mon->addHeadKeys(headKeys);
 	}
 
