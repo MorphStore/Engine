@@ -72,12 +72,12 @@ namespace morphstore{
         // for debugging
         void print_file_names(){
             std::cout << "Vertices-Files: " << std::endl;
-            for(auto& v : verticesPaths){
+            for(const auto& v : verticesPaths){
                 std::cout << "\t" << v << std::endl;
             }
 
             std::cout << "Relations-Files: " << std::endl;
-            for(auto& rel : relationsPaths){
+            for(const auto& rel : relationsPaths){
                 std::cout << "\t" << rel << std::endl;
             }
 
