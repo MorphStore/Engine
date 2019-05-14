@@ -56,5 +56,16 @@ namespace morphstore {
         );
     };
     
+    // fold-expressions only in c++1z / c++17
+    template<typename ... T>
+    std::string doPrint(char delim, T ... values) {
+        std::stringstream ss;
+        using isoHelper = int[];
+        (void)isoHelper {
+                0, (void(ss << std::forward< T >(values) << delim), 0) ...
+        };
+        return ss.str();
+    }
+    
 }
 #endif //MORPHSTORE_CORE_UTILS_VARIADIC_H

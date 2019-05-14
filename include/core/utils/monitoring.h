@@ -39,6 +39,7 @@
 
 #include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
+#include <core/utils/variadic.h>
 
 namespace morphstore {
 
@@ -659,17 +660,6 @@ public:
 		for (const std::string& s : hKeys) {
 			keyHeads.push_back(s);
 		}
-	}
-
-	// fold-expressions only in c++1z / c++17
-	std::string doPrint(char delim, T... values) const {
-		//((std::cout << (values) << " "),...);
-		std::stringstream ss;
-		using isoHelper = int[];
-		(void)isoHelper {
-			0, (void(ss << std::forward< T >(values) << delim), 0) ...
-		};
-		return ss.str();
 	}
 
 	// fold-expressions only in c++1z / c++17
