@@ -25,7 +25,7 @@ namespace vector{
    /*!
     * Rotate vector a by 1 element (e.g. for intersection, join,...)
     */
-   template<class VectorExtension, int Granularity>
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    typename VectorExtension::vector_t
    rotate(typename VectorExtension::vector_t a) {
        return manipulate<VectorExtension,  Granularity>::rotate( a );
