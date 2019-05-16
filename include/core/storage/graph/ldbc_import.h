@@ -39,6 +39,7 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
+        std::unordered_map<uint64_t , std::unordered_map<std::string, std::string>> vertices; // intermediate data structure for vertices
 
 
     public:
@@ -87,9 +88,14 @@ namespace morphstore{
                 // (1) calculate global size to allocate
                 for (const auto &address : verticesPaths) {
 
+                    // data strcuture for attributes e.g. taglass hsa id, name, url
+                    std::vector<std::string> attributes;
+
                     // get the entity from address ([...path...] / [entity-name].csv) and put key into attributes map
                     std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
-                    attributes[entity];
+
+                    std::cout << "\t{Processing " + entity + ".csv}" << std::endl;
+                    std::cout.flush();
 
                     char* buffer;
 
@@ -131,13 +137,30 @@ namespace morphstore{
                                 size_t last = 0;
                                 size_t next = 0;
                                 while ((next = row.find(delimiter, last)) != std::string::npos){
-                                    attributes[entity].push_back(row.substr(last, next-last));
+                                    attributes.push_back(row.substr(last, next-last));
                                     last = next + 1;
                                 }
                                 // last attribute
-                                attributes[entity].push_back(row.substr(last));
+                                attributes.push_back(row.substr(last));
                             }else{
                                 // (4) generate vertex with properties and write to graph
+                                // (4) generate vertex with properties and write to graph
+                                std::unordered_map<std::string, std::string> properties;
+
+                                size_t last = 0;
+                                size_t next = 0;
+                                size_t attrIndex = 0;
+                                while ((next = row.find(delimiter, last)) != std::string::npos){
+                                    properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next-last)));
+                                    last = next + 1;
+                                    attrIndex++;
+                                }
+                                // last attribute
+                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
+                                // add entity
+                                properties.insert(std::make_pair("entity", entity));
+                                vertices.insert(std::make_pair( std::stoull(row.substr(0, row.find(delimiter))), properties));
+                                properties.clear();
                             }
 
                             start = i; // set new starting point (otherwise it's concatenated)
@@ -146,15 +169,6 @@ namespace morphstore{
 
                     delete[] buffer; // free memory
                     vertexFile.close();
-                }
-
-                // Verify
-                for( std::unordered_map<std::string,std::vector<std::string> >::const_iterator ptr=attributes.begin(); ptr!=attributes.end(); ptr++) {
-                    std::cout << ptr->first << ": ";
-                    for( std::vector<std::string>::const_iterator eptr=ptr->second.begin(); eptr!=ptr->second.end(); eptr++){
-                        std::cout << *eptr << " ";
-                    }
-                    std::cout << std::endl;
                 }
 
             }

@@ -285,7 +285,7 @@ int main( void ){
 
     // NEW LDBC-IMPORT TEST
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
-    ldbcImport.print_file_names();
+    //ldbcImport.print_file_names();
     ldbcImport.generate_Vertices();
 
 
