@@ -266,9 +266,11 @@ int main( void ){
     // TODO: get base directory with cin -> user input
     string base = "/home/tim/Documents/TUD/(8) Informatik SS 2019/LDBC_Graph_Generating/LDBC_Python_Files/";
 
+    /*
     importDataLookup(base + "relationLookup.tsv", relationLookup);
     importDataVertex(base + "entityDict.tsv", vertexDict, entityLookup); // entityLookup is built within the function automatically
     importDataRelations(base + "relationDict.tsv", relationDict);
+
 
     // --------------------------------------- Generating the graph ---------------------------------------
 
@@ -279,9 +281,12 @@ int main( void ){
     //ldbc_graph.printVertexByID(90563);
     ldbc_graph.statistics();
 
+    */
+
     // NEW LDBC-IMPORT TEST
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
     ldbcImport.print_file_names();
+    ldbcImport.generate_Vertices();
 
 
     return 0;
