@@ -38,6 +38,8 @@
 #include <inttypes.h>
 
 #include <core/utils/logger.h>
+#include <core/utils/preprocessor.h>
+#include <core/utils/variadic.h>
 
 namespace morphstore {
 
@@ -243,7 +245,7 @@ namespace morphstore {
 		virtual ~SuperMon() {};
 
 		virtual std::string getTupleAsString(char delim) const = 0;
-		virtual void addHeadKeys(std::vector< std::string >& hKeys) = 0;
+		virtual void addHeadKeys(const std::vector< std::string >& hKeys) = 0;
 
 		void startInterval(const std::string& ident) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
@@ -654,21 +656,10 @@ public:
 		//return print::printTuple(delim, key);
 	}
 
-	void addHeadKeys(std::vector< std::string >& hKeys) override {
+	void addHeadKeys(const std::vector< std::string >& hKeys) override {
 		for (const std::string& s : hKeys) {
 			keyHeads.push_back(s);
 		}
-	}
-
-	// fold-expressions only in c++1z / c++17
-	std::string doPrint(char delim, T... values) const {
-		//((std::cout << (values) << " "),...);
-		std::stringstream ss;
-		using isoHelper = int[];
-		(void)isoHelper {
-			0, (void(ss << std::forward< T >(values) << delim), 0) ...
-		};
-		return ss.str();
 	}
 
 	// fold-expressions only in c++1z / c++17
@@ -732,7 +723,7 @@ public:
 		}
 	}*/
 
-	void create(SuperMon* mon, std::vector< std::string > headKeys) {
+	void create(SuperMon* mon, const std::vector< std::string >& headKeys) {
 		mon->addHeadKeys(headKeys);
 	}
 
