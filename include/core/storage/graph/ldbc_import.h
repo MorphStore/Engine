@@ -39,10 +39,11 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
-        std::unordered_map<uint64_t , std::unordered_map<std::string, std::string>> vertices; // intermediate data structure for vertices
+        std::unordered_map<uint64_t , std::unordered_map<std::string, std::string>> verticesMap; // intermediate data structure for vertices
 
 
     public:
+
         // constructor
         LDBC_Import(const std::string& dir){
             directory = dir;
@@ -77,7 +78,7 @@ namespace morphstore{
         }
 
         // This function generates the the vertices from the vertex-vector
-        void generate_Vertices(){
+        void read_data_vertices(){
             // data structure for attributes: entity -> (attributes), e.g. tagclass -> (id, name, url)
             std::unordered_map<std::string, std::vector<std::string>> attributes;
 
@@ -143,8 +144,7 @@ namespace morphstore{
                                 // last attribute
                                 attributes.push_back(row.substr(last));
                             }else{
-                                // (4) generate vertex with properties and write to graph
-                                // (4) generate vertex with properties and write to graph
+                                // (4) get properties from buffer/row and store them
                                 std::unordered_map<std::string, std::string> properties;
 
                                 size_t last = 0;
@@ -159,7 +159,8 @@ namespace morphstore{
                                 properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
                                 // add entity
                                 properties.insert(std::make_pair("entity", entity));
-                                vertices.insert(std::make_pair( std::stoull(row.substr(0, row.find(delimiter))), properties));
+
+                                verticesMap.insert(std::make_pair( std::stoull(row.substr(0, row.find(delimiter))), properties));
                                 properties.clear();
                             }
 
@@ -171,6 +172,13 @@ namespace morphstore{
                     vertexFile.close();
                 }
 
+            }
+        }
+
+        void generate_vertices_in_graph(Graph& graph){
+            for(const auto& v : verticesMap){
+                std::unordered_map<std::string, std::string> props = verticesMap.at(v.first);
+                graph.add_vertex_with_properties(v.first, v.first, props);
             }
         }
 
@@ -186,6 +194,16 @@ namespace morphstore{
                 std::cout << "\t" << rel << std::endl;
             }
 
+        }
+
+        // debugging
+        void printVertexAt(uint64_t ldbc_id){
+            std::unordered_map<std::string, std::string> searchedObject = verticesMap.at(ldbc_id);
+            std::cout << "Vertex={ ldbc_id=" << ldbc_id << " ";
+            for(const auto& attr : searchedObject) {
+                std::cout << attr.first << "=" << attr.second << " ";
+            }
+            std::cout << " }" << std::endl;
         }
 
     };

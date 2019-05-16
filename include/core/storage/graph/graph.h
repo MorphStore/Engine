@@ -42,10 +42,22 @@ namespace morphstore{
     public:
 
         // function to add a new (ldbc) vertex to the graph
-        void add_vertex(uint64_t id, uint64_t ldbc_id, int entity){
+        void add_vertex(uint64_t id, uint64_t ldbc_id){
             // if key is not present -> create vertex
             if(!exist_id(id)){
-                Vertex v(id, ldbc_id, entity);
+                Vertex v(id, ldbc_id);
+                vertices.insert(std::make_pair(id, v));
+            }else{
+                std::cout << "Vertex with ID " << id << " already exists!";
+            }
+        }
+
+        // function to add a new (ldbc) vertex to the graph
+        void add_vertex_with_properties(uint64_t id, uint64_t ldbc_id, std::unordered_map<std::string, std::string>& props ){
+            // if key is not present -> create vertex
+            if(!exist_id(id)){
+                Vertex v(id, ldbc_id);
+                v.setProperties(props);
                 vertices.insert(std::make_pair(id, v));
             }else{
                 std::cout << "Vertex with ID " << id << " already exists!";
@@ -94,7 +106,6 @@ namespace morphstore{
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
             std::cout << "LDBC-ID: \t"<< v->getLDBC_Id() << std::endl;
-            std::cout << "Entity-ID: \t"<< v->getEntity() << std::endl;
             std::cout << "#Edges: \t" << v->getAdjList().size() << std::endl;
             std::cout << "Adj.List: ";
 

@@ -46,7 +46,6 @@ namespace morphstore{
         uint64_t id;
         // TODO: remove ldbc_id from Vertex schema (to get more general structure without ldbc-dependency)
         uint64_t ldbc_id;
-        int entity;
         std::vector<Edge> adjList;
 
         // properties
@@ -55,14 +54,13 @@ namespace morphstore{
     public:
 
         // constrcutor without the adjList (Vertex can contain no edges int the graph)
-        Vertex(uint64_t id, uint64_t ldbc_id, int entity){
-            SetVertex(id, ldbc_id, entity);
+        Vertex(uint64_t id, uint64_t ldbc_id){
+            SetVertex(id, ldbc_id);
         }
 
-        void SetVertex(uint64_t id, uint64_t ldbc_id, int entity){
+        void SetVertex(uint64_t id, uint64_t ldbc_id){
             this->id = id;
             this->ldbc_id = ldbc_id;
-            this->entity = entity;
         }
 
         uint64_t getId() const{
@@ -73,18 +71,17 @@ namespace morphstore{
             return ldbc_id;
         }
 
-        int getEntity(){
-            return entity;
-        }
-
         // returns a reference (read-only) of the adjacency list
         const std::vector<Edge>& getAdjList() const{
             return adjList;
         }
 
-
-        void setEntity(int newEntity){
-            entity = newEntity;
+        void setProperties(std::unordered_map<std::string, std::string>& properties){
+            if(!properties.empty()){
+                this->properties = properties;
+            }else{
+                std::cout << "The properties-list is empty!" << std::endl;
+            }
         }
 
         // function to add new neighbor vertex
