@@ -27,6 +27,9 @@
 #include <core/utils/preprocessor.h>
 #include <core/memory/management/abstract_mm.h>
 
+#include <core/memory/management/mmap_mm.h>
+#include <core/memory/management/paged_mm.h>
+
 //#define MSV_DEBUG_MALLOC
 
 #include <dlfcn.h>
@@ -121,13 +124,18 @@ extern "C" {
  * @return Pointer to allocated memory.
  */
 void * operator new( size_t p_AllocSize ) {
-    /*if (p_AllocSize > 128_MB)
+    //const size_t CACHE_LINE_SIZE = 64;
+    size_t abs_needed_size = p_AllocSize + sizeof(morphstore::ObjectInfo);
+
+    if (abs_needed_size > morphstore::ALLOCATION_SIZE) { /* already allocates object info for convenience, aligned to chunksize */
         return morphstore::mmap_memory_manager::getInstance().allocateLarge(p_AllocSize);
-    else if (p_AllocSize > (( 1<<14 ) - sizeof(morphstore::PageHeader) )
-        return morphstore::mmap_memory_manager::getInstance().allocate(p_AllocSize);
-    else
-        return morphstore::paged_memory_manager::getGlobalInstance().allocate(p_AllocSize);*/
-   return malloc( p_AllocSize );
+    }
+    else if (abs_needed_size > (( 1l<<14 ) - sizeof(morphstore::PageHeader) )) {
+        return morphstore::mmap_memory_manager::getInstance().allocate(abs_needed_size);
+    }
+    else {
+        return morphstore::paged_memory_manager::getGlobalInstance().allocate(abs_needed_size);
+    }
 }
 
 void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& manager ) {
@@ -143,7 +151,7 @@ void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& ma
  * @return Pointer to allocated memory.
  */
 void* operator new[]( size_t p_AllocSize ) {
-   return malloc( p_AllocSize );
+   return operator new( p_AllocSize );
 }
 
 /**
@@ -154,7 +162,18 @@ void* operator new[]( size_t p_AllocSize ) {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void operator delete( void * p_FreePtr ) noexcept {
-   free( p_FreePtr );
+    morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>( reinterpret_cast<uint64_t>(p_FreePtr) - sizeof(morphstore::ObjectInfo));
+
+    if (info->size > morphstore::ALLOCATION_SIZE) {
+        morphstore::mmap_memory_manager::getInstance().deallocate(p_FreePtr);
+    }
+    else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
+        morphstore::mmap_memory_manager::getInstance().deallocate(info);
+    }
+    else {
+        morphstore::paged_memory_manager::getGlobalInstance().deallocate(info);
+    }
+    //free( p_FreePtr );
 }
 
 void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& manager ) noexcept {
