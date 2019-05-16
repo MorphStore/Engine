@@ -19,26 +19,38 @@ class PageHeader {
 
 public:
     PageHeader(uint32_t curr_offset, abstract_memory_manager& manager)
-        : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_manager(manager) {}
+        : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_manager(manager)
+    {
+        //trace("called constructor");
+    }
+
+    void init()
+    {
+        m_currOffset = static_cast<uint32_t>(sizeof(PageHeader));
+    }
 
     uint32_t m_currOffset;
     uint32_t m_sumOffset;
     std::mutex m_sema;
     abstract_memory_manager& m_manager;
 };
+static_assert( sizeof(PageHeader) > 0, "PageHeader must be larger than 0");
 
 class Page {
 public:
-    Page(abstract_memory_manager& manager) : header(sizeof(PageHeader), manager) {}
+    Page(abstract_memory_manager& manager) : header(sizeof(PageHeader), manager) {
+        //trace("called page constructor"); 
+    }
 
     void* allocate(size_t size)
     {
-        trace("Trying to allocate ", std::hex, size, " bytes in Page");
-        trace("Current offset ", std::hex, header.m_currOffset, " out of ", std::hex, PAGE_SIZE);
+        //trace("Trying to allocate ", std::hex, size, " bytes in Page");
+        //trace("Current offset ", std::hex, header.m_currOffset, " out of ", std::hex, PAGE_SIZE);
         if (size <= PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
-            header.m_currOffset += size;
             header.m_sumOffset += header.m_currOffset;
+            header.m_currOffset += size;
+            //trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", current offset ", std::hex, header.m_currOffset);
             return loc;
         }
         else {
@@ -50,9 +62,12 @@ public:
     {
         uint64_t offset = reinterpret_cast<uint64_t>(addr) - reinterpret_cast<uint64_t>(this);
         header.m_sumOffset -= offset;
+        trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", offset calculated ", std::hex, offset);
 
         if (header.m_sumOffset == 0) {
-            header.m_manager.deallocate(this);
+            trace( "Triggered deallocation on ", this);
+            //TODO: Fix bug after 0x7be deallocations
+            //mmap_memory_manager::getInstance().deallocate(this);
         }
     }
 
@@ -83,7 +98,7 @@ public:
     void* allocate(size_t size) override
     {
         //TODO: throw exception
-        trace("Allocation called");
+        //trace("Allocation called");
         assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
         auto& manager = mmap_memory_manager::getInstance();
         size += sizeof(ObjectInfo); // Additional space for type and allocation information
@@ -114,12 +129,14 @@ public:
                 current_chunk = manager.allocateContinuous();
                 page_loc = manager.allocate(PAGE_SIZE, current_chunk);
                 current_page = reinterpret_cast<Page*>(page_loc);
+                trace("should construct");
+                new (page_loc) Page(*this);
                 object_loc = current_page->allocate(size);
                 //1trace("[PAGED_MM] Allocated object on ", object_loc);
                 return object_loc;
             }
             else {
-                Page* page = reinterpret_cast<Page*>(page_loc);
+                Page* page = new (page_loc) Page(*this);
                 current_page = page;
                 object_loc = page->allocate(size);
                 //trace("Allocated object on ", object_loc, " with size ", std::hex, size);
@@ -127,14 +144,20 @@ public:
             }
         }
         else {
-            trace( "[PAGED_MM] Found object allocation spot in current page ", current_page);
+            //trace( "[PAGED_MM] Found object allocation spot in current page ", current_page);
             return object_loc;
         }
     }
-    
+
+    inline Page* getPage(void* addr)
+    {
+        return reinterpret_cast<Page*>( reinterpret_cast<uint64_t>(addr) & ~(DB_PAGE_SIZE - 1) );
+    }
+
     void deallocate(void* addr) override
     {
-        mmap_memory_manager::getInstance().deallocate(addr);
+        Page* page = getPage(addr);
+        page->deallocate(addr); 
     } 
    
     //TODO: set protected and only available to test 
