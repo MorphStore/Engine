@@ -48,7 +48,7 @@ namespace morphstore{
                 Vertex v(id, ldbc_id);
                 vertices.insert(std::make_pair(id, v));
             }else{
-                std::cout << "Vertex with ID " << id << " already exists!";
+                std::cout << "Vertex with ID " << id << " already exists in the database!";
             }
         }
 
@@ -57,21 +57,21 @@ namespace morphstore{
             // if key is not present -> create vertex
             if(!exist_id(id)){
                 Vertex v(id, ldbc_id);
-                v.setProperties(props);
+                v.set_properties(props);
                 vertices.insert(std::make_pair(id, v));
             }else{
-                std::cout << "Vertex with ID " << id << " already exists!";
+                std::cout << "Vertex with ID " << id << " already exists in the database!";
             }
         }
 
         // function that creates a new relation/edge between two (existing) vertices
-        void add_edge(uint64_t sourceID, uint64_t targetID, int relation){
+        void add_edge(uint64_t sourceID, uint64_t targetID, std::string rel){
             if(exist_id(sourceID) && exist_id(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
-                sourceV->add_edge(targetV, relation);
+                sourceV->add_edge(targetV, rel);
             }else{
-                std::cout << "Source-/Target-Vertex-ID does not exist!";
+                std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
             }
         }
 
@@ -106,10 +106,10 @@ namespace morphstore{
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
             std::cout << "LDBC-ID: \t"<< v->getLDBC_Id() << std::endl;
-            std::cout << "#Edges: \t" << v->getAdjList().size() << std::endl;
+            std::cout << "#Edges: \t" << v->get_adjList().size() << std::endl;
             std::cout << "Adj.List: ";
 
-            const std::vector<Edge>& adjList = v->getAdjList();
+            const std::vector<Edge>& adjList = v->get_adjList();
             for(const auto& e : adjList){
                 std::cout << "(" << e.target->getId() << "," << e.relation << ") ";
             }

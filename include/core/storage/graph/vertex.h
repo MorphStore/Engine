@@ -36,7 +36,7 @@ namespace morphstore{
     // this struct represents a relation to a target vertex; relation is the number in the lookup table
     struct Edge{
         Vertex* target;
-        int relation;
+        std::string relation;
     };
 
     class Vertex{
@@ -72,11 +72,11 @@ namespace morphstore{
         }
 
         // returns a reference (read-only) of the adjacency list
-        const std::vector<Edge>& getAdjList() const{
+        const std::vector<Edge>& get_adjList() const{
             return adjList;
         }
 
-        void setProperties(std::unordered_map<std::string, std::string>& properties){
+        void set_properties(std::unordered_map<std::string, std::string> &properties){
             if(!properties.empty()){
                 this->properties = properties;
             }else{
@@ -85,11 +85,15 @@ namespace morphstore{
         }
 
         // function to add new neighbor vertex
-        void add_edge(Vertex *target, int rel){
+        void add_edge(Vertex *target, std::string relation){
             Edge e;
-            e.relation = rel;
             e.target = target;
+            e.relation = relation;
             this->adjList.push_back(e);
+        }
+
+        void add_edge_with_property(){
+            // TODO
         }
 
         int get_number_of_edges(){
