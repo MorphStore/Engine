@@ -44,31 +44,21 @@ namespace morphstore{
     private:
         // Vertex contains a (global) id; (old) ldbc id; entity number for lookup; vector adjList for the adjacency List
         uint64_t id;
-        // TODO: remove ldbc_id from Vertex schema (to get more general structure without ldbc-dependency)
-        uint64_t ldbc_id;
         std::vector<Edge> adjList;
-
         // properties
         std::unordered_map<std::string, std::string> properties;
 
     public:
 
         // constrcutor without the adjList (Vertex can contain no edges int the graph)
-        Vertex(uint64_t id, uint64_t ldbc_id){
-            SetVertex(id, ldbc_id);
-        }
-
-        void SetVertex(uint64_t id, uint64_t ldbc_id){
-            this->id = id;
-            this->ldbc_id = ldbc_id;
+        Vertex(){
+            // unique ID generation
+            static uint64_t startID = 0;
+            id = startID++;
         }
 
         uint64_t getId() const{
             return id;
-        }
-
-        uint64_t getLDBC_Id(){
-            return ldbc_id;
         }
 
         // returns a reference (read-only) of the adjacency list
@@ -97,7 +87,7 @@ namespace morphstore{
         }
 
         int get_number_of_edges(){
-            return adjList.size();
+            return static_cast<int>(adjList.size());
         }
     };
 }

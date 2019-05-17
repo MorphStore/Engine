@@ -42,25 +42,22 @@ namespace morphstore{
     public:
 
         // function to add a new (ldbc) vertex to the graph
-        void add_vertex(uint64_t id, uint64_t ldbc_id){
-            // if key is not present -> create vertex
-            if(!exist_id(id)){
-                Vertex v(id, ldbc_id);
-                vertices.insert(std::make_pair(id, v));
+        void add_vertex(const Vertex& v){
+            if(!exist_id(v.getId())){
+                Vertex v;
+                vertices.insert(std::make_pair(v.getId(), v));
             }else{
-                std::cout << "Vertex with ID " << id << " already exists in the database!";
+                std::cout << "Vertex with ID " << v.getId() << " already exists in the database!";
             }
         }
 
         // function to add a new (ldbc) vertex to the graph
-        void add_vertex_with_properties(uint64_t id, uint64_t ldbc_id, std::unordered_map<std::string, std::string>& props ){
-            // if key is not present -> create vertex
-            if(!exist_id(id)){
-                Vertex v(id, ldbc_id);
+        void add_vertex_with_properties(Vertex& v, std::unordered_map<std::string, std::string>& props ){
+            if(!exist_id(v.getId())){
                 v.set_properties(props);
-                vertices.insert(std::make_pair(id, v));
-            }else{
-                std::cout << "Vertex with ID " << id << " already exists in the database!";
+                vertices.insert(std::make_pair(v.getId(), v));
+            } else{
+                std::cout << "Vertex with ID " << v.getId() << " already exists in the database!";
             }
         }
 
@@ -89,7 +86,7 @@ namespace morphstore{
             for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 totalNumberEdges += it->second.get_number_of_edges();
             }
-            return totalNumberEdges;
+            return static_cast<int>(totalNumberEdges);
         }
 
         // for debbuging
@@ -105,7 +102,6 @@ namespace morphstore{
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
-            std::cout << "LDBC-ID: \t"<< v->getLDBC_Id() << std::endl;
             std::cout << "#Edges: \t" << v->get_adjList().size() << std::endl;
             std::cout << "Adj.List: ";
 

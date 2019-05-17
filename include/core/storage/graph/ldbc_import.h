@@ -30,6 +30,17 @@
 #include <fstream>
 #include <unordered_map>
 
+// hash function used to hash a pair of any kind using XOR (for verticesMap)
+struct hash_pair {
+    template <class T1, class T2>
+    size_t operator()(const std::pair<T1, T2>& p) const
+    {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+        return hash1 ^ hash2;
+    }
+};
+
 namespace morphstore{
 
     class LDBC_Import{
@@ -38,7 +49,9 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
-        std::unordered_map<uint64_t , std::unordered_map<std::string, std::string>> verticesMap; // intermediate results
+
+        // intermediate vertex data structure: (entity, ldbc_id) -> properties [key is pair because we have to handle the local ids -> identification]
+        std::unordered_map< std::pair<std::string, std::string > , std::unordered_map<std::string, std::string>, hash_pair> verticesMap;
 
 
     public:
@@ -81,7 +94,7 @@ namespace morphstore{
         void read_data_vertices(){
 
             if(!verticesPaths.empty()) {
-                std::cout << "Generating LDBC-Vertices ...";
+                std::cout << "Reading LDBC-Vertices ...";
                 std::cout.flush();
 
                 // iterate through vector of vertex-addresses
@@ -106,7 +119,7 @@ namespace morphstore{
 
                     // calculate file size
                     if (vertexFile.is_open()) {
-                        fileSize = vertexFile.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
                         vertexFile.clear();
                         vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
                     }
@@ -153,7 +166,7 @@ namespace morphstore{
                                 // add entity
                                 properties.insert(std::make_pair("entity", entity));
                                 //insert into main importer data structure
-                                verticesMap.insert(std::make_pair( std::stoull(row.substr(0, row.find(delimiter))), properties));
+                                verticesMap.insert({{entity, row.substr(0, row.find(delimiter))}, properties});
                                 properties.clear(); // free memory
                             }
 
@@ -171,9 +184,10 @@ namespace morphstore{
         // function which generates the vertices to a given graph
         void generate_vertices_in_graph(Graph& graph){
             // for every vertex in the intermediate verticesMap, get properties map and insert into graph
-            for(const auto& v : verticesMap){
-                std::unordered_map<std::string, std::string> props = verticesMap.at(v.first);
-                graph.add_vertex_with_properties(v.first, v.first, props);
+            for(const auto& vertex : verticesMap){
+                std::unordered_map<std::string, std::string> props = verticesMap.at(vertex.first);
+                Vertex v;
+                graph.add_vertex_with_properties(v, props);
             }
             // clear vector
             verticesMap.clear();
@@ -208,7 +222,7 @@ namespace morphstore{
 
                     // calculate file size
                     if (vertexFile.is_open()) {
-                        fileSize = vertexFile.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
                         vertexFile.clear();
                         vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
                     }
@@ -256,8 +270,9 @@ namespace morphstore{
         }
 
         // debugging
-        void print_vertex_at(uint64_t ldbc_id){
-            std::unordered_map<std::string, std::string> searchedObject = verticesMap.at(ldbc_id);
+        void print_vertex_at(std::string entity, std::string ldbc_id){
+            std::pair<std::string, std::string> key = {entity, ldbc_id};
+            std::unordered_map<std::string, std::string> searchedObject = verticesMap.at(key);
             std::cout << "Vertex={ ldbc_id=" << ldbc_id << " ";
             for(const auto& attr : searchedObject) {
                 std::cout << attr.first << "=" << attr.second << " ";

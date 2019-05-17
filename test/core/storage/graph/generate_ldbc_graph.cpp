@@ -118,9 +118,9 @@ int main( void ){
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
     //ldbcImport.print_file_names();
     ldbcImport.read_data_vertices();
-    //ldbcImport.print_vertex_at(2199024637094);
+
     morphstore::Graph socialGraph;
-    ldbcImport.generate_vertices_in_graph(socialGraph);
+    //ldbcImport.generate_vertices_in_graph(socialGraph);
     socialGraph.statistics();
 
     return 0;
