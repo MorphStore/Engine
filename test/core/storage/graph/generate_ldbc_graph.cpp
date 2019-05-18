@@ -116,10 +116,10 @@ int main( void ){
 
     // TODO: get base directory with cin -> user input
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
-    //ldbcImport.print_file_names();
-    ldbcImport.read_data_vertices();
-
     morphstore::Graph socialGraph;
+
+    //ldbcImport.print_file_names();
+    ldbcImport.generate_vertices(socialGraph);
     //ldbcImport.generate_vertices_in_graph(socialGraph);
     socialGraph.statistics();
 

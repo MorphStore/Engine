@@ -50,8 +50,8 @@ namespace morphstore{
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
 
-        // intermediate vertex data structure: (entity, ldbc_id) -> properties [key is pair because we have to handle the local ids -> identification]
-        std::unordered_map< std::pair<std::string, std::string > , std::unordered_map<std::string, std::string>, hash_pair> verticesMap;
+        // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
+        std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
 
     public:
@@ -90,8 +90,8 @@ namespace morphstore{
             }
         }
 
-        // this function reads the vertices-files and write it to the intermediate map verticesMap
-        void read_data_vertices(){
+        // this function reads the vertices-files and creates vertices in a graph
+        void generate_vertices(Graph &graph){
 
             if(!verticesPaths.empty()) {
                 std::cout << "Reading LDBC-Vertices ...";
@@ -156,6 +156,7 @@ namespace morphstore{
                                 // actual data: write to intermediate properties map
                                 std::unordered_map<std::string, std::string> properties;
                                 size_t attrIndex = 0;
+                                std::string ldbcID = row.substr(0, row.find(delimiter));
                                 while ((next = row.find(delimiter, last)) != std::string::npos){
                                     properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next-last)));
                                     last = next + 1;
@@ -165,8 +166,13 @@ namespace morphstore{
                                 properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
                                 // add entity
                                 properties.insert(std::make_pair("entity", entity));
-                                //insert into main importer data structure
-                                verticesMap.insert({{entity, row.substr(0, row.find(delimiter))}, properties});
+                                //-----------------------------------------------------
+                                // create vertex and insert into graph with properties
+                                Vertex v;
+                                graph.add_vertex_with_properties(v, properties);
+                                // map entity and ldbc id to system generated id
+                                globalIdLookupMap.insert({{entity, ldbcID}, v.getId()});
+                                //-----------------------------------------------------
                                 properties.clear(); // free memory
                             }
 
@@ -179,18 +185,6 @@ namespace morphstore{
                 }
                 std::cout << " --> done" << std::endl;
             }
-        }
-
-        // function which generates the vertices to a given graph
-        void generate_vertices_in_graph(Graph& graph){
-            // for every vertex in the intermediate verticesMap, get properties map and insert into graph
-            for(const auto& vertex : verticesMap){
-                std::unordered_map<std::string, std::string> props = verticesMap.at(vertex.first);
-                Vertex v;
-                graph.add_vertex_with_properties(v, props);
-            }
-            // clear vector
-            verticesMap.clear();
         }
 
         // this function reads the relation-files and write it to the intermediate map verticesMap
@@ -267,17 +261,6 @@ namespace morphstore{
                 std::cout << "\t" << rel << std::endl;
             }
 
-        }
-
-        // debugging
-        void print_vertex_at(std::string entity, std::string ldbc_id){
-            std::pair<std::string, std::string> key = {entity, ldbc_id};
-            std::unordered_map<std::string, std::string> searchedObject = verticesMap.at(key);
-            std::cout << "Vertex={ ldbc_id=" << ldbc_id << " ";
-            for(const auto& attr : searchedObject) {
-                std::cout << attr.first << "=" << attr.second << " ";
-            }
-            std::cout << " }" << std::endl;
         }
 
     };
