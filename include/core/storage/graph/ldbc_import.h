@@ -204,7 +204,7 @@ namespace morphstore{
         // this function reads the relation-files and generates edges in graph
         void generate_edges(/*morphstore::Graph& graph*/){
 
-            if(!verticesPaths.empty()) {
+            if(!relationsPaths.empty()) {
                 std::cout << "Generating LDBC-Edges ...";
                 std::cout.flush();
 
@@ -214,30 +214,33 @@ namespace morphstore{
                     // data structure for attributes of entity, e.g. taglass -> id, name, url
                     std::vector<std::string> attributes;
 
-                    // get the entity from address ([...path...] / [entity-name].csv)
-                    std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+                    // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
+                    std::string relation = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+                    std::string fromEntity = relation.substr(0, relation.find('_'));
+                    std::string relationName = relation.substr(fromEntity.size() + 1, relation.find('_') - 1);
+                    std::string toEntity = relation.substr(fromEntity.size() + relationName.size() + 2, relation.find('_'));
 
                     char* buffer;
 
                     uint64_t fileSize = 0;
 
-                    std::ifstream vertexFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+                    std::ifstream relationFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
-                    if (!vertexFile) {
+                    if (!relationFile) {
                         std::cerr << "Error, opening file. ";
                         exit(EXIT_FAILURE);
                     }
 
                     // calculate file size
-                    if (vertexFile.is_open()) {
-                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                        vertexFile.clear();
-                        vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    if (relationFile.is_open()) {
+                        fileSize = static_cast<uint64_t>(relationFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        relationFile.clear();
+                        relationFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
                     }
 
                     // allocate memory
                     buffer = (char*) malloc( fileSize * sizeof( char ) );
-                    vertexFile.read(buffer, fileSize); // read data as one big block
+                    relationFile.read(buffer, fileSize); // read data as one big block
                     size_t start = 0;
                     std::string delimiter = "|";
 
@@ -277,7 +280,7 @@ namespace morphstore{
                     }
 
                     delete[] buffer; // free memory
-                    vertexFile.close();
+                    relationFile.close();
                 }
                 globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
                 std::cout << " --> done" << std::endl;
