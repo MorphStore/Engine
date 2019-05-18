@@ -29,6 +29,7 @@
 #include <string>
 #include <fstream>
 #include <unordered_map>
+#include <algorithm>
 
 // hash function used to hash a pair of any kind using XOR (for verticesMap)
 struct hash_pair {
@@ -49,7 +50,7 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
-
+        std::vector<std::string> entities; // for the multi-value attributes (lookup)
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
@@ -91,10 +92,10 @@ namespace morphstore{
         }
 
         // this function reads the vertices-files and creates vertices in a graph
-        void generate_vertices(Graph &graph){
+        void generate_vertices(morphstore::Graph &graph){
 
             if(!verticesPaths.empty()) {
-                std::cout << "Reading LDBC-Vertices ...";
+                std::cout << "Generating LDBC-Vertices ...";
                 std::cout.flush();
 
                 // iterate through vector of vertex-addresses
@@ -143,8 +144,9 @@ namespace morphstore{
 
                             size_t last = 0;
                             size_t next = 0;
+
                             // first line of *.csv contains the attributes -> write to attributes vector
-                            if(row.rfind("id", 0) == 0){
+                            if(start == 0){
                                 // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
                                 while ((next = row.find(delimiter, last)) != std::string::npos){
                                     attributes.push_back(row.substr(last, next-last));
@@ -182,13 +184,25 @@ namespace morphstore{
 
                     delete[] buffer; // free memory
                     vertexFile.close();
+                    // insert entity into vector
+                    entities.push_back(entity);
                 }
                 std::cout << " --> done" << std::endl;
             }
         }
 
-        // this function reads the relation-files and write it to the intermediate map verticesMap
-        void read_data_edges(){
+        // function which returns true, if parameter is a entity in ldbc-files
+        bool isEntity(const std::string& entity){
+            // iterate through entities vector to look up for paramater
+            if (std::find(entities.begin(), entities.end(), entity) != entities.end()){
+                return true;
+            }
+            return false;
+        }
+
+
+        // this function reads the relation-files and generates edges in graph
+        void generate_edges(/*morphstore::Graph& graph*/){
 
             if(!verticesPaths.empty()) {
                 std::cout << "Generating LDBC-Edges ...";
@@ -238,6 +252,26 @@ namespace morphstore{
                                 row.erase(0,1);
                             }
 
+                            size_t last = 0;
+                            size_t next = 0;
+
+                            // TODO: continue here {read first line and check if its relation or multi attribute file + generate edges in graph}
+                            // first line of *.csv: Differentiate whether it's
+                            // (1) relation without properties: e.g. Person.id|Person.id -> number = 2
+                            // (2) relation with properties: e.g. Person.id|Person.id|fromDate -> number = 3
+                            // (3) multiple attribute: e.g. Person.id|email -> number = 2 + isEntity("email") == false
+                            if(start == 0){
+                                // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
+                                while ((next = row.find(delimiter, last)) != std::string::npos){
+                                    attributes.push_back(row.substr(last, next-last));
+                                    last = next + 1;
+                                }
+                                // last attribute
+                                attributes.push_back(row.substr(last));
+                            }else{
+                                // actual data ... do stuff here
+                            }
+
                             start = i; // set new starting point for buffer (otherwise it's concatenated)
                         }
                     }
@@ -245,6 +279,7 @@ namespace morphstore{
                     delete[] buffer; // free memory
                     vertexFile.close();
                 }
+                globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
                 std::cout << " --> done" << std::endl;
             }
         }

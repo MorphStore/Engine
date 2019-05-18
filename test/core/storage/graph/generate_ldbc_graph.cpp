@@ -32,69 +32,7 @@
 
 using namespace std;
 
-
 /*
-
-void importDataRelations(string relationsFile, vector<Relation> &rList){
-
-    cout << "Reading LDBC-Relations ...";
-    std::cout.flush();
-
-    char* buffer;
-    ifstream graph(relationsFile, std::ios::binary | std::ios::ate ); // 'ate' means: open and seek to end immediately after opening
-    uint64_t fileSize = 0;
-
-    if(!graph){
-        cerr << "Error, opening file. ";
-        exit(EXIT_FAILURE);
-    }
-
-    if (graph.is_open()) {
-        fileSize = graph.tellg(); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-        graph.clear();
-        graph.seekg( 0, std::ios::beg ); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-    }
-
-    // allocate memory with the filesize and the char size
-    buffer = (char*) malloc( fileSize * sizeof( char ) );
-    graph.read(buffer, fileSize); // read data as one big block
-    size_t start = 0;
-    string delimiter = "\t";
-
-    for(size_t i = 0; i < fileSize; ++i){
-        if(buffer[i] == '\n'){
-
-            // get a row into string form buffer with start- and end-point and do stuff ...
-            string row(&buffer[start], &buffer[i]);
-
-            string fromID_str = row.substr(0, row.find(delimiter));
-            row.erase(0, row.find(delimiter) + delimiter.length());
-            string toID_str = row.substr(0, row.find(delimiter));
-            string relID_str = row.erase(0, row.find(delimiter) + delimiter.length());
-
-            // convert string data to needed types
-            uint64_t fromID = stoul(fromID_str,nullptr,10);
-            if(toID_str == "-1") toID_str = fromID_str; // if the toID is -1 --> loop to itself; refers to the multiple attributes
-            uint64_t toID = stoul(toID_str,nullptr,10);
-            int relID = stoi(relID_str, nullptr, 10);
-
-            // write to relationDict data structure
-            Relation r;
-            r.fromID = fromID;
-            r.toID = toID;
-            r.relID = relID;
-            rList.push_back(r);
-
-            start = i; // set new starting point (otherwise it's concatenated)
-        }
-    }
-
-    delete[] buffer; // free memory
-    graph.close();
-
-    cout << " --> done" << endl;
-}
-
 void generateEdges(vector<Relation>& rDict, morphstore::Graph& g){
 
     cout << "Generating Relations ...";
@@ -120,7 +58,6 @@ int main( void ){
 
     //ldbcImport.print_file_names();
     ldbcImport.generate_vertices(socialGraph);
-    //ldbcImport.generate_vertices_in_graph(socialGraph);
     socialGraph.statistics();
 
     return 0;
