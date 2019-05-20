@@ -50,14 +50,13 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
-        std::vector<std::string> entities; // for the multi-value attributes (lookup)
+        std::vector<std::string> entities;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
 
     public:
 
-        // constructor
         LDBC_Import(const std::string& dir){
             directory = dir;
             insert_file_names(directory);
@@ -310,10 +309,8 @@ namespace morphstore{
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
                             }
                         }
-
                         delete[] buffer; // free memory
                         relationFile.close();
-
                     }
                 }
                 globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
@@ -327,7 +324,6 @@ namespace morphstore{
             for(const auto& v : verticesPaths){
                 std::cout << "\t" << v << std::endl;
             }
-
             std::cout << "Relations-Files: " << std::endl;
             for(const auto& rel : relationsPaths){
                 std::cout << "\t" << rel << std::endl;
@@ -336,9 +332,6 @@ namespace morphstore{
         }
 
     };
-
-
-
 }
 
 #endif //MORPHSTORE_LDBC_IMPORT_H
