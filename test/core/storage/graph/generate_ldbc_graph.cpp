@@ -30,24 +30,6 @@
 #include <fstream>
 #include <stdio.h>
 
-using namespace std;
-
-/*
-void generateEdges(vector<Relation>& rDict, morphstore::Graph& g){
-
-    cout << "Generating Relations ...";
-    std::cout.flush();
-
-    // iterate through relationDict and add (target.id, rel.id) to the vertex adj.-list
-    for(std::vector<Relation>::iterator it = rDict.begin(); it != rDict.end(); ++it){
-        g.add_edge(it->fromID, it->toID, it->relID);
-    }
-
-    cout << " --> done" << endl;
-}
-
- */
-
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
@@ -58,6 +40,7 @@ int main( void ){
 
     //ldbcImport.print_file_names();
     ldbcImport.generate_vertices(socialGraph);
+    ldbcImport.generate_edges(socialGraph);
     socialGraph.statistics();
 
     return 0;

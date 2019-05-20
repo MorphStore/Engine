@@ -37,6 +37,7 @@ namespace morphstore{
     struct Edge{
         Vertex* target;
         std::string relation;
+        std::pair<std::string, std::string> property;
     };
 
     class Vertex{
@@ -74,7 +75,7 @@ namespace morphstore{
             }
         }
 
-        // function to add new neighbor vertex
+        // function that creates a new relation/edge between two (existing) vertices withouht properties
         void add_edge(Vertex *target, std::string relation){
             Edge e;
             e.target = target;
@@ -82,12 +83,23 @@ namespace morphstore{
             this->adjList.push_back(e);
         }
 
-        void add_edge_with_property(){
-            // TODO
+        // add edge with properties to vertex
+        void add_edge_with_property(Vertex *target, std::string relation, std::pair<std::string, std::string> property){
+            Edge e;
+            e.target = target;
+            e.relation = relation;
+            e.property = property;
+            this->adjList.push_back(e);
         }
 
         int get_number_of_edges(){
             return static_cast<int>(adjList.size());
+        }
+
+        void print_properties(){
+            for(const auto& entry : properties){
+                std::cout << "{" << entry.first << ": " << entry.second << "}";
+            }
         }
     };
 }

@@ -72,6 +72,17 @@ namespace morphstore{
             }
         }
 
+        // function that creates a new relation/edge between two (existing) vertices WITH property
+        void add_edge_with_property(uint64_t sourceID, uint64_t targetID, std::string rel, std::pair<std::string, std::string> property){
+            if(exist_id(sourceID) && exist_id(targetID)){
+                Vertex* sourceV = &vertices.at(sourceID);
+                Vertex* targetV = &vertices.at(targetID);
+                sourceV->add_edge_with_property(targetV, rel, property);
+            }else{
+                std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
+            }
+        }
+
         // function to check if the ID is present or not
         bool exist_id(const uint64_t id){
             if(vertices.find(id) == vertices.end()){
@@ -109,6 +120,8 @@ namespace morphstore{
             for(const auto& e : adjList){
                 std::cout << "(" << e.target->getId() << "," << e.relation << ") ";
             }
+            std::cout << "\n";
+            std::cout << "Properties: "; v->print_properties();
             std::cout << "\n";
         }
     };
