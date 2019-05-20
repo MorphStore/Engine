@@ -36,3 +36,22 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 
     add_test( agg_sum_vectorized_test agg_sum_app )
 endif()
+
+if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/my_operator_app )
+    add_executable( my_operator_app operators/my_operator.cpp )
+
+    target_compile_options( my_operator_app PRIVATE
+                        -Wall
+                        -Wextra
+                        -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( my_operator_app PRIVATE "-ldl" )
+
+    add_test( my_operator_test my_operator_app )
+endif()
