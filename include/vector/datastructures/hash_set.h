@@ -25,12 +25,27 @@ namespace vector {
     * @tparam MaxLoadfactor
     */
    template<
+      class BiggestSupportedVectorExtension,
       template<class> class HashFunction,
       size_t MaxLoadfactor //60 if 0.6...
    >
    class hash_set_lpcs {
 
       private:
+         /**
+          * 0   [ 0 ]   ==>
+          * 1   [ 0 ]
+          * 2   [ 0 ]
+          * 3   [ 0 ]
+          * 4   [ 0 ]
+          * 5   [ 0 ]
+          * 6   [ 0 ]
+          *
+          * @tparam VectorExtension
+          * @param p_Key
+          * @param p_StartPosition
+          * @param p_LastPossiblePosition
+          */
          template< class VectorExtension >
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
          void build_processing_unit(
