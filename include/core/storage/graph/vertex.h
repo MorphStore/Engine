@@ -18,7 +18,7 @@
 /**
  * @file vertex.h
  * @brief vertex class and its functions + Edge struct
- * @todo Add data structure for properties
+ * @todo
 */
 
 #ifndef MORPHSTORE_VERTEX_H

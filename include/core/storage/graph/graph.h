@@ -18,7 +18,7 @@
 /**
  * @file graph.h
  * @brief Graph storage format -> adjacency Lists
- * @todo Add property structure to Vertex and Edge
+ * @todo
  */
 
 #ifndef MORPHSTORE_GRAPH_H

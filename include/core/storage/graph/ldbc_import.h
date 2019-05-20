@@ -18,7 +18,7 @@
 /**
  * @file ldbc_import.h
  * @brief this class reads the ldbc files and generates the graph
- * @todo Any TODOS?
+ * @todo process Multi-value attributes
 */
 
 #ifndef MORPHSTORE_LDBC_IMPORT_H
@@ -221,10 +221,8 @@ namespace morphstore{
                     std::string toEntity = relation;
 
                     // check from file name whether it's a relation file or multi value attribute file
-                    // TODO: change handling of multi-value attributes (now just skipping...)
                     if(!isEntity(toEntity)){
-                        // multiple attribute; toEntity in file-name is no entity -> e.g. isEntity("email") == false
-                        std::cout << "\tFile is a multi-value attribute file. Skipping!" << std::endl;
+                        // TODO: add code here for multi value attr...
                     }
                         // handling of relation-files ...
                     else{

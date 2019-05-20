@@ -18,17 +18,11 @@
 /**
  * @file generate_ldbc_graph.cpp
  * @brief Test for generating social network graph from LDBC files
- * @todo TODOS?
+ * @todo
  */
 
 #include <core/storage/graph/graph.h>
 #include <core/storage/graph/ldbc_import.h>
-
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-#include <fstream>
-#include <stdio.h>
 
 int main( void ){
 
