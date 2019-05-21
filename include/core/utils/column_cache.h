@@ -51,6 +51,8 @@ namespace morphstore {
             
         public:
             const void * const m_ColumnVoidPtr;
+            
+            virtual ~abstract_column_wrapper() = default;
         };
         
         template<class t_format>
