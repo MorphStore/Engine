@@ -54,7 +54,7 @@ namespace morphstore{
         // function to add a new (ldbc) vertex to the graph
         void add_vertex_with_properties(Vertex& v, std::unordered_map<std::string, std::string>& props ){
             if(!exist_id(v.getId())){
-                v.set_properties(props);
+                v.add_properties(props);
                 vertices.insert(std::make_pair(v.getId(), v));
             } else{
                 std::cout << "Vertex with ID " << v.getId() << " already exists in the database!";
@@ -78,6 +78,15 @@ namespace morphstore{
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
                 sourceV->add_edge_with_property(targetV, rel, property);
+            }else{
+                std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
+            }
+        }
+
+        // this adds a specific key-value pair (property) to a vertex given by its id
+        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string>& property){
+            if(exist_id(id)){
+                vertices.at(id).add_property(property);
             }else{
                 std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
             }

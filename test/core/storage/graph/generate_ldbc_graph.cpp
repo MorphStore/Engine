@@ -32,10 +32,16 @@ int main( void ){
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::Graph socialGraph;
 
-    //ldbcImport.print_file_names();
+    // generate vertices & edges from LDBC files and insert into socialGraph
     ldbcImport.generate_vertices(socialGraph);
     ldbcImport.generate_edges(socialGraph);
+
     socialGraph.statistics();
+
+    // test vertices:
+    socialGraph.print_vertex_by_id(100454);
+    socialGraph.print_vertex_by_id(100450);
+    socialGraph.print_vertex_by_id(100168);
 
     return 0;
 }

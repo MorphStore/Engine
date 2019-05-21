@@ -220,39 +220,75 @@ namespace morphstore{
 
                     std::string toEntity = relation;
 
+                    char* buffer;
+
+                    uint64_t fileSize = 0;
+
+                    std::ifstream relationFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+
+                    if (!relationFile) {
+                        std::cerr << "Error, opening file. ";
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // calculate file size
+                    if (relationFile.is_open()) {
+                        fileSize = static_cast<uint64_t>(relationFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        relationFile.clear();
+                        relationFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    }
+
+                    // allocate memory
+                    buffer = (char*) malloc( fileSize * sizeof( char ) );
+                    relationFile.read(buffer, fileSize); // read data as one big block
+
+                    size_t start = 0;
+                    std::string delimiter = "|";
+
                     // check from file name whether it's a relation file or multi value attribute file
                     if(!isEntity(toEntity)){
-                        // TODO: add code here for multi value attr...
+                        // Multi-value-attributes: just take the last recently one
+                        std::string propertyKey;
+                        std::unordered_map<uint64_t, std::string> multiValueAttr;
+                        uint64_t systemID;
+                        std::string value;
+
+                        for(size_t i = 0; i < fileSize; ++i){
+                            if(buffer[i] == '\n'){
+                                // get a row into string form buffer with start- and end-point
+                                std::string row(&buffer[start], &buffer[i]);
+
+                                // remove unnecessary '\n' at the beginning of a string
+                                if(row.find('\n') != std::string::npos){
+                                    row.erase(0,1);
+                                }
+
+                                // first line: get the attribute a.k.a key for the property, e.g. Person.id|email -> get 'email'
+                                if(start == 0){
+                                    propertyKey = row.substr(row.find(delimiter) + 1);
+                                }else{
+                                    // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
+                                    systemID = globalIdLookupMap.at({fromEntity, row.substr(0, row.find(delimiter))});
+                                    value = row.substr(row.find(delimiter) + 1);
+                                    multiValueAttr[systemID] = value;
+                                }
+
+                                start = i; // set new starting point for buffer (otherwise it's concatenated)
+                            }
+                        }
+                        // iterate through multiValue map and assign property to vertex
+                        for(const auto &pair : multiValueAttr){
+                            const std::pair<std::string, std::string>& keyValuePair = {propertyKey, pair.second};
+                            graph.add_property_to_vertex(pair.first, keyValuePair);
+                        }
+
                     }
                         // handling of relation-files ...
                     else{
 
-                        char* buffer;
-
-                        uint64_t fileSize = 0;
-
-                        std::ifstream relationFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
-
-                        if (!relationFile) {
-                            std::cerr << "Error, opening file. ";
-                            exit(EXIT_FAILURE);
-                        }
-
-                        // calculate file size
-                        if (relationFile.is_open()) {
-                            fileSize = static_cast<uint64_t>(relationFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                            relationFile.clear();
-                            relationFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-                        }
-
-                        // allocate memory
-                        buffer = (char*) malloc( fileSize * sizeof( char ) );
-                        relationFile.read(buffer, fileSize); // read data as one big block
-
-                        size_t start = 0;
-                        std::string delimiter = "|";
                         bool hasProperties = false;
                         std::string propertyKey;
+                        uint64_t fromID, toID;
 
                         // read buffer and do the magic ...
                         for(size_t i = 0; i < fileSize; ++i){
@@ -285,11 +321,10 @@ namespace morphstore{
                                 }else{
                                     // lines of data: (from_local-ldbc-id), (to_local-ldbc-id) and property
                                     // get the system-(global) id's from local ids
-                                    uint64_t fromID = globalIdLookupMap.at({fromEntity, row.substr(0, row.find(delimiter))});
+                                    fromID = globalIdLookupMap.at({fromEntity, row.substr(0, row.find(delimiter))});
                                     // remove from id from string
                                     row.erase(0, row.find(delimiter) + delimiter.length());
                                     std::string value;
-                                    uint64_t toID;
                                     if(!hasProperties){
                                         // WITHOUT properties: just from the first delimiter on
                                         toID = globalIdLookupMap.at({toEntity, row});
@@ -307,9 +342,9 @@ namespace morphstore{
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
                             }
                         }
-                        delete[] buffer; // free memory
-                        relationFile.close();
                     }
+                    delete[] buffer; // free memory
+                    relationFile.close();
                 }
                 globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
                 std::cout << " --> done" << std::endl;

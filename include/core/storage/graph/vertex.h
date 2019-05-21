@@ -67,12 +67,18 @@ namespace morphstore{
             return adjList;
         }
 
-        void set_properties(std::unordered_map<std::string, std::string> &properties){
+        // this function adds a whole property map to a vertex
+        void add_properties(std::unordered_map<std::string, std::string> &properties){
             if(!properties.empty()){
                 this->properties = properties;
             }else{
                 std::cout << "The properties-list is empty!" << std::endl;
             }
+        }
+
+        // this adds one key-value pair to the vertex's property map
+        void add_property(const std::pair<std::string, std::string>& property){
+            this->properties[property.first] = property.second;
         }
 
         // function that creates a new relation/edge between two (existing) vertices withouht properties
