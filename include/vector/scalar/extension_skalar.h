@@ -14,11 +14,13 @@
 #include "vector/general_vector.h"
 
 namespace vector {
-
+    
+   template<class VectorReg>
+   struct scalar;
    template<typename T>
-   struct scalar<T> {
+   struct scalar<v64 <T>> {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
-      using vector_helper_t = v1<T>;
+      using vector_helper_t = v64<T>;
       using base_t = typename vector_helper_t::base_t;
 
       using vector_t = T;

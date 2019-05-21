@@ -11,8 +11,15 @@
 #include <vector/primitives/create.h>
 #include <core/utils/preprocessor.h>
 
+#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/compare_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+
 namespace morphstore {
 
+   using namespace vector;
+   
    /*template<class VectorExtension>
    const column<uncompr_f> *
       agg_sum(
@@ -54,20 +61,24 @@ namespace morphstore {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
          vector_t resultVec;
-         state_t(void): resultVec{ vector::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) } { }
-         state_t(vector_t const & p_Data): resultVec{ p_Data } { }
+         state_t(void): resultVec( vector::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) ) { }
+         //state_t(vector_t const & p_Data): resultVec( p_Data ) { }
+         state_t(base_t p_Data): resultVec(vector::load<scalar<v64<uint64_t>>,iov::ALIGNED,64>(&p_Data)){}
+         //TODO replace by set
       };
+      
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
-         p_State = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(
+         p_State.resultVec = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(
             p_State.resultVec, p_DataVector
          );
       }
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static base_t finalize(
-         state_t const & p_State
+         typename agg_sum_processing_unit<VectorExtension>::state_t & p_State
       ) {
+          
          return vector::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
@@ -107,12 +118,13 @@ namespace morphstore {
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
 
-         typename agg_sum_processing_unit<vector::scalar<base_t>>::state_t scalarState(
-            agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState )
+         static base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
+         typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState(
+         t
          );
 
-         vector::scalar<base_t>::base_t result =
-            agg_sum_batch<vector::scalar<base_t>>::apply( dataPtr, remainderCount, scalarState );
+        base_t result =
+            agg_sum_batch<scalar < v64 < uint64_t > >>::apply( dataPtr, remainderCount, scalarState );
 
          auto outDataCol = new column<uncompr_f>(sizeof(base_t));
          base_t * const outData = outDataCol->get_data();
