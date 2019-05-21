@@ -15,6 +15,7 @@
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
 
 namespace morphstore {
 
@@ -63,7 +64,7 @@ namespace morphstore {
          vector_t resultVec;
          state_t(void): resultVec( vector::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) ) { }
          //state_t(vector_t const & p_Data): resultVec( p_Data ) { }
-         state_t(base_t p_Data): resultVec(vector::load<scalar<v64<uint64_t>>,iov::ALIGNED,64>(&p_Data)){}
+         state_t(base_t p_Data): resultVec(vector::set1<scalar<v64<uint64_t>>,64>(p_Data)){}
          //TODO replace by set
       };
       
