@@ -132,6 +132,7 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "Properties: "; v->print_properties();
             std::cout << "\n";
+            std::cout << "-----------------------------------------------" << std::endl;
         }
     };
 

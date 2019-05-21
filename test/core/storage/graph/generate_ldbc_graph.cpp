@@ -37,11 +37,11 @@ int main( void ){
     ldbcImport.generate_edges(socialGraph);
 
     socialGraph.statistics();
-
+    /*
     // test vertices:
     socialGraph.print_vertex_by_id(100454);
     socialGraph.print_vertex_by_id(100450);
     socialGraph.print_vertex_by_id(100168);
-
+    */
     return 0;
 }
