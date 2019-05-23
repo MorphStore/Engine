@@ -191,7 +191,7 @@ void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& man
  * @param p_DeallocSize Unused (see details)
  */
 void operator delete( void * p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_DeallocSize ) noexcept {
-   free( p_FreePtr );
+   operator delete(p_FreePtr);
 }
 
 /**
@@ -202,7 +202,7 @@ void operator delete( void * p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_Deal
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void operator delete[]( void* p_FreePtr ) noexcept {
-   free( p_FreePtr );
+   operator delete(p_FreePtr);
 }
 
 /**
@@ -217,7 +217,7 @@ void operator delete[]( void* p_FreePtr ) noexcept {
  * @param p_DeallocSize Unused (see details)
  */
 void operator delete[]( void* p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_DeallocSize ) noexcept {
-   free( p_FreePtr );
+   operator delete(p_FreePtr);
 }
 
 #endif //MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H

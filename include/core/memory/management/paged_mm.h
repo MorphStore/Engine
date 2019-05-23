@@ -8,6 +8,8 @@
 #include "core/memory/management/abstract_mm.h"
 #include "core/memory/management/mmap_mm.h"
 
+#include <string.h>
+
 namespace morphstore {
 
 static const size_t PAGE_SIZE = 1 << 15;
@@ -184,9 +186,14 @@ public:
         return nullptr;
     }
 
-    void * reallocate(void* /*ptr*/, size_t /*size*/) override
+    void * reallocate(void* ptr, size_t size) override
     {
-        return nullptr;
+        //TODO: do proper impl
+        void* ret = allocate(size);
+        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
+        memcpy(ret, ptr, info->size > size ? size : info->size); 
+        deallocate(ptr);
+        return ret;
     }
 
     void handle_error() override

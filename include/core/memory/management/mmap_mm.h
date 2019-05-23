@@ -324,7 +324,7 @@ const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
 class mmap_memory_manager: public abstract_memory_manager {
 public:
     static mmap_memory_manager* m_Instance;
-    static mmap_memory_manager& getInstance()
+    static inline mmap_memory_manager& getInstance()
     {
         /*if (m_Instance == nullptr) {
             mmap_memory_manager* ptr = reinterpret_cast<mmap_memory_manager*>(
@@ -383,10 +383,10 @@ public:
     {
         assert(size % LINUX_PAGE_SIZE == 0);
         assert(size > (1 << 27));
-        char* ptr = ::new char[size + sizeof(StorageType)];
-        StorageType* type = reinterpret_cast<StorageType*>(ptr);
-        ptr += sizeof(StorageType);
-        *type = StorageType::LARGE;
+        char* ptr = ::new char[size + sizeof(ObjectInfo)];
+        ObjectInfo* type = reinterpret_cast<ObjectInfo*>(ptr);
+        type->size = size;
+        ptr += sizeof(ObjectInfo);
 
         return ptr;
     }
@@ -457,34 +457,42 @@ public:
 
     }
 
-    void *allocate(abstract_memory_manager *const /*manager*/, size_t /*size*/) override
+    void *allocate(abstract_memory_manager *const /*manager*/, size_t size) override
     {
-         return nullptr;
+         return allocate(size);
     }
 
-    void deallocate(abstract_memory_manager *const /*manager*/, void *const /*ptr*/) override
+    void deallocate(abstract_memory_manager *const /*manager*/, void *const ptr) override
     {
-
+        deallocate(ptr);
     }
 
-    void * reallocate(abstract_memory_manager * const /*manager*/, void * /*ptr*/, size_t /*size*/) override
+    void * reallocate(abstract_memory_manager * const /*manager*/, void * ptr, size_t size) override
     {
-        return nullptr;
+        return reallocate(ptr, size);
     }
 
     void * reallocate(void* ptr, size_t size) override
     {
-        return reallocate_front(ptr, size);
+        return reallocate_back(ptr, size);
     }
 
     void * reallocate_front(void* /*ptr*/, size_t /*size*/)
     {
+        //TODO: do proper implementation
+
         return nullptr;
     }
 
-    void * reallocate_back(void* /*ptr*/, size_t /*size*/)
+    void * reallocate_back(void* ptr, size_t size)
     {
-        return nullptr;
+        //TODO: this is a wip implementation for testing of normal alloc functions
+        //
+        void* ret = allocate(size);
+        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
+        memcpy(ret, ptr, info->size > size ? size : info->size);
+        deallocate(ptr);
+        return ret;
     }
 
     void handle_error() override
