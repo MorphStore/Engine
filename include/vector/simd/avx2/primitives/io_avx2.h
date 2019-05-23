@@ -31,7 +31,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, vector::avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          _mm256_store_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
