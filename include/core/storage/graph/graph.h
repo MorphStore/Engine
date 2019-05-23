@@ -41,24 +41,9 @@ namespace morphstore{
 
     public:
 
-        // function to add a new (ldbc) vertex to the graph
-        void add_vertex(const Vertex& v){
-            if(!exist_id(v.getId())){
-                Vertex v;
-                vertices.insert(std::make_pair(v.getId(), v));
-            }else{
-                std::cout << "Vertex with ID " << v.getId() << " already exists in the database!";
-            }
-        }
-
-        // function to add a new (ldbc) vertex to the graph
-        void add_vertex_with_properties(Vertex& v, std::unordered_map<std::string, std::string>& props ){
-            if(!exist_id(v.getId())){
-                v.add_properties(props);
-                vertices.insert(std::make_pair(v.getId(), v));
-            } else{
-                std::cout << "Vertex with ID " << v.getId() << " already exists in the database!";
-            }
+        void add_vertex(){
+            Vertex v;
+            vertices.insert(std::make_pair(v.getId(), v));
         }
 
         // function that creates a new relation/edge between two (existing) vertices
@@ -83,12 +68,28 @@ namespace morphstore{
             }
         }
 
+        // function to add a new (ldbc) vertex to the graph and returns system-ID
+        uint64_t add_vertex_with_properties(std::unordered_map<std::string, std::string>& props ){
+            Vertex v;
+            v.add_properties(props);
+            vertices.insert(std::make_pair(v.getId(), v));
+            return v.getId();
+        }
+
         // this adds a specific key-value pair (property) to a vertex given by its id
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string>& property){
             if(exist_id(id)){
                 vertices.at(id).add_property(property);
             }else{
                 std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
+            }
+        }
+
+        void add_entity_to_vertex(uint64_t id, std::string entity){
+            if(exist_id(id)){
+                vertices.at(id).add_entity(entity);
+            }else{
+                std::cout << "Vertex with ID " << id << " does not exist in the database!";
             }
         }
 

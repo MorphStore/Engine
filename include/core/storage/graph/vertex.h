@@ -27,6 +27,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 
 
 namespace morphstore{
@@ -48,6 +49,8 @@ namespace morphstore{
         std::vector<Edge> adjList;
         // properties
         std::unordered_map<std::string, std::string> properties;
+        // a vertex can have multiple entites
+        std::unordered_set<std::string> entities;
 
     public:
 
@@ -96,6 +99,11 @@ namespace morphstore{
             e.relation = relation;
             e.property = property;
             this->adjList.push_back(e);
+        }
+
+        // add entity to vertex
+        void add_entity(std::string e){
+            this->entities.insert(e);
         }
 
         int get_number_of_edges(){

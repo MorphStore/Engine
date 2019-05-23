@@ -23,10 +23,12 @@
 
 #include <core/storage/graph/graph.h>
 #include <core/storage/graph/ldbc_import.h>
+#include <chrono>  // for high_resolution_clock
 
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
+    auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     // TODO: get base directory with cin -> user input
     morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
@@ -36,7 +38,13 @@ int main( void ){
     ldbcImport.generate_vertices(socialGraph);
     ldbcImport.generate_edges(socialGraph);
 
+    // measuring time...
+    auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    std::chrono::duration<double> elapsed = finish - start;
+
     socialGraph.statistics();
+    std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";
+
     /*
     // test vertices:
     socialGraph.print_vertex_by_id(100454);

@@ -165,14 +165,13 @@ namespace morphstore{
                                 }
                                 // last attribute
                                 properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
-                                // add entity
-                                properties.insert(std::make_pair("entity", entity));
                                 //-----------------------------------------------------
                                 // create vertex and insert into graph with properties
-                                Vertex v;
-                                graph.add_vertex_with_properties(v, properties);
+                                uint64_t systemID = graph.add_vertex_with_properties(properties);
+                                // add entity to vertex
+                                graph.add_entity_to_vertex(systemID, entity);
                                 // map entity and ldbc id to system generated id
-                                globalIdLookupMap.insert({{entity, ldbcID}, v.getId()});
+                                globalIdLookupMap.insert({{entity, ldbcID}, systemID});
                                 //-----------------------------------------------------
                                 properties.clear(); // free memory
                             }
