@@ -23,6 +23,100 @@
 #include <functional>
 
 namespace vector{
+   template<>
+   struct equal<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint64_t>>::mask_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx2)" );
+         return
+            _mm256_movemask_pd(
+               _mm256_castsi256_pd(
+                  _mm256_cmpeq_epi64(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct less<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint64_t>>::mask_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (avx2)" );
+         return
+            _mm256_movemask_pd(
+               _mm256_castsi256_pd(
+                  _mm256_cmpgt_epi64(p_vec2, p_vec1)
+               )
+            );
+      }
+   };
+   template<>
+   struct lessequal<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint64_t>>::mask_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (avx2)" );
+         return
+            _mm256_movemask_pd(
+               _mm256_castsi256_pd(
+                  _mm256_or_si256(
+                     _mm256_cmpeq_epi64(p_vec1, p_vec2),
+                     _mm256_cmpgt_epi64(p_vec2, p_vec1)
+                  )
+               )
+            );
+      }
+   };
+
+   template<>
+   struct greater<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint64_t>>::mask_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (avx2)" );
+         return
+            _mm256_movemask_pd(
+               _mm256_castsi256_pd(
+                  _mm256_cmpgt_epi64(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct greaterequal<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint64_t>>::mask_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (avx2)" );
+         return
+            _mm256_movemask_pd(
+               _mm256_castsi256_pd(
+                  _mm256_or_si256(
+                     _mm256_cmpeq_epi64(p_vec1, p_vec2),
+                     _mm256_cmpgt_epi64(p_vec1, p_vec2)
+                  )
+               )
+            );
+      }
+   };
+
+
     template<typename T>
     struct compare<avx2<v256<T>>, 64> {
         

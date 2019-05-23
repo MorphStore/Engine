@@ -41,6 +41,10 @@ namespace morphstore {
       return ( 1024 * 1024 * 1024 * v );
    }
 
+   constexpr std::size_t byte_to_bit( std::size_t v ) {
+      return ( 8 * v );
+   }
+
    template< typename B, typename T >
    inline bool instanceof( T const * p_Ptr ) {
       return dynamic_cast< B const * >( p_Ptr ) != nullptr;
