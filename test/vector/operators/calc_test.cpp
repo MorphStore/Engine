@@ -46,8 +46,6 @@ int main( void ) {
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT/8));
 
-   std::cout << "result size in Byte: " <<  TEST_DATA_COUNT/8 << ", result[0]: " << ((uint32_t*)result->get_data())[0] << ", result1[0]: " << ((uint32_t*)result1->get_data())[0] << std::endl; 
-   std::cout << "result[1]: " << ((uint32_t*)result->get_data())[1] << ", result1[1]: " << ((uint32_t*)result1->get_data())[1] << std::endl; 
-   std::cout << "result[2]: " << ((uint32_t*)result->get_data())[2] << ", result1[2]: " << ((uint32_t*)result1->get_data())[2] << std::endl; 
+
    return allGood;
 }
