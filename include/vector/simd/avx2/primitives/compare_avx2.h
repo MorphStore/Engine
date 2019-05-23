@@ -116,7 +116,7 @@ namespace vector{
       }
    };
 
-
+/*
     template<typename T>
     struct compare<avx2<v256<T>>, 64> {
         
@@ -223,7 +223,7 @@ namespace vector{
             return _mm256_movemask_ps((__m256)(_mm256_or_si256(_mm256_cmpeq_epi32(p_vec1,p_vec2),_mm256_cmpgt_epi32(p_vec2,p_vec1))));
 
         }
-    };
+    };*/
 }
 
 #endif /* COMPARE_AVX2_H */

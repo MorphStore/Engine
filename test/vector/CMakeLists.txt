@@ -38,6 +38,44 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 endif()
 
 if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/calc_app )
+    add_executable( calc_app operators/calc_test.cpp )
+
+    target_compile_options( calc_app PRIVATE
+                        -Wall
+                        -Wextra
+                        -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( calc_app PRIVATE "-ldl" )
+
+    add_test( calc_test calc_app )
+endif()
+
+if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/project_app )
+    add_executable( project_app operators/project_test.cpp )
+
+    target_compile_options( project_app PRIVATE
+                        -Wall
+                        -Wextra
+                        -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( project_app PRIVATE "-ldl" )
+
+    add_test( project_test project_app )
+endif()
+
+if ( CTEST_ALL OR CTEST_VECTOR )
     FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/my_operator_app )
     add_executable( my_operator_app operators/my_operator.cpp )
 
