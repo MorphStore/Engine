@@ -32,7 +32,7 @@ int main( void ) {
    using namespace vector;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
+   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,0,1);
    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,1);
    std::cout << "Done...\n";
 
@@ -41,9 +41,8 @@ int main( void ) {
    auto result1 = project_t<sse<v128<uint64_t>>>::apply( testDataColumnSorted, testDataColumnSorted2 );
 
    const bool allGood =
-      ( ((uint64_t*)result->get_data())[0] == ((TEST_DATA_COUNT*TEST_DATA_COUNT + TEST_DATA_COUNT ) / 2)) &&
-      ( ((uint64_t*)result1->get_data())[0] == ((TEST_DATA_COUNT*TEST_DATA_COUNT + TEST_DATA_COUNT ) / 2));
+      memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT*8)); //returns zero if all bytes match
 
 
-   return !allGood;
+   return allGood;
 }

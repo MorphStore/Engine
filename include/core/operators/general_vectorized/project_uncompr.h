@@ -22,9 +22,9 @@ namespace morphstore {
    template<class VectorExtension>
    struct project_t_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static vector_t const & apply(
-         base_t const * const p_DataPtr,
-         vector_t const & p_PosVector
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE static vector_t apply(
+         base_t const * p_DataPtr,
+         vector_t p_PosVector
       ) {
          //@todo: Is it better to avoid gather here?
          return (vector::gather<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_DataPtr, p_PosVector));
@@ -35,9 +35,9 @@ namespace morphstore {
    struct project_t_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
-         base_t const * const p_DataPtr,
-         base_t const *& p_PosPtr,
-         base_t *& p_OutPtr,
+         base_t const * p_DataPtr,
+         base_t const * p_PosPtr,
+         base_t * p_OutPtr,
          size_t const p_Count
       ) {
          for(size_t i = 0; i < p_Count; ++i) {
