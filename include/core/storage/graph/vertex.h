@@ -71,7 +71,7 @@ namespace morphstore{
         }
 
         // this function adds a whole property map to a vertex
-        void add_properties(std::unordered_map<std::string, std::string> &properties){
+        void add_properties(const std::unordered_map<std::string, std::string> &properties){
             if(!properties.empty()){
                 this->properties = properties;
             }else{
@@ -81,11 +81,11 @@ namespace morphstore{
 
         // this adds one key-value pair to the vertex's property map
         void add_property(const std::pair<std::string, std::string>& property){
-            this->properties[property.first] = property.second;
+            this->properties[property.first] = std::move(property.second);
         }
 
         // function that creates a new relation/edge between two (existing) vertices withouht properties
-        void add_edge(Vertex *target, std::string relation){
+        void add_edge(Vertex *target, const std::string& relation){
             Edge e;
             e.target = target;
             e.relation = relation;
@@ -93,7 +93,7 @@ namespace morphstore{
         }
 
         // add edge with properties to vertex
-        void add_edge_with_property(Vertex *target, std::string relation, std::pair<std::string, std::string> property){
+        void add_edge_with_property(Vertex *target, const std::string& relation, const std::pair<std::string, std::string>& property){
             Edge e;
             e.target = target;
             e.relation = relation;
@@ -102,12 +102,12 @@ namespace morphstore{
         }
 
         // add entity to vertex
-        void add_entity(std::string e){
+        void add_entity(const std::string& e){
             this->entities.insert(e);
         }
 
-        int get_number_of_edges(){
-            return static_cast<int>(adjList.size());
+        uint64_t get_number_of_edges(){
+            return adjList.size();
         }
 
         void print_properties(){

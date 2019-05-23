@@ -269,7 +269,7 @@ namespace morphstore{
                                     // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
                                     systemID = globalIdLookupMap.at({fromEntity, row.substr(0, row.find(delimiter))});
                                     value = row.substr(row.find(delimiter) + 1);
-                                    multiValueAttr[systemID] = value;
+                                    multiValueAttr[systemID] = std::move(value);
                                 }
 
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)

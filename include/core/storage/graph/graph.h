@@ -47,7 +47,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices
-        void add_edge(uint64_t sourceID, uint64_t targetID, std::string rel){
+        void add_edge(const uint64_t sourceID, const uint64_t targetID, const std::string& rel){
             if(exist_id(sourceID) && exist_id(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
@@ -58,7 +58,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices WITH property
-        void add_edge_with_property(uint64_t sourceID, uint64_t targetID, std::string rel, std::pair<std::string, std::string> property){
+        void add_edge_with_property(uint64_t sourceID, uint64_t targetID, const std::string& rel, const std::pair<std::string, std::string>& property){
             if(exist_id(sourceID) && exist_id(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
@@ -69,7 +69,7 @@ namespace morphstore{
         }
 
         // function to add a new (ldbc) vertex to the graph and returns system-ID
-        uint64_t add_vertex_with_properties(std::unordered_map<std::string, std::string>& props ){
+        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ){
             Vertex v;
             v.add_properties(props);
             vertices.insert(std::make_pair(v.getId(), v));
@@ -77,7 +77,7 @@ namespace morphstore{
         }
 
         // this adds a specific key-value pair (property) to a vertex given by its id
-        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string>& property){
+        void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property){
             if(exist_id(id)){
                 vertices.at(id).add_property(property);
             }else{
@@ -85,7 +85,7 @@ namespace morphstore{
             }
         }
 
-        void add_entity_to_vertex(uint64_t id, std::string entity){
+        void add_entity_to_vertex(const uint64_t id, const std::string& entity){
             if(exist_id(id)){
                 vertices.at(id).add_entity(entity);
             }else{
@@ -102,12 +102,12 @@ namespace morphstore{
         }
 
         // this function returns the total number of edges in the graph
-        int get_total_number_of_edges(){
+        uint64_t get_total_number_of_edges(){
             uint64_t totalNumberEdges = 0;
             for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 totalNumberEdges += it->second.get_number_of_edges();
             }
-            return static_cast<int>(totalNumberEdges);
+            return totalNumberEdges;
         }
 
         // for debbuging
