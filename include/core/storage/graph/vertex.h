@@ -34,7 +34,7 @@ namespace morphstore{
 
     class Vertex;
 
-    // this struct represents a relation to a target vertex; relation is the number in the lookup table
+    // this struct represents a relation to a target vertex;
     struct Edge{
         Vertex* target;
         std::string relation;
