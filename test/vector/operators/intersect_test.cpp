@@ -26,7 +26,7 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
-#include <core/operators/general_vectorized/select_uncompr.h>
+#include <core/operators/general_vectorized/intersect_uncompr.h>
 
 #define TEST_DATA_COUNT 100
 
@@ -40,11 +40,11 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   auto result = select_t<avx2<v256<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
-   auto result1 = select_t<sse<v128<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
+   auto result = intersect<avx2<v256<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
+   auto result1 = intersect<sse<v128<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
 
    const bool allGood =
-      memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8);
+      memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT/8));
 
    
    return allGood;

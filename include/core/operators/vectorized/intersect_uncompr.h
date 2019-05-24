@@ -88,9 +88,15 @@ intersect_sorted<processing_style_t::vec256>(
            right=_mm256_loadu_si256(inPosR);
            changed_left=0;
         }else{
+            if ((mask ^ mask_greater_than) !=0){
+                inPosR++;
+                right=_mm256_loadu_si256(inPosR);
+                changed_left=0; 
+            }else{
            inPosL++;
            left=_mm256_loadu_si256(inPosL);
            changed_left=1;
+            }
         }
 
         //Reset all masks for the next iteration
