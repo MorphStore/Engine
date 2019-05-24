@@ -79,6 +79,17 @@ namespace vector {
          
       }
        
+       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+   
+         if (mask!=0)  *p_DataPtr=p_vec;
+        
+         return ;
+      }
+       
    };
 }
 

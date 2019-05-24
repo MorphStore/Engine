@@ -36,6 +36,15 @@ namespace vector {
          trace( "[VECTOR] - set1 sse register." );
          return reinterpret_cast<typename scalar< v64< uint64_t > >::vector_t> (a0);
       }
+      
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_INLINE
+      static typename scalar< v64< U > >::vector_t
+      set_sequence( int a, int b) {
+         trace( "[VECTOR] - set_sequence sse register." );
+         return a;
+      }
+            
    
    };
    

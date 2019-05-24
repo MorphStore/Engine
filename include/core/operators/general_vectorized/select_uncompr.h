@@ -11,20 +11,26 @@
 #include <vector/primitives/compare.h>
 #include <vector/primitives/calc.h>
 #include <core/utils/preprocessor.h>
+#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/compare_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
 
 namespace morphstore {
 
-   template<class VectorExtension, template<class> class Comparator>
+    using namespace vector;
+   template<class VectorExtension,  template< class, int > class Operator>
    struct select_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      vector_mask_t const &
+      vector_mask_t 
       apply(
-         vector_t const & p_DataVector
-         vector_t const & p_PredicateVector
+         vector_t const p_DataVector,
+         vector_t const p_PredicateVector
       ) {
-         return Comparator<VectorExtension>::apply(
+         return Operator<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(
             p_DataVector,
             p_PredicateVector
          );
@@ -32,7 +38,7 @@ namespace morphstore {
    };
 
    //@todo: SCALAR SEEMS TO BE SUPER INEFFICIENT, because of __builtin_popcount
-   template<class VectorExtension, template<class> class Comparator>
+   template<class VectorExtension,  template< class, int > class Operator>
    struct select_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
@@ -47,7 +53,7 @@ namespace morphstore {
          for(size_t i = 0; i < p_Count; ++i) {
             vector_t dataVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
             vector_mask_t resultMask =
-               select_processing_unit<VectorExtension,Comparator>::apply(
+               select_processing_unit<VectorExtension,Operator>::apply(
                   dataVector,
                   predicateVector
                );
@@ -60,8 +66,8 @@ namespace morphstore {
       }
    };
 
-   template<class VectorExtension, template<class> class Comparator>
-   struct select {
+   template<class VectorExtension, template< class, int > class Operator>
+   struct select_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -82,11 +88,11 @@ namespace morphstore {
          base_t * outDataPtr = outDataCol->get_data( );
          base_t * const outDataPtrOrigin = const_cast< base_t * const >(outDataPtr);
 
-         size_t const vectorCount = inPosCount / vector_element_count::value;
-         size_t const remainderCount = inPosCount % vector_element_count::value;
+         size_t const vectorCount = inDataCount / vector_element_count::value;
+         size_t const remainderCount = inDataCount % vector_element_count::value;
 
-         select_batch<VectorExtension, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-         select_batch<vector::scalar<base_t>, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount);
+         select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
+         select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount);
 
          size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 
