@@ -21,6 +21,9 @@
  * @todo Documentation.
  * @todo Support for repetitions.
  * @todo Rethink where the cached columns should be freed.
+ * @todo Include data generation, so that it can be included in the outputs.
+ * Then we would not need printDataGenStarted() and printDataGenDone() anymore.
+ * @todo Harmonize identifiers: "key" vs. "param".
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
@@ -42,6 +45,7 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -105,7 +109,9 @@ namespace morphstore {
                             class for_setting_keys {
                                 
                                 const std::vector<std::string> m_CsvVariantKeyColNames;
+                                const std::vector<std::string> m_CsvSettingKeyColNames;
                                 std::vector<std::string> m_CsvAllKeyColNames;
+                                bool m_AllGood;
                                 
                                 void check_csv_column_names(
                                         const std::vector<std::string> & p_CsvColNames,
@@ -122,6 +128,16 @@ namespace morphstore {
                                                 << p_ExpectedCount << ')';
                                         throw std::runtime_error(s.str());
                                     }
+                                }
+                                
+                                // We need some return value so that we can use
+                                // this function in a parameter pack expansion.
+                                template<typename t_type>
+                                bool print_setting_param(unsigned & p_SettingKeyIdx, t_type p_Val) {
+                                    std::cerr
+                                            << "\t\t" << m_CsvSettingKeyColNames[p_SettingKeyIdx++]
+                                            << ": \t" << p_Val << std::endl;
+                                    return false;
                                 }
 
                             public:
@@ -181,7 +197,7 @@ namespace morphstore {
                                                     const column<t_head_f> * p_HeadCol,
                                                     const column<t_tail_fs> * ... p_TailCols
                                             ) {
-                                                if(typeid(t_head_f) != typeid(uncompr_f))
+                                                if(std::is_same<t_head_f, uncompr_f>::value)
                                                     delete p_HeadCol;
                                                 column_tuple_deleter<t_Count - 1, t_tail_fs ...>::apply(
                                                         p_TailCols ...
@@ -283,7 +299,11 @@ namespace morphstore {
                                         const std::vector<std::string> p_VariantCsvKeyColNames,
                                         const std::vector<std::string> p_SettingCsvKeyColNames,
                                         const std::vector<std::string> p_AddParamsCsvKeyColNames
-                                ) : m_CsvVariantKeyColNames(p_VariantCsvKeyColNames) {
+                                ) :
+                                        m_CsvVariantKeyColNames(p_VariantCsvKeyColNames),
+                                        m_CsvSettingKeyColNames(p_SettingCsvKeyColNames),
+                                        m_AllGood(true)
+                                {
                                     check_csv_column_names(
                                             p_VariantCsvKeyColNames,
                                             "variant key",
@@ -315,13 +335,23 @@ namespace morphstore {
 
                                 void execute_variants(
                                         const std::vector<variant_t> p_Variants,
-                                        t_setting_key_ts ... p_SettingKeys,
+                                        t_setting_key_ts ... p_SettingParams,
                                         const column<t_uncompr_in_fs> * ... p_InCols,
                                         t_additional_param_ts ... p_AdditionalParams
                                 ) {
                                     column_cache cache;
+                                    
+                                    std::cerr
+                                            << "Setting" << std::endl
+                                            << "\tParameters" << std::endl;
+                                    {
+                                        unsigned i = 0;
+                                        std::make_tuple(print_setting_param(i, p_SettingParams) ...);
+                                    }
 
-                                    std::cerr << "Executing Variants" << std::endl << '\t';
+                                    std::cerr
+                                            << "\tExecuting Variants" << std::endl
+                                            << "\t\t";
                                     for(const auto & colName : m_CsvVariantKeyColNames)
                                         std::cerr << colName << '\t';
                                     std::cerr << std::endl;
@@ -331,11 +361,12 @@ namespace morphstore {
                                             nullptr
                                     >::value;
                                     std::tuple<const column<t_uncompr_out_fs> * ...> referenceOutput = nullptrTuple;
+                                    bool allGood = true;
                                     for(auto variant : p_Variants) {
                                         abstract_operator_wrapper * op = std::get<0>(variant);
 
                                         std::cerr
-                                                << '\t'
+                                                << "\t\t"
                                                 << doPrint('\t', std::get<t_VariantKeyIdxs + 1>(variant) ...)
                                                 << ": started... ";
                                         std::cerr.flush();
@@ -343,7 +374,7 @@ namespace morphstore {
                                         MONITORING_CREATE_MONITOR(
                                                 MONITORING_MAKE_MONITOR(
                                                         std::get<t_VariantKeyIdxs + 1>(variant) ...,
-                                                        p_SettingKeys ...,
+                                                        p_SettingParams ...,
                                                         p_AdditionalParams ...
                                                 ),
                                                 m_CsvAllKeyColNames
@@ -354,47 +385,74 @@ namespace morphstore {
                                                 p_InCols ...,
                                                 p_AdditionalParams ...,
                                                 std::get<t_VariantKeyIdxs + 1>(variant) ...,
-                                                p_SettingKeys ...
+                                                p_SettingParams ...
                                         );
+                                        // @todo At the moment, we have to clear the column cache after the execution
+                                        // of each operator variant in order not to use too much memeory when there
+                                        // are too many variants. We should selectively free certain formats when they
+                                        // are not needed any more.
+                                        cache.clear();
 
+                                        std::cerr << "done.";
+                                        
                                         if(referenceOutput == nullptrTuple) {
                                             referenceOutput = currentOutput;
                                             MONITORING_ADD_INT_FOR(
                                                     m_CsvColNameCheck,
                                                     -1,
                                                     std::get<t_VariantKeyIdxs + 1>(variant) ...,
-                                                    p_SettingKeys ...,
+                                                    p_SettingParams ...,
                                                     p_AdditionalParams ...
                                             );
+                                            std::cerr << " -> reference";
                                         }
                                         else {
+                                            const bool good = check_uncompr_column_tuples(
+                                                    referenceOutput,
+                                                    currentOutput,
+                                                    std::index_sequence_for<t_uncompr_out_fs ...>()
+                                            );
+                                            allGood = allGood && good;
                                             MONITORING_ADD_INT_FOR(
                                                     m_CsvColNameCheck,
-                                                    check_uncompr_column_tuples(
-                                                            referenceOutput,
-                                                            currentOutput,
-                                                            std::index_sequence_for<t_uncompr_out_fs ...>()
-                                                    ),
+                                                    good,
                                                     std::get<t_VariantKeyIdxs + 1>(variant) ...,
-                                                    p_SettingKeys ...,
+                                                    p_SettingParams ...,
                                                     p_AdditionalParams ...
                                             );
                                             delete_uncompr_column_tuple(
                                                     currentOutput,
                                                     std::index_sequence_for<t_uncompr_out_fs ...>()
                                             );
+                                            std::cerr << " -> " << equality_check::ok_str(good);
                                         }
-                                        std::cerr << "done." << std::endl;
+                                        std::cerr << std::endl;
                                     }
                                     delete_uncompr_column_tuple(
                                             referenceOutput,
                                             std::index_sequence_for<t_uncompr_out_fs ...>()
                                     );
+                                    m_AllGood = m_AllGood && allGood;
                                 }
 
-                                void done() {
-                                    // @todo Print a summary etc..
+                                void done() const {
+                                    std::cerr
+                                            << "Summary" << std::endl
+                                            << '\t' << (m_AllGood ? "all ok" : "some NOT OK")
+                                            << std::endl << std::endl;
                                     MONITORING_PRINT_MONITORS(monitorCsvLog);
+                                }
+                                
+                                bool good() const {
+                                    return m_AllGood;
+                                }
+                                
+                                void printDataGenStarted() const {
+                                    std::cerr << "Data generation: started... ";
+                                };
+                                
+                                void printDataGenDone() const {
+                                    std::cerr << "done." << std::endl;
                                 }
                             };
                         };
