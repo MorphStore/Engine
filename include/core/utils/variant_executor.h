@@ -246,8 +246,8 @@ namespace morphstore {
                                                 column_cache & cache,
                                                 const column<t_uncompr_in_fs> * ... p_InCols,
                                                 t_additional_param_ts ... p_AdditionalParams,
-                                                t_variant_key_ts ... p_VariantKeys,
-                                                t_setting_key_ts ... p_SettingKeys
+                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_variant_key_ts ... p_VariantKeys,
+                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_setting_key_ts ... p_SettingKeys
                                         ) {
                                             std::make_tuple(
                                                     cache.ensure_presence<t_in_fs>(p_InCols) ...
