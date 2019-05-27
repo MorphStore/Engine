@@ -63,13 +63,8 @@ int main(void) {
 //#ifdef MSV_NO_SELFMANAGED_MEMORY
 #if 1
     // Setup.
-    // @todo Provide some utility to simplify this.
-    using ve_t = variant_executor
-            ::for_uncompr_output_formats<uncompr_f>
-            ::for_uncompr_input_formats<uncompr_f, uncompr_f>
-            ::for_additional_params<>
+    using ve_t = variant_executor_helper<1, 2>::type
             ::for_variant_keys<std::string, std::string>
-            ::internal<0, 1>
             ::for_setting_keys<size_t, size_t>;
     ve_t ve(
             {"ps", "in_pos_f"},
