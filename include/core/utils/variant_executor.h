@@ -24,6 +24,8 @@
  * @todo Include data generation, so that it can be included in the outputs.
  * Then we would not need printDataGenStarted() and printDataGenDone() anymore.
  * @todo Harmonize identifiers: "key" vs. "param".
+ * @todo Print the monitoring (CSV) output after each call to execute_variants
+ * to make experiments abortable without losing all data measured so far.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
@@ -464,5 +466,30 @@ namespace morphstore {
 
     const std::string variant_executor::m_CsvColNameRuntime = "runtime:µs";
     const std::string variant_executor::m_CsvColNameCheck = "check";
+    
+    template<
+            unsigned t_OutputColumnCount,
+            unsigned t_InputColumnCount,
+            typename ... t_additional_param_ts
+    >
+    struct variant_executor_helper {
+        
+        template<template<class ...> class t_target, unsigned t_Count, class ... t_uncompr_fs>
+        struct repeat_uncompr_f : public repeat_uncompr_f<t_target, t_Count - 1, uncompr_f, t_uncompr_fs ...> {
+            //
+        };
+        template<template<class...> class t_target, class ... t_uncompr_fs>
+        struct repeat_uncompr_f<t_target, 0, t_uncompr_fs ...> {
+            using type = t_target<t_uncompr_fs ...>;
+        };
+        
+        using type = typename repeat_uncompr_f<
+                repeat_uncompr_f<
+                        variant_executor::for_uncompr_output_formats,
+                        t_OutputColumnCount
+                >::type::template for_uncompr_input_formats,
+                t_InputColumnCount
+        >::type::template for_additional_params<t_additional_param_ts ...>;
+    };
 }
 #endif //MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
