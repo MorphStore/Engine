@@ -65,7 +65,6 @@ int main(void) {
     // Setup.
     using ve_t = variant_executor_helper<1, 2>::type
             ::for_variant_keys<std::string, std::string>
-            ::internal<0, 1>
             ::for_setting_keys<size_t, size_t>;
     ve_t ve(
             {"ps", "in_pos_f"},
