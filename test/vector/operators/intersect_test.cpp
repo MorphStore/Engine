@@ -17,6 +17,7 @@
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
+#include <vector/simd/avx2/primitives/manipulate_avx2.h>
 
 
 
@@ -25,6 +26,7 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/simd/sse/primitives/manipulate_sse.h>
 
 #include <core/operators/general_vectorized/intersect_uncompr.h>
 
@@ -35,17 +37,18 @@ int main( void ) {
    using namespace vector;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,9,1);
+   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,5,1);
+   const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT,0,1);
    
    std::cout << "Done...\n";
 
 
-   auto result = intersect<avx2<v256<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
-   auto result1 = intersect<sse<v128<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
+   auto result = intersect_sorted<avx2<v256<uint64_t>>>::apply( testDataColumnSorted, testDataColumnSorted2 );
+   auto result1 = intersect_sorted<sse<v128<uint64_t>>>::apply( testDataColumnSorted, testDataColumnSorted2 );
 
    const bool allGood =
-      memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT/8));
+      memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8) && !(result->get_count_values()==result1->get_count_values());
 
-   
+
    return allGood;
 }

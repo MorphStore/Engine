@@ -79,6 +79,14 @@ namespace vector {
          
       }
        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_INLINE
+      static typename scalar<v64< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         trace( "[VECTOR] - Loading unaligned double value (scalar)" );
+         return *p_DataPtr;
+      }
+             
        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static void
