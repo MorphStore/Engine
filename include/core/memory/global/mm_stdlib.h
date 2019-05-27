@@ -51,7 +51,7 @@ void *malloc(size_t p_AllocSize) __THROW {
     if (abs_needed_size > morphstore::ALLOCATION_SIZE) { /* already allocates object info for convenience, aligned to chunksize */
         return morphstore::mmap_memory_manager::getInstance().allocateLarge(p_AllocSize);
     }
-    else if (abs_needed_size > (( 1l<<14 ) - sizeof(morphstore::PageHeader) )) {
+    else if (abs_needed_size > (( morphstore::DB_PAGE_SIZE ) - sizeof(morphstore::PageHeader) )) {
         return morphstore::mmap_memory_manager::getInstance().allocate(abs_needed_size);
     }
     else {
