@@ -60,8 +60,7 @@ using namespace morphstore;
 #define STEP_128 2
 
 int main(void) {
-//#ifdef MSV_NO_SELFMANAGED_MEMORY
-#if 1
+#ifdef MSV_NO_SELFMANAGED_MEMORY
     // Setup.
     using ve_t = variant_executor_helper<1, 2>::type
             ::for_variant_keys<std::string, std::string>
