@@ -31,7 +31,6 @@
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
-#include <core/utils/monitoring.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/processing_style.h>
 #include <core/utils/variant_executor.h>
@@ -46,8 +45,14 @@ using namespace morphstore;
 
 #define MAKE_VARIANT(ps, in_pos_f) \
 { \
-    new ve_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<uncompr_f, in_pos_f>( \
-            &project<processing_style_t::ps, uncompr_f, uncompr_f, in_pos_f> \
+    new ve_t::operator_wrapper \
+        ::for_output_formats<uncompr_f> \
+        ::for_input_formats<uncompr_f, in_pos_f>( \
+            &project< \
+                    processing_style_t::ps, \
+                    uncompr_f, \
+                    uncompr_f, in_pos_f \
+            > \
     ), \
     STR_EVAL_MACROS(ps), \
     STR_EVAL_MACROS(in_pos_f) \
@@ -63,8 +68,8 @@ int main(void) {
 #ifdef MSV_NO_SELFMANAGED_MEMORY
     // Setup.
     using ve_t = variant_executor_helper<1, 2>::type
-            ::for_variant_keys<std::string, std::string>
-            ::for_setting_keys<size_t, size_t>;
+            ::for_variant_params<std::string, std::string>
+            ::for_setting_params<size_t, size_t>;
     ve_t ve(
             {"ps", "in_pos_f"},
             {"inDataCount", "inPosCount"},
@@ -165,7 +170,7 @@ int main(void) {
         size_t inPosCount;
         std::tie(inDataCount, inPosCount) = settingParams;
 
-        ve.printDataGenStarted();
+        ve.print_datagen_started();
         auto inDataCol = generate_with_distr(
                 inDataCount,
                 std::uniform_int_distribution<uint64_t>(100, 200),
@@ -176,7 +181,7 @@ int main(void) {
                 std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
                 false
         );
-        ve.printDataGenDone();
+        ve.print_datagen_done();
         
         std::vector<ve_t::variant_t> variantsToUse(variants);
         // Add all operator variants using the static_vbp format with a high

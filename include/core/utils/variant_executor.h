@@ -23,7 +23,6 @@
  * @todo Rethink where the cached columns should be freed.
  * @todo Include data generation, so that it can be included in the outputs.
  * Then we would not need printDataGenStarted() and printDataGenDone() anymore.
- * @todo Harmonize identifiers: "key" vs. "param".
  * @todo Print the monitoring (CSV) output after each call to execute_variants
  * to make experiments abortable without losing all data measured so far.
  */
@@ -99,15 +98,15 @@ namespace morphstore {
                 template<typename ... t_additional_param_ts>
                 struct for_additional_params {
 
-                    template<typename ... t_variant_key_ts>
-                    struct for_variant_keys {
+                    template<typename ... t_variant_param_ts>
+                    struct for_variant_params {
 
-                        template<typename ... t_setting_key_ts>
-                        class for_setting_keys {
+                        template<typename ... t_setting_param_ts>
+                        class for_setting_params {
 
-                            const std::vector<std::string> m_CsvVariantKeyColNames;
-                            const std::vector<std::string> m_CsvSettingKeyColNames;
-                            std::vector<std::string> m_CsvAllKeyColNames;
+                            const std::vector<std::string> m_CsvVariantParamColNames;
+                            const std::vector<std::string> m_CsvSettingParamColNames;
+                            std::vector<std::string> m_CsvAllParamColNames;
                             bool m_AllGood;
 
                             void check_csv_column_names(
@@ -130,9 +129,9 @@ namespace morphstore {
                             // We need some return value so that we can use
                             // this function in a parameter pack expansion.
                             template<typename t_type>
-                            bool print_setting_param(unsigned & p_SettingKeyIdx, t_type p_Val) {
+                            bool print_setting_param(unsigned & p_SettingParamIdx, t_type p_Val) {
                                 std::cerr
-                                        << "\t\t" << m_CsvSettingKeyColNames[p_SettingKeyIdx++]
+                                        << "\t\t" << m_CsvSettingParamColNames[p_SettingParamIdx++]
                                         << ": \t" << p_Val << std::endl;
                                 return false;
                             }
@@ -145,8 +144,8 @@ namespace morphstore {
                                         column_cache & cache,
                                         const column<t_uncompr_in_fs> * ... p_InCols,
                                         t_additional_param_ts ... p_AdditionalParams,
-                                        t_variant_key_ts ... p_VariantKeys,
-                                        t_setting_key_ts ... p_SettingKeys
+                                        t_variant_param_ts ... p_VariantParams,
+                                        t_setting_param_ts ... p_SettingParams
                                 ) = 0;
                             };
 
@@ -246,16 +245,16 @@ namespace morphstore {
                                                 column_cache & cache,
                                                 const column<t_uncompr_in_fs> * ... p_InCols,
                                                 t_additional_param_ts ... p_AdditionalParams,
-                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_variant_key_ts ... p_VariantKeys,
-                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_setting_key_ts ... p_SettingKeys
+                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_variant_param_ts ... p_VariantParams,
+                                                MSV_CXX_ATTRIBUTE_PPUNUSED t_setting_param_ts ... p_SettingParams
                                         ) {
                                             std::make_tuple(
                                                     cache.ensure_presence<t_in_fs>(p_InCols) ...
                                             );
                                             MONITORING_START_INTERVAL_FOR(
                                                     m_CsvColNameRuntime,
-                                                    p_VariantKeys ...,
-                                                    p_SettingKeys ...,
+                                                    p_VariantParams ...,
+                                                    p_SettingParams ...,
                                                     p_AdditionalParams ...
                                             );
                                             auto resInternal = (*m_OpFuncPtr)(
@@ -264,8 +263,8 @@ namespace morphstore {
                                             );
                                             MONITORING_END_INTERVAL_FOR(
                                                     m_CsvColNameRuntime,
-                                                    p_VariantKeys ...,
-                                                    p_SettingKeys ...,
+                                                    p_VariantParams ...,
+                                                    p_SettingParams ...,
                                                     p_AdditionalParams ...
                                             );
                                             // Note that, when `m_OpFuncPtr` returns a
@@ -289,57 +288,59 @@ namespace morphstore {
 
                             using variant_t = std::tuple<
                                     abstract_operator_wrapper *,
-                                    t_variant_key_ts ...
+                                    t_variant_param_ts ...
                             >;
+                            
+                            using setting_t = std::tuple<t_setting_param_ts ...>;
 
-                            for_setting_keys (
-                                    const std::vector<std::string> p_VariantCsvKeyColNames,
-                                    const std::vector<std::string> p_SettingCsvKeyColNames,
-                                    const std::vector<std::string> p_AddParamsCsvKeyColNames
+                            for_setting_params (
+                                    const std::vector<std::string> p_VariantCsvParamColNames,
+                                    const std::vector<std::string> p_SettingCsvParamColNames,
+                                    const std::vector<std::string> p_AddParamsCsvParamColNames
                             ) :
-                                    m_CsvVariantKeyColNames(p_VariantCsvKeyColNames),
-                                    m_CsvSettingKeyColNames(p_SettingCsvKeyColNames),
+                                    m_CsvVariantParamColNames(p_VariantCsvParamColNames),
+                                    m_CsvSettingParamColNames(p_SettingCsvParamColNames),
                                     m_AllGood(true)
                             {
                                 check_csv_column_names(
-                                        p_VariantCsvKeyColNames,
-                                        "variant key",
-                                        sizeof...(t_variant_key_ts)
+                                        p_VariantCsvParamColNames,
+                                        "variant parameter",
+                                        sizeof...(t_variant_param_ts)
                                 );
                                 check_csv_column_names(
-                                        p_SettingCsvKeyColNames,
-                                        "setting key",
-                                        sizeof...(t_setting_key_ts)
+                                        p_SettingCsvParamColNames,
+                                        "setting parameter",
+                                        sizeof...(t_setting_param_ts)
                                 );
                                 check_csv_column_names(
-                                        p_AddParamsCsvKeyColNames,
+                                        p_AddParamsCsvParamColNames,
                                         "additional parameter",
                                         sizeof...(t_additional_param_ts)
                                 );
 
-                                m_CsvAllKeyColNames = p_VariantCsvKeyColNames;
-                                m_CsvAllKeyColNames.insert(
-                                        m_CsvAllKeyColNames.end(),
-                                        p_SettingCsvKeyColNames.begin(),
-                                        p_SettingCsvKeyColNames.end()
+                                m_CsvAllParamColNames = p_VariantCsvParamColNames;
+                                m_CsvAllParamColNames.insert(
+                                        m_CsvAllParamColNames.end(),
+                                        p_SettingCsvParamColNames.begin(),
+                                        p_SettingCsvParamColNames.end()
                                 );
-                                m_CsvAllKeyColNames.insert(
-                                        m_CsvAllKeyColNames.end(),
-                                        p_AddParamsCsvKeyColNames.begin(),
-                                        p_AddParamsCsvKeyColNames.end()
+                                m_CsvAllParamColNames.insert(
+                                        m_CsvAllParamColNames.end(),
+                                        p_AddParamsCsvParamColNames.begin(),
+                                        p_AddParamsCsvParamColNames.end()
                                 );
                             }
 
                         private:
-                            template<size_t ... t_VariantKeyIdxs>
+                            template<size_t ... t_VariantParamIdxs>
                             void execute_variants_internal(
                                     const std::vector<variant_t> p_Variants,
-                                    t_setting_key_ts ... p_SettingParams,
+                                    t_setting_param_ts ... p_SettingParams,
                                     const column<t_uncompr_in_fs> * ... p_InCols,
                                     t_additional_param_ts ... p_AdditionalParams,
-                                    MSV_CXX_ATTRIBUTE_PPUNUSED std::index_sequence<t_VariantKeyIdxs ...>
+                                    MSV_CXX_ATTRIBUTE_PPUNUSED std::index_sequence<t_VariantParamIdxs ...>
                             ) {
-                                STATIC_ASSERT_PARAMPACK_SAMESIZE(t_VariantKeyIdxs, t_variant_key_ts)
+                                STATIC_ASSERT_PARAMPACK_SAMESIZE(t_VariantParamIdxs, t_variant_param_ts)
 
                                 column_cache cache;
 
@@ -348,13 +349,13 @@ namespace morphstore {
                                         << "\tParameters" << std::endl;
                                 {
                                     unsigned i = 0;
-                                    std::make_tuple(print_setting_param(i, p_SettingParams) ...);
+                                    MSV_CXX_ATTRIBUTE_PPUNUSED bool x[] = {print_setting_param(i, p_SettingParams) ...};
                                 }
 
                                 std::cerr
                                         << "\tExecuting Variants" << std::endl
                                         << "\t\t";
-                                for(const auto & colName : m_CsvVariantKeyColNames)
+                                for(const auto & colName : m_CsvVariantParamColNames)
                                     std::cerr << colName << '\t';
                                 std::cerr << std::endl;
                                 auto nullptrTuple = repeat_as_tuple<
@@ -369,24 +370,24 @@ namespace morphstore {
 
                                     std::cerr
                                             << "\t\t"
-                                            << doPrint('\t', std::get<t_VariantKeyIdxs + 1>(variant) ...)
+                                            << doPrint('\t', std::get<t_VariantParamIdxs + 1>(variant) ...)
                                             << ": started... ";
                                     std::cerr.flush();
 
                                     MONITORING_CREATE_MONITOR(
                                             MONITORING_MAKE_MONITOR(
-                                                    std::get<t_VariantKeyIdxs + 1>(variant) ...,
+                                                    std::get<t_VariantParamIdxs + 1>(variant) ...,
                                                     p_SettingParams ...,
                                                     p_AdditionalParams ...
                                             ),
-                                            m_CsvAllKeyColNames
+                                            m_CsvAllParamColNames
                                     );
 
                                     auto currentOutput = op->call_operator(
                                             cache,
                                             p_InCols ...,
                                             p_AdditionalParams ...,
-                                            std::get<t_VariantKeyIdxs + 1>(variant) ...,
+                                            std::get<t_VariantParamIdxs + 1>(variant) ...,
                                             p_SettingParams ...
                                     );
                                     // @todo At the moment, we have to clear the column cache after the execution
@@ -402,7 +403,7 @@ namespace morphstore {
                                         MONITORING_ADD_INT_FOR(
                                                 m_CsvColNameCheck,
                                                 -1,
-                                                std::get<t_VariantKeyIdxs + 1>(variant) ...,
+                                                std::get<t_VariantParamIdxs + 1>(variant) ...,
                                                 p_SettingParams ...,
                                                 p_AdditionalParams ...
                                         );
@@ -418,7 +419,7 @@ namespace morphstore {
                                         MONITORING_ADD_INT_FOR(
                                                 m_CsvColNameCheck,
                                                 good,
-                                                std::get<t_VariantKeyIdxs + 1>(variant) ...,
+                                                std::get<t_VariantParamIdxs + 1>(variant) ...,
                                                 p_SettingParams ...,
                                                 p_AdditionalParams ...
                                         );
@@ -440,7 +441,7 @@ namespace morphstore {
                         public:
                             void execute_variants(
                                     const std::vector<variant_t> p_Variants,
-                                    t_setting_key_ts ... p_SettingParams,
+                                    t_setting_param_ts ... p_SettingParams,
                                     const column<t_uncompr_in_fs> * ... p_InCols,
                                     t_additional_param_ts ... p_AdditionalParams
                             ) {
@@ -449,7 +450,7 @@ namespace morphstore {
                                         p_SettingParams ...,
                                         p_InCols ...,
                                         p_AdditionalParams ...,
-                                        std::index_sequence_for<t_variant_key_ts ...>()
+                                        std::index_sequence_for<t_variant_param_ts ...>()
                                 );
                             }
 
@@ -465,11 +466,11 @@ namespace morphstore {
                                 return m_AllGood;
                             }
 
-                            void printDataGenStarted() const {
+                            void print_datagen_started() const {
                                 std::cerr << "Data generation: started... ";
                             };
 
-                            void printDataGenDone() const {
+                            void print_datagen_done() const {
                                 std::cerr << "done." << std::endl;
                             }
                         };
