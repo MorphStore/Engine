@@ -18,3 +18,12 @@ target_compile_options( example_query PRIVATE
                         $<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( example_query PRIVATE "-ldl" )
 
+add_executable( variant_executor_usage variant_executor_usage.cpp )
+target_compile_options( variant_executor_usage PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+                        -fstack-protector-all
+                        $<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( variant_executor_usage PRIVATE "-ldl" )
