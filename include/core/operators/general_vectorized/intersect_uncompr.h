@@ -28,12 +28,12 @@ using namespace vector;
    struct intersect_sorted_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
-         vector_mask_t m_MaskGreater;//Do we really need this as a state?
+         vector_mask_t m_MaskLess;//Do we really need this as a state?
          int m_doneLeft;
          int m_doneRight;
          //vector_t m_RotVec;
-         state_t(void): m_MaskGreater{ (vector_mask_t)0 } { }
-         state_t(vector_mask_t const & p_MaskGreater): m_MaskGreater{ p_MaskGreater } { }
+         state_t(void): m_MaskLess{ (vector_mask_t)0 } { }
+         state_t(vector_mask_t const & p_MaskLess): m_MaskLess{ p_MaskLess } { }
          
          
       };
@@ -49,7 +49,7 @@ using namespace vector;
          vector_mask_t resultMaskEqual    = 0;
          
             resultMaskEqual         = vector::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
-            p_State.m_MaskGreater   = vector::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
+            p_State.m_MaskLess   = vector::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
             
       
          return resultMaskEqual;
@@ -97,12 +97,12 @@ using namespace vector;
                 p_OutPtr++;
              }
             
-            if((p_State.m_MaskGreater) == 0) { //@todo: Original resultMaskEqual | p_State.m_MaskGreater. resultMaskEqual is not necessary, is it?
+            if((p_State.m_MaskLess) == 0) { //@todo: Original resultMaskEqual | p_State.m_MaskGreater. resultMaskEqual is not necessary, is it?
                p_Data1Ptr++;
                data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
                
             }else{
-                if((p_State.m_MaskGreater) == full_hit) { 
+                if((p_State.m_MaskLess) == full_hit) { 
                     p_Data2Ptr += vector_element_count::value;
                     data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
@@ -111,7 +111,7 @@ using namespace vector;
                 }else{
                     p_Data1Ptr++;
                     data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
-                    p_Data2Ptr += __builtin_popcount(p_State.m_MaskGreater);
+                    p_Data2Ptr += __builtin_popcount(p_State.m_MaskLess);
                     data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
                     );
@@ -123,8 +123,8 @@ using namespace vector;
          p_State.m_doneLeft = p_Data1Ptr-Data1Ptr_start;
          p_State.m_doneRight = p_Data2Ptr-Data2Ptr_start;
          
-         if ((p_State.m_MaskGreater) != 0) p_State.m_doneRight-=__builtin_popcount(p_State.m_MaskGreater);
-         if ((p_State.m_MaskGreater) != full_hit) p_State.m_doneLeft--;
+         if ((p_State.m_MaskLess) != 0) p_State.m_doneRight-=__builtin_popcount(p_State.m_MaskLess);
+         if ((p_State.m_MaskLess) != full_hit) p_State.m_doneLeft--;
          return (p_OutPtr-out_init);
       }
    };

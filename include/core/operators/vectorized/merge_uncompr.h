@@ -89,7 +89,7 @@ merge_sorted<processing_style_t::vec256>(
         //if no values on left side are greater than on right side 
         if (mask_gt==0){
             if (mask_eq==0){ //avoid duplicates
-                *outPos=_mm256_extract_epi64(left,0);//save current value from left side if is not greater than the right side value
+                *outPos=_mm256_extract_epi64(left,0);//save current value from left side if it is not greater than the right side value
                 outPos++;
             }
             idx_left++;
