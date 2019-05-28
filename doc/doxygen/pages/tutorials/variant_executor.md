@@ -63,16 +63,20 @@ The executable is `build/src/examples/variant_executor_usage`.
 First, select the right template-specialization of `variant_executor`.
 We must specialize for:
 
-- the interface of the operator to test/benchmark, this includes
-  - the number of output columns
-  - the number of input columns
-  - the types of additional non-column parameters (such as a selection constant or a cardinality estimate), if applicable for the operator
+- the interface of the operator to test/benchmark
+  - this is fully determined by the operator, so there is nothing to choose here for the developer
+  - this includes
+    - the number of output columns
+    - the number of input columns
+    - the types of additional non-column parameters (such as a selection constant or a cardinality estimate), if applicable for the operator
 - things specific to the test/benchmark to be implemented
-  - the types of the *variant parameters*, i.e., the values that identify a variant for this test/benchmark
-  - the types of the *setting parameters*, i.e., the values that identify a setting for this test/experiment
+  - this is completely up to the developer of the test/benchmark
+  - this includes
+    - the types of the *variant parameters*, i.e., the values that identify a variant for this test/benchmark
+    - the types of the *setting parameters*, i.e., the values that identify a setting for this test/experiment
   
 Example: The project operator has one output column, two input columns, and no additional parameters.
-Furthermore, let us assume we want to evaluate the different processing style variants of the project operator (but no compressed formats etc.).
+Furthermore, let us assume we want to evaluate the different processing style variants of the project-operator (but no compressed formats etc.).
 Then, a single `std::string` suffices for the variant parameters.
 Note that we could also use `morphstore::processing_style_t` as the type of this variant parameter, but for the output to the console, the type must be insertable into a stream.
 Interesting setting parameters could be the number of data elements in the project-operator's input data column and input positions column.
@@ -86,10 +90,11 @@ Hence, the type of `variant_executor` we need is:
 ~~~
 </div>
 
+If our operator haf additional non-column parameters, then their types would follow behind the numbers of output and input columns, e.g., `<1, 2, size_t>`.
 It is recommendable to use the alias name `varex_t` here, since this type will be needed again in the following.
 
 Next, we need an instance.
-The constructor expects the names of the variant parameters, the setting parameters, and the operator's additional non-column parameters as vectors of strings.
+The constructor expects the *names* of the variant parameters, the setting parameters, and the operator's additional non-column parameters as vectors of strings.
 
 <div class=userCode>
 ~~~{.cpp}
