@@ -19,18 +19,14 @@ namespace morphstore {
 
    template<
       class VectorExtension,
-      class BiggestSupportedVectorExtension,
-      template<class> class HashFunction,
-      vector::size_policy_hash SPH,
-      template<class, class, template<class>class, vector::size_policy_hash> class LookupInsertStrategy,
-      size_t MaxLoadfactor
+      class DataStructure
    >
    struct semi_join_build_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
          base_t *& p_InBuildDataPtr,
          size_t const p_Count,
-         typename vector::hash_set<BiggestSupportedVectorExtension,HashFunction,SPH,LookupInsertStrategy,MaxLoadfactor> & hs
+         DataStructure & hs
       ) {
          using namespace vector;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -45,11 +41,7 @@ namespace morphstore {
 
    template<
       class VectorExtension,
-      class BiggestSupportedVectorExtension,
-      template<class> class HashFunction,
-      vector::size_policy_hash SPH,
-      template<class, class, template<class>class, vector::size_policy_hash> class LookupInsertStrategy,
-      size_t MaxLoadfactor
+      class DataStructure
    >
    struct semi_join_probe_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -58,7 +50,7 @@ namespace morphstore {
          base_t *& p_InProbeDataPtr,
          size_t const p_Count,
          base_t * p_OutPosCol,
-         typename vector::hash_set<BiggestSupportedVectorExtension,HashFunction,SPH,LookupInsertStrategy,MaxLoadfactor> & hs
+         DataStructure & hs
       ) {
          using namespace vector;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -89,11 +81,7 @@ namespace morphstore {
    template<
       class Format,
       class VectorExtension,
-      class BiggestSupportedVectorExtension,
-      template<class> class HashFunction,
-      vector::size_policy_hash SPH,
-      template<class, class, template<class>class, vector::size_policy_hash> class LookupInsertStrategy,
-      size_t MaxLoadfactor
+      class DataStructure
    >
    struct semi_join {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -110,8 +98,7 @@ namespace morphstore {
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
-         hash_set<BiggestSupportedVectorExtension,HashFunction,SPH,LookupInsertStrategy,MaxLoadfactor>
-            hs( inBuildDataCount );
+         DataStructure hs( inBuildDataCount );
          auto outPosCol = new column<uncompr_f>(
             (inProbeDataCount * sizeof(uint64_t))
          );
@@ -124,21 +111,13 @@ namespace morphstore {
 
          semi_join_build_batch<
             VectorExtension,
-            BiggestSupportedVectorExtension,
-            HashFunction,
-            SPH,
-            LookupInsertStrategy,
-            MaxLoadfactor
+            DataStructure
          >::apply( inBuildDataPtr, buildVectorCount, hs );
 //         semi_join_build_batch<scalar<base_t>, HashSet>::apply( inBuildDataPtr, buildRemainderCount, hs );
          size_t resultCount =
             semi_join_probe_batch<
                VectorExtension,
-               BiggestSupportedVectorExtension,
-               HashFunction,
-               SPH,
-               LookupInsertStrategy,
-               MaxLoadfactor
+               DataStructure
             >::apply( inProbeDataPtr, probeVectorCount, outPtr, hs );
 //         resultCount +=
 //            semi_join_probe_batch<scalar<base_t>, HashSet>::apply( inProbeDataPtr, probeVectorCount, outPtr, hs );

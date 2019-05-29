@@ -51,11 +51,13 @@ int main( void ) {
       semi_join<
          uncompr_f,
          sse<v128<uint64_t>>,
-         avx2<v256<uint64_t>>,
-         multiply_mod_hash,
-         size_policy_hash::ARBITRARY,
-         scalar_key_vectorized_linear_search,
-         60
+         hash_set<
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::ARBITRARY,
+            scalar_key_vectorized_linear_search,
+            60
+         >
       >::apply(col1, col2);
 
    print_columns(
