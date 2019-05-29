@@ -31,7 +31,7 @@ int main( void ){
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     // TODO: get base directory with cin -> user input
-    morphstore::LDBC_Import ldbcImport("/home/tim/ldbc_snb_datagen-0.2.8/social_network/");
+    morphstore::LDBC_Import ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::Graph socialGraph;
 
     // generate vertices & edges from LDBC files and insert into socialGraph
