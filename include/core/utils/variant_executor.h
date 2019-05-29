@@ -348,8 +348,11 @@ namespace morphstore {
                                         << "Setting" << std::endl
                                         << "\tParameters" << std::endl;
                                 {
-                                    unsigned i = 0;
-                                    MSV_CXX_ATTRIBUTE_PPUNUSED bool x[] = {print_setting_param(i, p_SettingParams) ...};
+                                    MSV_CXX_ATTRIBUTE_PPUNUSED unsigned i = 0;
+                                    MSV_CXX_ATTRIBUTE_PPUNUSED bool x[] = {
+                                        // false is needed, because p_SettingParams could be empty.
+                                        false, print_setting_param(i, p_SettingParams) ...
+                                    };
                                 }
 
                                 std::cerr
