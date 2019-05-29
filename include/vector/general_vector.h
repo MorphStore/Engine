@@ -9,6 +9,8 @@
 #define MORPHSTORE_VECTOR_GENERAL_VECTOR_H
 
 #include <cstdint>
+#include <type_traits>
+#include <cstddef>
 #include <vector/preprocessor.h>
 namespace vector {
 

@@ -64,6 +64,19 @@ const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec) {
     return resCol;
 }
 
+const column<uncompr_f> * make_column(uint64_t const * const vec, size_t count) {
+   if(count > 400)
+      throw std::runtime_error(
+         "make_column() is an inefficient convenience function and "
+         "should only be used for very small columns"
+      );
+   const size_t size = count * sizeof(uint64_t);
+   auto resCol = new column<uncompr_f>(size);
+   memcpy(resCol->get_data(), vec, size);
+   resCol->set_meta_data(count, size);
+   return resCol;
+}
+
 /**
  * @brief Creates an uncompressed column and fills its data buffer with sorted
  * unique data elements. Can be used to generate primary key columns.

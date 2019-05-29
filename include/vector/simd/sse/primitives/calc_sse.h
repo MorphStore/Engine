@@ -80,7 +80,7 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (sse)" );
-         warn( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm_mul_epu32( p_vec1, p_vec2);
       }
    };
@@ -126,7 +126,7 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (sse)" );
-         warn( "[VECTOR] - MODULO IS A WORKAROUND" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m128d divhelper = _mm_set1_pd(0x0010000000000000);
          __m128d intermediate =
             _mm_add_pd(
