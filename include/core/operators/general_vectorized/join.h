@@ -64,8 +64,8 @@ namespace morphstore {
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          size_t resultCount = 0;
 
-         vector_t positionVector = set_sequence<VectorExtension, vector_element_count::value>(0,1);
-         vector_t const incrementVector = set1<VectorExtension>( vector_element_count::value );
+         vector_t positionVector = set_sequence<VectorExtension, vector_base_t_granularity::value>(0,1);
+         vector_t const incrementVector = set1<VectorExtension, vector_base_t_granularity::value>( vector_element_count::value );
          vector_mask_t lookupResultMask;
          uint8_t hitResultCount;
          for( size_t i = 0; i < p_Count; ++i ) {

@@ -78,7 +78,7 @@ namespace vector{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx2)" );
-         warn( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm256_mul_epu32( p_vec1, p_vec2);
       }
    };
@@ -121,7 +121,7 @@ namespace vector{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx2)" );
-         warn( "[VECTOR] - MODULO IS A WORKAROUND" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m256d divhelper = _mm256_set1_pd(0x0010000000000000);
          __m256d intermediate =
             _mm256_add_pd(

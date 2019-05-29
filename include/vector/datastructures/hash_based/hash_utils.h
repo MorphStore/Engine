@@ -114,7 +114,7 @@ namespace vector {
          vector_t const m_ResizeVector;
          state_t(size_t const p_Count ) :
             m_ResizeValue{ p_Count },
-            m_ResizeVector{set1<VectorExtension>(p_Count)} {}
+            m_ResizeVector{set1<VectorExtension, vector_base_t_granularity::value>(p_Count)} {}
       };
       /**
        * @brief Maps all keys from the vector register into the finite index space of the target hash based datastructure.
