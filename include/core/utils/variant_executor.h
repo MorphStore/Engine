@@ -294,9 +294,9 @@ namespace morphstore {
                             using setting_t = std::tuple<t_setting_param_ts ...>;
 
                             for_setting_params (
+                                    const std::vector<std::string> p_AddParamsCsvParamColNames,
                                     const std::vector<std::string> p_VariantCsvParamColNames,
-                                    const std::vector<std::string> p_SettingCsvParamColNames,
-                                    const std::vector<std::string> p_AddParamsCsvParamColNames
+                                    const std::vector<std::string> p_SettingCsvParamColNames
                             ) :
                                     m_CsvVariantParamColNames(p_VariantCsvParamColNames),
                                     m_CsvSettingParamColNames(p_SettingCsvParamColNames),

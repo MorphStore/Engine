@@ -62,9 +62,9 @@ int main(void) {
             ::for_variant_params<std::string>
             ::for_setting_params<size_t, size_t>;
     varex_t varex(
+            {}, // names of the operator's additional parameters
             {"ps"}, // names of the variant parameters
-            {"inDataCount", "inPosCount"}, // names of the setting parameters
-            {} // names of the operator's additional parameters
+            {"inDataCount", "inPosCount"} // names of the setting parameters
     );
     
     // Define the variants.

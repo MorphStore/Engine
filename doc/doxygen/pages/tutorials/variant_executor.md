@@ -94,14 +94,14 @@ If our operator haf additional non-column parameters, then their types would fol
 It is recommendable to use the alias name `varex_t` here, since this type will be needed again in the following.
 
 Next, we need an instance.
-The constructor expects the *names* of the variant parameters, the setting parameters, and the operator's additional non-column parameters as vectors of strings.
+The constructor expects the *names* of the operator's additional non-column parameters (if applicable), the variant parameters, and the setting parameters as vectors of strings.
 
 <div class=userCode>
 ~~~{.cpp}
 	varex_t varex(
+  	        {}, // names of the operator's additional parameters
 	        {"ps"}, // names of the variant parameters
-	        {"inDataCount", "inPosCount"}, // names of the setting parameters
-  	        {} // names of the operator's additional parameters
+	        {"inDataCount", "inPosCount"} // names of the setting parameters
   	);
 ~~~
 </div>

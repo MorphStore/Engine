@@ -71,9 +71,9 @@ int main(void) {
             ::for_variant_params<std::string, std::string>
             ::for_setting_params<size_t, size_t>;
     ve_t ve(
+            {},
             {"ps", "in_pos_f"},
-            {"inDataCount", "inPosCount"},
-            {}
+            {"inDataCount", "inPosCount"}
     );
     
     // These variants can be executed for all input columns.
