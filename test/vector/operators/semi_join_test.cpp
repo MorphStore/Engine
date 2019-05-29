@@ -1,5 +1,5 @@
 //
-// Created by jpietrzyk on 20.05.19.
+// Created by jpietrzyk on 29.05.19.
 //
 
 #include <vector/primitives/logic.h>
@@ -18,6 +18,7 @@
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_set.h>
+#include <core/operators/general_vectorized/join.h>
 
 #include <vector/complex/hash.h>
 
@@ -41,45 +42,31 @@ int main( void ) {
 
    size_t const dataCount = 128;
    size_t const loadfactor = 60;
-//   size_t const mapCount = (dataCount * 100 / loadfactor);
 
-   auto col1 = generate_sorted_unique(dataCount);
-   /*auto col2 = new column<uncompr_f>( mapCount* sizeof( uint64_t));
-   col2->set_meta_data(mapCount, mapCount*sizeof(uint64_t));
-   uint64_t * d = col1->get_data();
 
-//   hash_set_lpcs< avx2<v256<uint64_t>>, multiply_mod_hash, size_policy_set::ARBITRARY, 60> hs( col1 );
-   scalar_key_vectorized_linear_search<
-      sse<v128<uint64_t>>,
-      avx2<v256<uint64_t>>,
-      multiply_mod_hash,
-      size_policy_set::ARBITRARY
-   >::build_batch( d, col2->get_data(), dataCount, mapCount);
-*/
+   auto col1 = generate_sorted_unique(dataCount, 1, 1);
+   auto col2 = generate_sorted_unique(dataCount, 1, 2);
 
-   hash_set<
-      avx2<v256<uint64_t>>,
-      multiply_mod_hash,
-      size_policy_hash::ARBITRARY,
-      scalar_key_vectorized_linear_search,
-      60 >
-   hs( col1->get_count_values() );
-
-   auto state = hs.get_lookup_insert_strategy_state< sse<v128<uint64_t>>>();
-   hs.build< uncompr_f, sse<v128<uint64_t>> >( col1, state );
-
-   auto col2 = hs.get_data();
-
-   std::vector<uint64_t> myvector( col2, col2 + hs.get_bucket_count());
-   std::sort (myvector.begin(), myvector.end());
-   auto col3 = make_column( myvector.data(),  hs.get_bucket_count() );
+   auto col3 =
+      semi_join<
+         sse<v128<uint64_t>>,
+         hash_set<
+            BiggestSupportedVectorExtension,
+            multiply_mod_hash,
+            size_policy_hash::ARBITRARY,
+            scalar_key_vectorized_linear_search,
+            60
+         >
+      >::apply(col1, col2);
 
    print_columns(
       print_buffer_base::decimal,
       col1,
+      col2,
       col3,
-      "data",
-      "hashset"
+      "LEFT",
+      "RIGHT",
+      "JOIN_POS"
    );
 
    return 0;
