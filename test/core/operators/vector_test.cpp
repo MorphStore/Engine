@@ -214,7 +214,7 @@ int main( void ) {
     auto intersect_result=intersect_sorted<processing_style_t::scalar, uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT);
     std::cout << "Scalar Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect_result->get_data()))[0] << ", " << ((uint64_t*)(intersect_result->get_data()))[1] << ", " << ((uint64_t*)(intersect_result->get_data()))[2] <<  "\n\t Count: " << intersect_result->get_count_values() << "\n";
     
-    auto intersect256_result=morphstore::intersect_sorted<processing_style_t::vec256, uncompr_f>(testDataColumnSorted,testDataColumnSorted2,TEST_DATA_COUNT);
+    auto intersect256_result=morphstore::intersect_sorted<processing_style_t::vec256, uncompr_f>(testDataColumnSorted2,testDataColumnSorted,TEST_DATA_COUNT);
     std::cout << "256 bit Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect256_result->get_data()))[0] << ", " << ((uint64_t*)(intersect256_result->get_data()))[1] << ", " << ((uint64_t*)(intersect256_result->get_data()))[2] <<  "\n\t Count: " << intersect256_result->get_count_values() << "\n";
     
     ok = memcmp(intersect_result->get_data(),intersect256_result->get_data(),intersect256_result->get_count_values()*sizeof(uint64_t));

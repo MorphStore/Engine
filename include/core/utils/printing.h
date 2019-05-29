@@ -18,7 +18,6 @@
 /**
  * @file printing.h
  * @brief Some utilities for printing columns.
- * @todo TODOS?
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_PRINTING_H
@@ -52,7 +51,7 @@ template< typename uintX_t >
 void print_binary(
         std::ostream & os,
         uintX_t val,
-        size_t countBytes,
+        size_t countBytes = sizeof( uintX_t ),
         char zeroChar = '.',
         char oneChar = 'I'
 ) {
@@ -280,7 +279,7 @@ void print_buffers(
                 // Print the uintX_t-word in the specified base.
                 switch( p_Base ) {
                     case print_buffer_base::binary:
-                        print_binary( std::cout, value, sizeof( uintX_t ) );
+                        print_binary( std::cout, value );
                         break;
                     case print_buffer_base::decimal:
                         std::cout << std::setw( colW ) << std::dec << value;
