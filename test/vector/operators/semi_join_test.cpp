@@ -49,14 +49,13 @@ int main( void ) {
 
    auto col3 =
       semi_join<
+         uncompr_f,
          sse<v128<uint64_t>>,
-         hash_set<
-            BiggestSupportedVectorExtension,
-            multiply_mod_hash,
-            size_policy_hash::ARBITRARY,
-            scalar_key_vectorized_linear_search,
-            60
-         >
+         avx2<v256<uint64_t>>,
+         multiply_mod_hash,
+         size_policy_hash::ARBITRARY,
+         scalar_key_vectorized_linear_search,
+         60
       >::apply(col1, col2);
 
    print_columns(

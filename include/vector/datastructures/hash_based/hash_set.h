@@ -82,7 +82,7 @@ namespace vector {
 
          template< class VectorExtension >
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
-         typename VectorExtension::mask_t
+         std::pair< typename VectorExtension::mask_t, uint8_t >
          lookup(
             typename VectorExtension::vector_t const & p_KeysToLookup,
             typename
