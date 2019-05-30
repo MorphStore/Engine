@@ -97,5 +97,43 @@ nested_loop_join<processing_style_t::scalar>(
     return std::make_tuple(outPosLCol, outPosRCol);
 }
 
+template<>
+const column<uncompr_f> *
+left_semi_nto1_nested_loop_join<processing_style_t::scalar>(
+        const column<uncompr_f> * const inDataLCol,
+        const column<uncompr_f> * const inDataRCol,
+        const size_t outCountEstimate
+) {
+    const size_t inDataLCount = inDataLCol->get_count_values();
+    const size_t inDataRCount = inDataRCol->get_count_values();
+    
+    const uint64_t * const inDataL = inDataLCol->get_data();
+    const uint64_t * const inDataR = inDataRCol->get_data();
+    
+    // If no estimate is provided: Pessimistic allocation size (for
+    // uncompressed data), reached only if all data elements in the left input
+    // column have a join partner in the right input column.
+    const size_t size = bool(outCountEstimate)
+            // use given estimate
+            ? (outCountEstimate * sizeof(uint64_t))
+            // use pessimistic estimate
+            : (inDataLCount * sizeof(uint64_t));
+    auto outPosLCol = new column<uncompr_f>(size);
+    uint64_t * const outPosL = outPosLCol->get_data();
+    
+    unsigned iOut = 0;
+    for(unsigned iL = 0; iL < inDataLCount; iL++)
+        for(unsigned iR = 0; iR < inDataRCount; iR++)
+            if(inDataL[iL] == inDataR[iR]) {
+                outPosL[iOut] = iL;
+                iOut++;
+                break;
+            }
+    
+    outPosLCol->set_meta_data(iOut, iOut * sizeof(uint64_t));
+    
+    return outPosLCol;
+}
+
 }
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_JOIN_UNCOMPR_H

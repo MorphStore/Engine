@@ -7,6 +7,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/group_unary_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/intersect_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/join_test_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/left_semi_nto1_nested_loop_join_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/merge_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_test_app )
 	
@@ -27,6 +28,7 @@ ENDIF(CAVXTWO  OR CAVX512)
 	add_executable( group_unary_test_app group_unary_test.cpp )
 	add_executable( intersect_test_app intersect_test.cpp )
 	add_executable( join_test_app join_test.cpp )
+	add_executable( left_semi_nto1_nested_loop_join_test_app left_semi_nto1_nested_loop_join_test.cpp )
 	add_executable( merge_test_app merge_test.cpp )
 	add_executable( project_test_app project_test.cpp )
 	
@@ -110,6 +112,15 @@ ENDIF(CAVXTWO  OR CAVX512)
 	        -fstack-protector-all
 	        $<$<CONFIG:DEBUG>:-DDEBUG> )
 	target_link_libraries( join_test_app PRIVATE "-ldl" )
+	
+	target_compile_options( left_semi_nto1_nested_loop_join_test_app PRIVATE
+	        -Werror
+	        -Wall
+	        -Wextra
+	        -pedantic
+	        -fstack-protector-all
+	        $<$<CONFIG:DEBUG>:-DDEBUG> )
+	target_link_libraries( left_semi_nto1_nested_loop_join_test_app PRIVATE "-ldl" )
 	
 	target_compile_options( merge_test_app PRIVATE
 	        -Werror
@@ -201,6 +212,7 @@ ENDIF(CAVXTWO  OR CAVX512)
 	add_test( group_unary_test group_unary_test_app )
 	add_test( intersect_test intersect_test_app )
 	add_test( join_test join_test_app )
+	add_test( left_semi_nto1_nested_loop_join_test join_test_app )
 	add_test( merge_test merge_test_app )
 	add_test( project_test project_test_app )
 	add_test( select_test select_test_app )
