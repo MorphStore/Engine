@@ -7,7 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
-#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/extension_scalar.h>
 #include <vector/primitives/calc.h>
 
 #include <functional>
@@ -74,7 +74,6 @@ namespace vector{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Divide 64 bit integer values from two registers (scalar)" );
-         __m256d divhelper = _mm256_set1_pd(0x0010000000000000);
 
          return p_vec1 / p_vec2;
       }

@@ -7,7 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
-#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/extension_scalar.h>
 #include <vector/primitives/compare.h>
 
 #include <functional>

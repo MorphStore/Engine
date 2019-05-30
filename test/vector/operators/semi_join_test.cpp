@@ -4,17 +4,28 @@
 
 #include <vector/primitives/logic.h>
 #include <vector/primitives/io.h>
+
+#include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/primitives/logic_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/compare_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+
+
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx2/primitives/logic_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
+
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_set.h>
@@ -40,7 +51,7 @@ int main( void ) {
    using namespace vector;
    using namespace morphstore;
 
-   size_t const dataCount = 128;
+   size_t const dataCount = 131;
    size_t const loadfactor = 60;
 
 
