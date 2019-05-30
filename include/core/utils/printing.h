@@ -72,6 +72,34 @@ void repeat_char( std::ostream & os, char c, size_t n ) {
     os << std::setw( n ) << std::setfill( c ) << "";
 }
 
+struct colored {
+    enum class color {
+        black   = 30,
+        red     = 31,
+        green   = 32,
+        yellow  = 33,
+        blue    = 34,
+        magenta = 35,
+        cyan    = 36,
+        white   = 37
+    };
+    
+    std::string m_Text;
+    color m_Color;
+    
+    colored(std::string p_Text, color p_Color)
+    : m_Text(p_Text), m_Color(p_Color) {
+        //
+    }
+};
+
+std::ostream & operator<<(std::ostream & os, const colored & c) {
+    os
+            << "\033[1;" << static_cast<unsigned>(c.m_Color) << "m"
+            << c.m_Text << "\033[0m";
+    return os;
+}
+
 /**
  * Bases for printing columns respectively buffers.
  */
