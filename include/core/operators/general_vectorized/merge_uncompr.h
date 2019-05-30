@@ -28,7 +28,7 @@
 #include <vector/primitives/compare.h>
 #include <vector/primitives/manipulate.h>
 #include <core/utils/preprocessor.h>
-#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
