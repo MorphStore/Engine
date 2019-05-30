@@ -23,6 +23,7 @@
 #ifndef MORPHSTORE_CORE_UTILS_VARIADIC_H
 #define MORPHSTORE_CORE_UTILS_VARIADIC_H
 
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -63,6 +64,18 @@ namespace morphstore {
         using isoHelper = int[];
         (void)isoHelper {
                 0, (void(ss << std::forward< T >(values) << delim), 0) ...
+        };
+        return ss.str();
+    }
+    
+    // fold-expressions only in c++1z / c++17
+    template<typename ... T>
+    std::string doPrintWithWidths(const std::string & delim, const size_t * ws, T ... values) {
+        std::stringstream ss;
+        using isoHelper = int[];
+        unsigned i = 0;
+        (void)isoHelper {
+                0, (void(ss << std::left << std::setw(ws[i++]) << std::forward< T >(values) << delim), 0) ...
         };
         return ss.str();
     }

@@ -38,10 +38,12 @@
 #include <core/utils/equality_check.h>
 #include <core/utils/monitoring.h>
 #include <core/utils/preprocessor.h>
+#include <core/utils/printing.h>
 #include <core/utils/processing_style.h>
 #include <core/utils/variadic.h>
 
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -348,18 +350,34 @@ namespace morphstore {
                                         << "Setting" << std::endl
                                         << "\tParameters" << std::endl;
                                 {
-                                    MSV_CXX_ATTRIBUTE_PPUNUSED unsigned i = 0;
-                                    MSV_CXX_ATTRIBUTE_PPUNUSED bool x[] = {
-                                        // false is needed, because p_SettingParams could be empty.
-                                        false, print_setting_param(i, p_SettingParams) ...
-                                    };
+                                    if(sizeof...(t_setting_param_ts)) {
+                                        MSV_CXX_ATTRIBUTE_PPUNUSED unsigned i = 0;
+                                        MSV_CXX_ATTRIBUTE_PPUNUSED bool x[] = {
+                                            // false is needed, because p_SettingParams could be empty.
+                                            false, print_setting_param(i, p_SettingParams) ...
+                                        };
+                                    }
+                                    else
+                                        std::cerr << "\t\t(none)" << std::endl;
                                 }
+                                
+                                // Calculate the maximum width of each column.
+                                size_t maxVariantParamWs[] = {get_text_length(m_CsvVariantParamColNames[t_VariantParamIdxs]) ...};
+                                for(auto variant : p_Variants) {
+                                    size_t variantParamWs[] = {get_text_length(std::get<t_VariantParamIdxs + 1>(variant)) ...};
+                                    for(unsigned vpIdx = 0; vpIdx < sizeof...(t_VariantParamIdxs); vpIdx++)
+                                        if(variantParamWs[vpIdx] > maxVariantParamWs[vpIdx])
+                                            maxVariantParamWs[vpIdx] = variantParamWs[vpIdx];
+                                }
+                                const std::string vpDelim = "  ";
 
                                 std::cerr
                                         << "\tExecuting Variants" << std::endl
                                         << "\t\t";
-                                for(const auto & colName : m_CsvVariantParamColNames)
-                                    std::cerr << colName << '\t';
+                                for(unsigned vpIdx = 0; vpIdx < sizeof...(t_VariantParamIdxs); vpIdx++)
+                                    std::cerr
+                                            << std::left << std::setw(maxVariantParamWs[vpIdx])
+                                            << m_CsvVariantParamColNames[vpIdx] << vpDelim;
                                 std::cerr << std::endl;
                                 auto nullptrTuple = repeat_as_tuple<
                                         sizeof...(t_uncompr_out_fs),
@@ -373,7 +391,7 @@ namespace morphstore {
 
                                     std::cerr
                                             << "\t\t"
-                                            << doPrint('\t', std::get<t_VariantParamIdxs + 1>(variant) ...)
+                                            << doPrintWithWidths(vpDelim, maxVariantParamWs, std::get<t_VariantParamIdxs + 1>(variant) ...)
                                             << ": started... ";
                                     std::cerr.flush();
 
@@ -410,7 +428,7 @@ namespace morphstore {
                                                 p_SettingParams ...,
                                                 p_AdditionalParams ...
                                         );
-                                        std::cerr << " -> reference";
+                                        std::cerr << " -> " << colored("reference", colored::color::cyan);
                                     }
                                     else {
                                         const bool good = check_uncompr_column_tuples(
@@ -430,7 +448,11 @@ namespace morphstore {
                                                 currentOutput,
                                                 std::index_sequence_for<t_uncompr_out_fs ...>()
                                         );
-                                        std::cerr << " -> " << equality_check::ok_str(good);
+                                        std::cerr << " -> " << (
+                                                good
+                                                ? colored("ok", colored::color::green)
+                                                : colored("not ok", colored::color::red)
+                                        );
                                     }
                                     std::cerr << std::endl;
                                 }
@@ -460,7 +482,11 @@ namespace morphstore {
                             void done() const {
                                 std::cerr
                                         << "Summary" << std::endl
-                                        << '\t' << (m_AllGood ? "all ok" : "some NOT OK")
+                                        << '\t' << (
+                                                m_AllGood
+                                                ? colored("all ok", colored::color::green)
+                                                : colored("SOME NOT OK", colored::color::red)
+                                        )
                                         << std::endl << std::endl;
                                 MONITORING_PRINT_MONITORS(monitorCsvLog);
                             }

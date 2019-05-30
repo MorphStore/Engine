@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -98,6 +99,13 @@ std::ostream & operator<<(std::ostream & os, const colored & c) {
             << "\033[1;" << static_cast<unsigned>(c.m_Color) << "m"
             << c.m_Text << "\033[0m";
     return os;
+}
+
+template<typename t_type>
+size_t get_text_length(t_type val) {
+    std::stringstream s;
+    s << val;
+    return s.tellp();
 }
 
 /**
