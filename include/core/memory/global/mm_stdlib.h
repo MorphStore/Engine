@@ -26,6 +26,8 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/management/abstract_mm.h>
+#include <core/memory/global/mm_override.h>
+#include <core/memory/morphstore_mm.h>
 
 #include <core/memory/management/mmap_mm.h>
 #include <core/memory/management/paged_mm.h>
@@ -44,36 +46,20 @@ extern "C" {
  * @return Pointer to allocated memory.
  */
 void *malloc(size_t p_AllocSize) __THROW {
-   //return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
-    //const size_t CACHE_LINE_SIZE = 64;
-    size_t abs_needed_size = p_AllocSize + sizeof(morphstore::ObjectInfo);
-
-    if (abs_needed_size > morphstore::ALLOCATION_SIZE) { /* already allocates object info for convenience, aligned to chunksize */
-        return morphstore::mmap_memory_manager::getInstance().allocateLarge(p_AllocSize);
-    }
-    else if (abs_needed_size > (( morphstore::DB_PAGE_SIZE ) - sizeof(morphstore::PageHeader) )) {
-        return morphstore::mmap_memory_manager::getInstance().allocate(abs_needed_size);
-    }
-    else {
-        return morphstore::paged_memory_manager::getGlobalInstance().allocate(abs_needed_size);
-    }
+#ifdef USE_MMAP_MM
+    return mm_malloc(p_AllocSize);
+#else
+    return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
+#endif
 }
 
 void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
-   //return morphstore::query_memory_manager::get_instance().reallocate(p_Ptr, p_AllocSize);
-    morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>( reinterpret_cast<uint64_t>(p_Ptr) - sizeof(morphstore::ObjectInfo));
-
-    if (info->size > morphstore::ALLOCATION_SIZE) {
-        return morphstore::mmap_memory_manager::getInstance().reallocate(p_Ptr, p_AllocSize);
-    }
-    else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
-        return morphstore::mmap_memory_manager::getInstance().reallocate(info, p_AllocSize + sizeof(morphstore::ObjectInfo));
-    }
-    else {
-        return morphstore::paged_memory_manager::getGlobalInstance().reallocate(info, p_AllocSize + sizeof(morphstore::ObjectInfo));
-    }
+#ifdef USE_MMAP_MM
+    return mm_realloc(p_Ptr, p_AllocSize);
+#else
+    return morphstore::query_memory_manager::get_instance().reallocate(p_Ptr, p_AllocSize);
+#endif
 }
-
 
 /**
  * @brief Global replacement for free from cstdlib.
@@ -86,22 +72,16 @@ void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void free(void *p_FreePtr) __THROW {
-    morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>( reinterpret_cast<uint64_t>(p_FreePtr) - sizeof(morphstore::ObjectInfo));
-
-    if (info->size > morphstore::ALLOCATION_SIZE) {
-        morphstore::mmap_memory_manager::getInstance().deallocate(p_FreePtr);
-    }
-    else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
-        morphstore::mmap_memory_manager::getInstance().deallocate(info);
-    }
-    else {
-        morphstore::paged_memory_manager::getGlobalInstance().deallocate(info);
-    }
-   /*if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
+#ifdef USE_MMAP_MM
+   mm_free(p_FreePtr);
+#else
+   if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
       morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);
    else
-      morphstore::stdlib_free_ptr( p_FreePtr );*/
+      morphstore::stdlib_free_ptr( p_FreePtr );
+#endif
 }
+
 #elif defined( MSV_DEBUG_MALLOC )
 /**
  * @brief Global helper function for debugging calls to malloc.
@@ -138,18 +118,16 @@ void * debug_malloc( size_t p_AllocSize, const char *file, int line, const char 
  */
 void debug_free( void *p_FreePtr, const char *file, int line, const char *func ) __THROW {
    fprintf( stdout, "[MEM  ]: %s [Managed Free] - %p [ %s - Line %d ].\n", func, p_FreePtr, file, line );
-   /*if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
+   if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
       morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);
    else
-      morphstore::stdlib_free_ptr( p_FreePtr );*/
+      morphstore::stdlib_free_ptr( p_FreePtr );
    free(p_FreePtr);
 }
 #  define malloc( X ) debug_malloc( X, __FILE__, __LINE__, __FUNCTION__ )
 #  define free( X ) debug_free( X, __FILE__, __LINE__, __FUNCTION__ )
 #endif
 }
-
-
 
 
 #endif //MORPHSTORE_CORE_MEMORY_GLOBAL_MM_STDLIB_H

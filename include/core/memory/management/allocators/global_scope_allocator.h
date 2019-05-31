@@ -84,7 +84,7 @@ namespace morphstore {
       }
 
       pointer allocate( size_t p_AllocCount, const void * = 0 ) {
-         return static_cast< pointer >( malloc( p_AllocCount * sizeof( C )  ) );
+         return static_cast< pointer >( stdlib_malloc( p_AllocCount * sizeof( C )  ) );
       }
 
       void construct( pointer p_Ptr, const C & value ) {
@@ -101,7 +101,7 @@ namespace morphstore {
       }
 
       void deallocate( pointer p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_NumElements ) {
-         free( static_cast< void * >( p_FreePtr ) );
+          stdlib_free( static_cast< void * >( p_FreePtr ) );
       }
    };
    template <class T1, class T2>

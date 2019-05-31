@@ -2,6 +2,11 @@
 #include <core/memory/management/mmap_mm.h>
 #include <core/memory/management/paged_mm.h>
 
+#include <core/memory/global/mm_hooks.h>
+/*#include <core/memory/management/allocators/global_scope_allocator.h>
+#include <core/memory/management/query_mm.h>*/
+#include <core/memory/global/mm_override.h>
+
 #include <cstdio>
 #include <vector>
 #include <chrono>
@@ -15,28 +20,27 @@ paged_memory_manager* paged_memory_manager::global_manager = nullptr;
 }
 
 int main(int /*argc*/, char** /*argv*/) {
+    init_mem_hooks();
     morphstore::mmap_memory_manager& instance = morphstore::mmap_memory_manager::getInstance();
 
     void* ptr = reinterpret_cast<void*>(instance.allocateContinuous());
-    //std::cout << "got address: " << ptr << std::endl;
 
     morphstore::ChunkHeader* header = reinterpret_cast<morphstore::ChunkHeader*>(reinterpret_cast<uint64_t>(ptr) - sizeof(morphstore::ChunkHeader));
     uint64_t state_test = header->getAllocBits64(60, 4);
 
-    //std::cout << "State test is " << std::hex << state_test << std::endl;
     assert(state_test == 0b1011l);
 
     state_test = header->getAllocBits64(0, 1);
-    //std::cout << "State test is " << std::hex << state_test << std::endl;
     assert(state_test == (1ul << 63));
     state_test = header->getAllocBits64(0, 4);
-    //std::cout << "State test is " << std::hex << state_test << std::endl;
 
     morphstore::paged_memory_manager& page_instance = morphstore::paged_memory_manager::getGlobalInstance();
-    /*page_instance.setCurrentChunk(ptr);
 
-    void* obj_ptr = page_instance.allocate(32);
-    page_instance.deallocate(obj_ptr);*/
+    /*void* obj_ptr = page_instance.allocate(32);
+    page_instance.deallocate(obj_ptr);
+
+    //obj_ptr = malloc(72704);
+    //free(obj_ptr);*/
 
     header = reinterpret_cast<morphstore::ChunkHeader*>( reinterpret_cast<uint64_t>(ptr) - sizeof(morphstore::ChunkHeader) );
     
@@ -49,7 +53,7 @@ int main(int /*argc*/, char** /*argv*/) {
     }
     // performance tests
     
-    const uint32_t ARRAY_LENGTH = 900000;
+    const uint32_t ARRAY_LENGTH = 1000000;
     uint32_t const object_sizes[7] = {8, 16, 32, 64, 128, 256, 512};
     //const uint32_t OBJ_SIZE = 32;
     void* ptrs[ARRAY_LENGTH];
@@ -61,19 +65,16 @@ int main(int /*argc*/, char** /*argv*/) {
 
         auto start = std::chrono::system_clock::now();
         for (int k = 0; k < 3; ++k) {
+
             for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-                ptrs[i] = page_instance.allocate(object_sizes[j]);
-                //std::cout << "Allocating on chunk " << std::hex << ( ~(morphstore::ALLOCATION_SIZE - 1) & reinterpret_cast<uint64_t>(ptrs[i]) ) << std::endl;
-                //std::cout << "Iteration " << std::dec << i << std::endl;
+                ptrs[i] = mm_malloc(object_sizes[(j + i) % 7]);
                 if (ptrs[i] == nullptr)
                     std::cerr << "Pointer " << i << " got returned as zero" << std::endl;
+                *reinterpret_cast<uint64_t*>(ptrs[i]) = 4;
             }
-            //std::cout << "Beginning deallocation" << std::endl;
-            for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-                //std::cout << "it: " << i << std::endl;
-                //std::cout << "Deallocating on chunk " << std::hex << ( ~(morphstore::ALLOCATION_SIZE - 1) & reinterpret_cast<uint64_t>(ptrs[i]) ) << std::endl;
-                //std::cout << "deallocating " << ptrs[i] << std::endl;
-                page_instance.deallocate(ptrs[i]);
+
+            for (int i = 0; i < ARRAY_LENGTH; ++i) {
+                mm_free(reinterpret_cast<char*>(ptrs[i]));
             }
         }
         auto end = std::chrono::system_clock::now();
@@ -84,15 +85,16 @@ int main(int /*argc*/, char** /*argv*/) {
         start = std::chrono::system_clock::now();
         for (int k = 0; k < 3; ++k) {
             for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
-                ptrs[i] = new char[object_sizes[j]];
+                ptrs[i] = malloc(object_sizes[(i + j) % 7]);
                 //std::cout << "Iteration " << std::dec << i << std::endl;
                 if (ptrs[i] == nullptr)
                     std::cerr << "Pointer " << i << " got returned as zero" << std::endl;
+                *reinterpret_cast<uint64_t*>(ptrs[i]) = 4;
             }
             //std::cout << "Beginning deallocation" << std::endl;
             for (unsigned int i = 0; i < ARRAY_LENGTH; ++i) {
                 //std::cout << "it: " << i << std::endl;
-                delete[] reinterpret_cast<char*>(ptrs[i]);
+                free(reinterpret_cast<char*>(ptrs[i]));
             }
         }
         end = std::chrono::system_clock::now();

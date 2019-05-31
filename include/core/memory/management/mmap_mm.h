@@ -1,8 +1,11 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_MMAP_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_MMAP_MM_H
 
-//#include <core/memory/global/mm_hooks.h>
-//#include <core/utils/logger.h>
+#ifndef USE_MMAP_MM
+#include <core/memory/global/mm_hooks.h>
+#include <core/memory/management/allocators/global_scope_allocator.h>
+#include <core/utils/logger.h>
+#endif
 
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
 #  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before mmap memory manager."
@@ -45,9 +48,9 @@ class ChunkHeader;
 
 class AllocationStatus {
 public:
-    AllocationStatus(size_t alloc_size) : m_next(nullptr), m_curr_offset(0), m_info((StorageType::CONTINUOUS), alloc_size) {}
+    AllocationStatus(size_t alloc_size) : m_next(nullptr), m_totalRegions(0), m_info((StorageType::CONTINUOUS), alloc_size) {}
     ChunkHeader* m_next;
-    uint64_t m_curr_offset;
+    uint64_t m_totalRegions;
     std::mutex m_sema;
     ObjectInfo m_info;
 };
@@ -72,7 +75,7 @@ public:
     void initialize(StorageType type)
     {
         m_info.status.m_next = nullptr;
-        m_info.status.m_curr_offset = 0;
+        m_info.status.m_totalRegions = 0;
         m_info.status.m_info.type = (type);
         m_info.status.m_info.size = ALLOCATION_SIZE;
     }
@@ -91,24 +94,11 @@ public:
         vol_memset(bitmap, UNUSED, LINUX_PAGE_SIZE);
     }
 
-    void* getCurrentOffset()
-    {
-        size_t chunkLocation = reinterpret_cast<size_t>(this) + sizeof(ChunkHeader);
-        return reinterpret_cast<void*>(chunkLocation + reinterpret_cast<size_t>(m_info.status.m_curr_offset));
-    }
-
-    // TODO: implement atomic variant to enable lock-free allocation
-    // Not used yet
-    void forwardOffset(size_t size)
-    {
-        char* address = reinterpret_cast<char*>(getCurrentOffset());
-        address += size;
-        //char* chunkLocation = reinterpret_cast<char*>(this) + sizeof(ChunkHeader);
-        m_info.status.m_curr_offset = reinterpret_cast<uint64_t>(address);
-    }
-
     void setAllocated(void* address, size_t size)
     {
+        //TODO: need to lock chunk to increment regions, or do atomic
+        //trace("Setting allocated on ", address, " for size ", size);
+        m_info.status.m_totalRegions++; 
         char* location_this = reinterpret_cast<char*>(this);
         uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) - reinterpret_cast<uint64_t>(location_this + sizeof(ChunkHeader));
         location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
@@ -132,6 +122,7 @@ public:
 
         *word_in_bitmap |= state;
         needed_blocks -= allocate_in_word;
+        //trace("Word in bitmap is now ", *word_in_bitmap);
         // Move forward in bitmap by one word
         word_in_bitmap = reinterpret_cast<volatile uint64_t*>(reinterpret_cast<volatile uint64_t>(word_in_bitmap) + sizeof(uint64_t));
         while (needed_blocks > 0) {
@@ -139,6 +130,7 @@ public:
              *word_in_bitmap = state;
              needed_blocks -= sizeof(uint64_t) * 8 / ALLOC_BITS;
              word_in_bitmap = reinterpret_cast<volatile uint64_t*>(reinterpret_cast<uint64_t>(word_in_bitmap) + sizeof(uint64_t));
+             //trace("Word in bitmap is now ", *word_in_bitmap);
         }
 
         //dumpBitmap();
@@ -152,7 +144,7 @@ public:
         location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
 
         // Calculate precise location in bitmap
-        //trace("got location ", location_in_chunk);
+        trace("got location ", location_in_chunk, " for address ", address);
         uint64_t bit_offset = ALLOC_BITS * location_in_chunk;
         uint64_t word_aligned_pos_in_bitmap = bit_offset >> 6;
         uint64_t bit_offset_in_word = bit_offset & 0x3fl;
@@ -161,13 +153,13 @@ public:
         // Mask which starts with 1s at the first allocation bits
         volatile uint64_t* word_in_bitmap = reinterpret_cast<volatile uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
         (void) word_in_bitmap;
-        //trace("bitmap: ", std::hex, getBitmapAddress(), ", this: ", this);
-        //trace("got addr ", reinterpret_cast<uint64_t>(word_in_bitmap), " in bitmap ", std::hex, getBitmapAddress(), " with value ", *word_in_bitmap);
+        trace("bitmap: ", std::hex, getBitmapAddress(), ", this: ", this);
+        trace("got addr ", reinterpret_cast<uint64_t>(word_in_bitmap), " in bitmap ", std::hex, getBitmapAddress(), " with value ", *word_in_bitmap);
         
         // probe for start bits
         volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
         uint64_t start_offset = (bit_offset_in_word);
-        //trace("start offset: ", start_offset);
+        trace("start offset: ", start_offset, ", start word: ", std::hex, *start_word);
         assert( (*start_word >> (62 - start_offset) & 0b11) == 0b10 );
 
         //trace("*word is ", std::hex, *start_word);
@@ -191,6 +183,11 @@ public:
                 endFound = true;
             }
         }
+
+        //TODO: lock
+        m_info.status.m_totalRegions--;
+        //if (m_info.status.m_totalRegions < 10 )
+            //std::cout << "Total number of used regions " << m_info.status.m_totalRegions << std::endl;
 
     }
 
@@ -345,6 +342,10 @@ public:
         //trace("[MMAP_MM] Allocation of continuous chunk requested");
         const size_t mmap_alloc_size = 2 * ALLOCATION_SIZE + HEAD_STRUCT;
         char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
+        if (reinterpret_cast<void*>(given_ptr) == reinterpret_cast<void*>(~0l)) {
+            //std::cerr << "Out of memory..." << std::endl;
+            return nullptr;
+        }
         char* end_of_region = given_ptr + mmap_alloc_size;
 
         // provide
@@ -357,6 +358,7 @@ public:
         if ( offset_from_alignment != IDEAL_OFFSET) {
             // align
             aligned_ptr = given_ptr - offset_from_alignment + ALLOCATION_SIZE;
+            //std::cout << "Assigning memory on " << reinterpret_cast<void*>(aligned_ptr) << "from given ptr " << reinterpret_cast<void*>(given_ptr) << " with " << std::hex << offset_from_alignment << std::endl;
             unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr - sizeof(ChunkHeader));
             unneeded_memory_end   = end_of_region - aligned_ptr - ALLOCATION_SIZE;
 
@@ -366,9 +368,10 @@ public:
         // Unmap unneeded assigned memory
         munmap(aligned_ptr + ALLOCATION_SIZE, unneeded_memory_end);
 
+        assert(reinterpret_cast<void*>(aligned_ptr) != nullptr);
+        //std::cout << "Assigning memory on " << reinterpret_cast<void*>(aligned_ptr) << std::endl;
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>( aligned_ptr - sizeof(ChunkHeader) );
         header->initialize(StorageType::CONTINUOUS);
-        //header->info->status->type = StorageType::CONTINUOUS;
         // memset bitmap to initialize status
         header->reset();
 
@@ -381,21 +384,29 @@ public:
     // TODO: it must be aligned to work AT ALL
     void* allocateLarge(size_t size)
     {
-        assert(size % LINUX_PAGE_SIZE == 0);
-        assert(size > (1 << 27));
-        char* ptr = ::new char[size + sizeof(ObjectInfo)];
+        assert(size > ALLOCATION_SIZE);
+        size += sizeof(ObjectInfo);
+        size_t alloc_size = (size % LINUX_PAGE_SIZE == 0) ? size : (size - (size % LINUX_PAGE_SIZE) + LINUX_PAGE_SIZE);
+        assert(alloc_size % LINUX_PAGE_SIZE == 0);
+        char* ptr = reinterpret_cast<char*>(mmap(nullptr, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
         ObjectInfo* type = reinterpret_cast<ObjectInfo*>(ptr);
-        type->size = size;
+        type->size = alloc_size;
         ptr += sizeof(ObjectInfo);
 
         return ptr;
     }
 
+    void deallocateLarge(void* const ptr)
+    {
+        ObjectInfo* info = reinterpret_cast<ObjectInfo*>( reinterpret_cast<uint64_t>(ptr) - sizeof(ObjectInfo));
+        assert(info->size % LINUX_PAGE_SIZE == 0);
+        munmap(info, info->size);
+    }
+
     void* allocatePages(size_t size, void* chunk_location)
     {
-        ////trace( "Page allocation request for size ", size, " on location ", chunk_location);
+        //trace( "Page allocation request for size ", size, " on location ", chunk_location);
         if (size < DB_PAGE_SIZE) {
-            //warn( "[MMAP_MM] Request for too small size ", std::hex, size, " has been made, rounding up...");
             size = DB_PAGE_SIZE;
         }
 
@@ -423,7 +434,7 @@ public:
                 return allocatePages(size, chunk_location);
             }
             else if (m_current_chunk == nullptr) {
-                ////trace("Using allocator specific chunk on ", m_current_chunk);
+                //trace("Using allocator specific chunk on ", m_current_chunk);
                 m_current_chunk = allocateContinuous();
             }
 
@@ -433,6 +444,7 @@ public:
 
     void* allocate(size_t size) override
     {
+        trace("Using allocate size=", size);
         if (size > ALLOCATION_SIZE) {
             return allocateLarge(size);
         }
@@ -440,7 +452,7 @@ public:
             // TODO: concurrency
             if (m_current_chunk == nullptr)
                 m_current_chunk = allocateContinuous();
-	    return allocatePages(size, m_current_chunk);
+            return allocatePages(size, m_current_chunk);
         }
     }
 
@@ -450,6 +462,11 @@ public:
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>( chunk_ptr - sizeof(ChunkHeader) );
         //trace("deallocating ", ptr, " with header on ", header);
         header->setDeallocated(ptr);
+        if (header->m_info.status.m_totalRegions == 0) {
+            if (reinterpret_cast<void*>(chunk_ptr) == m_current_chunk)
+                m_current_chunk = nullptr;
+            //munmap(header, sizeof(ChunkHeader) + ALLOCATION_SIZE);
+        }
     }
 
     void deallocateAll()

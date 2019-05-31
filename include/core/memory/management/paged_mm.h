@@ -1,9 +1,9 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 
-/*#include <core/memory/global/mm_hooks.h>
+#include <core/memory/global/mm_hooks.h>
 #include <core/memory/management/allocators/global_scope_allocator.h>
-#include <core/utils/logger.h>*/
+#include <core/utils/logger.h>
 
 #include "core/memory/management/abstract_mm.h"
 #include "core/memory/management/mmap_mm.h"
@@ -67,9 +67,9 @@ public:
         //trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", offset calculated ", std::hex, offset);
 
         if (header.m_sumOffset == 0) {
-            //trace( "Triggered deallocation on ", this);
+            trace( "Triggered deallocation on ", this, " due to address ", addr);
             //TODO: Fix bug after 0x7be deallocations
-            //mmap_memory_manager::getInstance().deallocate(this);
+            mmap_memory_manager::getInstance().deallocate(this);
         }
     }
 
@@ -103,7 +103,6 @@ public:
     void* allocate(size_t size) override
     {
         //TODO: throw exception
-        ////trace("Allocation called");
         assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
         auto& manager = mmap_memory_manager::getInstance();
         size += sizeof(ObjectInfo); // Additional space for type and allocation information
@@ -113,7 +112,7 @@ public:
 
         if (current_page != nullptr) {
             object_loc = current_page->allocate(size);
-            ////trace("[PAGED_MM] Allocated memory on spot ", object_loc, " from page ", current_page);
+            //trace("[PAGED_MM] Allocated memory on spot ", object_loc, " from page ", current_page);
         }
 
         //current page was (probably) full    
@@ -168,6 +167,7 @@ public:
     //TODO: set protected and only available to test 
     void setCurrentChunk(void* chunk)
     {
+        current_page = nullptr;
         current_chunk = chunk;
     }
     
