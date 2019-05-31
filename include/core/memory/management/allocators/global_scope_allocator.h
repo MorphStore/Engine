@@ -84,7 +84,7 @@ namespace morphstore {
       }
 
       pointer allocate( size_t p_AllocCount, const void * = 0 ) {
-         return static_cast< pointer >( stdlib_malloc( p_AllocCount * sizeof( C )  ) );
+         return static_cast< pointer >( malloc( p_AllocCount * sizeof( C )  ) );
       }
 
       void construct( pointer p_Ptr, const C & value ) {
