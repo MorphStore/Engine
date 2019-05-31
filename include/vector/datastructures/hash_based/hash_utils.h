@@ -5,12 +5,15 @@
 #ifndef MORPHSTORE_HASH_UTILS_H
 #define MORPHSTORE_HASH_UTILS_H
 
-#include <vector/general_vector.h>
 #include <core/utils/preprocessor.h>
-#include <vector/primitives/calc.h>
+
+#include <vector/general_vector.h>
 #include <vector/primitives/create.h>
+#include <vector/primitives/calc.h>
 #include <vector/primitives/logic.h>
-#include <core/utils/math.h>
+
+#include <cstddef>
+#include <type_traits>
 
 namespace vector {
 

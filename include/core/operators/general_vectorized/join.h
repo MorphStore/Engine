@@ -5,14 +5,18 @@
 #ifndef MORPHSTORE_JOIN_H
 #define MORPHSTORE_JOIN_H
 
+#include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
+
 #include <vector/general_vector.h>
-#include <vector/datastructures/hash_based/hash_set.h>
 #include <vector/primitives/io.h>
 #include <vector/primitives/create.h>
 #include <vector/primitives/calc.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <tuple>
 
 namespace morphstore {
 
@@ -101,7 +105,7 @@ namespace morphstore {
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
          DataStructure hs( inBuildDataCount );
-         auto outPosCol = new column<uncompr_f>(
+         auto outPosCol = new column<Format>(
             (inProbeDataCount * sizeof(uint64_t))
          );
          base_t * outPtr = outPosCol->get_data( );

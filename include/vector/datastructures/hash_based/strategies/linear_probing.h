@@ -4,12 +4,20 @@
 
 #ifndef MORPHSTORE_LINEAR_PROBING_H
 #define MORPHSTORE_LINEAR_PROBING_H
-#include <vector/general_vector.h>
+
 #include <core/utils/preprocessor.h>
+
+#include <vector/general_vector.h>
 #include <vector/primitives/create.h>
 #include <vector/primitives/io.h>
-#include <vector/primitives/logic.h>
+#include <vector/primitives/compare.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+
 
 namespace vector {
 

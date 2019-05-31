@@ -6,18 +6,13 @@
 #define MORPHSTORE_VECTOR_DATASTRUCTURES_HASH_SET_H
 
 #include <core/memory/mm_glob.h>
-#include <core/storage/column.h>
-#include <core/morphing/format.h>
+#include <core/utils/preprocessor.h>
 #include <vector/general_vector.h>
-#include <vector/complex/hash.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
-#include <vector/datastructures/hash_based/strategies/linear_probing.h>
-#include <vector/primitives/io.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/calc.h>
-#include <vector/primitives/compare.h>
 
-
+#include <utility> //pair
+#include <cstdint> //uint8_t
+#include <cstddef> //size_t
 
 namespace vector {
 
@@ -36,6 +31,7 @@ namespace vector {
    >
    class hash_set{
       public:
+/*
          template<class Format, class VectorExtension>
          void build(
             morphstore::column<Format> const * const p_Column,
@@ -58,13 +54,16 @@ namespace vector {
                inDataPtr += vector_element_count::value;
             }
 
-            /*LookupInsertStrategy<
+            */
+/*LookupInsertStrategy<
                scalar<base_t> ,
                BiggestSupportedVectorExtension,
                HashFunction,
                SPH
-            >::build_batch( inDataPtr, m_Data, vectorCount, m_Size);*/
+            >::build_batch( inDataPtr, m_Data, vectorCount, m_Size);*//*
+
          }
+*/
 
          template< class VectorExtension >
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
