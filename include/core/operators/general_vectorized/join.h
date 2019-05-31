@@ -14,6 +14,10 @@
 #include <vector/primitives/create.h>
 #include <vector/primitives/calc.h>
 
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
