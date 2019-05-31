@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <cstddef>
-#include <vector/preprocessor.h>
+#include <core/utils/preprocessor.h>
 namespace vector {
 
    template<uint16_t BitWidth, typename T>
@@ -36,17 +36,16 @@ namespace vector {
    template<typename T>
    using v512 = vector_view<512, T>;
 
-
 #define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) \
-   using vector_element_count = typename VectorExtension::vector_helper_t::element_count; \
-   using base_t = typename VectorExtension::vector_helper_t::base_t; \
-   using vector_size_bit = typename VectorExtension::vector_helper_t::size_bit; \
-   using vector_size_byte = typename VectorExtension::vector_helper_t::size_byte; \
-   using vector_alignment = typename VectorExtension::vector_helper_t::alignment; \
-   using vector_t = typename VectorExtension::vector_t; \
-   using vector_size = typename VectorExtension::size; \
-   using vector_mask_t = typename VectorExtension::mask_t; \
-   using vector_base_t_granularity = typename VectorExtension::vector_helper_t::granularity;
+   using vector_element_count MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::element_count; \
+   using base_t MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::base_t; \
+   using vector_size_bit MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::size_bit; \
+   using vector_size_byte MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::size_byte; \
+   using vector_alignment MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::alignment; \
+   using vector_t MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_t; \
+   using vector_size MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::size; \
+   using vector_mask_t MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::mask_t; \
+   using vector_base_t_granularity MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::granularity;
 
 
 }

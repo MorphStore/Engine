@@ -52,7 +52,6 @@ int main( void ) {
    using namespace morphstore;
 
    size_t const dataCount = 131;
-   size_t const loadfactor = 60;
 
 
    auto col1 = generate_sorted_unique(dataCount, 1, 1);

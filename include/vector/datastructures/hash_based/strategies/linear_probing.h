@@ -39,19 +39,12 @@ namespace vector {
    struct scalar_key_vectorized_linear_search {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
-         MSV_CXX_ATTRIBUTE_HOT
             alignas(vector_size_byte::value) base_t m_KeyArray[vector_element_count::value];
-         MSV_CXX_ATTRIBUTE_HOT
             alignas(vector_size_byte::value) base_t m_IndexArray[vector_element_count::value];
-         MSV_CXX_ATTRIBUTE_HOT
             typename HashFunction<VectorExtension>::state_t m_HashState;
-         MSV_CXX_ATTRIBUTE_HOT
             typename index_aligner<VectorExtension>::template state_t<BiggestSupportedVectorExtension> m_AlignerState;
-         MSV_CXX_ATTRIBUTE_HOT
             typename index_resizer<VectorExtension, SPH>::state_t m_ResizerState;
-         MSV_CXX_ATTRIBUTE_HOT
             base_t * const m_ContainerStartPtr;
-         MSV_CXX_ATTRIBUTE_HOT
             base_t * const m_ContainerEndPtr;
 
          state_t(

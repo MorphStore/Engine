@@ -40,7 +40,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static typename scalar< v64< U > >::vector_t
-      set_sequence( int a, int b) {
+      set_sequence( int a, MSV_CXX_ATTRIBUTE_PPUNUSED int b) {
          trace( "[VECTOR] - set_sequence sse register." );
          return a;
       }

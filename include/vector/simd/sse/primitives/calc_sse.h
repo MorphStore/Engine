@@ -95,7 +95,6 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const &p_vec2
       ) {
          trace("[VECTOR] - Divide 64 bit integer values from two registers (sse)");
-         __m128d intermediate;
          __m128d divhelper=_mm_set1_pd(0x0010000000000000);
 
          return

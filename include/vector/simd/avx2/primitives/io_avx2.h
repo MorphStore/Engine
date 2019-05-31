@@ -186,13 +186,14 @@ namespace vector {
          
          return ;
       }
-       
+
+      //@todo we should actually provide a specialization (depending on the basetype) here!
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_INLINE
       static typename avx2< v256< U > >::vector_t
       gather( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
-         return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+         return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
          
       }
             
@@ -222,6 +223,7 @@ namespace vector {
       
    };
 
+    //@todo we should actually provide a specialization (depending on the basetype) here!
     template<typename T, int IOGranularity>
     struct io<avx2<v128<T>>,iov::UNALIGNED, IOGranularity> {
      
@@ -230,7 +232,7 @@ namespace vector {
         static typename avx2< v128< U > >::vector_t
         gather( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-            return _mm_i64gather_epi64( reinterpret_cast<typename avx2< v128< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+            return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
 
           }
     };
