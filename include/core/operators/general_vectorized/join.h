@@ -44,6 +44,7 @@ namespace morphstore {
                state );
             p_InBuildDataPtr += vector_element_count::value;
          }
+
       }
    };
 
@@ -57,14 +58,15 @@ namespace morphstore {
       apply(
          base_t *& p_InProbeDataPtr,
          size_t const p_Count,
-         base_t * p_OutPosCol,
+         base_t *& p_OutPosCol,
+         base_t const p_InPositionIn,
          DataStructure & hs
       ) {
          using namespace vector;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          size_t resultCount = 0;
 
-         vector_t positionVector = set_sequence<VectorExtension, vector_base_t_granularity::value>(0,1);
+         vector_t positionVector = set_sequence<VectorExtension, vector_base_t_granularity::value>(p_InPositionIn,1);
          vector_t const incrementVector = set1<VectorExtension, vector_base_t_granularity::value>( vector_element_count::value );
          vector_mask_t lookupResultMask;
          uint8_t hitResultCount;
@@ -83,6 +85,7 @@ namespace morphstore {
             hitResultCount = 0;
             lookupResultMask = 0;
          }
+
          return resultCount;
       }
    };
@@ -108,6 +111,7 @@ namespace morphstore {
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
+         base_t * const startProbeDataPrt = inProbeDataPtr;
          DataStructure hs( inBuildDataCount );
          auto outPosCol = new column<Format>(
             (inProbeDataCount * sizeof(uint64_t))
@@ -123,11 +127,11 @@ namespace morphstore {
          semi_join_build_batch<scalar<v64<base_t>>, DataStructure>::apply( inBuildDataPtr, buildRemainderCount, hs );
          size_t resultCount =
             semi_join_probe_batch<VectorExtension, DataStructure>::apply(
-               inProbeDataPtr, probeVectorCount, outPtr, hs
+               inProbeDataPtr, probeVectorCount, outPtr, 0, hs
             );
          resultCount +=
             semi_join_probe_batch<scalar<v64<base_t>>, DataStructure>::apply(
-               inProbeDataPtr, probeRemainderCount, outPtr, hs
+               inProbeDataPtr, probeRemainderCount, outPtr, (inProbeDataPtr-startProbeDataPrt), hs
             );
          outPosCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
 
