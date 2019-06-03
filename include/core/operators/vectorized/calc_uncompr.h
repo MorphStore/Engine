@@ -189,7 +189,7 @@ struct calc_binary<
         
         //Process the last elements (which do not fill up a whole register) sequentially 
         uint64_t * oData=(uint64_t *)outData;
-        for(unsigned i = (outDataInit+inDataSize-(uint64_t*)outData); i < inDataCount; i++)
+        for(unsigned i = (outDataInit+inDataCount-(uint64_t*)outData)/sizeof(uint64_t); i < inDataCount; i++)
             oData[i] = op(((uint64_t*)inDataL)[i],((uint64_t*)inDataR)[i]);
         
               
