@@ -56,6 +56,24 @@ endif()]]
     add_test( hash_set_vectorized_test hash_set_app )
 endif()]]
 if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/equi_join_app )
+    add_executable( equi_join_app operators/equi_join_test.cpp )
+
+    target_compile_options( equi_join_app PRIVATE
+            -Wall
+            -Wextra
+            -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( equi_join_app PRIVATE "-ldl" )
+
+    add_test( equi_join_vectorized_test equi_join_app )
+endif()
+if ( CTEST_ALL OR CTEST_VECTOR )
     FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/semi_join_app )
     add_executable( semi_join_app operators/semi_join_test.cpp )
 
