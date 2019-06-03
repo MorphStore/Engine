@@ -123,13 +123,13 @@ namespace morphstore {
          size_t const probeRemainderCount = inProbeDataCount % vector_element_count::value;
 
          semi_join_build_batch<VectorExtension, DataStructure >::apply( inBuildDataPtr, buildVectorCount, hs );
-         semi_join_build_batch<scalar<v64<base_t>>, DataStructure>::apply( inBuildDataPtr, buildRemainderCount, hs );
+         semi_join_build_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply( inBuildDataPtr, buildRemainderCount, hs );
          size_t resultCount =
             semi_join_probe_batch<VectorExtension, DataStructure>::apply(
                inProbeDataPtr, probeVectorCount, outPtr, 0, hs
             );
          resultCount +=
-            semi_join_probe_batch<scalar<v64<base_t>>, DataStructure>::apply(
+            semi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
                inProbeDataPtr, probeRemainderCount, outPtr, (inProbeDataPtr-startProbeDataPrt), hs
             );
          outPosCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
@@ -273,7 +273,7 @@ namespace morphstore {
                inProbeDataPtr, probeVectorCount, outLPtr, outRPtr, 0, hs
          );
          resultCount +=
-            equi_join_probe_batch<scalar<v64<base_t>>, DataStructure>::apply(
+            equi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
                inProbeDataPtr, probeRemainderCount, outLPtr, outRPtr, (inProbeDataPtr-startProbeDataPtr), hs
          );
          outPosLCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
