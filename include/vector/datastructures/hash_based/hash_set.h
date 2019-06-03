@@ -13,6 +13,7 @@
 #include <utility> //pair
 #include <cstdint> //uint8_t
 #include <cstddef> //size_t
+#include <algorithm>
 
 namespace vector {
 
@@ -108,7 +109,9 @@ namespace vector {
             },
             m_Data{
                ( typename BiggestSupportedVectorExtension::base_t * )
-               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) } { }
+               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) } {
+            std::fill(m_Data, m_Data+m_SizeHelper.m_Count, 0);
+         }
 
 
          typename BiggestSupportedVectorExtension::base_t * get_data( void ) {
@@ -135,6 +138,17 @@ namespace vector {
 
          ~hash_set() {
             free( m_Data );
+         }
+
+         void print( void ) const {
+            uint64_t mulres, resizeres, alignres;
+            fprintf( stdout, "HashSet idx;Key;Key*Prime;Resized;Aligned (StartPos)\n");
+            for( size_t i = 0; i < m_SizeHelper.m_Count; ++i ) {
+               __builtin_umull_overflow( m_Data[i], 65537, &mulres);
+               resizeres = mulres & 1023;
+               alignres = resizeres & (typename BiggestSupportedVectorExtension::base_t)~(BiggestSupportedVectorExtension::vector_helper_t::element_count::value - 1);
+               fprintf( stdout, "%lu;%lu;%lu;%lu,%lu\n", i, m_Data[i],mulres,resizeres,alignres );
+            }
          }
    };
 
