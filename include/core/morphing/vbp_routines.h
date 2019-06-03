@@ -380,11 +380,7 @@ namespace morphstore {
             const size_t countOut128 = convert_size<uint64_t, __m128i>(countOut64);
 
             const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const __m128i mask = _mm_set1_epi64x(
-                (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1
-            );
+            const __m128i mask = _mm_set1_epi64x(bitwidth_max<uint64_t>(t_bw));
 
 #if 0
             // This variant uses a store instruction at two points.
@@ -478,9 +474,7 @@ namespace morphstore {
             uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
             
             const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const uint64_t mask = (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1;
+            const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
 
             // This variant uses a store instruction at only one point.
             uint64_t nextOut0 = 0;
@@ -534,9 +528,7 @@ namespace morphstore {
             uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
             
             const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const uint64_t mask = (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1;
+            const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
 
             // This variant uses a store instruction at only one point.
             uint64_t nextOut[t_step];

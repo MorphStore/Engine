@@ -104,9 +104,7 @@ struct unpack_with_project_t<
         uint64_t * outData64 = reinterpret_cast<uint64_t *>(outData8);
 
         const size_t countBits = std::numeric_limits<uint64_t>::digits;
-        const uint64_t mask = (t_bw == countBits)
-            ? std::numeric_limits<uint64_t>::max()
-            : (static_cast<uint64_t>(1) << t_bw) - 1;
+        const uint64_t mask = bitwidth_max<uint64_t>(t_bw);;
 
         // This variant uses a store instruction at only one point.
         uint64_t nextOut[t_step];
