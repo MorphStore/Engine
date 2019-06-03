@@ -55,7 +55,7 @@ int main( void ) {
 
 
    auto col1 = generate_sorted_unique(dataCount, 1, 1);
-   auto col2 = generate_sorted_unique(dataCount, 1, 2);
+   auto col2 = generate_sorted_unique(dataCount, 1, 0);
 
    const column<uncompr_f> * col3;
    const column<uncompr_f> * col4;
