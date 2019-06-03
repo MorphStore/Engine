@@ -231,13 +231,19 @@ namespace morphstore {
       >
       apply(
          column< Format > const * const p_InDataLCol,
-         column< Format > const * const p_InDataRCol
+         column< Format > const * const p_InDataRCol,
+         size_t const outCountEstimate = 0
       ) {
          using namespace vector;
 
          const size_t inBuildDataCount = p_InDataLCol->get_count_values();
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
-         const size_t outCount = inBuildDataCount * inProbeDataCount;
+         const size_t outCount = bool(outCountEstimate)
+                             // use given estimate
+                             ? (outCountEstimate)
+                             // use pessimistic estimate
+                             : (inBuildDataCount * inProbeDataCount);
+         
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
          base_t * const startBuildDataPtr = inBuildDataPtr;
