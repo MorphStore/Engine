@@ -224,7 +224,7 @@ namespace morphstore {
    struct equi_join {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static
+      static
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
@@ -238,12 +238,13 @@ namespace morphstore {
 
          const size_t inBuildDataCount = p_InDataLCol->get_count_values();
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
+
          const size_t outCount = bool(outCountEstimate)
                              // use given estimate
                              ? (outCountEstimate)
                              // use pessimistic estimate
                              : (inBuildDataCount * inProbeDataCount);
-         
+
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
          base_t * const startBuildDataPtr = inBuildDataPtr;
