@@ -265,7 +265,7 @@ namespace morphstore {
          size_t const probeRemainderCount = inProbeDataCount % vector_element_count::value;
 
          equi_join_build_batch<VectorExtension, DataStructure >::apply( inBuildDataPtr, buildVectorCount, 0, hs );
-         equi_join_build_batch<scalar<v64<base_t>>, DataStructure>::apply(
+         equi_join_build_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
             inBuildDataPtr, buildRemainderCount, (inBuildDataPtr-startBuildDataPtr), hs
          );
          size_t resultCount =

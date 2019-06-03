@@ -28,7 +28,8 @@ namespace vector {
    template<typename T>
    //using v1 = vector_view<(sizeof(T)<<3), T>;
    using v64 = vector_view<64, T>;
-   
+   template<typename T>
+   using v32 = vector_view<32, T>;
    template<typename T>
    using v128 = vector_view<128, T>;
    template<typename T>
