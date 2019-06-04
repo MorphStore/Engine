@@ -238,6 +238,9 @@ const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<bw, 1> > 
 // ****************************************************************************
 
 int main(void) {
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
     using varex_t = variant_executor_helper<1, 1>::type
         ::for_variant_params<std::string, std::string, unsigned>
         ::for_setting_params<>;

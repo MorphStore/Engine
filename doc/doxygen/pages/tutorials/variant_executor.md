@@ -40,7 +40,7 @@ As a consequence, it must be specialized a little to use it.
 ### Limitations
 
 - `variant_executor` requires the ability to free columns.
-Thus, at the time of this writing, MorphStore should be compiled with `-noSelfManaging` to use it.
+Thus, at the time of this writing, MorphStore should be compiled with `-noSelfManaging` to use it. The header `<core/memory/noselfmanaging_helper.h>` provides a function `fail_if_self_managed_memory()`, which can be used at the beginning of a programm using `variant_executor` to prevent it from running if memory is self-managed.
 - At the moment, it is ready to be used for testing. Using it for reliable micro-benchmarks, however, will still need some more work.
 
 Usage

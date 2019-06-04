@@ -65,6 +65,9 @@ using namespace morphstore;
 // ****************************************************************************
 
 int main(void) {
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
     using varex_t = variant_executor_helper<1, 1>::type
         ::for_variant_params<std::string, unsigned>
         ::for_setting_params<>;

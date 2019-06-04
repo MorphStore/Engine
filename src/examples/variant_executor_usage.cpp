@@ -23,6 +23,7 @@
  */
 
 #include <core/memory/mm_glob.h>
+#include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/operators/scalar/project_uncompr.h>
 #include <core/operators/vectorized/project_uncompr.h>
@@ -56,7 +57,9 @@ using namespace morphstore;
 }
     
 int main(void) {
-#ifdef MSV_NO_SELFMANAGED_MEMORY
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
     // Create an instance of a variant executor.
     using varex_t = variant_executor_helper<1, 2>::type
             ::for_variant_params<std::string>
@@ -123,12 +126,4 @@ int main(void) {
     varex.done();
     
     return !varex.good();
-#else
-    // @todo Make it work with self-managed memory.
-    std::cerr
-            << "Currently, this benchmark only works with non-self-managed "
-            << "memory. Compile MorphStore with build.sh -noSelfManaging ."
-            << std::endl;
-    return 1;
-#endif
 }
