@@ -56,6 +56,24 @@ endif()]]
     add_test( hash_set_vectorized_test hash_set_app )
 endif()]]
 if ( CTEST_ALL OR CTEST_VECTOR )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/group_unary_app )
+    add_executable( group_unary_app operators/group_test.cpp )
+
+    target_compile_options( group_unary_app PRIVATE
+            -Wall
+            -Wextra
+            -pedantic
+            -fstack-protector-all
+            -mavx2
+            # -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl
+
+            $<$<CONFIG:DEBUG>:-DDEBUG> )
+
+    target_link_libraries( group_unary_app PRIVATE "-ldl" )
+
+    add_test( group_unary_vectorized_test group_unary_app )
+endif()
+if ( CTEST_ALL OR CTEST_VECTOR )
     FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/equi_join_app )
     add_executable( equi_join_app operators/equi_join_test.cpp )
 

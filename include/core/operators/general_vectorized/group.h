@@ -75,7 +75,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct group {
+   struct group1 {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
       static
@@ -92,7 +92,7 @@ namespace morphstore {
          const size_t inDataCount = p_InDataCol->get_count_values();
          const size_t inDataSize = p_InDataCol->get_size_used_byte();
 
-         const size_t outCount = bool(outExtCountEstimate) ? (outExtCountEstimate): inDataCount;
+         const size_t outCount = bool(outCountEstimate) ? (outCountEstimate): inDataCount;
          auto outGrCol = new column<uncompr_f>(inDataSize);
          auto outExtCol = new column<uncompr_f>( outCount * sizeof( uint64_t ) );
 
