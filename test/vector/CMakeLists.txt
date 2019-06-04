@@ -31,6 +31,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 
 	target_compile_options( agg_sum_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( agg_sum_app PRIVATE "-ldl" )
 
@@ -41,41 +42,49 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 
 	target_compile_options( equi_join_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( equi_join_app PRIVATE "-ldl" )
 
 	target_compile_options( semi_join_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( semi_join_app PRIVATE "-ldl" )
 
 	target_compile_options( calc_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( calc_app PRIVATE "-ldl" )
 
 	target_compile_options( project_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( project_app PRIVATE "-ldl" )
 
 	target_compile_options( select_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( select_app PRIVATE "-ldl" )
 
 	target_compile_options( intersect_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( intersect_app PRIVATE "-ldl" )
 
 	target_compile_options( merge_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( merge_app PRIVATE "-ldl" )
 
 	target_compile_options( my_operator_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
+		-Wno-ignored-attributes
 	)
 	target_link_libraries( my_operator_app PRIVATE "-ldl" )
 

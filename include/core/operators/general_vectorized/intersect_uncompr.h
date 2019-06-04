@@ -146,9 +146,6 @@ using namespace vector;
          base_t  * inData1Ptr = p_Data1Column->get_data( );
          base_t  * inData2Ptr = p_Data2Column->get_data( );
 
-         base_t const * end_inData1Ptr = inData1Ptr+inData1Count;
-         base_t const * end_inData2Ptr = inData2Ptr+inData2Count ;
-
          size_t const sizeByte =
             bool(p_OutPosCountEstimate)
             ? (p_OutPosCountEstimate * sizeof(base_t))
