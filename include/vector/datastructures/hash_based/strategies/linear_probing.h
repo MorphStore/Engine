@@ -23,7 +23,7 @@ namespace vector {
 
    /**
     * @brief Linear Probe Strategy for hash based data structures.
-    * @details @todo
+    * @details As every strategy for hash based data structures, different insert as well as lookup methods are provided.
     * @tparam VectorExtension Vector extension which is used for probing.
     * @tparam BiggestSupportedVectorExtension Biggest vector extension the linear search should be able to work with.
     * @tparam HashFunction Struct which provides an static apply function to hash a vector register (VectorExtension::vector_t).
@@ -345,8 +345,102 @@ namespace vector {
          }
       }
 
-   };
 
+
+
+
+
+
+
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      std::tuple<
+         vector_t,      // groupID vector register
+         vector_t,      // groupExt vector register
+         vector_mask_t, // active groupExt elements
+         uint8_t        // Number of active groupExt elements
+      >
+      insert_and_lookup(
+         vector_t const & p_InKeyVector,
+         base_t & p_InStartPosFromKey,
+         base_t & p_InStartValue,
+         state_t & p_SearchState
+      ) {
+         vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
+         vector_mask_t activeGroupExtMask = 0;
+         vector_mask_t currentMaskForGroupExtMask = 1;
+         uint8_t activeGroupExtCount = 0;
+
+         store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
+            p_SearchState.m_IndexArray,
+            index_aligner<VectorExtension>::apply(
+               index_resizer<VectorExtension, SPH>::apply(
+                  HashFunction<VectorExtension>::apply(
+                     p_InKeyVector,
+                     p_SearchState.m_HashState
+                  ),
+                  p_SearchState.m_ResizerState
+               ),
+               p_SearchState.m_AlignerState
+            )
+         );
+         store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
+            p_SearchState.m_KeyArray,
+            p_InKeyVector
+         );
+         vector_t keyVec;
+         vector_mask_t searchOffset;
+
+         for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
+            base_t index = p_SearchState.m_IndexArray[pos];
+            base_t key = p_SearchState.m_KeyArray[pos];
+
+            base_t * currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
+            keyVec = set1<VectorExtension, vector_base_t_granularity::value>(key);
+            bool done = false;
+            while(!done) {
+               vector_t loadedBucketsVec = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
+                  currentSearchPtr);
+               searchOffset = equal<VectorExtension>::apply(loadedBucketsVec, keyVec);
+               if(searchOffset != 0) {
+                  p_SearchState.m_ValueArray[ pos ] = p_SearchState.m_ValueContainerStartPtr[index + __builtin_ctz(searchOffset)];
+                  done = true;
+               } else {
+                  searchOffset = equal<VectorExtension>::apply(loadedBucketsVec, zeroVec);
+                  if(searchOffset != 0) {
+                     size_t targetIdx = index + __builtin_ctz(searchOffset);
+                     p_SearchState.m_KeyContainerStartPtr[targetIdx] = key;
+                     p_SearchState.m_ValueContainerStartPtr[targetIdx] = p_InStartValue;
+                     p_SearchState.m_ValueArray[ pos ] = p_InStartValue++;
+                     p_SearchState.m_IndexArray[ pos ] = p_InStartPosFromKey;
+                     activeGroupExtMask |= currentMaskForGroupExtMask;
+                     ++activeGroupExtCount;
+                     done = true;
+                  } else {
+                     if(MSV_CXX_ATTRIBUTE_LIKELY(currentSearchPtr < p_SearchState.m_KeyContainerEndPtr)) {
+                        currentSearchPtr += vector_element_count::value;
+                        index += vector_element_count::value;
+                     } else {
+                        currentSearchPtr = p_SearchState.m_KeyContainerStartPtr;
+                        index = 0;
+                     }
+                  }
+               }
+            }
+            currentMaskForGroupExtMask = currentMaskForGroupExtMask << 1;
+            ++p_InStartPosFromKey;
+         }
+         return
+            std::make_tuple(
+               load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(p_SearchState.m_ValueArray),
+               load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(p_SearchState.m_IndexArray),
+               activeGroupExtMask,
+               activeGroupExtCount
+            );
+      }
+
+   };
 
 }
 #endif //MORPHSTORE_LINEAR_PROBING_H

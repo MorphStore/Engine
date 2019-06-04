@@ -98,7 +98,7 @@ namespace morphstore {
    struct semi_join {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static
+      static
       const column<Format> *
       apply(
          column< Format > const * const p_InDataLCol,

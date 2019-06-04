@@ -52,6 +52,29 @@ namespace vector {
 
       template< class VectorExtension >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      std::tuple<
+         typename VectorExtension::vector_t,      // groupID vector register
+         typename VectorExtension::vector_t,      // groupExt vector register
+         typename VectorExtension::mask_t, // active groupExt elements
+         uint8_t        // Number of active groupExt elements
+      >
+      insert_and_lookup(
+         typename VectorExtension::vector_t const & p_InKeyVector,
+         typename VectorExtension::base_t & p_InStartPosFromKey,
+         typename VectorExtension::base_t & p_InStartValue,
+         typename LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t &
+         p_LookupInsertStrategyState
+      ) {
+         return LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::insert_and_lookup(
+            p_InKeyVector,
+            p_InStartPosFromKey,
+            p_InStartValue,
+            p_LookupInsertStrategyState
+         );
+      }
+
+      template< class VectorExtension >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       std::tuple< typename VectorExtension::vector_t, typename VectorExtension::mask_t, uint8_t >
       lookup(
          typename VectorExtension::vector_t const & p_KeysToLookup,

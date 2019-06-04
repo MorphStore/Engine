@@ -22,6 +22,7 @@
  */
 
 #include <core/memory/mm_glob.h>
+#include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
 #include <core/operators/scalar/agg_sum_compr_iterator.h>
@@ -65,6 +66,9 @@ using namespace morphstore;
 // ****************************************************************************
 
 int main(void) {
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
     using varex_t = variant_executor_helper<1, 1>::type
         ::for_variant_params<std::string, unsigned>
         ::for_setting_params<>;

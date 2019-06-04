@@ -26,6 +26,8 @@
  * @todo Print the monitoring (CSV) output after each call to execute_variants
  * to make experiments abortable without losing all data measured so far.
  * @todo It would be cool if even segfaults in a variant could be tolerated.
+ * @todo If only one variant is executed, "all ok" will always be output, since
+ * no mismatch was found. However, we cannot know whether it was ok.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H

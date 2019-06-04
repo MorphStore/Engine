@@ -39,7 +39,11 @@ namespace vector {
              case 2: return _mm256_extract_epi64(p_vec,2); break;
              case 3: return _mm256_extract_epi64(p_vec,3); break;
          }
+<<<<<<< HEAD
          return _mm256_extract_epi64(p_vec,0);
+=======
+         return (typename avx2< v256< U > >::base_t)0;
+>>>>>>> c051978544ca12d25b3d3fa58963b1b59a33f409
       }
    };
    
@@ -61,7 +65,7 @@ namespace vector {
              case 6: return _mm256_extract_epi32(p_vec,6); break;
              case 7: return _mm256_extract_epi32(p_vec,7); break;
          }
-         return NULL;
+         return (typename avx2< v256< U > >::base_t)0;
       }
    };
 }

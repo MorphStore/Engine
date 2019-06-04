@@ -94,18 +94,14 @@ using namespace vector;
         base_t *  endInPosL = p_Data1Ptr+p_CountData1;
         
          //We hope that the larger column has the longest sequential runs, i.e. we get more sequential memory access
-        bool switched=false; 
         if (p_CountData2 < p_CountData1){
            
             p_Data1Ptr = pr;
             p_Data2Ptr = pl;
             endInPosR = p_Data2Ptr+p_CountData1;
             endInPosL = p_Data1Ptr+p_CountData2;
-            switched=true;
         }
     
-         base_t const * Data1Ptr_start = p_Data1Ptr;
-         base_t const * Data2Ptr_start = p_Data2Ptr;
          base_t const * out_init = p_OutPtr;
          
          
