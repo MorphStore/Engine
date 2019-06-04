@@ -52,6 +52,7 @@ agg_sum<processing_style_t::scalar>(
     auto outDataCol = new column<uncompr_f>(sizeof(uint64_t));
     uint64_t * const outData = outDataCol->get_data();
 
+    *outData = 0;
     for(unsigned i = 0; i < inDataCount; i++)
         *outData += inData[i];
     
@@ -83,6 +84,8 @@ agg_sum<processing_style_t::scalar>(
     auto outDataCol = new column<uncompr_f>(outDataSize);
     uint64_t * const outData = outDataCol->get_data();
     
+    for(unsigned i = 0; i < inExtCount; i++)
+        outData[i] = 0;
     for(unsigned i = 0; i < inDataCount; i++)
         outData[inGr[i]] += inData[i];
     

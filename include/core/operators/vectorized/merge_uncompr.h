@@ -147,6 +147,21 @@ merge_sorted<processing_style_t::vec256>(
     
     if (idx_right>REnd) outPos-=(idx_right-REnd);//correct last output address if our last position is not divisible by 4
     
+    
+    
+    //Copy rest, which didn't fit in a vetor register
+        while (idx_left < LEnd){
+            *outPos = idx_left;
+             idx_left++;
+             outPos++;
+        }
+         
+        while (idx_right < REnd){
+             *outPos = idx_right;
+             idx_right++;
+             outPos++;
+        }
+    
     const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);
     outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
     

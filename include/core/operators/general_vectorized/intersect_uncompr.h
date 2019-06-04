@@ -152,7 +152,10 @@ using namespace vector;
          size_t const sizeByte =
             bool(p_OutPosCountEstimate)
             ? (p_OutPosCountEstimate * sizeof(base_t))
-            : p_Data1Column->get_size_used_byte();
+            : std::min(
+                    p_Data1Column->get_size_used_byte(),
+                    p_Data2Column->get_size_used_byte()
+            );
 
          typename intersect_sorted_processing_unit<VectorExtension>::state_t vectorState;
          typename intersect_sorted_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState;

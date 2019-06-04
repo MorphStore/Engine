@@ -25,6 +25,7 @@
  * Then we would not need printDataGenStarted() and printDataGenDone() anymore.
  * @todo Print the monitoring (CSV) output after each call to execute_variants
  * to make experiments abortable without losing all data measured so far.
+ * @todo It would be cool if even segfaults in a variant could be tolerated.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
@@ -444,6 +445,9 @@ namespace morphstore {
                                                 p_SettingParams ...,
                                                 p_AdditionalParams ...
                                         );
+                                        // @todo One of the output columns could be one of the input columns
+                                        // and then it must not be freed (otherwise segfault) (this can
+                                        // happen, when a no-op morph-operator is among the variants).
                                         delete_uncompr_column_tuple(
                                                 currentOutput,
                                                 std::index_sequence_for<t_uncompr_out_fs ...>()
@@ -456,6 +460,10 @@ namespace morphstore {
                                     }
                                     std::cerr << std::endl;
                                 }
+                                
+                                // @todo One of the output columns could be one of the input columns
+                                // and then it must not be freed (otherwise segfault) (this can
+                                // happen, when a no-op morph-operator is among the variants).
                                 delete_uncompr_column_tuple(
                                         referenceOutput,
                                         std::index_sequence_for<t_uncompr_out_fs ...>()
