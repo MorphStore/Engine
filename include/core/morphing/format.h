@@ -57,5 +57,8 @@ struct uncompr_f : public format {
     }
 };
 
+template<class t_format>
+class read_iterator;
+
 }
 #endif //MORPHSTORE_CORE_MORPHING_FORMAT_H

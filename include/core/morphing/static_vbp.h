@@ -32,6 +32,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
+#include <core/utils/preprocessor.h>
 #include <core/utils/processing_style.h>
 
 #include <cstdint>
@@ -74,6 +75,72 @@ namespace morphstore {
             return p_CountValues * t_bw / bitsPerByte;
         }
     };
+    
+#if 1
+    // Iterator implementation with a load in each call of next().
+    // Seems to be faster for all bit widths.
+    
+    // @todo This does not work for bit widths 59, 61, 62, 63. But these are not so
+    // important anyway.
+    // @todo This is probably hard to vectorize.
+    template<unsigned t_bw>
+    class read_iterator<static_vbp_f<t_bw, 1> > {
+        const uint8_t * const m_Data8;
+        uint64_t m_Bitpos;
+
+        static const uint64_t m_Mask = bitwidth_max<uint64_t>(t_bw);
+
+    public:
+        read_iterator(const uint8_t * p_Data8)
+        : m_Data8(p_Data8), m_Bitpos(0) {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE uint64_t next() {
+            const uint64_t retVal = ((*reinterpret_cast<const uint64_t *>(m_Data8 + (m_Bitpos >> 3))) >> (m_Bitpos & 0b111)) & m_Mask;
+            m_Bitpos += t_bw;
+            return retVal;
+        };
+    };
+#else
+    // Iterator implementation with a check in each call of next().
+    // Seems to be slower for all bit widths.
+    
+    template<unsigned t_bw>
+    class read_iterator<static_vbp_f<t_bw, 1> > {
+        const uint64_t * in64;
+        uint64_t nextOut;
+        uint64_t bitpos;
+        uint64_t tmp;
+
+        static const size_t bitsPerWord = std::numeric_limits<uint64_t>::digits;
+        static const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
+
+    public:
+        read_iterator(const uint64_t * in64) {
+            this->in64 = in64;
+            nextOut = 0;
+            bitpos = bitsPerWord + t_bw;
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE uint64_t next() {
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(bitpos == bitsPerWord + t_bw)) {
+                tmp = *in64++;
+                nextOut = mask & tmp;
+                bitpos = t_bw;
+            }
+            else if(MSV_CXX_ATTRIBUTE_UNLIKELY(bitpos > bitsPerWord && bitpos < bitsPerWord + t_bw)) {
+                tmp = *(in64)++;
+                nextOut = mask & ((tmp << (bitsPerWord - bitpos + t_bw)) | nextOut);
+                bitpos = bitpos - bitsPerWord;
+            }
+            const uint64_t retVal = nextOut;
+            nextOut = mask & (tmp >> bitpos);
+            bitpos += t_bw;
+            return retVal;
+        };
+    };
+#endif
     
     /**
      * @brief Morph-operator for the compression to the vertical bit-packed
