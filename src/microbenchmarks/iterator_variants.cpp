@@ -22,6 +22,7 @@
  */
 
 #include <core/memory/mm_glob.h>
+#include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
