@@ -1,7 +1,7 @@
 if ( CTEST_ALL OR CTEST_VECTOR )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/vector_test_app )
+#	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/vector_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/agg_sum_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/hash_set_app )
+#	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/hash_set_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/equi_join_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/semi_join_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/calc_app )
@@ -11,9 +11,9 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/merge_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/my_operator_app )
 
-	add_executable( vector_test_app main.cpp )
+#	add_executable( vector_test_app main.cpp )
 	add_executable( agg_sum_app operators/agg_sum_whole_column_test.cpp )
-	add_executable( hash_set_app operators/hash_set_test.cpp )
+#	add_executable( hash_set_app operators/hash_set_test.cpp )
 	add_executable( equi_join_app operators/equi_join_test.cpp )
 	add_executable( semi_join_app operators/semi_join_test.cpp )
 	add_executable( calc_app operators/calc_test.cpp )
@@ -23,21 +23,21 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	add_executable( merge_app operators/merge_test.cpp )
 	add_executable( my_operator_app operators/my_operator.cpp )
 
-	target_compile_options( vector_test_app PRIVATE
-		# space to add custom flags for THIS SPECIFIC TARGET
-		-msse4.2 -msse2
-	)
-	target_link_libraries( vector_test_app PRIVATE "-ldl" )
+#	target_compile_options( vector_test_app PRIVATE
+#		# space to add custom flags for THIS SPECIFIC TARGET
+#		-msse4.2 -msse2
+#	)
+#	target_link_libraries( vector_test_app PRIVATE "-ldl" )
 
 	target_compile_options( agg_sum_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
 	)
 	target_link_libraries( agg_sum_app PRIVATE "-ldl" )
 
-	target_compile_options( hash_set_app PRIVATE
-		# space to add custom flags for THIS SPECIFIC TARGET
-	)
-	target_link_libraries( hash_set_app PRIVATE "-ldl" )
+#	target_compile_options( hash_set_app PRIVATE
+#		# space to add custom flags for THIS SPECIFIC TARGET
+#	)
+#	target_link_libraries( hash_set_app PRIVATE "-ldl" )
 
 	target_compile_options( equi_join_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
@@ -79,9 +79,9 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	)
 	target_link_libraries( my_operator_app PRIVATE "-ldl" )
 
-	add_test( vector_test vector_test_app )
+#	add_test( vector_test vector_test_app )
 	add_test( agg_sum_vectorized_test agg_sum_app )
-	add_test( hash_set_vectorized_test hash_set_app )
+#	add_test( hash_set_vectorized_test hash_set_app )
 	add_test( equi_join_vectorized_test equi_join_app )
 	add_test( semi_join_vectorized_test semi_join_app )
 	add_test( calc_test calc_app )

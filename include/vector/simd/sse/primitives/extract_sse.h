@@ -36,7 +36,7 @@ namespace vector {
              case 0: return _mm_extract_epi64(p_vec,0); break;
              case 1: return _mm_extract_epi64(p_vec,1); break;
          }
-         return NULL;
+         return (typename sse< v128< U > >::base_t)0;
       }
    };
    
@@ -54,7 +54,7 @@ namespace vector {
              case 2: return _mm_extract_epi32(p_vec,2); break;
              case 3: return _mm_extract_epi32(p_vec,3); break;
          }
-         return NULL;
+         return (typename sse< v128< U > >::base_t)0;
       }
    };
 }

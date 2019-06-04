@@ -39,7 +39,7 @@ namespace vector {
              case 2: return _mm256_extract_epi64(p_vec,2); break;
              case 3: return _mm256_extract_epi64(p_vec,3); break;
          }
-         return NULL;
+         return (typename avx2< v256< U > >::base_t)0;
       }
    };
    
@@ -61,7 +61,7 @@ namespace vector {
              case 6: return _mm256_extract_epi32(p_vec,6); break;
              case 7: return _mm256_extract_epi32(p_vec,7); break;
          }
-         return NULL;
+         return (typename avx2< v256< U > >::base_t)0;
       }
    };
 }
