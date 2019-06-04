@@ -39,7 +39,7 @@ namespace vector {
              case 2: return _mm256_extract_epi64(p_vec,2); break;
              case 3: return _mm256_extract_epi64(p_vec,3); break;
          }
-         return NULL;
+         return _mm256_extract_epi64(p_vec,0);
       }
    };
    
