@@ -21,7 +21,7 @@ namespace morphstore {
 
 
 
-template< int32_t N >
+/*template< int32_t N >
 MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i rotl64( __m256i p_data, std::integral_constant< int32_t, N > ) {
    return _mm256_or_si256(
          _mm256_slli_epi64( p_data, N ),
@@ -76,11 +76,11 @@ struct xxhash {
 
 template< >
 struct xxhash< uint64_t > {
-   static const uint64_t PRIME64_1 = 11400714785074694791ULL;   /* 0b1001111000110111011110011011000110000101111010111100101010000111 */
-   static const uint64_t PRIME64_2 = 14029467366897019727ULL;   /* 0b1100001010110010101011100011110100100111110101001110101101001111 */
-   static const uint64_t PRIME64_3 =  1609587929392839161ULL;   /* 0b0001011001010110011001111011000110011110001101110111100111111001 */
-   static const uint64_t PRIME64_4 =  9650029242287828579ULL;   /* 0b1000010111101011110010100111011111000010101100101010111001100011 */
-   static const uint64_t PRIME64_5 =  2870177450012600261ULL;   /* 0b0010011111010100111010110010111100010110010101100110011111000101 */
+   static const uint64_t PRIME64_1 = 11400714785074694791ULL;   *//* 0b1001111000110111011110011011000110000101111010111100101010000111 *//*
+   static const uint64_t PRIME64_2 = 14029467366897019727ULL;   *//* 0b1100001010110010101011100011110100100111110101001110101101001111 *//*
+   static const uint64_t PRIME64_3 =  1609587929392839161ULL;   *//* 0b0001011001010110011001111011000110011110001101110111100111111001 *//*
+   static const uint64_t PRIME64_4 =  9650029242287828579ULL;   *//* 0b1000010111101011110010100111011111000010101100101010111001100011 *//*
+   static const uint64_t PRIME64_5 =  2870177450012600261ULL;   *//* 0b0010011111010100111010110010111100010110010101100110011111000101 *//*
 
    static MSV_CXX_ATTRIBUTE_FORCE_INLINE __m256i round64( __m256i p_acc, __m256i p_value ) {
       return
@@ -215,7 +215,7 @@ struct xxhash< uint64_t > {
          )
       );
    }
-};
+};*/
 
 
 template<>
@@ -253,9 +253,14 @@ const std::tuple<
    size_t vectorizedPartCount = inDataCount - scalarPartCount;
    uint64_t groupId = 0;
 
+   uint64_t const hashPrime = (1<<16)+1;
+   __m256i const primeVector = _mm256_set1_epi64x( hashPrime );
+
    for( size_t dataPos = 0; dataPos < vectorizedPartCount; dataPos += sizeof( __m256i ) / sizeof( uint64_t ) ) {
-      _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes),
-                         xxhash<uint64_t>::apply(_mm256_load_si256(reinterpret_cast<__m256i const *>(&(inData[dataPos])))));
+
+      __m256i dataVector = _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inData[dataPos])));
+      __m256i hashedVector = _mm256_mul_epu32( dataVector, primeVector );
+      _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes), hashedVector);
       for(size_t hashPos = 0; hashPos < 4; ++hashPos) {
          uint32_t searchOffset = 0;
          bool dataFound;
@@ -306,7 +311,26 @@ const std::tuple<
    }
 
    for( size_t dataPos = vectorizedPartCount; dataPos < inDataCount; ++dataPos ) {
-
+      uint64_t keyScalar = inData[dataPos];
+      size_t pos = ( keyScalar * hashPrime ) % lastPossibleVectorNumberInHashContainer;
+      size_t pos_new = pos;
+      bool done = false;
+      while( ! done ) {
+         pos = pos_new;
+         pos_new = ( pos_new + 1 ) % lastPossibleVectorNumberInHashContainer;
+         if( hashContainerData[ pos ] == keyScalar ) {
+            *(outGr++) = hashContainerGroupIds[ pos ];
+            done = true;
+         } else {
+            if( hashContainerData[ pos ] == 0 ) {
+               hashContainerData[pos] = inData[dataPos];
+               hashContainerGroupIds[pos] = groupId;
+               *(outGr++) = groupId++;
+               *(outExt++) = dataPos;
+               done = true;
+            }
+         }
+      }
    }
 
    const size_t outExtCount = outExt - initOutExt;
@@ -362,13 +386,15 @@ group<processing_style_t::vec256>(
    size_t scalarPartCount = inDataCount & (elementCount-1);
    size_t vectorizedPartCount = inDataCount - scalarPartCount;
    uint64_t groupId = 0;
+   uint64_t const hashPrime = (1<<16)+1;
+   __m256i const primeVector = _mm256_set1_epi64x( hashPrime );
 
    for( size_t dataPos = 0; dataPos < vectorizedPartCount; dataPos += sizeof( __m256i ) / sizeof( uint64_t ) ) {
-      _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes),
-                         xxhash<uint64_t>::apply(
-                            _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inData[dataPos]))),
-                            _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inGr[dataPos]))))
-                         );
+      __m256i dataVector = _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inData[dataPos])));
+      __m256i groupVector = _mm256_load_si256(reinterpret_cast<__m256i const *>(&(inGr[dataPos])));
+      __m256i hashedVector = _mm256_mul_epu32( _mm256_mul_epu32( dataVector, groupVector ), primeVector );
+      _mm256_store_si256(reinterpret_cast<__m256i *>(tmpHashes), hashedVector);
+
       for(size_t hashPos = 0; hashPos < 4; ++hashPos) {
          uint32_t searchOffset = 0;
          bool dataFound;
@@ -475,7 +501,26 @@ group<processing_style_t::vec256>(
       }
    }
    for( size_t dataPos = vectorizedPartCount; dataPos < inDataCount; ++dataPos ) {
-
+      uint64_t keyScalar = inData[dataPos];
+      size_t pos = ( keyScalar * hashPrime ) % lastPossibleVectorNumberInHashContainer;
+      size_t pos_new = pos;
+      bool done = false;
+      while( ! done ) {
+         pos = pos_new;
+         pos_new = ( pos_new + 1 ) % lastPossibleVectorNumberInHashContainer;
+         if( hashContainerData[ pos ] == keyScalar ) {
+            *(outGr++) = hashContainerGroupIds[ pos ];
+            done = true;
+         } else {
+            if( hashContainerData[ pos ] == 0 ) {
+               hashContainerData[pos] = inData[dataPos];
+               hashContainerGroupIds[pos] = groupId;
+               *(outGr++) = groupId++;
+               *(outExt++) = dataPos;
+               done = true;
+            }
+         }
+      }
    }
 
    const size_t outExtCount = outExt - initOutExt;
