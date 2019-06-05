@@ -27,6 +27,8 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <functional>
+#include <core/utils/preprocessor.h>
 
     
 #define STATIC_ASSERT_PARAMPACK_SAMESIZE(pack1, pack2) \
@@ -79,6 +81,20 @@ namespace morphstore {
         };
         return ss.str();
     }
+
+
+   template<std::size_t I = 0, typename Tuple, typename Func>
+   constexpr
+   typename std::enable_if< I != std::tuple_size<Tuple>::value, void >::type
+   static_for_each(const Tuple& p_Tuple, Func&& p_Func) {
+      p_Func(std::get<I>(p_Tuple));
+      static_for_each<I + 1>(p_Tuple, p_Func);
+   }
+
+   template<std::size_t I = 0, typename Tuple, typename Func>
+   constexpr
+   typename std::enable_if< I == std::tuple_size<Tuple>::value, void >::type
+   static_for_each(const Tuple& MSV_CXX_ATTRIBUTE_PPUNUSED p_Tuple, Func&& MSV_CXX_ATTRIBUTE_PPUNUSED p_Func){}
     
 }
 #endif //MORPHSTORE_CORE_UTILS_VARIADIC_H

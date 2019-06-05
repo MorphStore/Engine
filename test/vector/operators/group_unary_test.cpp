@@ -56,11 +56,11 @@
 
 int main( void ) {
 
-   using namespace vector;
    using namespace morphstore;
+   using namespace vector;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-   const column< uncompr_f > * testDataColumnSorted = make_column({333, 333, 111, 333, 222, 111,444});
+   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
 
 
    const column<uncompr_f> * outGrCol1;
@@ -72,30 +72,20 @@ int main( void ) {
    const column<uncompr_f> * outExtCol2;
    const column<uncompr_f> * outExtColScalar2;
    std::cout << "Done\nVectorized..." << std::flush;
-
    std::tie(outGrCol1, outExtCol1) =
       group1<
          uncompr_f,
          sse<v128<uint64_t>>,
          hash_map<
-         avx2<v256<uint64_t>>,
-         multiply_mod_hash,
-         size_policy_hash::EXPONENTIAL,
-         scalar_key_vectorized_linear_search,
-         60
-      >
-      >::apply(testDataColumnSorted);
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::EXPONENTIAL,
+            scalar_key_vectorized_linear_search,
+            60
+         >
+      >::apply(testDataColumnSorted, TEST_DATA_COUNT);
+
    std::cout << "Done\nScalar..." << std::flush;
-   print_columns(
-      print_buffer_base::decimal,
-      testDataColumnSorted,
-      outGrCol1,
-      outExtCol1,
-      "Data",
-      "GroupID",
-      "GroupExt"
-   );
-   return 0;
    std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nGenerating..." << std::flush;
 
@@ -111,14 +101,14 @@ int main( void ) {
    std::tie(outGrCol2, outExtCol2) =
       group1<
          uncompr_f,
-         sse<v128<uint64_t>>,
-         hash_map<
          avx2<v256<uint64_t>>,
-         multiply_mod_hash,
-         size_policy_hash::EXPONENTIAL,
-         scalar_key_vectorized_linear_search,
-         60
-      >
+         hash_map<
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::EXPONENTIAL,
+            scalar_key_vectorized_linear_search,
+            60
+         >
       >::apply(testDataColumnSorted, TEST_DATA_COUNT);
    std::cout << "Done\nScalar..." << std::flush;
    std::tie(outGrColScalar2, outExtColScalar2) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );

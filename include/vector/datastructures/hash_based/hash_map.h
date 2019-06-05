@@ -40,7 +40,7 @@ namespace vector {
          typename VectorExtension::vector_t const & p_KeysToLookup,
          typename VectorExtension::vector_t const & p_Values,
          typename
-         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t
          & p_LookupInsertStrategyState
       ) {
          LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::insert(
@@ -62,8 +62,8 @@ namespace vector {
          typename VectorExtension::vector_t const & p_InKeyVector,
          typename VectorExtension::base_t & p_InStartPosFromKey,
          typename VectorExtension::base_t & p_InStartValue,
-         typename LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t &
-         p_LookupInsertStrategyState
+         typename LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t
+         & p_LookupInsertStrategyState
       ) {
          return LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::insert_and_lookup(
             p_InKeyVector,
@@ -73,16 +73,17 @@ namespace vector {
          );
       }
 
+
       template< class VectorExtension >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       std::tuple< typename VectorExtension::vector_t, typename VectorExtension::mask_t, uint8_t >
       lookup(
          typename VectorExtension::vector_t const & p_KeysToLookup,
          typename
-         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t
          & p_LookupInsertStrategyState
       ) {
-         return LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::lookup_value(
+         return LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::lookup(
             p_KeysToLookup,
             p_LookupInsertStrategyState
          );
@@ -125,11 +126,11 @@ namespace vector {
 
       template< class VectorExtension >
       typename
-      LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+      LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t
       get_lookup_insert_strategy_state( void ) {
          return
             typename
-            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t(
+            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t(
                m_Keys,
                m_Values,
                m_SizeHelper.m_Count

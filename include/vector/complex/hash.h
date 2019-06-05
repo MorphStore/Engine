@@ -35,6 +35,21 @@ namespace vector {
                p_State.m_Prime
             );
       }
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      vector_t apply(
+         vector_t const & p_Key,
+         vector_t const & p_Key2,
+         state_t const & p_State
+      ) {
+         return
+            mul<VectorExtension>::apply(
+               mul<VectorExtension>::apply(
+                  p_Key, p_Key2
+               ),
+               p_State.m_Prime
+            );
+      }
    };
 
 }

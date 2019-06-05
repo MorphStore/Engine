@@ -32,47 +32,13 @@ namespace vector {
    >
    class hash_set{
       public:
-/*
-         template<class Format, class VectorExtension>
-         void build(
-            morphstore::column<Format> const * const p_Column,
-            typename
-            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
-            & p_LookupInsertStrategyState
-         ) {
-            IMPORT_VECTOR_BOILER_PLATE(VectorExtension);
-            const size_t inDataCount = p_Column->get_count_values();
-            base_t * inDataPtr = p_Column->get_data( );
-
-            size_t const vectorCount = inDataCount / vector_element_count::value;
-            size_t const remainderCount = inDataCount % vector_element_count::value;
-
-            for(size_t i = 0; i < vectorCount; ++i) {
-               insert<VectorExtension>(
-                  load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( inDataPtr ),
-                     p_LookupInsertStrategyState );
-
-               inDataPtr += vector_element_count::value;
-            }
-
-            */
-/*LookupInsertStrategy<
-               scalar<base_t> ,
-               BiggestSupportedVectorExtension,
-               HashFunction,
-               SPH
-            >::build_batch( inDataPtr, m_Data, vectorCount, m_Size);*//*
-
-         }
-*/
-
          template< class VectorExtension >
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
          void
          insert(
             typename VectorExtension::vector_t const & p_KeysToLookup,
             typename
-            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_t
             & p_LookupInsertStrategyState
          ) {
             LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::insert(
@@ -87,7 +53,7 @@ namespace vector {
          lookup(
             typename VectorExtension::vector_t const & p_KeysToLookup,
             typename
-            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+            LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_t
             & p_LookupInsertStrategyState
          ) {
             return LookupInsertStrategy<VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH>::lookup(
@@ -124,11 +90,11 @@ namespace vector {
 
          template< class VectorExtension >
          typename
-         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t
+         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_t
          get_lookup_insert_strategy_state( void ) {
             return
                typename
-               LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_t(
+               LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_t(
                   m_Data,
                   m_SizeHelper.m_Count
                );
