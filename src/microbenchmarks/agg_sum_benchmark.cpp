@@ -25,7 +25,8 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
-#include <core/operators/scalar/agg_sum_compr_iterator.h>
+#include <core/operators/general_vectorized/agg_sum_compr.h>
+//#include <core/operators/scalar/agg_sum_compr_iterator.h>
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
