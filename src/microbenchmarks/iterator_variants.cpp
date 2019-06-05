@@ -32,8 +32,8 @@
 #include <core/utils/equality_check.h>
 #include <core/utils/monitoring.h>
 #include <core/utils/printing.h>
-#include <core/utils/processing_style.h>
 #include <core/utils/variant_executor.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <iostream>
 #include <limits>
@@ -42,6 +42,7 @@
 #include <vector>
 
 using namespace morphstore;
+using namespace vector;
 
 // ****************************************************************************
 // Iterator implementations.
@@ -210,7 +211,7 @@ const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<bw, 1> > 
 
 #define MAKE_VARIANT_MORPH(t_in_data_f, bw) { \
     new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<t_in_data_f>( \
-        &morph<processing_style_t::scalar, uncompr_f, t_in_data_f> \
+        &morph<scalar<v64<uint64_t>>, uncompr_f, t_in_data_f> \
     ), \
     "morph", \
     STR_EVAL_MACROS(t_in_data_f), \

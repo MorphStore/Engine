@@ -27,9 +27,9 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/equality_check.h>
-#include <core/utils/processing_style.h>
-
 #include <core/utils/monitoring.h>
+#include <vector/scalar/extension_scalar.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -40,6 +40,7 @@
 #include <limits>
 
 using namespace morphstore;
+using namespace vector;
 
 template< unsigned bw >
 bool test( ) {
@@ -62,11 +63,11 @@ bool test( ) {
 
     // Compress the data (using the scalar and the vec128 morph-operator).
     auto comprColScalar = morph<
-            processing_style_t::scalar,
+            scalar<v64<uint64_t>>,
             static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
     >(origCol);
     auto comprColVec128 = morph<
-            processing_style_t::vec128,
+            sse<v128<uint64_t>>,
             static_vbp_f<bw, sizeof(__m128i) / sizeof(uint64_t)>
     >(origCol);
     
@@ -76,10 +77,10 @@ bool test( ) {
     ).good();
     
     // Decompress the data (using the scalar and the vec128 morph-operator).
-    auto decomprColScalar = morph<processing_style_t::scalar, uncompr_f>(
+    auto decomprColScalar = morph<scalar<v64<uint64_t>>, uncompr_f>(
             comprColScalar
     );
-    auto decomprColVec128 = morph<processing_style_t::vec128, uncompr_f>(
+    auto decomprColVec128 = morph<sse<v128<uint64_t>>, uncompr_f>(
             comprColVec128
     );
     

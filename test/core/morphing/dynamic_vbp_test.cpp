@@ -28,6 +28,7 @@
 #include <core/storage/column_gen.h>
 #include <core/utils/equality_check.h>
 #include <core/utils/math.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -39,6 +40,7 @@
 #include <immintrin.h>
 
 using namespace morphstore;
+using namespace vector;
 
 template<unsigned bw>
 bool test() {
@@ -56,11 +58,11 @@ bool test() {
     // This template specialization is SIMD-BP128 with the difference that we
     // use 64-bit instead of 32-bit data elements.
     auto comprCol = morph<
-            processing_style_t::vec128,
+            sse<v128<uint64_t>>,
             dynamic_vbp_f<sizeof(__m128i) * bitsPerByte, sizeof(__m128i)>
     >(origCol);
     
-    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
+    auto decomprCol = morph<sse<v128<uint64_t>>, uncompr_f>(comprCol);
     
     const bool good = equality_check(origCol, decomprCol).good();
     std::cout

@@ -31,8 +31,10 @@
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/preprocessor.h>
-#include <core/utils/processing_style.h>
 #include <core/utils/variant_executor.h>
+#include <vector/scalar/extension_scalar.h>
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <iostream>
 #include <random>
@@ -40,20 +42,21 @@
 #include <vector>
 
 using namespace morphstore;
+using namespace vector;
 
 // A macro expanding to an initializer list for a variant.
-#define MAKE_VARIANT(ps) \
+#define MAKE_VARIANT(ve) \
 { \
     new varex_t::operator_wrapper \
         ::for_output_formats<uncompr_f> \
         ::for_input_formats<uncompr_f, uncompr_f>( \
             &project< \
-                    processing_style_t::ps, \
+                    ve, \
                     uncompr_f, \
                     uncompr_f, uncompr_f \
             > \
     ), \
-    STR_EVAL_MACROS(ps) \
+    STR_EVAL_MACROS(ve) \
 }
     
 int main(void) {
@@ -66,16 +69,16 @@ int main(void) {
             ::for_setting_params<size_t, size_t>;
     varex_t varex(
             {}, // names of the operator's additional parameters
-            {"ps"}, // names of the variant parameters
+            {"ve"}, // names of the variant parameters
             {"inDataCount", "inPosCount"} // names of the setting parameters
     );
     
     // Define the variants.
     const std::vector<varex_t::variant_t> variants = {
-        MAKE_VARIANT(scalar),
-        MAKE_VARIANT(vec128),
+        MAKE_VARIANT(scalar<v64<uint64_t>>),
+        MAKE_VARIANT(sse<v128<uint64_t>>),
 #ifdef AVXTWO
-        MAKE_VARIANT(vec256),
+        MAKE_VARIANT(avx2<v256<uint64_t>>),
 #endif
     };
     

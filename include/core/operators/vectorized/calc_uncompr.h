@@ -19,7 +19,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -34,7 +34,7 @@ namespace morphstore {
 template<template<typename> class t_unary_op>
 struct calc_unary<
         t_unary_op,
-        processing_style_t::vec256,
+        vector::avx2<vector::v256<uint64_t>>,
         uncompr_f,
         uncompr_f
 > {
@@ -74,7 +74,7 @@ struct calc_unary<
     
 template<template<typename> class t_binary_op>
 struct calc_binary<
-        t_binary_op, processing_style_t::vec256,
+        t_binary_op, vector::avx2<vector::v256<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

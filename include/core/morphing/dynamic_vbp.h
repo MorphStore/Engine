@@ -30,6 +30,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <cstdint>
 #include <immintrin.h>
@@ -104,7 +105,7 @@ namespace morphstore {
     
     template<size_t t_BlockSize64, size_t t_PageSizeBlocks>
     struct morph_t<
-            processing_style_t::vec128,
+            vector::sse<vector::v128<uint64_t>>,
             dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks>,
             uncompr_f
     > {
@@ -176,7 +177,7 @@ namespace morphstore {
                     const uint8_t * in8 = reinterpret_cast<const uint8_t *>(in128);
                     uint8_t * out8 = reinterpret_cast<uint8_t *>(out128);
                     pack_switch<
-                            processing_style_t::vec128,
+                            vector::sse<vector::v128<uint64_t>>,
                             sizeof(__m128i) / sizeof(uint64_t)
                     >(bw, in8, t_BlockSize64, out8);
                     in128 = reinterpret_cast<const __m128i *>(in8);
@@ -195,7 +196,7 @@ namespace morphstore {
     
     template<size_t t_BlockSize64, size_t t_PageSizeBlocks>
     struct morph_t<
-            processing_style_t::vec128,
+            vector::sse<vector::v128<uint64_t>>,
             uncompr_f,
             dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks>
     > {
@@ -235,7 +236,7 @@ namespace morphstore {
                     const uint8_t * in8 = reinterpret_cast<const uint8_t *>(in128);
                     uint8_t * out8 = reinterpret_cast<uint8_t *>(out128);
                     unpack_switch<
-                            processing_style_t::vec128,
+                            vector::sse<vector::v128<uint64_t>>,
                             sizeof(__m128i) / sizeof(uint64_t)
                     >(inMeta8[blockIdx], in8, out8, t_BlockSize64);
                     in128 = reinterpret_cast<const __m128i *>(in8);

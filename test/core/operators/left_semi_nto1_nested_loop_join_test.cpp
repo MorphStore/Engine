@@ -28,15 +28,16 @@
 #include <core/operators/scalar/join_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vector;
 
 int main(void) {
     const bool allGood = test_op_2in_1out_1val(
             "Left-Semi-N:1-Join",
             &left_semi_nto1_nested_loop_join<
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f
             >,
             make_column({11, 22, 33, 11, 44, 55}),

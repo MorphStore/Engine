@@ -27,7 +27,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <tuple>
 
@@ -58,7 +57,7 @@ namespace morphstore {
  * predicate/operation just like the selection.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_l_f,
         class t_out_pos_r_f,
         class t_in_data_l_f,
@@ -97,7 +96,7 @@ nested_loop_join(
  * all data elements in the left input which have a match in the right input.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_l_f,
         class t_in_data_l_f,
         class t_in_data_r_f

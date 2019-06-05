@@ -30,14 +30,14 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 
 namespace morphstore {
     
 template<template<typename> class t_op>
-struct select<t_op, processing_style_t::scalar, uncompr_f, uncompr_f> {
+struct select<t_op, vector::scalar<vector::v64<uint64_t>>, uncompr_f, uncompr_f> {
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataCol,

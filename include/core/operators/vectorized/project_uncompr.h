@@ -18,7 +18,9 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/sse/extension_sse.h>
+
 #include <immintrin.h>
 
 #include <cstdint>
@@ -27,7 +29,7 @@ namespace morphstore {
     
 template<>
 struct project_t<
-        processing_style_t::vec128,
+        vector::sse<vector::v128<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f
@@ -74,7 +76,7 @@ struct project_t<
 
 template<>
 struct project_t<
-        processing_style_t::vec256,
+        vector::avx2<vector::v256<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

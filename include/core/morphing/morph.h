@@ -24,7 +24,6 @@
 #define MORPHSTORE_CORE_MORPHING_MORPH_H
 
 #include <core/storage/column.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
 
@@ -35,7 +34,7 @@ namespace morphstore {
  * required, since some compressed formats have their own template parameters.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_dst_f,
         class t_src_f
 >
@@ -64,10 +63,10 @@ struct morph_t {
  * It merely returns the given column without doing any work.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_f
 >
-struct morph_t<t_ps, t_f, t_f> {
+struct morph_t<t_vector_extension, t_f, t_f> {
     static
     const column<t_f> *
     apply(const column<t_f> * inCol) {
@@ -86,12 +85,12 @@ struct morph_t<t_ps, t_f, t_f> {
  * @return The same data represented in the destination format.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_dst_f,
         class t_src_f
 >
 const column<t_dst_f> * morph(const column<t_src_f> * inCol) {
-    return morph_t<t_ps, t_dst_f, t_src_f>::apply(inCol);
+    return morph_t<t_vector_extension, t_dst_f, t_src_f>::apply(inCol);
 }
 
 }

@@ -33,7 +33,7 @@
 #include "../../include/core/storage/column_gen.h"
 #include "../../include/core/utils/basic_types.h"
 #include "../../include/core/utils/printing.h"
-#include "../../include/core/utils/processing_style.h"
+#include "../../include/vector/scalar/extension_scalar.h"
 
 #include <functional>
 #include <iostream>
@@ -41,6 +41,7 @@
 #include <tuple>
 
 using namespace morphstore;
+using namespace vector;
 
 // ****************************************************************************
 // * Example query
@@ -126,7 +127,7 @@ int main( void ) {
     // * Query execution
     // ************************************************************************
     
-    const processing_style_t scalar = processing_style_t::scalar;
+    using ve = scalar<v64<uint64_t> >;
     
     std::cout << "Query execution started... ";
     std::cout.flush();
@@ -137,13 +138,13 @@ int main( void ) {
     // Positions in "part" fulfilling "part.weight < 2000"
     auto iPPos = morphstore::select<
             std::less,
-            scalar,
+            ve,
             uncompr_f,
             uncompr_f
     >::apply(part.weight, 2000);
     
     // Data elements of "part.partKey" fulfilling "part.weight < 2000"
-    auto iPPartKeyProj = project<scalar, uncompr_f>(part.partKey, iPPos);
+    auto iPPartKeyProj = project<ve, uncompr_f>(part.partKey, iPPos);
     
     // Positions in "order" having a join partner in the filtered "part"
     // relation
@@ -151,16 +152,16 @@ int main( void ) {
     // (unused)
     const column<uncompr_f> * iPJoinedPos;
     std::tie(iOJoinedPos, iPJoinedPos) = nested_loop_join<
-            scalar,
+            ve,
             uncompr_f,
             uncompr_f
     >(order.partKey, iPPartKeyProj, orderCount);
     
     // "order.suppKey", "order.custKey", and "order.qty" for the positions in
     // "order" which have a join partner in "part"
-    auto iOSuppKeyProj = project<scalar, uncompr_f>(order.suppKey, iOJoinedPos);
-    auto iOCustKeyProj = project<scalar, uncompr_f>(order.custKey, iOJoinedPos);
-    auto iOQtyProj     = project<scalar, uncompr_f>(order.qty    , iOJoinedPos);
+    auto iOSuppKeyProj = project<ve, uncompr_f>(order.suppKey, iOJoinedPos);
+    auto iOCustKeyProj = project<ve, uncompr_f>(order.custKey, iOJoinedPos);
+    auto iOQtyProj     = project<ve, uncompr_f>(order.qty    , iOJoinedPos);
     
     // First step of the grouping: group by "order.suppKey".
     // Group-ids of *unary* grouping on filtered "order.suppKey"
@@ -168,7 +169,7 @@ int main( void ) {
     // Positions of group-representatives of *unary* grouping on filtered
     // "order.suppKey"
     const column<uncompr_f> * iOSuppKeyExt;
-    std::tie(iOSuppKeyGr, iOSuppKeyExt) = group<scalar, uncompr_f, uncompr_f>(
+    std::tie(iOSuppKeyGr, iOSuppKeyExt) = group<ve, uncompr_f, uncompr_f>(
             iOSuppKeyProj
     );
     
@@ -178,12 +179,12 @@ int main( void ) {
     // Positions of group-representatives of *binary* grouping on filtered
     // "order.custKey"
     const column<uncompr_f> * iOCustKeyExt;
-    std::tie(iOCustKeyGr, iOCustKeyExt) = group<scalar, uncompr_f, uncompr_f>(
+    std::tie(iOCustKeyGr, iOCustKeyExt) = group<ve, uncompr_f, uncompr_f>(
             iOSuppKeyGr, iOCustKeyProj
     );
     
     // Per-group aggregates of filtered "order.qty"
-    auto iOQtyGrSum = agg_sum<scalar, uncompr_f>(
+    auto iOQtyGrSum = agg_sum<ve, uncompr_f>(
             iOCustKeyGr,
             iOQtyProj,
             iOCustKeyExt->get_count_values()
@@ -192,24 +193,24 @@ int main( void ) {
     // Group-ids of *binary* grouping fulfilling "SUM(order.qty) > 200000"
     auto iOPosHaving = morphstore::select<
             std::greater,
-            scalar,
+            ve,
             uncompr_f,
             uncompr_f
     >::apply(iOQtyGrSum, 200000);
     
     // Per-group aggregates of filtered "order.qty" fulfilling
     // "SUM(order.qty) > 200000"
-    auto iOQtyGrSumHaving = project<scalar, uncompr_f>(iOQtyGrSum, iOPosHaving);
+    auto iOQtyGrSumHaving = project<ve, uncompr_f>(iOQtyGrSum, iOPosHaving);
     
     // Looking up the representatives of "order.custKey" (the *second* grouping
     // attribute).
     // Positions of group-representatives fulfilling "SUM(order.qty) > 200000"
-    auto iOCustKeyHavingRepr0 = project<scalar, uncompr_f>(
+    auto iOCustKeyHavingRepr0 = project<ve, uncompr_f>(
             iOCustKeyExt,
             iOPosHaving
     );
     // Group-representatives fulfilling "SUM(order.qty) > 200000"
-    auto iOCustKeyHavingRepr = project<scalar, uncompr_f>(
+    auto iOCustKeyHavingRepr = project<ve, uncompr_f>(
             iOCustKeyProj,
             iOCustKeyHavingRepr0
     );
@@ -218,17 +219,17 @@ int main( void ) {
     // attribute).
     // Group-ids of the *unary* grouping belonging to the group-ids of the
     // *binary* grouping fulfilling "SUM(order.qty) > 200000"
-    auto iOSuppKeyHavingRepr0 = project<scalar, uncompr_f>(
+    auto iOSuppKeyHavingRepr0 = project<ve, uncompr_f>(
             iOSuppKeyGr,
             iOCustKeyHavingRepr0
     );
     // Positions of group-representatives fulfilling "SUM(order.qty) > 200000"
-    auto iOSuppKeyHavingRepr1 = project<scalar, uncompr_f>(
+    auto iOSuppKeyHavingRepr1 = project<ve, uncompr_f>(
             iOSuppKeyExt,
             iOSuppKeyHavingRepr0
     );
     // Group-representatives fulfilling "SUM(order.qty) > 200000"
-    auto iOSuppKeyHavingRepr  = project<scalar, uncompr_f>(
+    auto iOSuppKeyHavingRepr  = project<ve, uncompr_f>(
             iOSuppKeyProj,
             iOSuppKeyHavingRepr1
     );

@@ -31,7 +31,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -42,7 +42,7 @@ namespace morphstore {
 
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::scalar>(
+agg_sum<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol
 ) {
     const size_t inDataCount = inDataCol->get_count_values();
@@ -63,7 +63,7 @@ agg_sum<processing_style_t::scalar>(
 
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::scalar>(
+agg_sum<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         size_t inExtCount

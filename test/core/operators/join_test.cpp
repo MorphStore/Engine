@@ -29,15 +29,16 @@
 #include <core/operators/scalar/join_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vector;
 
 int main( void ) {
     const bool allGood = test_op_2in_2out_1val(
             "Join",
             &nested_loop_join<
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >,

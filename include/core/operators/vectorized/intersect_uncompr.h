@@ -20,7 +20,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
+
 #include <immintrin.h>
 #include <cstdint>
 
@@ -28,7 +29,7 @@ namespace morphstore {
 
 template<>
 const column<uncompr_f> *
-intersect_sorted<processing_style_t::vec256>(
+intersect_sorted<vector::avx2<vector::v256<uint64_t>>>(
         const column<uncompr_f> * const p_Data1,
         const column<uncompr_f> * const p_Data2,
         const size_t outPosCountEstimate

@@ -32,7 +32,7 @@
 #include <core/morphing/vbp_routines.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <immintrin.h>
@@ -53,7 +53,7 @@ namespace morphstore {
 
 // Struct for partial template specialization.
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         unsigned t_bw,
         unsigned t_step
 >
@@ -68,7 +68,7 @@ struct unpack_with_project_t {
 
 // Convenience function.
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         unsigned t_bw,
         unsigned t_step
 >
@@ -78,7 +78,7 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_with_project(
         uint8_t * & outData8,
         size_t countOutData64
 ) {
-    unpack_with_project_t<t_ps, t_bw, t_step>::apply(inData8, inPos8, outData8, countOutData64);
+    unpack_with_project_t<t_vector_extension, t_bw, t_step>::apply(inData8, inPos8, outData8, countOutData64);
 }
 
 
@@ -89,7 +89,7 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_with_project(
 // Generic w.r.t. the step width. Hopefully the compiler unrolls the loops.
 template<unsigned t_bw, unsigned t_step>
 struct unpack_with_project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         t_bw,
         t_step
 > {
@@ -148,9 +148,9 @@ struct unpack_with_project_t<
 // ************************************************************************
     
 // Generic implementation; the magic happens in unpack_with_project.
-template<processing_style_t t_ps, unsigned t_bw, unsigned t_step>
+template<class t_vector_extension, unsigned t_bw, unsigned t_step>
 struct project_t<
-        t_ps,
+        t_vector_extension,
         uncompr_f,
         uncompr_f,
         static_vbp_f<t_bw, t_step>
@@ -170,7 +170,7 @@ struct project_t<
         auto outDataCol = new column<uncompr_f>(outSize);
         uint8_t * outData8 = outDataCol->get_data();
 
-        unpack_with_project<t_ps, t_bw, t_step>(
+        unpack_with_project<t_vector_extension, t_bw, t_step>(
                 inData8, inPos8, outData8, inPosCount64
         );
 
@@ -184,7 +184,7 @@ struct project_t<
 #if 1
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<32, sizeof(__m128i) / sizeof(uint64_t)>
@@ -252,7 +252,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<16, sizeof(__m128i) / sizeof(uint64_t)>
@@ -320,7 +320,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
@@ -388,7 +388,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<4, sizeof(__m128i) / sizeof(uint64_t)>
@@ -428,7 +428,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<2, sizeof(__m128i) / sizeof(uint64_t)>

@@ -33,7 +33,6 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <core/utils/processing_style.h>
 
 #include <cstdint>
 #include <immintrin.h>
@@ -152,12 +151,12 @@ namespace morphstore {
      * detected at compile-time.
      */
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
     struct morph_t<
-            t_ps,
+            t_vector_extension,
             static_vbp_f<t_bw, t_step>,
             uncompr_f
     > {
@@ -175,7 +174,7 @@ namespace morphstore {
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            pack<t_ps, t_bw, t_step>(in8, count64, out8);
+            pack<t_vector_extension, t_bw, t_step>(in8, count64, out8);
 
             outCol->set_meta_data(count64, out8 - initOut8);
             
@@ -193,12 +192,12 @@ namespace morphstore {
      * detected at compile-time.
      */
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
     struct morph_t<
-            t_ps,
+            t_vector_extension,
             uncompr_f,
             static_vbp_f<t_bw, t_step>
     > {
@@ -215,7 +214,7 @@ namespace morphstore {
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            unpack<t_ps, t_bw, t_step>(in8, out8, count64);
+            unpack<t_vector_extension, t_bw, t_step>(in8, out8, count64);
             
             outCol->set_meta_data(count64, out8 - initOut8);
 

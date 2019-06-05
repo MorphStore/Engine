@@ -29,14 +29,15 @@
 #include <core/operators/scalar/project_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vector;
 
 int main( void ) {
     const bool allGood = test_op_2in_1out(
             "Project",
-            &project<processing_style_t::scalar>,
+            &project<scalar<v64<uint64_t>>>,
             make_column({11, 44, 22, 33, 11}),
             make_column({1, 3, 4}),
             "inDataCol",

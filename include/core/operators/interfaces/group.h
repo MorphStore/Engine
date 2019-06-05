@@ -27,7 +27,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <tuple>
 
@@ -57,7 +56,7 @@ namespace morphstore {
  * of some representative of the i-th group in inDataCol.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_gr_f,
         class t_out_ext_f,
         class t_in_data_f
@@ -95,7 +94,7 @@ group(
  * of some representative of the i-th group in inDataCol.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_gr_f,
         class t_out_ext_f,
         class t_in_gr_f,

@@ -27,13 +27,14 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/printing.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <cstdint>
 #include <immintrin.h>
 #include <unordered_map>
 
 using namespace morphstore;
+using namespace vector;
 
 /**
  * A small example usage of print_columns.
@@ -41,10 +42,10 @@ using namespace morphstore;
 void small_example( ) {
     auto origCol = generate_sorted_unique(128);
     auto comprCol = morph<
-            processing_style_t::vec128,
+            sse<v128<uint64_t>>,
             static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
     >(origCol);
-    auto decomprCol = morph<processing_style_t::vec128, uncompr_f>(comprCol);
+    auto decomprCol = morph<sse<v128<uint64_t>>, uncompr_f>(comprCol);
     
     print_columns(
             print_buffer_base::hexadecimal,

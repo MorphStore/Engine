@@ -15,6 +15,7 @@
 #define CALC_AVX2_H
 
 
+#include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
 #include <vector/simd/avx2/extension_avx2.h>

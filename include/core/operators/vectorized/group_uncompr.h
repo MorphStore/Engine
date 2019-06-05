@@ -12,7 +12,7 @@
 #include <core/operators/interfaces/group.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <immintrin.h>
 #include <core/utils/printing.h>
@@ -223,7 +223,7 @@ const std::tuple<
    const column<uncompr_f> *,
    const column<uncompr_f> *
 >
-   group<processing_style_t::vec256>(
+   group<vector::avx2<vector::v256<uint64_t>>>(
    column<uncompr_f> const * const  inDataCol,
    size_t            const          outExtCountEstimate
 ) {
@@ -347,7 +347,7 @@ const std::tuple<
    const column<uncompr_f> *,
    const column<uncompr_f> *
 >
-group<processing_style_t::vec256>(
+group<vector::avx2<vector::v256<uint64_t>>>(
    const column<uncompr_f> * const inGrCol,
    const column<uncompr_f> * const inDataCol,
    const size_t outExtCountEstimate

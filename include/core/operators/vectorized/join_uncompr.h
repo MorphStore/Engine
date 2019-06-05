@@ -18,8 +18,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 #include <core/operators/vectorized/select_uncompr.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstdint>
 #include <tuple>
@@ -32,7 +32,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<processing_style_t::vec256>(
+nested_loop_join<vector::avx2<vector::v256<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -44,7 +44,7 @@ nested_loop_join<processing_style_t::vec256>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                processing_style_t::vec256,
+                vector::avx2<vector::v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(

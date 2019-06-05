@@ -27,7 +27,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
     
@@ -37,7 +36,7 @@ namespace morphstore {
  */
 template<
         template<typename> class t_unary_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f
 >
@@ -67,7 +66,7 @@ struct calc_unary {
  */
 template<
         template<typename> class t_binary_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_l_f,
         class t_in_data_r_f

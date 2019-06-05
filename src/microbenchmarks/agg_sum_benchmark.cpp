@@ -33,8 +33,8 @@
 #include <core/utils/equality_check.h>
 #include <core/utils/monitoring.h>
 #include <core/utils/printing.h>
-#include <core/utils/processing_style.h>
 #include <core/utils/variant_executor.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <iostream>
 #include <limits>
@@ -43,6 +43,7 @@
 #include <vector>
 
 using namespace morphstore;
+using namespace vector;
 
 
 // ****************************************************************************
@@ -51,7 +52,7 @@ using namespace morphstore;
 
 #define MAKE_VARIANT(in_data_f, inDataFName, bw) { \
     new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<in_data_f>( \
-        &agg_sum<processing_style_t::scalar, in_data_f> \
+        &agg_sum<scalar<v64<uint64_t>>, in_data_f> \
     ), \
     STR_EVAL_MACROS(inDataFName), \
     bw \

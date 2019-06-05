@@ -20,6 +20,9 @@
 #include <core/operators/scalar/merge_uncompr.h>
 #include <core/operators/vectorized/calc_uncompr.h>
 #include <core/operators/scalar/calc_uncompr.h>
+#include <vector/scalar/extension_scalar.h>
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/sse/extension_sse.h>
 
 #include <iostream>
 
@@ -30,6 +33,7 @@
 #define TEST_DATA_COUNT 100
 
 using namespace morphstore;
+using namespace vector;
 
 void init_data( column< uncompr_f > * const dataColumn ) {
    uint64_t * data = dataColumn->get_data( );
@@ -47,17 +51,17 @@ int main( void ) {
     const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT+15,5,3);
 
     std::cout << "Start scalar aggregation...\n";
-    auto sum_aggscalar_result=agg_sum<processing_style_t::scalar>( testDataColumn );//Do aggregation
+    auto sum_aggscalar_result=agg_sum<scalar<v64<uint64_t>>>( testDataColumn );//Do aggregation
     std::cout << "Done!\n";
     std::cout << "Should be "<< TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << *((uint64_t*)(sum_aggscalar_result->get_data())) << "\n";
     
     std::cout << "Start aggregation with 128 bit registers...\n";
-    auto sum_agg128_result=agg_sum<processing_style_t::vec128>( testDataColumn );//Do aggregation
+    auto sum_agg128_result=agg_sum<sse<v128<uint64_t>>>( testDataColumn );//Do aggregation
     std::cout << "Done!\n";
     std::cout << "Should be "<< TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << *((uint64_t*)(sum_agg128_result->get_data())) << "\n";
     
     std::cout << "Start aggregation with 256 bit registers...\n";
-    auto sum_agg256_result=agg_sum<processing_style_t::vec256>( testDataColumn );//Do aggregation
+    auto sum_agg256_result=agg_sum<avx2<v256<uint64_t>>>( testDataColumn );//Do aggregation
     std::cout << "Done!\n";
     std::cout << "Should be "<< TEST_DATA_COUNT / sizeof( uint64_t ) << ". is: " << *((uint64_t*)(sum_agg256_result->get_data())) << "\n";
     
@@ -65,7 +69,7 @@ int main( void ) {
     std::cout << "Start select Tests...\n";
     auto selectscalar_result=morphstore::select<
                     std::less,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8);
@@ -74,7 +78,7 @@ int main( void ) {
    
     auto select128_result=morphstore::select<
                     std::less,
-                    processing_style_t::vec128,
+                    sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -82,7 +86,7 @@ int main( void ) {
     
     auto select256_result=morphstore::select<
                 std::less,
-                processing_style_t::vec256,
+                avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -91,7 +95,7 @@ int main( void ) {
     
     selectscalar_result=morphstore::select<
                     std::greater,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,9);
@@ -100,7 +104,7 @@ int main( void ) {
    
     select128_result=morphstore::select<
                     std::greater,
-                    processing_style_t::vec128,
+                    sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,9 );//Do aggregation
@@ -108,7 +112,7 @@ int main( void ) {
     
     select256_result=morphstore::select<
                 std::greater,
-                processing_style_t::vec256,
+                avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >::apply( testDataColumnSorted,9 );//Do aggregation
@@ -117,7 +121,7 @@ int main( void ) {
     
     selectscalar_result=morphstore::select<
                     std::equal_to,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8);
@@ -126,7 +130,7 @@ int main( void ) {
    
     select128_result=morphstore::select<
                     std::equal_to,
-                    processing_style_t::vec128,
+                    sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -134,7 +138,7 @@ int main( void ) {
     
     select256_result=morphstore::select<
                     std::equal_to,
-                    processing_style_t::vec256,
+                    avx2<v256<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -143,7 +147,7 @@ int main( void ) {
     
     selectscalar_result=morphstore::select<
                     std::greater_equal,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8);
@@ -152,7 +156,7 @@ int main( void ) {
    
     select128_result=morphstore::select<
                     std::greater_equal,
-                    processing_style_t::vec128,
+                    sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -160,7 +164,7 @@ int main( void ) {
     
     select256_result=morphstore::select<
                 std::greater_equal,
-                processing_style_t::vec256,
+                avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -169,7 +173,7 @@ int main( void ) {
     
     selectscalar_result=morphstore::select<
                     std::less_equal,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8);
@@ -178,7 +182,7 @@ int main( void ) {
    
     select128_result=morphstore::select<
                     std::less_equal,
-                    processing_style_t::vec128,
+                    sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
             >::apply( testDataColumnSorted,8 );//Do aggregation
@@ -186,7 +190,7 @@ int main( void ) {
     
     select256_result=morphstore::select<
                 std::less_equal,
-                processing_style_t::vec256,
+                avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >::apply( testDataColumnSorted,8);//Do aggregation
@@ -195,11 +199,11 @@ int main( void ) {
     
     std::cout << "Start projection...\n";
     
-    auto projectionscalar_result=project<processing_style_t::vec128, uncompr_f>(testDataColumn,testDataColumn);
+    auto projectionscalar_result=project<sse<v128<uint64_t>>, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "Scalar Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projectionscalar_result->get_data()))[0] << ", " << ((uint64_t*)(projectionscalar_result->get_data()))[1] << ", " << ((uint64_t*)(projectionscalar_result->get_data()))[2] <<  "\n\t Count: " << projectionscalar_result->get_count_values() << "\n";            
-    auto projection128_result=project<processing_style_t::vec128, uncompr_f>(testDataColumn,testDataColumn);
+    auto projection128_result=project<sse<v128<uint64_t>>, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "128 bit Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projection128_result->get_data()))[0] << ", " << ((uint64_t*)(projection128_result->get_data()))[1] << ", " << ((uint64_t*)(projection128_result->get_data()))[2] <<  "\n\t Count: " << projection128_result->get_count_values() << "\n";            
-    auto projection256_result=project<processing_style_t::vec256, uncompr_f>(testDataColumn,testDataColumn);
+    auto projection256_result=project<avx2<v256<uint64_t>>, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "256 bit Projection\n\t 1st 3 IDs: " << ((uint64_t*)(projection256_result->get_data()))[0] << ", " << ((uint64_t*)(projection256_result->get_data()))[1] << ", " << ((uint64_t*)(projection256_result->get_data()))[2] <<  "\n\t Count: " << projection256_result->get_count_values() << "\n";            
     
     int ok = memcmp(projectionscalar_result->get_data(),projection128_result->get_data(),projectionscalar_result->get_count_values()*sizeof(uint64_t));
@@ -211,24 +215,24 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Projections are equal\n";     
     
   
-    auto intersect_result=intersect_sorted<processing_style_t::scalar, uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
+    auto intersect_result=intersect_sorted<scalar<v64<uint64_t>>, uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
     std::cout << "Scalar Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect_result->get_data()))[0] << ", " << ((uint64_t*)(intersect_result->get_data()))[1] << ", " << ((uint64_t*)(intersect_result->get_data()))[2] <<  "\n\t Count: " << intersect_result->get_count_values() << "\n";
     
-    auto intersect256_result=morphstore::intersect_sorted<processing_style_t::vec256, uncompr_f>(testDataColumnSorted2,testDataColumnSorted);
+    auto intersect256_result=morphstore::intersect_sorted<avx2<v256<uint64_t>>, uncompr_f>(testDataColumnSorted2,testDataColumnSorted);
     std::cout << "256 bit Intersection\n\t 1st 3 IDs: " << ((uint64_t*)(intersect256_result->get_data()))[0] << ", " << ((uint64_t*)(intersect256_result->get_data()))[1] << ", " << ((uint64_t*)(intersect256_result->get_data()))[2] <<  "\n\t Count: " << intersect256_result->get_count_values() << "\n";
     
     ok = memcmp(intersect_result->get_data(),intersect256_result->get_data(),intersect256_result->get_count_values()*sizeof(uint64_t));
     if (ok!=0) return ok;
     else std::cout << "Scalar and 256 bit Intersections are equal\n";
     
-    auto joinscalar_result=morphstore::nested_loop_join<processing_style_t::scalar, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
+    auto joinscalar_result=morphstore::nested_loop_join<scalar<v64<uint64_t>>, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
     std::cout << "Scalar Join\n\t 1st 3 IDs:\n\t" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[0] << ", " << ((uint64_t*)(std::get<1>(joinscalar_result)->get_data()))[0] << "\n";
     std::cout << "\t" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[1] << ", " << ((uint64_t*)((std::get<1>(joinscalar_result))->get_data()))[1] << "\n";
     std::cout << "\t" << ((uint64_t*)(std::get<0>(joinscalar_result)->get_data()))[2] << ", " << ((uint64_t*)((std::get<1>(joinscalar_result))->get_data()))[2] << "\n";
     std::cout <<  "\tCount A: " << ((uint64_t*)(std::get<0>(joinscalar_result)->get_count_values())) <<  "\n";
     std::cout <<  "\tCount B: " << ((uint64_t*)(std::get<1>(joinscalar_result)->get_count_values())) <<  "\n";
     
-    auto join256_result=morphstore::nested_loop_join<processing_style_t::vec256, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
+    auto join256_result=morphstore::nested_loop_join<avx2<v256<uint64_t>>, uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
     std::cout << "256 bit Join\n\t 1st 3 IDs:\n\t" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[0] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[0] << "\n";
     std::cout << "\t" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[1] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[1] << "\n";
     std::cout << "\t" << ((uint64_t*)(std::get<0>(join256_result)->get_data()))[2] << ", " << ((uint64_t*)(std::get<1>(join256_result)->get_data()))[2] << "\n";
@@ -242,10 +246,10 @@ int main( void ) {
     if (ok!=0) return ok;
     else std::cout << "Sizes of scalar and 256 bit Joins are equal\n";
     
-    auto merge256_result=morphstore::merge_sorted<processing_style_t::vec256,uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
+    auto merge256_result=morphstore::merge_sorted<avx2<v256<uint64_t>>,uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
     std::cout << "256 bit Merge (union)\n\t 1st 3 IDs: " << ((uint64_t*)(merge256_result->get_data()))[0] << ", " << ((uint64_t*)(merge256_result->get_data()))[1] << ", " << ((uint64_t*)(merge256_result->get_data()))[2] <<  "\n\t Count: " << merge256_result->get_count_values() << "\n";
     
-    auto mergescalar_result=morphstore::merge_sorted<processing_style_t::scalar,uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
+    auto mergescalar_result=morphstore::merge_sorted<scalar<v64<uint64_t>>,uncompr_f,uncompr_f>(testDataColumnSorted,testDataColumnSorted2);
     std::cout << "Scalar Merge (union)\n\t 1st 3 IDs: " << ((uint64_t*)(mergescalar_result->get_data()))[0] << ", " << ((uint64_t*)(mergescalar_result->get_data()))[1] << ", " << ((uint64_t*)(mergescalar_result->get_data()))[2] <<  "\n\t Count: " << mergescalar_result->get_count_values() << "\n";
      
     ok = memcmp(merge256_result->get_data(),mergescalar_result->get_data(),mergescalar_result->get_count_values()*sizeof(uint64_t));
@@ -253,10 +257,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Merge are equal\n";
      
     
-    auto calcscalar_add_result=morphstore::calc_binary<std::plus, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calcscalar_add_result=morphstore::calc_binary<std::plus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_add_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_add_result->get_count_values() << "\n";
     
-    auto calc256_add_result=morphstore::calc_binary<std::plus, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_add_result=morphstore::calc_binary<std::plus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_add_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[2] <<  "\n\t Count: " << calc256_add_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_add_result->get_data(),calc256_add_result->get_data(),calc256_add_result->get_count_values()*sizeof(uint64_t));
@@ -264,10 +268,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Add are equal\n";
     
     //removed from test because scalar operator sometimes doesn't divide integers
-   /* auto calcscalar_div_result=morphstore::calc_binary<std::divides, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+   /* auto calcscalar_div_result=morphstore::calc_binary<std::divides, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_div_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_div_result->get_count_values() << "\n";
     
-    auto calc256_div_result=morphstore::calc_binary<std::divides, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_div_result=morphstore::calc_binary<std::divides, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_div_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[2] <<  "\n\t Count: " << calc256_div_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_div_result->get_data(),calc256_div_result->get_data(),calc256_div_result->get_count_values()*sizeof(uint64_t));
@@ -275,10 +279,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Div are equal\n";*/
     
    
-    auto calcscalar_mult_result=morphstore::calc_binary<std::multiplies, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calcscalar_mult_result=morphstore::calc_binary<std::multiplies, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mult_result->get_count_values() << "\n";
     
-    auto calc256_mult_result=morphstore::calc_binary<std::multiplies, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_mult_result=morphstore::calc_binary<std::multiplies, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[2] <<  "\n\t Count: " << calc256_mult_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_mult_result->get_data(),calc256_mult_result->get_data(),calc256_mult_result->get_count_values()*sizeof(uint64_t));
@@ -287,10 +291,10 @@ int main( void ) {
 
     
     
-     auto calcscalar_mod_result=morphstore::calc_binary<std::modulus, processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
+     auto calcscalar_mod_result=morphstore::calc_binary<std::modulus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
     std::cout << "Scalar calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mod_result->get_count_values() << "\n";
     
-    auto calc256_mod_result=morphstore::calc_binary<std::modulus, processing_style_t::vec256, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
+    auto calc256_mod_result=morphstore::calc_binary<std::modulus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
     std::cout << "256 bit calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[2] <<  "\n\t Count: " << calc256_mod_result->get_count_values() << "\n";
     
     

@@ -30,13 +30,12 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <cstdint>
 
 namespace morphstore {
 
-template<processing_style_t t_ps, class t_in_data_f>
+template<class t_vector_extension, class t_in_data_f>
 const column<uncompr_f> *
 agg_sum(
         const column<t_in_data_f> * const inDataCol

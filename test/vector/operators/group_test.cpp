@@ -96,7 +96,7 @@ int main( void ) {
       "GroupExt"
    );
    return 0;
-   std::tie(outGrColScalar1, outExtColScalar1) = group<processing_style_t::scalar, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nGenerating..." << std::flush;
 
    testDataColumnSorted = generate_with_distr(
@@ -121,7 +121,7 @@ int main( void ) {
       >
       >::apply(testDataColumnSorted, TEST_DATA_COUNT);
    std::cout << "Done\nScalar..." << std::flush;
-   std::tie(outGrColScalar2, outExtColScalar2) = group<processing_style_t::scalar, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrColScalar2, outExtColScalar2) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\n" << std::flush;
 
 

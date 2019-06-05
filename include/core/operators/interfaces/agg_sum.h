@@ -28,7 +28,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
     
@@ -46,7 +45,7 @@ namespace morphstore {
  * a single value would not make much sense.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_in_data_f
 >
 const column<uncompr_f> *
@@ -81,7 +80,7 @@ agg_sum(
  * equals i.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_gr_f,
         class t_in_data_f

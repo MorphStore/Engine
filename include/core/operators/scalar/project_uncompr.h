@@ -30,7 +30,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 
@@ -38,7 +38,7 @@ namespace morphstore {
     
 template<>
 struct project_t<
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

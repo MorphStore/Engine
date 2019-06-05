@@ -30,7 +30,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <tuple>
@@ -42,7 +42,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<processing_style_t::scalar>(
+nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -54,7 +54,7 @@ nested_loop_join<processing_style_t::scalar>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                processing_style_t::scalar,
+                vector::scalar<vector::v64<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(
@@ -99,7 +99,7 @@ nested_loop_join<processing_style_t::scalar>(
 
 template<>
 const column<uncompr_f> *
-left_semi_nto1_nested_loop_join<processing_style_t::scalar>(
+left_semi_nto1_nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate

@@ -26,7 +26,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <cstdint>
 
@@ -38,7 +37,7 @@ namespace morphstore {
  */
 template<
         template<typename> class t_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_f,
         class t_in_data_f
 >

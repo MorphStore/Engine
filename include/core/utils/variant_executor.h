@@ -42,8 +42,8 @@
 #include <core/utils/monitoring.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/printing.h>
-#include <core/utils/processing_style.h>
 #include <core/utils/variadic.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -186,7 +186,7 @@ namespace morphstore {
                                         STATIC_ASSERT_PARAMPACK_SAMESIZE(t_Idxs, t_uncompr_out_fs)
                                         return {
                                             // @todo Do not hardcode the processing style.
-                                            morph<processing_style_t::scalar, uncompr_f>(
+                                            morph<vector::scalar<vector::v64<uint64_t>>, uncompr_f>(
                                                     std::get<t_Idxs>(p_Cols) ...
                                             )
                                         };

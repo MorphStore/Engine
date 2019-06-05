@@ -31,7 +31,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -41,7 +41,7 @@ namespace morphstore {
 template<template<typename> class t_unary_op>
 struct calc_unary<
         t_unary_op,
-        processing_style_t::scalar,
+        vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f
 > {
@@ -69,7 +69,7 @@ struct calc_unary<
     
 template<template<typename> class t_binary_op>
 struct calc_binary<
-        t_binary_op, processing_style_t::scalar,
+        t_binary_op, vector::scalar<vector::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

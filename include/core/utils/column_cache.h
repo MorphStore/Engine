@@ -29,8 +29,8 @@
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
 #include <core/storage/column.h>
-#include <core/utils/processing_style.h>
 #include <core/utils/preprocessor.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <iostream>
 #include <typeindex>
@@ -101,7 +101,7 @@ namespace morphstore {
                 formatMap.emplace(
                         formatKey,
                         new column_wrapper<t_format>(
-                                morph<processing_style_t::scalar, t_format>(
+                                morph<vector::scalar<vector::v64<uint64_t>>, t_format>(
                                         p_Col
                                 )
                         )
