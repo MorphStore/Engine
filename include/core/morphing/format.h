@@ -18,7 +18,6 @@
 /**
  * @file format.h
  * @brief Brief description
- * @todo TODOS?
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_FORMAT_H
@@ -59,6 +58,13 @@ struct uncompr_f : public format {
 
 template<class t_format>
 class read_iterator;
+
+template<
+        class t_vector_extension,
+        class t_format,
+        template<class /*t_vector_extension*/> class t_op_processing_unit
+>
+class decompress_and_process_batch;
 
 }
 #endif //MORPHSTORE_CORE_MORPHING_FORMAT_H
