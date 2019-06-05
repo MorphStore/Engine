@@ -668,13 +668,13 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_bw,
             unsigned t_step,
-            class t_op_processing_unit
+            template<class /*t_vector_extension*/> class t_op_processing_unit
     >
     struct unpack_and_process_t {
         static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
-                typename t_op_processing_unit::state_t & opState
+                typename t_op_processing_unit<t_vector_extension>::state_t & opState
         ) = delete;
     };
     
@@ -683,12 +683,12 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_bw,
             unsigned t_step,
-            class t_op_processing_unit
+            template<class /*t_vector_extension*/> class t_op_processing_unit
     >
     MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process(
             const uint8_t * & in8,
             size_t countIn8,
-            typename t_op_processing_unit::state_t & opState
+            typename t_op_processing_unit<t_vector_extension>::state_t & opState
     ) {
         unpack_and_process_t<t_vector_extension, t_bw, t_step, t_op_processing_unit>::apply(
                 in8, countIn8, opState
@@ -700,7 +700,7 @@ namespace morphstore {
     // Template specializations.
     // ------------------------------------------------------------------------
     
-    template<unsigned t_bw, class t_op_processing_unit>
+    template<unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
     class unpack_and_process_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1, t_op_processing_unit> {
         static const size_t countBits = std::numeric_limits<uint64_t>::digits;
         static const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
@@ -721,7 +721,10 @@ namespace morphstore {
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s, typename t_op_processing_unit::state_t & opState) {
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(
+                state_t & s,
+                typename t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::state_t & opState
+        ) {
             if(t_CycleLen > 1) {
                 process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
                 process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
@@ -737,7 +740,7 @@ namespace morphstore {
                     s.nextOut = mask & ((s.tmp << (countBits - s.bitpos + t_bw)) | s.nextOut);
                     s.bitpos = s.bitpos - countBits;
                 }
-                t_op_processing_unit::apply(s.nextOut, opState);
+                t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::apply(s.nextOut, opState);
                 s.nextOut = mask & (s.tmp >> s.bitpos);
                 s.bitpos += t_bw;
             }
@@ -747,7 +750,7 @@ namespace morphstore {
         static void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
-                typename t_op_processing_unit::state_t & opState
+                typename t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::state_t & opState
         ) {
             const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
             const uint64_t * const endIn64 = in64 + convert_size<uint8_t, uint64_t>(countIn8);
@@ -764,13 +767,13 @@ namespace morphstore {
     template<
             class t_vector_extension,
             unsigned t_step,
-            class t_op_processing_unit
+            template<class /*t_vector_extension*/> class t_op_processing_unit
     >
     MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             size_t countIn8,
-            typename t_op_processing_unit::state_t & opState
+            typename t_op_processing_unit<t_vector_extension>::state_t & opState
     ) {
         switch(bitwidth) {
             // Generated with Python:
