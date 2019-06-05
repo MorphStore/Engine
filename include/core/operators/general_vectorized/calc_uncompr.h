@@ -109,9 +109,9 @@ template<class VectorExtension, int Granularity, template< class, int > class Op
 struct calc_binary_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
-         base_t const * p_Data1Ptr,
-         base_t const * p_Data2Ptr,
-         base_t * p_OutPtr,
+         base_t const *& p_Data1Ptr,
+         base_t const *& p_Data2Ptr,
+         base_t *& p_OutPtr,
          size_t const p_Count
       ) {
           

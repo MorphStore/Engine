@@ -35,9 +35,9 @@ namespace morphstore {
    struct project_t_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
-         base_t const * p_DataPtr,
-         base_t const * p_PosPtr,
-         base_t * p_OutPtr,
+         base_t const *& p_DataPtr,
+         base_t const *& p_PosPtr,
+         base_t *& p_OutPtr,
          size_t const p_Count
       ) {
          for(size_t i = 0; i < p_Count; ++i) {
@@ -67,7 +67,7 @@ namespace morphstore {
          size_t const inUsedBytes = p_PosColumn->get_size_used_byte();
          size_t const vectorCount = inPosCount / vector_element_count::value;
          size_t const remainderCount = inPosCount % vector_element_count::value;
-         base_t const * const inDataPtr = p_DataColumn->get_data( );
+         base_t const * inDataPtr = p_DataColumn->get_data( );
          base_t const * inPosPtr = p_PosColumn->get_data( );
          auto outDataCol = new column<uncompr_f>(inUsedBytes);
          base_t * outDataPtr = outDataCol->get_data( );

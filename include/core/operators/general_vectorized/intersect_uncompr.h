@@ -48,7 +48,7 @@ using namespace vector;
       ) {
          vector_mask_t resultMaskEqual    = 0;
          
-            resultMaskEqual         = vector::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
+            resultMaskEqual      = vector::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
             p_State.m_MaskLess   = vector::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
             
       
@@ -61,8 +61,8 @@ using namespace vector;
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
     
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t apply(
-         base_t  * p_Data1Ptr,//left
-         base_t  * p_Data2Ptr,//right
+         base_t  const * p_Data1Ptr,//left
+         base_t  const * p_Data2Ptr,//right
          base_t       * p_OutPtr,
          size_t const    p_CountData1,
          size_t const    p_CountData2,
@@ -123,8 +123,8 @@ using namespace vector;
          p_State.m_doneLeft = p_Data1Ptr-Data1Ptr_start;
          p_State.m_doneRight = p_Data2Ptr-Data2Ptr_start;
          
-         if ((p_State.m_MaskLess) != 0) p_State.m_doneRight-=__builtin_popcount(p_State.m_MaskLess);
-         if ((p_State.m_MaskLess) != full_hit) p_State.m_doneLeft--;
+        // if ((p_State.m_MaskLess) != 0) p_State.m_doneRight-=__builtin_popcount(p_State.m_MaskLess);
+        // if ((p_State.m_MaskLess) != full_hit) p_State.m_doneLeft--;
          return (p_OutPtr-out_init);
       }
    };
@@ -143,8 +143,8 @@ using namespace vector;
          const size_t inData2Count = p_Data2Column->get_count_values();
          //assert(inData1Count == p_Data2Column->get_count_values());
 
-         base_t  * inData1Ptr = p_Data1Column->get_data( );
-         base_t  * inData2Ptr = p_Data2Column->get_data( );
+         base_t  const * inData1Ptr = p_Data1Column->get_data( );
+         base_t  const * inData2Ptr = p_Data2Column->get_data( );
 
          size_t const sizeByte =
             bool(p_OutPosCountEstimate)
@@ -166,8 +166,8 @@ using namespace vector;
 
          size_t const Count2 = inData2Count-vector_element_count::value;
          
-         
-         int vec_count=intersect_sorted_batch<VectorExtension>::apply(inData1Ptr, inData2Ptr, outDataPtr, Count1, Count2,vectorState);
+         int vec_count=0;
+         vec_count=intersect_sorted_batch<VectorExtension>::apply(inData1Ptr, inData2Ptr, outDataPtr, Count1, Count2,vectorState);
                   
          int scalar_count=0;
 
