@@ -185,10 +185,10 @@ namespace morphstore {
                                     ) {
                                         STATIC_ASSERT_PARAMPACK_SAMESIZE(t_Idxs, t_uncompr_out_fs)
                                         return {
-                                            // @todo Do not hardcode the processing style.
+                                            // @todo Do not hardcode the vector extension.
                                             morph<vector::scalar<vector::v64<uint64_t>>, uncompr_f>(
-                                                    std::get<t_Idxs>(p_Cols) ...
-                                            )
+                                                    std::get<t_Idxs>(p_Cols)
+                                            ) ...
                                         };
                                     }
 
