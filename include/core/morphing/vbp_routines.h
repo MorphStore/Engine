@@ -651,6 +651,196 @@ namespace morphstore {
             case 64: unpack<t_ps, 64, t_step>(in8, out8, outCount64); break;
         }
     }
+    
+    
+    
+    // ************************************************************************
+    // Routines for unpacking and processing
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Interfaces
+    // ------------------------------------------------------------------------
+    
+    // Struct for partial template specialization.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step,
+            class t_op_processing_unit
+    >
+    struct unpack_and_process_t {
+        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_processing_unit::state_t & opState
+        ) = delete;
+    };
+    
+    // Convenience function.
+    template<
+            processing_style_t t_ps,
+            unsigned t_bw,
+            unsigned t_step,
+            class t_op_processing_unit
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process(
+            const uint8_t * & in8,
+            size_t countIn8,
+            typename t_op_processing_unit::state_t & opState
+    ) {
+        unpack_and_process_t<t_ps, t_bw, t_step, t_op_processing_unit>::apply(
+                in8, countIn8, opState
+        );
+    }
+    
+    
+    // ------------------------------------------------------------------------
+    // Template specializations.
+    // ------------------------------------------------------------------------
+    
+    template<unsigned t_bw, class t_op_processing_unit>
+    class unpack_and_process_t<processing_style_t::scalar, t_bw, 1, t_op_processing_unit> {
+        static const size_t countBits = std::numeric_limits<uint64_t>::digits;
+        static const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
+        
+        struct state_t {
+            const uint64_t * in64;
+            uint64_t nextOut;
+            unsigned bitpos;
+            uint64_t tmp;
+            
+            state_t(const uint64_t * p_In64) {
+                in64 = p_In64;
+                nextOut = 0;
+                // @todo maybe we don't need this
+                bitpos = 0;
+                tmp = 0;
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s, typename t_op_processing_unit::state_t & opState) {
+            if(t_CycleLen > 1) {
+                process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
+                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = *(s.in64)++;
+                    s.nextOut = mask & s.tmp;
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = *(s.in64)++;
+                    s.nextOut = mask & ((s.tmp << (countBits - s.bitpos + t_bw)) | s.nextOut);
+                    s.bitpos = s.bitpos - countBits;
+                }
+                t_op_processing_unit::apply(s.nextOut, opState);
+                s.nextOut = mask & (s.tmp >> s.bitpos);
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_processing_unit::state_t & opState
+        ) {
+            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
+            const uint64_t * const endIn64 = in64 + convert_size<uint8_t, uint64_t>(countIn8);
+            state_t s(in64);
+            while(s.in64 < endIn64)
+                process_block<countBits, 0>(s, opState);
+        }
+    };
+    
+    // ------------------------------------------------------------------------
+    // Selection of the right routine at run-time.
+    // ------------------------------------------------------------------------
+    
+    template<
+            processing_style_t t_ps,
+            unsigned t_step,
+            class t_op_processing_unit
+    >
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process_switch(
+            unsigned bitwidth,
+            const uint8_t * & in8,
+            size_t countIn8,
+            typename t_op_processing_unit::state_t & opState
+    ) {
+        switch(bitwidth) {
+            // Generated with Python:
+            // for bw in range(1, 64+1):
+            //   print("case {: >2}: unpack_and_process<t_ps, {: >2}, t_step, t_op_processing_unit>(in8, countIn8, opState); break;".format(bw, bw))
+            case  1: unpack_and_process<t_ps,  1, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  2: unpack_and_process<t_ps,  2, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  3: unpack_and_process<t_ps,  3, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  4: unpack_and_process<t_ps,  4, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  5: unpack_and_process<t_ps,  5, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  6: unpack_and_process<t_ps,  6, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  7: unpack_and_process<t_ps,  7, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  8: unpack_and_process<t_ps,  8, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case  9: unpack_and_process<t_ps,  9, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 10: unpack_and_process<t_ps, 10, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 11: unpack_and_process<t_ps, 11, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 12: unpack_and_process<t_ps, 12, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 13: unpack_and_process<t_ps, 13, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 14: unpack_and_process<t_ps, 14, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 15: unpack_and_process<t_ps, 15, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 16: unpack_and_process<t_ps, 16, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 17: unpack_and_process<t_ps, 17, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 18: unpack_and_process<t_ps, 18, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 19: unpack_and_process<t_ps, 19, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 20: unpack_and_process<t_ps, 20, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 21: unpack_and_process<t_ps, 21, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 22: unpack_and_process<t_ps, 22, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 23: unpack_and_process<t_ps, 23, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 24: unpack_and_process<t_ps, 24, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 25: unpack_and_process<t_ps, 25, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 26: unpack_and_process<t_ps, 26, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 27: unpack_and_process<t_ps, 27, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 28: unpack_and_process<t_ps, 28, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 29: unpack_and_process<t_ps, 29, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 30: unpack_and_process<t_ps, 30, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 31: unpack_and_process<t_ps, 31, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 32: unpack_and_process<t_ps, 32, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 33: unpack_and_process<t_ps, 33, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 34: unpack_and_process<t_ps, 34, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 35: unpack_and_process<t_ps, 35, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 36: unpack_and_process<t_ps, 36, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 37: unpack_and_process<t_ps, 37, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 38: unpack_and_process<t_ps, 38, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 39: unpack_and_process<t_ps, 39, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 40: unpack_and_process<t_ps, 40, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 41: unpack_and_process<t_ps, 41, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 42: unpack_and_process<t_ps, 42, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 43: unpack_and_process<t_ps, 43, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 44: unpack_and_process<t_ps, 44, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 45: unpack_and_process<t_ps, 45, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 46: unpack_and_process<t_ps, 46, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 47: unpack_and_process<t_ps, 47, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 48: unpack_and_process<t_ps, 48, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 49: unpack_and_process<t_ps, 49, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 50: unpack_and_process<t_ps, 50, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 51: unpack_and_process<t_ps, 51, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 52: unpack_and_process<t_ps, 52, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 53: unpack_and_process<t_ps, 53, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 54: unpack_and_process<t_ps, 54, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 55: unpack_and_process<t_ps, 55, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 56: unpack_and_process<t_ps, 56, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 57: unpack_and_process<t_ps, 57, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 58: unpack_and_process<t_ps, 58, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 59: unpack_and_process<t_ps, 59, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 60: unpack_and_process<t_ps, 60, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 61: unpack_and_process<t_ps, 61, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 62: unpack_and_process<t_ps, 62, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 63: unpack_and_process<t_ps, 63, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            case 64: unpack_and_process<t_ps, 64, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+        }
+    }
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
