@@ -163,7 +163,7 @@ namespace morphstore {
                                 template<class ... t_out_fs>
                                 struct return_type_helper {
                                     STATIC_ASSERT_PARAMPACK_SAMESIZE(t_out_fs, t_uncompr_out_fs)
-                                    using return_t = std::tuple<const column<t_out_fs> * ...>;
+                                    using return_t = const std::tuple<const column<t_out_fs> * ...>;
                                 };
 
                                 template<class t_single_out_f>
