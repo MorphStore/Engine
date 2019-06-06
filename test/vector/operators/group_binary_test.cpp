@@ -99,7 +99,7 @@ int main( void ) {
             scalar_key_vectorized_linear_search,
             60
          >
-      >::apply(testDataColumnSorted1, TEST_DATA_COUNT);
+      >(testDataColumnSorted1, TEST_DATA_COUNT);
 
 
 //   std::cout << "Vec Result:\n";
@@ -120,7 +120,7 @@ int main( void ) {
             scalar_key_vectorized_linear_search,
             60
          >
-      >::apply(outGrColTmp, testDataColumnSorted2, TEST_DATA_COUNT);
+      >(outGrColTmp, testDataColumnSorted2, TEST_DATA_COUNT);
 
 //   std::cout << "Vec Result:\n";
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted2, outGrColTmp, outGrCol, outExtCol, "Input Data", "Input GroupIds", "Result GroupIds", "Result GroupEx");

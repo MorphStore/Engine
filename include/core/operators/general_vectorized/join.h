@@ -95,7 +95,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct semi_join {
+   struct semi_join_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
       static
@@ -221,7 +221,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct equi_join {
+   struct equi_join_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
       static
@@ -283,6 +283,29 @@ namespace morphstore {
       }
    };
 
-
+    template<class Format, class VectorExtension, class DataStructure>
+    static
+      const std::tuple<
+         const column<uncompr_f> *,
+         const column<uncompr_f> *
+      >
+    equi_join(           
+         column< Format > const * const p_InDataLCol,
+         column< Format > const * const p_InDataRCol,
+         size_t const outCountEstimate = 0
+      ) {
+        return equi_join_t<Format,VectorExtension,DataStructure>::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
+    }
+    
+    template<class Format, class VectorExtension, class DataStructure>
+   static
+      const column<Format> *
+    semi_join(           
+         column< Format > const * const p_InDataLCol,
+         column< Format > const * const p_InDataRCol
+         
+      ) {
+        return semi_join_t<Format,VectorExtension,DataStructure>::apply(p_InDataLCol,p_InDataRCol);
+    }
 }
 #endif //MORPHSTORE_JOIN_H

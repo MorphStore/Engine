@@ -70,7 +70,7 @@ int main( void ) {
             scalar_key_vectorized_linear_search,
             60
          >
-      >::apply(col1, col2);
+      >(col1, col2);
 
    print_columns(
       print_buffer_base::decimal,

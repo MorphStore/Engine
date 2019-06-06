@@ -130,7 +130,7 @@ using namespace vector;
    };
 
    template<class VectorExtension>
-   struct intersect_sorted {
+   struct intersect_sorted_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -178,7 +178,16 @@ using namespace vector;
          return outDataCol;
       }
    };
-
+   
+    template<class VectorExtension>
+    column<uncompr_f> const * intersect_sorted(
+         column< uncompr_f > const * const p_Data1Column,
+         column< uncompr_f > const * const p_Data2Column,
+         const size_t p_OutPosCountEstimate = 0
+      ) {
+        
+        return intersect_sorted_t<VectorExtension>::apply(p_Data1Column,p_Data2Column,p_OutPosCountEstimate);
+    }
 
 }
 
