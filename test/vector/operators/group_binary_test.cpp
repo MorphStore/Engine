@@ -26,13 +26,14 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
+/*
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
-#include <vector/datastructures/hash_based/hash_binary_key_map.h>
+#include <vector/datastructures/hash_based/hash_binary_key_map.h>*/
 #include <core/operators/general_vectorized/group.h>
 
-#include <vector/complex/hash.h>
+//#include <vector/complex/hash.h>
 
 
 #include <core/memory/mm_glob.h>
@@ -90,15 +91,10 @@ int main( void ) {
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted1, outGrColScalar, outExtColScalar, "Input", "GroupIds", "GroupEx");
    std::tie(outGrColTmp, outExtCol) =
       group1<
-         uncompr_f,
          sse<v128<uint64_t>>,
-         hash_map<
-            avx2<v256<uint64_t>>,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60
-         >
+           uncompr_f,
+           uncompr_f,
+           uncompr_f
       >(testDataColumnSorted1, TEST_DATA_COUNT);
 
 
@@ -111,16 +107,12 @@ int main( void ) {
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted2, outGrColScalarTmp, outGrColScalar, outExtColScalar, "Input Data", "Input GroupIds", "Result GroupIds", "Result GroupEx");
    std::tie(outGrCol, outExtCol) =
       group1<
-         uncompr_f,
          avx2<v256<uint64_t>>,
-         hash_binary_key_map<
-            avx2<v256<uint64_t>>,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60
-         >
-      >(outGrColTmp, testDataColumnSorted2, TEST_DATA_COUNT);
+           uncompr_f,
+           uncompr_f,
+           uncompr_f
+        >
+      (outGrColTmp, testDataColumnSorted2, TEST_DATA_COUNT);
 
 //   std::cout << "Vec Result:\n";
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted2, outGrColTmp, outGrCol, outExtCol, "Input Data", "Input GroupIds", "Result GroupIds", "Result GroupEx");

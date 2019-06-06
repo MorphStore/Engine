@@ -28,6 +28,7 @@
 #include <vector/primitives/compare.h>
 #include <vector/primitives/manipulate.h>
 #include <core/utils/preprocessor.h>
+#include <core/operators/interfaces/merge.h>
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
@@ -238,7 +239,7 @@ using namespace vector;
       }
    };
    
-    template<class VectorExtension>
+    template<class VectorExtension, class t_out_pos_f, class t_in_pos_l_f, class t_in_pos_r_f>
     column<uncompr_f> const * merge_sorted(
          column< uncompr_f > const * const p_Data1Column,
          column< uncompr_f > const * const p_Data2Column,

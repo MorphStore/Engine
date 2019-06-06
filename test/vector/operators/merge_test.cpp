@@ -43,8 +43,8 @@ int main( void ) {
 
 
 
-   auto result1 = merge_sorted<sse<v128<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
-   auto result = merge_sorted<avx2<v256<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result1 = merge_sorted<sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result = merge_sorted<avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
    
 
    const bool allGood =

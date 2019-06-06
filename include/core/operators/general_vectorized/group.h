@@ -18,12 +18,22 @@
 #include <vector/scalar/primitives/create_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 
+
+#include <vector/datastructures/hash_based/hash_utils.h>
+#include <vector/datastructures/hash_based/hash_map.h>
+#include <vector/datastructures/hash_based/hash_binary_key_map.h>
+#include <vector/datastructures/hash_based/strategies/linear_probing.h>
+
+#include <vector/complex/hash.h>
+
+#include <core/operators/interfaces/group.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
 
 namespace morphstore {
-
+   using namespace vector;
    template<
       class VectorExtension,
       class DataStructure
@@ -111,7 +121,6 @@ namespace morphstore {
    };
 
    template<
-      class Format,
       class VectorExtension,
       class DataStructure
    >
@@ -240,7 +249,9 @@ namespace morphstore {
       }
    };
 
-   template<class Format, class VectorExtension, class DataStructure>
+   
+   
+   template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
    static
       const std::tuple<
          const column<uncompr_f> *,
@@ -249,11 +260,18 @@ namespace morphstore {
          column<uncompr_f> const * const  p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
-       return group1_t<Format,VectorExtension,DataStructure>::apply(p_InDataCol,outCountEstimate);
+       return group1_t<VectorExtension, 
+                hash_map<
+                avx2<v256<uint64_t>>,
+                multiply_mod_hash,
+                size_policy_hash::EXPONENTIAL,
+                scalar_key_vectorized_linear_search,
+                60>
+                >::apply(p_InDataCol,outCountEstimate);
       }
      
 
-      template<class Format, class VectorExtension, class DataStructure>
+      template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
    static
       const std::tuple<
          const column<uncompr_f> *,
@@ -263,7 +281,13 @@ namespace morphstore {
          column<uncompr_f> const * const p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
-       return group1_t<Format,VectorExtension,DataStructure>::apply(p_InGrCol,p_InDataCol,outCountEstimate);
+       return group1_t<VectorExtension, hash_binary_key_map<
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::EXPONENTIAL,
+            scalar_key_vectorized_linear_search,
+            60>
+            >::apply(p_InGrCol,p_InDataCol,outCountEstimate);
       }
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H

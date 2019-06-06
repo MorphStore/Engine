@@ -58,7 +58,7 @@ struct select<t_op, vector::scalar<vector::v64<uint64_t>>, uncompr_f, uncompr_f>
                 : inDataCol->get_size_used_byte()
         );
         
-                t_op<uint64_t> op;
+        t_op<uint64_t> op;
         uint64_t * outPos = outPosCol->get_data();
         const uint64_t * const initOutPos = outPos;
 

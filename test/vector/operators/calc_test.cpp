@@ -40,16 +40,16 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   auto result = compare_binary<avx2<v256<uint64_t>>, 64,equal>( testDataColumnSorted, testDataColumnSorted2 );
-   auto result1 = compare_binary<sse<v128<uint64_t>>, 64,equal>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result = compare_binary<equal, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result1 = compare_binary<equal, sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
 
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT/8));
 
    if (allGood!=0) return allGood;
    
-   auto result2 = calc_binary<avx2<v256<uint64_t>>, 64,add>( testDataColumnSorted, testDataColumnSorted2 );
-   auto result3 = calc_binary<sse<v128<uint64_t>>, 64,add>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result2 = calc_binary<add, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result3 = calc_binary<add, sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
    
    const bool allGood2 =
       memcmp(result2->get_data(),result3->get_data(),TEST_DATA_COUNT*8);

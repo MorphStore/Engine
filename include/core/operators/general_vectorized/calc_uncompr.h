@@ -11,6 +11,7 @@
 #include <vector/primitives/compare.h>
 #include <vector/primitives/calc.h>
 #include <core/utils/preprocessor.h>
+
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
@@ -136,7 +137,7 @@ struct calc_binary_batch {
       }
    };
 
-template<class VectorExtension, int Granularity, template< class, int > class Operator>
+template<class VectorExtension, template< class, int > class Operator>
 struct calc_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
@@ -164,8 +165,8 @@ struct calc_binary_t {
          size_t const vectorCount = inData1Count / vector_element_count::value;
          size_t const remainderCount = inData1Count % vector_element_count::value;
 
-         calc_binary_batch<VectorExtension,64,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, vectorCount);
-         calc_binary_batch<scalar<v64<uint64_t>>,64,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, remainderCount);
+         calc_binary_batch<VectorExtension,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, vectorCount);
+         calc_binary_batch<scalar<v64<uint64_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, remainderCount);
 
          outDataCol->set_meta_data(inData1Count, sizeByte);
 
@@ -173,13 +174,13 @@ struct calc_binary_t {
       }
    };
    
-   template<class VectorExtension, int Granularity, template< class, int > class Operator>
+    template<template<class,int> class t_binary_op, class VectorExtension, class t_out_data_f, class t_in_data_l_f, class t_in_data_r_f>
     column<uncompr_f> const *
-   calc_binary(  column< uncompr_f > const * const p_Data1Column,
+    calc_binary(  column< uncompr_f > const * const p_Data1Column,
          column< uncompr_f > const * const p_Data2Column,
          const size_t p_OutPosCountEstimate = 0){
-       return calc_binary_t< VectorExtension,  Granularity,  Operator>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
-   }
+            return calc_binary_t< VectorExtension,  t_binary_op>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+    }
    
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
    struct compare_binary_processing_unit {
@@ -234,7 +235,7 @@ struct compare_binary_batch {
       }
    };
 
-template<class VectorExtension, int Granularity, template< class, int > class Operator>
+template<class VectorExtension, template< class, int > class Operator>
 struct compare_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
@@ -262,8 +263,8 @@ struct compare_binary_t {
          size_t const vectorCount = inData1Count / vector_element_count::value;
          size_t const remainderCount = inData1Count % vector_element_count::value;
 
-         compare_binary_batch<VectorExtension,64,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *)outDataPtr, vectorCount);
-         compare_binary_batch<scalar<v64<uint64_t>>,64,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
+         compare_binary_batch<VectorExtension,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *)outDataPtr, vectorCount);
+         compare_binary_batch<scalar<v64<uint64_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
 
          outDataCol->set_meta_data(inData1Count/sizeof(base_t), sizeByte);
 
@@ -271,12 +272,12 @@ struct compare_binary_t {
       }
    };
    
-    template<class VectorExtension, int Granularity, template< class, int > class Operator>
+    template<template<class,int> class t_binary_op, class VectorExtension, class t_out_data_f, class t_in_data_l_f, class t_in_data_r_f>
     column<uncompr_f> const *
     compare_binary(  column< uncompr_f > const * const p_Data1Column,
          column< uncompr_f > const * const p_Data2Column,
          const size_t p_OutPosCountEstimate = 0){
-       return compare_binary_t< VectorExtension,  Granularity,  Operator>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+       return compare_binary_t< VectorExtension, t_binary_op>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
    }
 
 

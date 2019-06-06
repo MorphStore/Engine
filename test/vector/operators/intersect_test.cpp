@@ -43,8 +43,8 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   auto result = intersect_sorted<avx2<v256<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
-   auto result1 = intersect_sorted<sse<v128<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result = intersect_sorted<avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result1 = intersect_sorted<sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>( testDataColumnSorted, testDataColumnSorted2 );
 
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8) || !(result->get_count_values()==result1->get_count_values());

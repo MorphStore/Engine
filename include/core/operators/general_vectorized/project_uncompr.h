@@ -80,12 +80,12 @@ namespace morphstore {
       }
    };
 
-    template<class VectorExtension>
+    template<class t_vector_extension, class t_out_data_f, class t_in_data_f, class t_in_pos_f>
     column<uncompr_f> const * project(
          column< uncompr_f > const * const p_Data1Column,
          column< uncompr_f > const * const p_Data2Column
       ){
-        return project_t<VectorExtension>::apply(p_Data1Column,p_Data2Column);
+        return project_t<t_vector_extension>::apply(p_Data1Column,p_Data2Column);
     }
 
 }

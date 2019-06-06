@@ -18,12 +18,18 @@
 #include <vector/scalar/primitives/create_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 
+#include <vector/datastructures/hash_based/strategies/linear_probing.h>
+#include <vector/datastructures/hash_based/hash_utils.h>
+#include <vector/datastructures/hash_based/hash_map.h>
+#include <vector/datastructures/hash_based/hash_set.h>
+#include <vector/complex/hash.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
 
 namespace morphstore {
-
+    using namespace vector;
 
    template<
       class VectorExtension,
@@ -283,7 +289,7 @@ namespace morphstore {
       }
    };
 
-    template<class Format, class VectorExtension, class DataStructure>
+    template<class Format, class VectorExtension>
     static
       const std::tuple<
          const column<uncompr_f> *,
@@ -294,10 +300,16 @@ namespace morphstore {
          column< Format > const * const p_InDataRCol,
          size_t const outCountEstimate = 0
       ) {
-        return equi_join_t<Format,VectorExtension,DataStructure>::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
+        return equi_join_t<Format,VectorExtension, hash_map<
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::EXPONENTIAL,
+            scalar_key_vectorized_linear_search,
+            60>
+         >::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
     }
     
-    template<class Format, class VectorExtension, class DataStructure>
+    template<class Format, class VectorExtension>
    static
       const column<Format> *
     semi_join(           
@@ -305,7 +317,13 @@ namespace morphstore {
          column< Format > const * const p_InDataRCol
          
       ) {
-        return semi_join_t<Format,VectorExtension,DataStructure>::apply(p_InDataLCol,p_InDataRCol);
+        return semi_join_t<Format,VectorExtension,hash_set<
+            avx2<v256<uint64_t>>,
+            multiply_mod_hash,
+            size_policy_hash::ARBITRARY,
+            scalar_key_vectorized_linear_search,
+            60>
+         >::apply(p_InDataLCol,p_InDataRCol);
     }
 }
 #endif //MORPHSTORE_JOIN_H

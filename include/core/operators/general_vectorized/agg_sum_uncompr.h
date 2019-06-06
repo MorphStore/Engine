@@ -10,6 +10,7 @@
 #include <vector/primitives/io.h>
 #include <vector/primitives/create.h>
 #include <core/utils/preprocessor.h>
+#include <core/operators/interfaces/agg_sum.h>
 
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
@@ -136,11 +137,12 @@ namespace morphstore {
    };
 
 
-   template<class t_vector_extension>
-    const column<uncompr_f> * agg_sum(column< uncompr_f > const * const p_DataColumn){
+   template<class t_vector_extension, class t_in_data_f>
+    const column<uncompr_f> * agg_sum(column< t_in_data_f > const * const p_DataColumn){
        return agg_sum_t<t_vector_extension>::apply(p_DataColumn);
    }
    
+ 
 }
 
 

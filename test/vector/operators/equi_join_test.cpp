@@ -26,12 +26,10 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
-#include <vector/datastructures/hash_based/strategies/linear_probing.h>
-#include <vector/datastructures/hash_based/hash_utils.h>
-#include <vector/datastructures/hash_based/hash_map.h>
+
 #include <core/operators/general_vectorized/join.h>
 
-#include <vector/complex/hash.h>
+
 
 
 #include <core/memory/mm_glob.h>
@@ -62,14 +60,8 @@ int main( void ) {
    std::tie(col3, col4) =
       equi_join<
          uncompr_f,
-         sse<v128<uint64_t>>,
-         hash_map<
-            avx2<v256<uint64_t>>,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60
-         >
+         sse<v128<uint64_t>>
+        
       >(col1, col2);
 
    print_columns(

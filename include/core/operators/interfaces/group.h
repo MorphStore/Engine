@@ -60,6 +60,7 @@ template<
         class t_out_gr_f,
         class t_out_ext_f,
         class t_in_data_f
+        
 >
 const std::tuple<
         const column<t_out_gr_f> *,

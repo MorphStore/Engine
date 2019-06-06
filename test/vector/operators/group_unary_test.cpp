@@ -26,13 +26,14 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
+
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
+
 #include <core/operators/general_vectorized/group.h>
 
 #include <vector/complex/hash.h>
-
 
 #include <core/memory/mm_glob.h>
 #include <core/morphing/format.h>
@@ -74,16 +75,12 @@ int main( void ) {
    std::cout << "Done\nVectorized..." << std::flush;
    std::tie(outGrCol1, outExtCol1) =
       group1<
-         uncompr_f,
          sse<v128<uint64_t>>,
-         hash_map<
-            avx2<v256<uint64_t>>,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60
+           uncompr_f,
+           uncompr_f,
+           uncompr_f
          >
-      >(testDataColumnSorted, TEST_DATA_COUNT);
+      (testDataColumnSorted, TEST_DATA_COUNT);
 
    std::cout << "Done\nScalar..." << std::flush;
    std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
@@ -100,16 +97,12 @@ int main( void ) {
    std::cout << "Done\nVectorized..." << std::flush;
    std::tie(outGrCol2, outExtCol2) =
       group1<
-         uncompr_f,
          avx2<v256<uint64_t>>,
-         hash_map<
-            avx2<v256<uint64_t>>,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60
+           uncompr_f,
+           uncompr_f,
+           uncompr_f
          >
-      >(testDataColumnSorted, TEST_DATA_COUNT);
+      (testDataColumnSorted, TEST_DATA_COUNT);
    std::cout << "Done\nScalar..." << std::flush;
    std::tie(outGrColScalar2, outExtColScalar2) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\n" << std::flush;
