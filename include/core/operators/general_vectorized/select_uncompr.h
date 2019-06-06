@@ -102,6 +102,15 @@ namespace morphstore {
       }
    };
 
+    template<class VectorExtension, template< class, int > class Operator>
+    column<uncompr_f> const * select(
+        column< uncompr_f > const * const p_DataColumn,
+         typename VectorExtension::vector_helper_t::base_t const p_Predicate,
+         const size_t outPosCountEstimate = 0
+      ){
+        return select_t<VectorExtension,Operator>::apply(p_DataColumn,p_Predicate,outPosCountEstimate);
+    }
+
 
 }
 

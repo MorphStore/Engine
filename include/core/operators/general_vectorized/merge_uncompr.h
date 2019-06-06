@@ -196,7 +196,7 @@ using namespace vector;
    };
 
    template<class VectorExtension>
-   struct merge_sorted {
+   struct merge_sorted_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -237,6 +237,15 @@ using namespace vector;
          return outDataCol;
       }
    };
+   
+    template<class VectorExtension>
+    column<uncompr_f> const * merge_sorted(
+         column< uncompr_f > const * const p_Data1Column,
+         column< uncompr_f > const * const p_Data2Column,
+         const size_t p_OutPosCountEstimate = 0
+      ){
+        return merge_sorted_t<VectorExtension>::apply(p_Data1Column,p_Data2Column,p_OutPosCountEstimate);
+    }
 
 
 }

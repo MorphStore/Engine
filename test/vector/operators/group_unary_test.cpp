@@ -83,7 +83,7 @@ int main( void ) {
             scalar_key_vectorized_linear_search,
             60
          >
-      >::apply(testDataColumnSorted, TEST_DATA_COUNT);
+      >(testDataColumnSorted, TEST_DATA_COUNT);
 
    std::cout << "Done\nScalar..." << std::flush;
    std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
@@ -109,7 +109,7 @@ int main( void ) {
             scalar_key_vectorized_linear_search,
             60
          >
-      >::apply(testDataColumnSorted, TEST_DATA_COUNT);
+      >(testDataColumnSorted, TEST_DATA_COUNT);
    std::cout << "Done\nScalar..." << std::flush;
    std::tie(outGrColScalar2, outExtColScalar2) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\n" << std::flush;

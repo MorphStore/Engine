@@ -137,7 +137,7 @@ struct calc_binary_batch {
    };
 
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
-struct calc_binary {
+struct calc_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -172,6 +172,14 @@ struct calc_binary {
          return outDataCol;
       }
    };
+   
+   template<class VectorExtension, int Granularity, template< class, int > class Operator>
+    column<uncompr_f> const *
+   calc_binary(  column< uncompr_f > const * const p_Data1Column,
+         column< uncompr_f > const * const p_Data2Column,
+         const size_t p_OutPosCountEstimate = 0){
+       return calc_binary_t< VectorExtension,  Granularity,  Operator>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+   }
    
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
    struct compare_binary_processing_unit {
@@ -227,7 +235,7 @@ struct compare_binary_batch {
    };
 
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
-struct compare_binary {
+struct compare_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -262,6 +270,14 @@ struct compare_binary {
          return outDataCol;
       }
    };
+   
+    template<class VectorExtension, int Granularity, template< class, int > class Operator>
+    column<uncompr_f> const *
+    compare_binary(  column< uncompr_f > const * const p_Data1Column,
+         column< uncompr_f > const * const p_Data2Column,
+         const size_t p_OutPosCountEstimate = 0){
+       return compare_binary_t< VectorExtension,  Granularity,  Operator>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+   }
 
 
 }

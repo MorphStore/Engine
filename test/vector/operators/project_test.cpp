@@ -37,8 +37,8 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   auto result = project_t<avx2<v256<uint64_t>>>::apply( testDataColumnSorted, testDataColumnSorted2 );
-   auto result1 = project_t<sse<v128<uint64_t>>>::apply( testDataColumnSorted, testDataColumnSorted2 );
+   auto result = project<avx2<v256<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
+   auto result1 = project<sse<v128<uint64_t>>>( testDataColumnSorted, testDataColumnSorted2 );
 
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),(int)(TEST_DATA_COUNT*8)); //returns zero if all bytes match

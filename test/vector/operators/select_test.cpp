@@ -40,8 +40,8 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   auto result = select_t<avx2<v256<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
-   auto result1 = select_t<sse<v128<uint64_t>>, greater>::apply( testDataColumnSorted, 10 );
+   auto result = morphstore::select<avx2<v256<uint64_t>>, greater>( testDataColumnSorted, 10 );
+   auto result1 = morphstore::select<sse<v128<uint64_t>>, greater>( testDataColumnSorted, 10 );
 
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8);

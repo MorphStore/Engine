@@ -115,7 +115,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct group1 {
+   struct group1_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
       static
@@ -173,7 +173,8 @@ namespace morphstore {
          return std::make_tuple(outGrCol, outExtCol);
       }
 
-
+       
+      
       static
       const std::tuple<
          const column<uncompr_f> *,
@@ -239,6 +240,30 @@ namespace morphstore {
       }
    };
 
+   template<class Format, class VectorExtension, class DataStructure>
+   static
+      const std::tuple<
+         const column<uncompr_f> *,
+         const column<uncompr_f> *
+      > group1(
+         column<uncompr_f> const * const  p_InDataCol,
+         size_t const outCountEstimate = 0
+      ) {
+       return group1_t<Format,VectorExtension,DataStructure>::apply(p_InDataCol,outCountEstimate);
+      }
+     
 
+      template<class Format, class VectorExtension, class DataStructure>
+   static
+      const std::tuple<
+         const column<uncompr_f> *,
+         const column<uncompr_f> *
+      > group1(
+         column<uncompr_f> const * const p_InGrCol,
+         column<uncompr_f> const * const p_InDataCol,
+         size_t const outCountEstimate = 0
+      ) {
+       return group1_t<Format,VectorExtension,DataStructure>::apply(p_InGrCol,p_InDataCol,outCountEstimate);
+      }
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
