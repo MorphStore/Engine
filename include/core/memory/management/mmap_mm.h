@@ -48,8 +48,10 @@ class ChunkHeader;
 
 class AllocationStatus {
 public:
-    AllocationStatus(size_t alloc_size) : m_next(nullptr), m_totalRegions(0), m_info((StorageType::CONTINUOUS), alloc_size) {}
-    ChunkHeader* m_next;
+    AllocationStatus(size_t alloc_size) : m_next(nullptr), m_prev(nullptr), m_refcount(0), m_totalRegions(0), m_info((StorageType::CONTINUOUS), alloc_size) {}
+    void* m_next;
+    void* m_prev;
+    uint32_t m_refcount;
     uint64_t m_totalRegions;
     std::mutex m_sema;
     ObjectInfo m_info;
@@ -75,6 +77,7 @@ public:
     void initialize(StorageType type)
     {
         m_info.status.m_next = nullptr;
+        m_info.status.m_prev = nullptr;
         m_info.status.m_totalRegions = 0;
         m_info.status.m_info.type = (type);
         m_info.status.m_info.size = ALLOCATION_SIZE;
@@ -92,6 +95,27 @@ public:
     void reset()
     {
         vol_memset(bitmap, UNUSED, LINUX_PAGE_SIZE);
+    }
+
+
+    void* getNext()
+    {
+        return m_info.status.m_next;
+    }
+
+    void setNext(void* nextChunk)
+    {
+        m_info.status.m_next = nextChunk;
+    }
+
+    void* getPrev()
+    {
+        return m_info.status.m_prev;
+    }
+
+    void setPrev(void* prevChunk)
+    {
+        m_info.status.m_prev = prevChunk;
     }
 
     void setAllocated(void* address, size_t size)
@@ -138,13 +162,13 @@ public:
 
     void setDeallocated(void* address)
     {
-        dumpBitmap();
+        //dumpBitmap();
         uint64_t location_chunk = reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1);
         uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) - (location_chunk );
         location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
 
         // Calculate precise location in bitmap
-        trace("got location ", location_in_chunk, " for address ", address);
+        //trace("got location ", location_in_chunk, " for address ", address);
         uint64_t bit_offset = ALLOC_BITS * location_in_chunk;
         uint64_t word_aligned_pos_in_bitmap = bit_offset >> 6;
         uint64_t bit_offset_in_word = bit_offset & 0x3fl;
@@ -153,14 +177,16 @@ public:
         // Mask which starts with 1s at the first allocation bits
         volatile uint64_t* word_in_bitmap = reinterpret_cast<volatile uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
         (void) word_in_bitmap;
-        trace("bitmap: ", std::hex, getBitmapAddress(), ", this: ", this);
-        trace("got addr ", reinterpret_cast<uint64_t>(word_in_bitmap), " in bitmap ", std::hex, getBitmapAddress(), " with value ", *word_in_bitmap);
+        //trace("bitmap: ", std::hex, getBitmapAddress(), ", this: ", this);
+        //trace("got addr ", reinterpret_cast<uint64_t>(word_in_bitmap), " in bitmap ", std::hex, getBitmapAddress(), " with value ", *word_in_bitmap);
         
         // probe for start bits
         volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
         uint64_t start_offset = (bit_offset_in_word);
-        trace("start offset: ", start_offset, ", start word: ", std::hex, *start_word);
-        assert( (*start_word >> (62 - start_offset) & 0b11) == 0b10 );
+        //trace("start offset: ", start_offset, ", start word: ", std::hex, *start_word);
+
+        //if( (*start_word >> (62 - start_offset) & 0b11) != 0b10 )
+            //warn("Address on ", address, " was indicated as not have been allocated, word in allocation bitmap is ", std::hex, *start_word);
 
         //trace("*word is ", std::hex, *start_word);
         *start_word = *start_word & ~(0b11l << (62 - start_offset));
@@ -214,13 +240,11 @@ public:
         while (reinterpret_cast<uint64_t>(loc) < end_of_allocation_bitmap) {
             //First check if space is not full
             if (*loc < ~(0x4ul << 60)) {
-                ////trace( std::hex, *loc, " allocation map for 8 bytes on ", loc);
                 uint64_t bit_offset = ALLOC_BITS;
 
                 // check within one word
                 while (bit_offset <= 64) {
                     uint8_t bits = (*loc >> (64 - bit_offset)) & 0b11ul;
-                    ////trace( "Bits are ", std::hex, static_cast<uint32_t>(bits));
                     // space is available
                     if (bits == 0) {
                         bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
@@ -228,10 +252,8 @@ public:
                         //uint64_t bit_start = reinterpret_cast<char*>(loc) - bitmap + bit_offset;
                         ++continuousPageCounter;
                         if (continuousPageCounter >= slots_needed) {
-                            ////trace( "Returning blocks with offset ", bit_start/2, ", this ", this, " chunkheader ", std::hex, sizeof(ChunkHeader));
                             void* addr = reinterpret_cast<void*>(
                                     reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader) + DB_PAGE_SIZE * (bit_start / 2));
-                            ////trace( "Returning address ", addr);
                             assert(reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader) + ALLOCATION_SIZE > reinterpret_cast<uint64_t>(addr));
                             return addr; 
                         }
@@ -277,16 +299,11 @@ public:
         uint8_t i = startOffset;
         uint64_t state = 0;
 
-        // Start is marked directly at first two MSB
-        //if (startOffset == 0 && isStart)
-        //    return (~(0l) - (1l << 63));
-
         // TODO: optimize, dunno if compiler optimizes
         while (i <= 64 && count_blocks > 0) {
             state = state | ((i == startOffset && isStart ? 0b10ul : 0b11ul) << (64 - i));
             --count_blocks;
             i+=ALLOC_BITS; 
-            ////trace(std::hex, state);
         }
 
         return state;
@@ -315,6 +332,17 @@ public:
 };
 static_assert(sizeof(ChunkHeader) == 8192, "Code expects ChunkHeader to be two pages long, please refit solution in case that should not hold");
 
+ChunkHeader* getChunkHeader(void* address)
+{
+    return reinterpret_cast<ChunkHeader*>( (reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1)) - sizeof(ChunkHeader));
+}
+
+void* getChunkPointer(ChunkHeader* header)
+{
+    return reinterpret_cast<void*>(reinterpret_cast<uint64_t>(header) + sizeof(ChunkHeader));
+}
+
+
 const size_t HEAD_STRUCT = sizeof(ChunkHeader);
 const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
 
@@ -323,11 +351,6 @@ public:
     static mmap_memory_manager* m_Instance;
     static inline mmap_memory_manager& getInstance()
     {
-        /*if (m_Instance == nullptr) {
-            mmap_memory_manager* ptr = reinterpret_cast<mmap_memory_manager*>(
-                    mmap(nullptr, LINUX_PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
-            m_Instance = new (ptr) mmap_memory_manager();
-        }*/
         static mmap_memory_manager instance;
         return instance;
     }
@@ -338,17 +361,30 @@ public:
      */
     void* allocateContinuous()
     {
+        // first check if prealloced chunks are available
+        if (m_next_free_chunk != nullptr) {
+            void* res = m_next_free_chunk;
+            ChunkHeader* header = getChunkHeader(m_next_free_chunk);
+
+            m_next_free_chunk = header->getNext();
+            if (m_next_free_chunk != nullptr)
+                getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
+
+            // set back to init;
+            header->setNext(nullptr);
+
+            return res;
+        }
+
         // need at least 2*alloc_size-1 for guaranteed alignment
-        //trace("[MMAP_MM] Allocation of continuous chunk requested");
         const size_t mmap_alloc_size = 2 * ALLOCATION_SIZE + HEAD_STRUCT;
-        char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
+        char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_POPULATE | MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
         if (reinterpret_cast<void*>(given_ptr) == reinterpret_cast<void*>(~0l)) {
-            //std::cerr << "Out of memory..." << std::endl;
+            //Out of memory...
             return nullptr;
         }
         char* end_of_region = given_ptr + mmap_alloc_size;
 
-        // provide
         size_t offset_from_alignment = reinterpret_cast<size_t>(given_ptr) & (ALLOCATION_SIZE - 1);
         char* aligned_ptr = given_ptr;
         size_t unneeded_memory_start = 0;
@@ -358,7 +394,6 @@ public:
         if ( offset_from_alignment != IDEAL_OFFSET) {
             // align
             aligned_ptr = given_ptr - offset_from_alignment + ALLOCATION_SIZE;
-            //std::cout << "Assigning memory on " << reinterpret_cast<void*>(aligned_ptr) << "from given ptr " << reinterpret_cast<void*>(given_ptr) << " with " << std::hex << offset_from_alignment << std::endl;
             unneeded_memory_start = static_cast<size_t>(aligned_ptr - given_ptr - sizeof(ChunkHeader));
             unneeded_memory_end   = end_of_region - aligned_ptr - ALLOCATION_SIZE;
 
@@ -369,7 +404,6 @@ public:
         munmap(aligned_ptr + ALLOCATION_SIZE, unneeded_memory_end);
 
         assert(reinterpret_cast<void*>(aligned_ptr) != nullptr);
-        //std::cout << "Assigning memory on " << reinterpret_cast<void*>(aligned_ptr) << std::endl;
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>( aligned_ptr - sizeof(ChunkHeader) );
         header->initialize(StorageType::CONTINUOUS);
         // memset bitmap to initialize status
@@ -444,7 +478,7 @@ public:
 
     void* allocate(size_t size) override
     {
-        trace("Using allocate size=", size);
+        //trace("Using allocate size=", size);
         if (size > ALLOCATION_SIZE) {
             return allocateLarge(size);
         }
@@ -460,12 +494,27 @@ public:
     {
         uint64_t chunk_ptr = reinterpret_cast<uint64_t>(ptr) & ~(ALLOCATION_SIZE - 1);
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>( chunk_ptr - sizeof(ChunkHeader) );
-        //trace("deallocating ", ptr, " with header on ", header);
         header->setDeallocated(ptr);
         if (header->m_info.status.m_totalRegions == 0) {
             if (reinterpret_cast<void*>(chunk_ptr) == m_current_chunk)
                 m_current_chunk = nullptr;
             //munmap(header, sizeof(ChunkHeader) + ALLOCATION_SIZE);
+            if (m_next_free_chunk == nullptr) {
+                m_next_free_chunk = reinterpret_cast<void*>(chunk_ptr);
+                getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
+                getChunkHeader(m_next_free_chunk)->setNext(nullptr);
+            }
+            else {
+                ChunkHeader* header_iter = getChunkHeader(m_next_free_chunk);
+                while (header_iter->getNext() != nullptr) {
+                   header_iter = getChunkHeader(header_iter->getNext());
+                }
+
+                // append to list
+                header_iter->setNext(m_next_free_chunk);
+                getChunkHeader(m_next_free_chunk)->setPrev(getChunkPointer(header_iter));
+                getChunkHeader(m_next_free_chunk)->setNext(nullptr);
+            }
         }
     }
 
@@ -518,10 +567,11 @@ public:
     }
 
 private:
-    mmap_memory_manager() : m_current_chunk(nullptr) {}
+    mmap_memory_manager() : m_current_chunk(nullptr), m_next_free_chunk(nullptr) {}
 
     // used for direct allocation calls
     void* m_current_chunk;
+    void* m_next_free_chunk;
     std::mutex m_Mutex;
 
 };

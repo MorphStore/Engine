@@ -24,6 +24,8 @@
 #ifndef MORPHSTORE_MORPHSTORE_MM_H
 #define MORPHSTORE_MORPHSTORE_MM_H
 
+#define USE_MMAP_MM
+
 #include <core/utils/helper.h>
 #include <core/memory/management/utils/expand_helper.h>
 

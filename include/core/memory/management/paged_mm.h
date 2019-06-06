@@ -1,9 +1,9 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 
-#include <core/memory/global/mm_hooks.h>
+/*#include <core/memory/global/mm_hooks.h>
 #include <core/memory/management/allocators/global_scope_allocator.h>
-#include <core/utils/logger.h>
+#include <core/utils/logger.h>*/
 
 #include "core/memory/management/abstract_mm.h"
 #include "core/memory/management/mmap_mm.h"
@@ -46,8 +46,6 @@ public:
 
     void* allocate(size_t size)
     {
-        ////trace("Trying to allocate ", std::hex, size, " bytes in Page");
-        ////trace("Current offset ", std::hex, header.m_currOffset, " out of ", std::hex, PAGE_SIZE);
         if (size <= PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_sumOffset += header.m_currOffset;
@@ -67,7 +65,7 @@ public:
         //trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", offset calculated ", std::hex, offset);
 
         if (header.m_sumOffset == 0) {
-            trace( "Triggered deallocation on ", this, " due to address ", addr);
+            //trace( "Triggered deallocation on ", this, " due to address ", addr);
             //TODO: Fix bug after 0x7be deallocations
             mmap_memory_manager::getInstance().deallocate(this);
         }
@@ -84,11 +82,6 @@ public:
     static paged_memory_manager* global_manager;
     static paged_memory_manager& getGlobalInstance()
     {
-        /*if (global_manager == nullptr) {
-            paged_memory_manager* ptr = reinterpret_cast<paged_memory_manager*>(
-                    mmap(nullptr, LINUX_PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
-            global_manager = new (ptr) paged_memory_manager();
-        }*/
         static paged_memory_manager instance;
         return instance;
     }
