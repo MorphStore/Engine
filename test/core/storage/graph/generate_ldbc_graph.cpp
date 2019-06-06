@@ -35,8 +35,7 @@ int main( void ){
     morphstore::Graph socialGraph;
 
     // generate vertices & edges from LDBC files and insert into socialGraph
-    ldbcImport.generate_vertices(socialGraph);
-    ldbcImport.generate_edges(socialGraph);
+    ldbcImport.import(socialGraph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time

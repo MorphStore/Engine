@@ -66,6 +66,17 @@ namespace morphstore{
             return directory;
         }
 
+        // generate_vertices() + generate_edges()
+        void import(morphstore::Graph &graph){
+            std::cout << "Importing LDBC-files into graph ... ";
+            std::cout.flush();
+            // (1) generate vertices
+            generate_vertices(graph);
+            // (2) generate edges
+            generate_edges(graph);
+            std::cout << "--> done" << std::endl;
+        }
+
         // function which iterates through directory to receive file names (entire path)
         void insert_file_names(std::string dir){
             for (const auto & entry : std::experimental::filesystem::directory_iterator(dir)){
@@ -94,8 +105,8 @@ namespace morphstore{
         void generate_vertices(morphstore::Graph &graph){
 
             if(!verticesPaths.empty()) {
-                std::cout << "(1/2) Generating LDBC-Vertices ...";
-                std::cout.flush();
+                //std::cout << "(1/2) Generating LDBC-Vertices ...";
+                //std::cout.flush();
 
                 // iterate through vector of vertex-addresses
                 for (const auto &address : verticesPaths) {
@@ -185,7 +196,7 @@ namespace morphstore{
                     // insert entity into vector
                     entities.push_back(entity);
                 }
-                std::cout << " --> done" << std::endl;
+                //std::cout << " --> done" << std::endl;
             }
         }
 
@@ -203,8 +214,8 @@ namespace morphstore{
         void generate_edges(morphstore::Graph& graph){
 
             if(!relationsPaths.empty()) {
-                std::cout << "(2/2) Generating LDBC-Edges ...";
-                std::cout.flush();
+                //std::cout << "(2/2) Generating LDBC-Edges ...";
+                //std::cout.flush();
 
                 // iterate through vector of vertex-addresses
                 for (const auto &address : relationsPaths) {
@@ -346,7 +357,7 @@ namespace morphstore{
                     relationFile.close();
                 }
                 globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
-                std::cout << " --> done" << std::endl;
+                //std::cout << " --> done" << std::endl;
             }
         }
 
