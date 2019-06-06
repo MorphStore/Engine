@@ -72,6 +72,9 @@ void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void free(void *p_FreePtr) __THROW {
+    // standard semantics
+    if (p_FreePtr == nullptr)
+        return;
 #ifdef USE_MMAP_MM
    mm_free(p_FreePtr);
 #else
