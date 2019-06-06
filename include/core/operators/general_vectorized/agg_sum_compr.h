@@ -26,8 +26,8 @@
  * compression.
  */
 
-#ifndef AGG_SUM_COMPR_H
-#define AGG_SUM_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H
 
 #include <core/morphing/format.h>
 #include <core/operators/general_vectorized/agg_sum_uncompr.h>
@@ -66,5 +66,5 @@ namespace morphstore {
 
 }
 
-#endif /* AGG_SUM_COMPR_H */
+#endif /* MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H */
 
