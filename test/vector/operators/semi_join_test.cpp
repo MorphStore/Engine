@@ -29,7 +29,7 @@
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_set.h>
-#include <core/operators/general_vectorized/join.h>
+#include <core/operators/general_vectorized/join_uncompr.h>
 
 #include <vector/complex/hash.h>
 

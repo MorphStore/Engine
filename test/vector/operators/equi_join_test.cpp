@@ -27,7 +27,7 @@
 #include <vector/simd/sse/primitives/compare_sse.h>
 
 
-#include <core/operators/general_vectorized/join.h>
+#include <core/operators/general_vectorized/join_uncompr.h>
 
 
 

@@ -31,7 +31,7 @@
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
 #include <vector/datastructures/hash_based/hash_binary_key_map.h>*/
-#include <core/operators/general_vectorized/group.h>
+#include <core/operators/general_vectorized/group_uncompr.h>
 
 //#include <vector/complex/hash.h>
 
@@ -90,7 +90,7 @@ int main( void ) {
 //   std::cout << "Scalar Result:\n";
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted1, outGrColScalar, outExtColScalar, "Input", "GroupIds", "GroupEx");
    std::tie(outGrColTmp, outExtCol) =
-      group1<
+      group<
          sse<v128<uint64_t>>,
            uncompr_f,
            uncompr_f,
@@ -106,7 +106,7 @@ int main( void ) {
 //   std::cout << "Scalar Result:\n";
 //   print_columns(print_buffer_base::decimal, testDataColumnSorted2, outGrColScalarTmp, outGrColScalar, outExtColScalar, "Input Data", "Input GroupIds", "Result GroupIds", "Result GroupEx");
    std::tie(outGrCol, outExtCol) =
-      group1<
+      group<
          avx2<v256<uint64_t>>,
            uncompr_f,
            uncompr_f,

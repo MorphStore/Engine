@@ -29,7 +29,7 @@
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
-#include <core/operators/general_vectorized/group.h>
+#include <core/operators/general_vectorized/group_uncompr.h>
 
 #include <vector/complex/hash.h>
 
@@ -63,16 +63,11 @@ using namespace vector;
         ::for_output_formats<uncompr_f, uncompr_f> \
         ::for_input_formats<uncompr_f>( \
             &group1< \
-                    uncompr_f, \
                     ve1, \
-                    hash_map< \
-                       ve2, \
-                       multiply_mod_hash, \
-                       size_policy_hash::EXPONENTIAL, \
-                       scalar_key_vectorized_linear_search, \
-                       60 \
-                    > \
-                   >::apply \
+                    uncompr_f, \
+                    uncompr_f, \
+                    uncompr_f \
+                   > \
     ), \
     STR_EVAL_MACROS(ve1), \
     STR_EVAL_MACROS(ve2) \

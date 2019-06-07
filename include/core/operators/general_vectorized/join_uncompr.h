@@ -5,6 +5,8 @@
 #ifndef MORPHSTORE_JOIN_H
 #define MORPHSTORE_JOIN_H
 
+#include <vector/simd/avx2/extension_avx2.h>
+
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
@@ -23,6 +25,7 @@
 #include <vector/datastructures/hash_based/hash_map.h>
 #include <vector/datastructures/hash_based/hash_set.h>
 #include <vector/complex/hash.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstddef>
 #include <cstdint>

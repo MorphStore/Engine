@@ -138,7 +138,7 @@ namespace morphstore {
 
 
    template<class t_vector_extension, class t_in_data_f>
-    const column<uncompr_f> * agg_sum(column< t_in_data_f > const * const p_DataColumn){
+    const column<uncompr_f> * agg_sum(column< uncompr_f > const * const p_DataColumn){
        return agg_sum_t<t_vector_extension>::apply(p_DataColumn);
    }
    

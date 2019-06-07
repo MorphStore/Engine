@@ -141,7 +141,7 @@ int main( void ) {
             ve,
             uncompr_f,
             uncompr_f
-    >::apply(part.weight, 2000);
+    >(part.weight, 2000);
     
     // Data elements of "part.partKey" fulfilling "part.weight < 2000"
     auto iPPartKeyProj = project<ve, uncompr_f>(part.partKey, iPPos);
@@ -196,7 +196,7 @@ int main( void ) {
             ve,
             uncompr_f,
             uncompr_f
-    >::apply(iOQtyGrSum, 200000);
+    >(iOQtyGrSum, 200000);
     
     // Per-group aggregates of filtered "order.qty" fulfilling
     // "SUM(order.qty) > 200000"

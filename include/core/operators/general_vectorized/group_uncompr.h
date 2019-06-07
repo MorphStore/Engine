@@ -5,6 +5,7 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
 
+#include <vector/simd/avx2/extension_avx2.h>
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
@@ -256,7 +257,7 @@ namespace morphstore {
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
-      > group1(
+      > group(
          column<uncompr_f> const * const  p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
@@ -271,12 +272,12 @@ namespace morphstore {
       }
      
 
-      template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
+      template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
    static
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
-      > group1(
+      > group(
          column<uncompr_f> const * const p_InGrCol,
          column<uncompr_f> const * const p_InDataCol,
          size_t const outCountEstimate = 0

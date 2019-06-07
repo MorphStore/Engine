@@ -53,7 +53,7 @@ int main(void) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply,
+            >
             make_column({10, 20, 0, 3, 100}),
             "inDataCol",
             make_column({15, 25, 5, 8, 105}),

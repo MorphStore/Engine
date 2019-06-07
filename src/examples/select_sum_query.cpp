@@ -83,7 +83,7 @@ int main( void ) {
             ve,
             uncompr_f,
             uncompr_f
-    >::apply(baseCol1, 150);
+    >(baseCol1, 150);
     // Data elements of "baseCol2" fulfilling "baseCol1 = 150"
     auto i2 = project<ve, uncompr_f>(baseCol2, i1);
     // Sum over the data elements of "baseCol2" fulfilling "baseCol1 = 150"

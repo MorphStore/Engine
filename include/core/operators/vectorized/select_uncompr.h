@@ -35,7 +35,7 @@ namespace morphstore {
 
     //! 128-bit Select implementation using only SSE and AVX(2) intrinsics
 template<template<typename> class t_op>
-struct select<t_op, vector::sse<vector::v128<uint64_t>>, uncompr_f, uncompr_f> {
+struct select_t<t_op, vector::sse<vector::v128<uint64_t>>, uncompr_f, uncompr_f> {
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataCol,
@@ -232,7 +232,7 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE/*__attribute__((always_inline)) inline*/ void com
 
 //! 256-bit Select implementation using only SSE and AVX(2) intrinsics
 template<template<typename> class t_op>
-struct select<t_op, vector::avx2<vector::v256<uint64_t>>, uncompr_f, uncompr_f> {
+struct select_t<t_op, vector::avx2<vector::v256<uint64_t>>, uncompr_f, uncompr_f> {
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataCol,

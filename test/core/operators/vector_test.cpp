@@ -72,7 +72,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8);
+            >( testDataColumnSorted,8);
     std::cout << "Scalar (Less)\n\t 1st 3 IDs: " << ((uint64_t*)(selectscalar_result->get_data()))[0] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[1] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[2] <<  "\n\t Count: " << selectscalar_result->get_count_values() << "\n";
     
    
@@ -81,7 +81,7 @@ int main( void ) {
                     sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8 );//Do aggregation
+            >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "128 bit (Less)\n\t 1st 3 IDs: " << ((uint64_t*)(select128_result->get_data()))[0] << ", " << ((uint64_t*)(select128_result->get_data()))[1] << ", " << ((uint64_t*)(select128_result->get_data()))[2] <<  "\n\t Count: " << select128_result->get_count_values() << "\n";
     
     auto select256_result=morphstore::select<
@@ -89,7 +89,7 @@ int main( void ) {
                 avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
-        >::apply( testDataColumnSorted,8 );//Do aggregation
+        >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "256 bit (Less)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
@@ -98,7 +98,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,9);
+            >( testDataColumnSorted,9);
     std::cout << "Scalar (Greater)\n\t 1st 3 IDs: " << ((uint64_t*)(selectscalar_result->get_data()))[0] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[1] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[2] <<  "\n\t Count: " << selectscalar_result->get_count_values() << "\n";
     
    
@@ -107,7 +107,7 @@ int main( void ) {
                     sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,9 );//Do aggregation
+            >( testDataColumnSorted,9 );//Do aggregation
     std::cout << "128 bit (Greater)\n\t 1st 3 IDs: " << ((uint64_t*)(select128_result->get_data()))[0] << ", " << ((uint64_t*)(select128_result->get_data()))[1] << ", " << ((uint64_t*)(select128_result->get_data()))[2] <<  "\n\t Count: " << select128_result->get_count_values() << "\n";
     
     select256_result=morphstore::select<
@@ -115,7 +115,7 @@ int main( void ) {
                 avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
-        >::apply( testDataColumnSorted,9 );//Do aggregation
+        >( testDataColumnSorted,9 );//Do aggregation
     std::cout << "256 bit (Greater)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
@@ -124,7 +124,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8);
+            >( testDataColumnSorted,8);
     std::cout << "Scalar (Equality)\n\t 1st 3 IDs: " << ((uint64_t*)(selectscalar_result->get_data()))[0] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[1] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[2] <<  "\n\t Count: " << selectscalar_result->get_count_values() << "\n";
     
    
@@ -133,7 +133,7 @@ int main( void ) {
                     sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8 );//Do aggregation
+            >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "128 bit (Equality)\n\t 1st 3 IDs: " << ((uint64_t*)(select128_result->get_data()))[0] << ", " << ((uint64_t*)(select128_result->get_data()))[1] << ", " << ((uint64_t*)(select128_result->get_data()))[2] <<  "\n\t Count: " << select128_result->get_count_values() << "\n";
     
     select256_result=morphstore::select<
@@ -141,7 +141,7 @@ int main( void ) {
                     avx2<v256<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8 );//Do aggregation
+            >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "256 bit (Equality)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
@@ -150,7 +150,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8);
+            >( testDataColumnSorted,8);
     std::cout << "Scalar (Greater Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(selectscalar_result->get_data()))[0] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[1] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[2] <<  "\n\t Count: " << selectscalar_result->get_count_values() << "\n";
     
    
@@ -159,7 +159,7 @@ int main( void ) {
                     sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8 );//Do aggregation
+            >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "128 bit (Greater Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(select128_result->get_data()))[0] << ", " << ((uint64_t*)(select128_result->get_data()))[1] << ", " << ((uint64_t*)(select128_result->get_data()))[2] <<  "\n\t Count: " << select128_result->get_count_values() << "\n";
     
     select256_result=morphstore::select<
@@ -167,7 +167,7 @@ int main( void ) {
                 avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
-        >::apply( testDataColumnSorted,8 );//Do aggregation
+        >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "256 bit (Greater Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
@@ -176,7 +176,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8);
+            >( testDataColumnSorted,8);
     std::cout << "Scalar (Less Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(selectscalar_result->get_data()))[0] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[1] << ", " << ((uint64_t*)(selectscalar_result->get_data()))[2] <<  "\n\t Count: " << selectscalar_result->get_count_values() << "\n";
     
    
@@ -185,7 +185,7 @@ int main( void ) {
                     sse<v128<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply( testDataColumnSorted,8 );//Do aggregation
+            >( testDataColumnSorted,8 );//Do aggregation
     std::cout << "128 bit (Less Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(select128_result->get_data()))[0] << ", " << ((uint64_t*)(select128_result->get_data()))[1] << ", " << ((uint64_t*)(select128_result->get_data()))[2] <<  "\n\t Count: " << select128_result->get_count_values() << "\n";
     
     select256_result=morphstore::select<
@@ -193,7 +193,7 @@ int main( void ) {
                 avx2<v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
-        >::apply( testDataColumnSorted,8);//Do aggregation
+        >( testDataColumnSorted,8);//Do aggregation
     std::cout << "256 bit (Less Equal)\n\t 1st 3 IDs: " << ((uint64_t*)(select256_result->get_data()))[0] << ", " << ((uint64_t*)(select256_result->get_data()))[1] << ", " << ((uint64_t*)(select256_result->get_data()))[2] <<  "\n\t Count: " << select256_result->get_count_values() << "\n";
     
     
@@ -257,10 +257,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Merge are equal\n";
      
     
-    auto calcscalar_add_result=morphstore::calc_binary<std::plus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calcscalar_add_result=morphstore::calc_binary<std::plus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_add_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_add_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_add_result->get_count_values() << "\n";
     
-    auto calc256_add_result=morphstore::calc_binary<std::plus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_add_result=morphstore::calc_binary<std::plus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (add)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_add_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_add_result->get_data()))[2] <<  "\n\t Count: " << calc256_add_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_add_result->get_data(),calc256_add_result->get_data(),calc256_add_result->get_count_values()*sizeof(uint64_t));
@@ -268,10 +268,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Add are equal\n";
     
     //removed from test because scalar operator sometimes doesn't divide integers
-   /* auto calcscalar_div_result=morphstore::calc_binary<std::divides, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+   /* auto calcscalar_div_result=morphstore::calc_binary<std::divides, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_div_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_div_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_div_result->get_count_values() << "\n";
     
-    auto calc256_div_result=morphstore::calc_binary<std::divides, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_div_result=morphstore::calc_binary<std::divides, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (div)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_div_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_div_result->get_data()))[2] <<  "\n\t Count: " << calc256_div_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_div_result->get_data(),calc256_div_result->get_data(),calc256_div_result->get_count_values()*sizeof(uint64_t));
@@ -279,10 +279,10 @@ int main( void ) {
     else std::cout << "Scalar and 256 bit Div are equal\n";*/
     
    
-    auto calcscalar_mult_result=morphstore::calc_binary<std::multiplies, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calcscalar_mult_result=morphstore::calc_binary<std::multiplies, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "Scalar calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mult_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mult_result->get_count_values() << "\n";
     
-    auto calc256_mult_result=morphstore::calc_binary<std::multiplies, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumn,testDataColumn);
+    auto calc256_mult_result=morphstore::calc_binary<std::multiplies, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumn,testDataColumn);
     std::cout << "256 bit calc (mult)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mult_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mult_result->get_data()))[2] <<  "\n\t Count: " << calc256_mult_result->get_count_values() << "\n";
     
     ok = memcmp(calcscalar_mult_result->get_data(),calc256_mult_result->get_data(),calc256_mult_result->get_count_values()*sizeof(uint64_t));
@@ -291,10 +291,10 @@ int main( void ) {
 
     
     
-     auto calcscalar_mod_result=morphstore::calc_binary<std::modulus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
+     auto calcscalar_mod_result=morphstore::calc_binary<std::modulus, scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumnSorted2,testDataColumnSorted2);
     std::cout << "Scalar calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calcscalar_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calcscalar_mod_result->get_data()))[2] <<  "\n\t Count: " << calcscalar_mod_result->get_count_values() << "\n";
     
-    auto calc256_mod_result=morphstore::calc_binary<std::modulus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>::apply(testDataColumnSorted2,testDataColumnSorted2);
+    auto calc256_mod_result=morphstore::calc_binary<std::modulus, avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(testDataColumnSorted2,testDataColumnSorted2);
     std::cout << "256 bit calc (mod)\n\t 1st 3 IDs: " << ((uint64_t*)(calc256_mod_result->get_data()))[0] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[1] << ", " << ((uint64_t*)(calc256_mod_result->get_data()))[2] <<  "\n\t Count: " << calc256_mod_result->get_count_values() << "\n";
     
     
