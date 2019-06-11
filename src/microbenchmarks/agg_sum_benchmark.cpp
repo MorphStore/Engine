@@ -31,9 +31,6 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/equality_check.h>
-#include <core/utils/monitoring.h>
-#include <core/utils/printing.h>
 #include <core/utils/variant_executor.h>
 #include <vector/scalar/extension_scalar.h>
 
