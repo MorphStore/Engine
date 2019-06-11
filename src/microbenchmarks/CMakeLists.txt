@@ -27,3 +27,13 @@ target_compile_options( select_benchmark PRIVATE
                         -fstack-protector-all
                         $<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( select_benchmark PRIVATE "-ldl" )
+
+add_executable( inc_benchmark inc_benchmark.cpp )
+target_compile_options( inc_benchmark PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+                        -fstack-protector-all
+                        $<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( inc_benchmark PRIVATE "-ldl" )
