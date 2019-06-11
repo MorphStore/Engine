@@ -181,5 +181,71 @@ const column<uncompr_f> * generate_with_distr(
     return resCol;
 }
 
+/**
+ * @brief Creates an uncompressed column and fills its data buffer such that
+ * exactly the specified number of data elements have the specified value.
+ * 
+ * @param p_CountValues The number of data elements to generate.
+ * @param p_CountMatches The exact number of occurences of the value
+ * `p_ValMatch`.
+ * @param p_ValMatch The value that shall appear exactly `p_CountMatches` times
+ * in the data.
+ * @param p_ValOther The value to use for all remaining data elements.
+ * @param p_Seed The seed to use for the pseudo random number generator.
+ * @return An uncompressed column containing the generated data elements.
+ */
+const column<uncompr_f> * generate_exact_number(
+        size_t p_CountValues,
+        size_t p_CountMatches,
+        uint64_t p_ValMatch,
+        uint64_t p_ValOther,
+        size_t p_Seed = 0
+) {
+    if(p_CountMatches > p_CountValues)
+        throw std::runtime_error(
+                "p_CountMatches must be less than p_CountValues"
+        );
+    if(p_ValMatch == p_ValOther)
+        throw std::runtime_error(
+                "p_ValMatch and p_ValOther must be different"
+        );
+    
+    // If the relative frequency is above 50%, then swap things to be more
+    // efficient.
+    if(p_CountMatches > p_CountValues / 2)
+        return generate_exact_number(
+                p_CountValues,
+                p_CountValues - p_CountMatches,
+                p_ValOther,
+                p_ValMatch,
+                p_Seed
+        );
+    
+    const size_t allocationSize = p_CountValues * sizeof(uint64_t);
+    auto resCol = new column<uncompr_f>(allocationSize);
+    uint64_t * const res = resCol->get_data();
+    
+    for(size_t i = 0; i < p_CountValues; i++)
+        res[i] = p_ValOther;
+    
+    if(p_Seed == 0)
+       p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(p_Seed);
+    std::uniform_int_distribution<size_t> rnd(0, p_CountValues);
+    
+    for(size_t i = 0; i < p_CountMatches; i++)
+        while(true) {
+            const size_t pos = rnd(generator);
+            if(res[pos] != p_ValMatch) {
+                res[pos] = p_ValMatch;
+                break;
+            }
+        }
+    
+    resCol->set_meta_data(p_CountValues, allocationSize);
+    
+    return resCol;
+}
+
 }
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_GEN_H
