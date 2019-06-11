@@ -65,6 +65,29 @@ namespace morphstore{
             return id;
         }
 
+        // calculate size of a vertex for memory usage in bytes
+        size_t get_size_of_vertex(){
+            size_t size = 0;
+            size += sizeof(uint64_t); // id
+            // Adj.List:
+            for(const auto& e : adjList){
+                size += sizeof(morphstore::Vertex*) + sizeof(std::string);
+                if(!e.property.first.empty()){
+                    size += (2 * sizeof(std::string));
+                }
+            }
+            // properties:
+            for(std::unordered_map<std::string, std::string>::iterator it = properties.begin(); it != properties.end(); ++it){
+                size += (2 * sizeof(std::string));
+            }
+            // entities:
+            for(std::unordered_set<std::string>::iterator iter = entities.begin(); iter != entities.end(); ++iter){
+                size += sizeof(std::string);
+            }
+
+            return size;
+        }
+
         // returns a reference (read-only) of the adjacency list
         const std::vector<Edge>& get_adjList() const{
             return adjList;
