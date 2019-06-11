@@ -134,6 +134,8 @@ namespace morphstore {
     };
     
 #if 0
+    // Loop-based routines, inefficient.
+#if 0
     // Tailored to a step width of 2 (as for the 128-bit variant).
     template<unsigned t_bw>
     struct pack_t<
@@ -235,7 +237,67 @@ namespace morphstore {
         };
     };
 #endif
-
+#elif 1
+    // Unrolled routines, more efficient.
+    template<unsigned t_bw>
+    class pack_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1> {
+        static const size_t countBits = std::numeric_limits<uint64_t>::digits;
+        
+        struct state_t {
+            const uint64_t * in64;
+            uint64_t * out64;
+            unsigned bitpos;
+            uint64_t tmp;
+            
+            state_t(const uint64_t * p_In64, uint64_t * p_Out64) {
+                in64 = p_In64;
+                out64 = p_Out64;
+//                // @todo maybe we don't need this
+                bitpos = 0;
+                tmp = 0;
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s) {
+            if(t_CycleLen > 1) {
+                process_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                const uint64_t tmp2 = *(s.in64)++;
+                s.tmp |= (tmp2 << s.bitpos);
+                s.bitpos += t_bw;
+                if(((t_PosInCycle + 1) * t_bw) % countBits == 0) {
+                    *s.out64++ = s.tmp;
+                    s.tmp = 0;
+                    s.bitpos = 0;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    *s.out64++ = s.tmp;
+                    s.tmp = tmp2 >> (t_bw - s.bitpos + countBits);
+                    s.bitpos -= countBits;
+                }
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn64,
+                uint8_t * & out8
+        ) {
+            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
+            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
+            state_t s(in64, out64);
+            for(unsigned i = 0; i < countIn64; i += 64)
+                process_block<countBits, 0>(s);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.in64);
+            out8 = reinterpret_cast<uint8_t *>(s.out64);
+        }
+    };
+#endif
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
@@ -459,6 +521,8 @@ namespace morphstore {
     };
     
 #if 0
+    // Loop-based routines, inefficient.
+#if 0
     // Tailored to a step width of 2 (as for the 128-bit variant).
     template<unsigned t_bw>
     struct unpack_t<
@@ -564,6 +628,70 @@ namespace morphstore {
             
             in8 = reinterpret_cast<const uint8_t *>(in64);
             out8 = reinterpret_cast<uint8_t *>(out64);
+        }
+    };
+#endif
+#elif 1
+    // Unrolled routines, more efficient.
+    template<unsigned t_bw>
+    class unpack_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1> {
+        static const size_t countBits = std::numeric_limits<uint64_t>::digits;
+        static const uint64_t mask = bitwidth_max<uint64_t>(t_bw);
+        
+        struct state_t {
+            const uint64_t * in64;
+            uint64_t * out64;
+            uint64_t nextOut;
+            unsigned bitpos;
+            uint64_t tmp;
+            
+            state_t(const uint64_t * p_In64, uint64_t * p_Out64) {
+                in64 = p_In64;
+                out64 = p_Out64;
+                nextOut = 0;
+                // @todo maybe we don't need this
+                bitpos = 0;
+                tmp = 0;
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s) {
+            if(t_CycleLen > 1) {
+                process_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = *(s.in64)++;
+                    s.nextOut = mask & s.tmp;
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = *(s.in64)++;
+                    s.nextOut = mask & ((s.tmp << (countBits - s.bitpos + t_bw)) | s.nextOut);
+                    s.bitpos = s.bitpos - countBits;
+                }
+                *(s.out64)++ = s.nextOut;
+                s.nextOut = mask & (s.tmp >> s.bitpos);
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                uint8_t * & out8,
+                size_t countOut64
+        ) {
+            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
+            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
+            state_t s(in64, out64);
+            for(unsigned i = 0; i < countOut64; i += 64)
+                process_block<countBits, 0>(s);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.in64);
+            out8 = reinterpret_cast<uint8_t *>(s.out64);
         }
     };
 #endif
