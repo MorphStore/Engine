@@ -231,7 +231,7 @@ const column<uncompr_f> * generate_exact_number(
     if(p_Seed == 0)
        p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::default_random_engine generator(p_Seed);
-    std::uniform_int_distribution<size_t> rnd(0, p_CountValues);
+    std::uniform_int_distribution<size_t> rnd(0, p_CountValues - 1);
     
     for(size_t i = 0; i < p_CountMatches; i++)
         while(true) {
