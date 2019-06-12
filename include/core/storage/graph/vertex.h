@@ -39,6 +39,10 @@ namespace morphstore{
         Vertex* target;
         std::string relation;
         std::pair<std::string, std::string> property;
+
+		size_t size_in_bytes() const {
+			return sizeof(Vertex*) + sizeof(char)*relation.length() + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
+		};
     };
 
     class Vertex{
@@ -66,23 +70,22 @@ namespace morphstore{
         }
 
         // calculate size of a vertex for memory usage in bytes
-        size_t get_size_of_vertex(){
+        size_t get_size_of_vertex() {
             size_t size = 0;
             size += sizeof(uint64_t); // id
             // Adj.List:
             for(const auto& e : adjList){
-                size += sizeof(morphstore::Vertex*) + sizeof(std::string);
-                if(!e.property.first.empty()){
-                    size += (2 * sizeof(std::string));
-                }
+				size += e.size_in_bytes();
             }
-            // properties:
-            for(std::unordered_map<std::string, std::string>::iterator it = properties.begin(); it != properties.end(); ++it){
-                size += (2 * sizeof(std::string));
+			// properties:
+			size += sizeof(std::unordered_map<std::string, std::string>);
+            for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
+                size += sizeof(char)*(property->first.length() + property->second.length());
             }
-            // entities:
+			// entities:
+			size += sizeof( std::unordered_set<std::string> );
             for(std::unordered_set<std::string>::iterator iter = entities.begin(); iter != entities.end(); ++iter){
-                size += sizeof(std::string);
+                size += sizeof(char)*(*iter).length();
             }
 
             return size;

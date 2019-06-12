@@ -44,6 +44,7 @@ namespace morphstore{
         // calculate the graph size in bytes
         size_t get_size_of_graph(){
             size_t size = 0;
+			size += sizeof(std::unordered_map<uint64_t, Vertex>);
             for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 size += it->second.get_size_of_vertex();
             }
