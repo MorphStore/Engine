@@ -43,7 +43,7 @@ namespace vector {
              case 6: return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,1),2); break;
              case 7: return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,1),3); break;
          }
-         return NULL;
+         return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,0),0);
       }
    };
    
@@ -73,8 +73,8 @@ namespace vector {
              case 14: return _mm256_extract_epi32(_mm512_extracti64x4_epi64(p_vec,1),6); break;
              case 15: return _mm256_extract_epi32(_mm512_extracti64x4_epi64(p_vec,1),7); break;
          }
-         return NULL;
-      }
+         return _mm256_extract_epi32(_mm512_extracti64x4_epi64(p_vec,0),0);
+     }
    };
 }
 

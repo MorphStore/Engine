@@ -84,6 +84,8 @@ namespace vector{
          return _mm512_cmpge_epi64_mask(p_vec1, p_vec2);
       }
    };
+   
+   /*
     template<typename T>
     struct compare<avx512<v512<T>>, 64> {
         
@@ -405,7 +407,7 @@ namespace vector{
             return _mm_cmple_epi32_mask(p_vec1,p_vec2);
 
         }
-    };
+    };*/
 }
 
 #endif /* COMPARE_AVX512_H */
