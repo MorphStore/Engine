@@ -323,7 +323,7 @@ namespace morphstore {
         return semi_join_t<Format,VectorExtension,hash_set<
             avx2<v256<uint64_t>>,
             multiply_mod_hash,
-            size_policy_hash::ARBITRARY,
+            size_policy_hash::EXPONENTIAL,
             scalar_key_vectorized_linear_search,
             60>
          >::apply(p_InDataLCol,p_InDataRCol);
