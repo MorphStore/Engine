@@ -143,8 +143,7 @@ namespace vector {
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
             base_t *currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
-            keyVec = set1<VectorExtension, vector_base_t_granularity::value>(p_SearchState.m_KeyArray[pos]);
-            searchOffset = 0;
+            keyVec = set1<VectorExtension, vector_base_t_granularity::value>(p_SearchState.m_KeyArray[pos] + 1 );
             bool done = false;
             while(!done) {
                vector_t loadedBucketsVec = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
@@ -221,7 +220,7 @@ namespace vector {
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
             base_t *currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
-            keyVec = set1<VectorExtension, vector_base_t_granularity::value>(p_SearchState.m_KeyArray[pos]);
+            keyVec = set1<VectorExtension, vector_base_t_granularity::value>(p_SearchState.m_KeyArray[pos] + 1 );
             searchOffset = 0;
             bool done = false;
             while(!done) {
@@ -283,7 +282,7 @@ namespace vector {
          vector_mask_t searchOffset;
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
-            base_t key = p_SearchState.m_KeyArray[pos];
+            base_t key = p_SearchState.m_KeyArray[pos] + 1;
             base_t *currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
             keyVec = set1<VectorExtension, vector_base_t_granularity::value>(key);
             bool done = false;
@@ -348,7 +347,7 @@ namespace vector {
          vector_mask_t searchOffset;
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
-            base_t key = p_SearchState.m_KeyArray[pos];
+            base_t key = p_SearchState.m_KeyArray[pos] + 1;
             base_t value = p_SearchState.m_ValueArray[pos];
             base_t *currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
             keyVec = set1<VectorExtension, vector_base_t_granularity::value>(key);
@@ -429,7 +428,7 @@ namespace vector {
 
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
-            base_t key = p_SearchState.m_KeyArray[pos];
+            base_t key = p_SearchState.m_KeyArray[pos] + 1;
 
             base_t * currentSearchPtr = p_SearchState.m_KeyContainerStartPtr + index;
             keyVec = set1<VectorExtension, vector_base_t_granularity::value>(key);
@@ -522,7 +521,7 @@ namespace vector {
 
          for(size_t pos = 0; pos < vector_element_count::value; ++pos) {
             base_t index = p_SearchState.m_IndexArray[pos];
-            base_t keyFirst = p_SearchState.m_FirstKeyArray[pos];
+            base_t keyFirst = p_SearchState.m_FirstKeyArray[pos] + 1;
             base_t keySecond = p_SearchState.m_SecondKeyArray[pos];
 
             base_t * currentFirstKeySearchPtr = p_SearchState.m_FirstKeyContainerStartPtr + index;
