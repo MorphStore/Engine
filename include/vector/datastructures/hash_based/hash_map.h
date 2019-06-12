@@ -10,6 +10,10 @@
 #include <vector/general_vector.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <core/memory/management/utils/alignment_helper.h>
+#endif
+
 #include <tuple> //tuple
 #include <cstdint> //uint8_t
 #include <cstddef> //size_t
@@ -92,6 +96,10 @@ namespace vector {
 
    private:
       size_helper<BiggestSupportedVectorExtension, MaxLoadfactor, SPH> const m_SizeHelper;
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+      void * const m_KeysUnaligned;
+      void * const m_ValuesUnaligned;
+#endif
       typename BiggestSupportedVectorExtension::base_t * const m_Keys;
       typename BiggestSupportedVectorExtension::base_t * const m_Values;
    public:
@@ -101,12 +109,26 @@ namespace vector {
          m_SizeHelper{
             p_DistinctElementCountEstimate
          },
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         m_KeysUnaligned{
+            malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
+         },
+         m_ValuesUnaligned{
+            malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) )
+         },
+         m_Keys{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_KeysUnaligned ) },
+         m_Values{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_ValuesUnaligned ) }
+#else
          m_Keys{
             ( typename BiggestSupportedVectorExtension::base_t * )
-               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) },
+            malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) )
+         },
          m_Values{
             ( typename BiggestSupportedVectorExtension::base_t * )
-               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) } {
+            malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) )
+         }
+#endif
+      {
          std::fill(m_Keys, m_Keys+m_SizeHelper.m_Count, 0);
          std::fill(m_Values, m_Values+m_SizeHelper.m_Count, 0);
       }
@@ -140,8 +162,14 @@ namespace vector {
 
 
       ~hash_map() {
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         free( m_ValuesUnaligned );
+         free( m_KeysUnaligned );
+#else
          free( m_Values );
          free( m_Keys );
+
+#endif
       }
 
       void print( void ) const {

@@ -10,6 +10,10 @@
 #include <vector/general_vector.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <core/memory/management/utils/alignment_helper.h>
+#endif
+
 #include <tuple> //tuple
 #include <cstdint> //uint8_t
 #include <cstddef> //size_t
@@ -58,6 +62,11 @@ namespace vector {
 
       private:
          size_helper<BiggestSupportedVectorExtension, MaxLoadfactor, SPH> const m_SizeHelper;
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         void * const m_KeysFirstUnaligned;
+         void * const m_KeysSecondUnaligned;
+         void * const m_ValuesUnaligned;
+#endif
          typename BiggestSupportedVectorExtension::base_t * const m_KeysFirst;
          typename BiggestSupportedVectorExtension::base_t * const m_KeysSecond;
          typename BiggestSupportedVectorExtension::base_t * const m_Values;
@@ -68,6 +77,21 @@ namespace vector {
             m_SizeHelper{
                p_DistinctElementCountEstimate
             },
+
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+            m_KeysFirstUnaligned{
+               malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
+            },
+            m_KeysSecondUnaligned{
+               malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
+            },
+            m_ValuesUnaligned{
+               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) )
+            },
+            m_KeysFirst{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_KeysFirstUnaligned ) },
+            m_KeysSecond{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_KeysSecondUnaligned ) },
+            m_Values{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_ValuesUnaligned ) }
+#else
             m_KeysFirst{
                ( typename BiggestSupportedVectorExtension::base_t * )
                   malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) },
@@ -76,7 +100,9 @@ namespace vector {
                   malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) },
             m_Values{
                ( typename BiggestSupportedVectorExtension::base_t * )
-                  malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) } {
+                  malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) }
+#endif
+         {
             std::fill(m_KeysFirst, m_KeysFirst+m_SizeHelper.m_Count, 0);
             std::fill(m_KeysSecond, m_KeysSecond+m_SizeHelper.m_Count, 0);
             std::fill(m_Values, m_Values+m_SizeHelper.m_Count, 0);
@@ -116,9 +142,15 @@ namespace vector {
 
 
          ~hash_binary_key_map() {
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+            free( m_ValuesUnaligned );
+            free( m_KeysSecondUnaligned );
+            free( m_KeysFirstUnaligned );
+#else
             free( m_Values );
             free( m_KeysSecond );
             free( m_KeysFirst );
+#endif
          }
    };
 

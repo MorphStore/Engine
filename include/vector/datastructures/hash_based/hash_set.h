@@ -10,6 +10,10 @@
 #include <vector/general_vector.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <core/memory/management/utils/alignment_helper.h>
+#endif
+
 #include <utility> //pair
 #include <cstdint> //uint8_t
 #include <cstddef> //size_t
@@ -65,6 +69,9 @@ namespace vector {
 
       private:
          size_helper<BiggestSupportedVectorExtension, MaxLoadfactor, SPH> const m_SizeHelper;
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+         void * const m_DataUnaligned;
+#endif
          typename BiggestSupportedVectorExtension::base_t * const m_Data;
       public:
          hash_set(
@@ -73,9 +80,16 @@ namespace vector {
             m_SizeHelper{
                p_DistinctElementCountEstimate
             },
-            m_Data{
-               ( typename BiggestSupportedVectorExtension::base_t * )
-               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) } {
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+            m_DataUnaligned{
+               malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
+            },
+            m_Data{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_DataUnaligned ) }
+#else
+            m_Data{ ( typename BiggestSupportedVectorExtension::base_t * )
+                       malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) }
+#endif
+         {
             std::fill(m_Data, m_Data+m_SizeHelper.m_Count, 0);
          }
 
@@ -103,7 +117,11 @@ namespace vector {
 
 
          ~hash_set() {
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+            free( m_DataUnaligned );
+#else
             free( m_Data );
+#endif
          }
 
          void print( void ) const {
