@@ -159,5 +159,79 @@ struct my_select_t {
     }
 };
 
+
+
+// Hand-written scalar implementation, fast.
+template<template<class, int> class t_op, class t_wit>
+struct select_processing_unit_wit {
+    // We need a nested struct, because
+    // (1) we must be able to hand a class with a single template argument (for
+    //     the vector extension) to decompress_and_process
+    // (2) we still want to be generic w.r.t. the comparison operator
+    template<class t_vector_extension>
+    struct type {
+        struct state_t {
+            const uint64_t m_Predicate;
+            size_t m_Pos;
+            t_wit m_Wit;
+
+            state_t(uint64_t p_Predicate, uint8_t * p_Out) :
+            m_Predicate(p_Predicate), m_Pos(0), m_Wit(p_Out) {
+                //
+            }
+        };
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(uint64_t p_Data, state_t & p_State) {
+            int mask = p_Data == p_State.m_Predicate;
+            if(mask)
+                p_State.m_Wit.write(p_State.m_Pos, 1);
+            p_State.m_Pos++;
+        }
+    };
+};
+    
+template<
+        template<class, int> class t_op,
+        class t_vector_extension,
+        class t_out_pos_f,
+        class t_in_data_f
+>
+// @todo We cannot call it select or select_t at the moment, because it has
+// other requirements for t_op than the select-struct in the general interface.
+struct my_select_wit_t {
+    static const column<t_out_pos_f> * apply(
+            const column<t_in_data_f> * const inDataCol,
+            const uint64_t val,
+            const size_t outPosCountEstimate = 0
+    ) {
+        const uint8_t * inData = inDataCol->get_data();
+
+        // If no estimate is provided: Pessimistic allocation size (for
+        // uncompressed data), reached only if all input data elements pass the
+        // selection.
+        auto outPosCol = new column<t_out_pos_f>(
+                bool(outPosCountEstimate)
+                // use given estimate
+                ? (outPosCountEstimate * sizeof(uint64_t))
+                // use pessimistic estimate
+                : t_out_pos_f::get_size_max_byte(inDataCol->get_count_values())
+        );
+        
+        uint8_t * outPos = outPosCol->get_data();
+
+        typename select_processing_unit_wit<t_op, write_iterator<t_vector_extension, t_out_pos_f>>::template type<t_vector_extension>::state_t s(val, outPos);
+        decompress_and_process_batch<
+                t_vector_extension, t_in_data_f, select_processing_unit_wit<t_op, write_iterator<t_vector_extension, t_out_pos_f>>::template type
+        >::apply(
+                inData, inDataCol->get_size_used_byte(), s
+        );
+
+        const size_t outPosCount = s.m_Wit.get_count();
+        outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
+
+        return outPosCol;
+    }
+};
+
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H

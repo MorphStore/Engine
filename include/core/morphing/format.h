@@ -24,6 +24,10 @@
 #define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
 #include <core/utils/math.h>
+#include <core/utils/basic_types.h>
+#include <vector/general_vector.h>
+
+#include <cstdint>
 
 namespace morphstore {
 
@@ -64,7 +68,23 @@ template<
         class t_format,
         template<class /*t_vector_extension*/> class t_op_processing_unit
 >
-class decompress_and_process_batch;
+class decompress_and_process_batch {
+    static void apply(
+            const uint8_t * & p_In8,
+            size_t p_CountIn8,
+            typename t_op_processing_unit<t_vector_extension>::state_t & p_State
+    );
+};
+
+template<class t_vector_extension, class t_format>
+struct write_iterator {
+    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+            
+    write_iterator(uint8_t * p_Out);
+    void write(vector_t p_Data, vector_mask_t p_Mask);
+    void done();
+    size_t get_count() const;
+};
 
 }
 #endif //MORPHSTORE_CORE_MORPHING_FORMAT_H

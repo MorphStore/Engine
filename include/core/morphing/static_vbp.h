@@ -33,13 +33,20 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
+#include <vector/general_vector.h>
+#include <vector/primitives/io.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
 
-#include <cstdint>
 #include <immintrin.h>
 #include <limits>
 #include <stdexcept>
 #include <string>
 #include <sstream>
+
+#include <cstdint>
+#include <cstring>
 
 namespace morphstore {
     
@@ -243,6 +250,76 @@ namespace morphstore {
             >(
                     p_In8, p_CountIn8, p_State
             );
+        }
+    };
+
+    // @todo Works only if base_t is uint64_t.
+    // @todo Take t_step into account correctly.
+    template<class t_vector_extension, unsigned t_bw, unsigned t_step>
+    class write_iterator<
+            t_vector_extension, static_vbp_f<t_bw, t_step>
+    > {
+        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+        
+        uint8_t * m_Out;
+        static const size_t m_CountBuffer = vector_size_bit::value * 16;
+        // @todo Alignment for vectorized processing.
+        base_t m_StartBuffer[m_CountBuffer];
+        base_t * m_Buffer;
+        base_t * const m_EndBuffer;
+        size_t m_Count;
+        
+    public:
+        write_iterator(uint8_t * p_Out) :
+                m_Out(p_Out),
+                m_Buffer(m_StartBuffer),
+                m_EndBuffer(m_StartBuffer + m_CountBuffer),
+                m_Count(0)
+        {
+            //
+        }
+        
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        void write(vector_t p_Data, vector_mask_t p_Mask) {
+            vector::compressstore<
+                    t_vector_extension,
+                    vector::iov::UNALIGNED, 
+                    vector_base_t_granularity::value
+            >(m_Buffer, p_Data, p_Mask);
+            // @todo Use primitive.
+#if 0
+            m_Buffer += __builtin_popcount(p_Mask);
+#else
+            m_Buffer += p_Mask;
+#endif
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
+                const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
+                        m_StartBuffer
+                );
+                // @todo This should not be inlined.
+                pack<t_vector_extension, t_bw, t_step>(
+                        buffer8, m_CountBuffer, m_Out
+                );
+#if 0
+                // @todo This is required for vectorized processing.
+                size_t overflow = m_Buffer - m_EndBuffer;
+                memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
+                m_Buffer = m_StartBuffer + overflow;
+#else
+                m_Buffer = m_StartBuffer;
+#endif
+                m_Count += m_CountBuffer;
+            }
+        }
+        
+        void done() {
+            if(m_Buffer != m_StartBuffer)
+                // @todo Error message.
+                throw std::runtime_error("ohoh");
+        }
+        
+        size_t get_count() const {
+            return m_Count;
         }
     };
     

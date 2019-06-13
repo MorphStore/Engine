@@ -58,7 +58,7 @@ namespace morphstore {
             unsigned t_step
     >
     struct pack_t {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+        static /*MSV_CXX_ATTRIBUTE_FORCE_INLINE*/ void apply(
                 const uint8_t * & in8,
                 size_t countIn64,
                 uint8_t * & out8
@@ -71,7 +71,7 @@ namespace morphstore {
             unsigned t_bw,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack(
+    /*MSV_CXX_ATTRIBUTE_FORCE_INLINE*/ void pack(
             const uint8_t * & in8,
             size_t countIn64,
             uint8_t * & out8
@@ -90,7 +90,7 @@ namespace morphstore {
             t_bw,
             sizeof(__m128i) / sizeof(uint64_t)
     > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+        static /*MSV_CXX_ATTRIBUTE_FORCE_INLINE*/ void apply(
                 const uint8_t * & in8,
                 size_t countIn64,
                 uint8_t * & out8
