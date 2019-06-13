@@ -304,7 +304,7 @@ namespace morphstore {
          size_t const outCountEstimate = 0
       ) {
         return equi_join_t<Format,VectorExtension, hash_map<
-            avx2<v256<uint64_t>>,
+            VectorExtension,
             multiply_mod_hash,
             size_policy_hash::EXPONENTIAL,
             scalar_key_vectorized_linear_search,
@@ -321,7 +321,7 @@ namespace morphstore {
          
       ) {
         return semi_join_t<Format,VectorExtension,hash_set<
-            avx2<v256<uint64_t>>,
+            VectorExtension,
             multiply_mod_hash,
             size_policy_hash::EXPONENTIAL,
             scalar_key_vectorized_linear_search,

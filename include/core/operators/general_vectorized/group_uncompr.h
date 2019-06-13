@@ -263,7 +263,7 @@ namespace morphstore {
       ) {
        return group1_t<VectorExtension, 
                 hash_map<
-                avx2<v256<uint64_t>>,
+                VectorExtension,
                 multiply_mod_hash,
                 size_policy_hash::EXPONENTIAL,
                 scalar_key_vectorized_linear_search,
@@ -283,7 +283,7 @@ namespace morphstore {
          size_t const outCountEstimate = 0
       ) {
        return group1_t<VectorExtension, hash_binary_key_map<
-            avx2<v256<uint64_t>>,
+            VectorExtension,
             multiply_mod_hash,
             size_policy_hash::EXPONENTIAL,
             scalar_key_vectorized_linear_search,
