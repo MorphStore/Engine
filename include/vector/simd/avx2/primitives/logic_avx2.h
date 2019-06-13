@@ -18,7 +18,7 @@ namespace vector {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx2<v256<T>>::vector_t
-      logical_and( typename avx2<v256<T>>::vector_t const & p_In1, typename avx2<v256<T>>::vector_t const & p_In2) {
+      bitwise_and( typename avx2<v256<T>>::vector_t const & p_In1, typename avx2<v256<T>>::vector_t const & p_In2) {
          return _mm256_and_si256( p_In1, p_In2 );
       }
 

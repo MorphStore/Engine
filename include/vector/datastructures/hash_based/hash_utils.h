@@ -168,7 +168,7 @@ namespace vector {
       vector_t
       apply( vector_t const & p_IndexValues, state_t const & p_State ) {
          return
-            logical_and<VectorExtension, vector_size_bit::value>(
+            bitwise_and<VectorExtension, vector_size_bit::value>(
                p_IndexValues,
                p_State.m_ResizeVector
             );
@@ -229,7 +229,7 @@ namespace vector {
       static
       vector_t
       apply( vector_t const & p_IndexValues, state_t<BiggestSupportedVectorExtension> const & p_State ) {
-         return logical_and<VectorExtension, vector_size_bit::value>( p_IndexValues, p_State.m_AlignmentVector );
+         return bitwise_and<VectorExtension, vector_size_bit::value>( p_IndexValues, p_State.m_AlignmentVector );
       }
    };
 
