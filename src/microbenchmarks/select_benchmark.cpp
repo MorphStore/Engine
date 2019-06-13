@@ -25,6 +25,7 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/uncompr.h>
 #include <core/operators/general_vectorized/select_compr.h>
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
@@ -151,7 +152,7 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
         &my_select_t<equal, scalar<v64<uint64_t>>, in_data_f>::apply \
     ), \
     "my_select", \
-    STR_EVAL_MACROS(outDataFName), \
+    "uncompr_f", \
     STR_EVAL_MACROS(inDataFName), \
     bw \
 }
@@ -171,6 +172,9 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
     MAKE_VARIANT_FUNC     (select_handwritten_buffer_compr_out, bw), \
     MAKE_VARIANT_FUNC     (select_handwritten_wit_compr_out, bw), \
     MAKE_VARIANT_STRUCT   (SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw), \
+    MAKE_VARIANT_STRUCT_WIT(uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
+    MAKE_VARIANT_STRUCT_WIT(uncompr_f, "uncompr_f", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw), \
+    MAKE_VARIANT_STRUCT_WIT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", uncompr_f, "uncompr_f", bw), \
     MAKE_VARIANT_STRUCT_WIT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw)
 
 // ****************************************************************************
