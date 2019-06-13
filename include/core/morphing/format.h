@@ -54,6 +54,8 @@ struct format {
 /**
  * @brief The uncompressed format, i.e., a sequence of 64-bit integers.
  */
+// @todo This should be moved to "uncompr.h", but since it is used at so many
+// places, we should leave this for later.
 struct uncompr_f : public format {
     static size_t get_size_max_byte(size_t p_CountValues) {
         return convert_size<uint64_t, uint8_t>(p_CountValues);
