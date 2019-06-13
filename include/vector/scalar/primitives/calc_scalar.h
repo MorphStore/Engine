@@ -103,5 +103,31 @@ namespace vector{
          return ((~p_vec1)+1);
       }
    };
+   template<>
+   struct shift_left<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::vector_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (scalar)" );
+         return p_vec1 << p_distance;
+      }
+   };
+   template<>
+   struct shift_right<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::vector_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (scalar)" );
+         return p_vec1 >> p_distance;
+      }
+   };
 }
 #endif //MORPHSTORE_VECTOR_SCALAR_PRIMITIVE_CALC_SCALAR_H

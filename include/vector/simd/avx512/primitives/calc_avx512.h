@@ -151,6 +151,32 @@ namespace vector{
          return _mm512_sub_epi64( _mm512_set1_epi64(0), p_vec1);
       }
    };
+   template<>
+   struct shift_left<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (avx512)" );
+         return _mm512_slli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_right<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (avx512)" );
+         return _mm512_srli_epi64(p_vec1, p_distance);
+      }
+   };
 }
 #endif /* CALC_AVX512_H */
 

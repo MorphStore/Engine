@@ -164,6 +164,34 @@ namespace vector{
       }
    };
 
+   template<>
+   struct shift_left<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (sse)" );
+         return _mm_slli_epi64(p_vec1, p_distance);
+      }
+   };
+
+   template<>
+   struct shift_right<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (sse)" );
+         return _mm_srli_epi64(p_vec1, p_distance);
+      }
+   };
+
 }
 #endif /* CALC_SSE_H */
 

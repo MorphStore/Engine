@@ -85,6 +85,26 @@ namespace vector{
          typename VectorExtension::vector_t const & p_vec1
       ) = delete;
    };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_left {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         int const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_right {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         int const & p_distance
+      ) = delete;
+   };
 
    
       
