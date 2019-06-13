@@ -73,6 +73,16 @@ namespace vector{
       ) = delete;
    };
 
+   template<class VectorExtension>
+   struct count_matches {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      uint8_t
+      apply(
+         typename VectorExtension::mask_t const & p_mask
+      ) = delete;
+   };
+
    
 //   template<class VectorExtension, int IOGranularity>
 //   struct compare;
