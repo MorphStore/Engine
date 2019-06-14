@@ -119,7 +119,7 @@ namespace vector{
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static uint8_t
       apply(
-         typename sse<v128<uint64_t>>::mask_t const & p_mask,
+         typename sse<v128<uint64_t>>::mask_t const & p_mask
       ) {
          trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
          // @todo Which one is faster?
