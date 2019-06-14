@@ -112,7 +112,7 @@ using namespace vector;
                 }else{
                     p_Data1Ptr++;
                     data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
-                    p_Data2Ptr += __builtin_popcount(p_State.m_MaskLess);
+                    p_Data2Ptr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
                     data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
                     );

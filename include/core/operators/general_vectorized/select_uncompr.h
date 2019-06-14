@@ -61,7 +61,8 @@ namespace morphstore {
             vector::compressstore<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
             positionVector = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
 
-            p_OutPtr += __builtin_popcount( resultMask );
+            //p_OutPtr += __builtin_popcount( resultMask );
+            p_OutPtr += vector::count_matches<VectorExtension>::apply( resultMask );
             p_DataPtr += vector_element_count::value;
          }
       }

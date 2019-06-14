@@ -132,8 +132,10 @@ using namespace vector;
                 data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
             }else{
                 vector::compressstore<VectorExtension,vector::iov::UNALIGNED,vector_base_t_granularity::value>(p_OutPtr,data2Vector,p_State.m_MaskGreater);
-                p_Data2Ptr += __builtin_popcountl(p_State.m_MaskGreater); 
-                p_OutPtr += __builtin_popcountl(p_State.m_MaskGreater);
+                //p_Data2Ptr += __builtin_popcountl(p_State.m_MaskGreater); 
+                //p_OutPtr += __builtin_popcountl(p_State.m_MaskGreater);
+                p_Data2Ptr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskGreater); 
+                p_OutPtr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskGreater);
                 data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
                               
             }
