@@ -104,10 +104,10 @@ namespace morphstore {
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s) {
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void pack_block(state_t & s) {
             if(t_CycleLen > 1) {
-                process_block<t_CycleLen / 2, t_PosInCycle                 >(s);
-                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+                pack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                pack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
             }
             else {
                 const uint64_t tmp2 = *(s.in64)++;
@@ -136,7 +136,7 @@ namespace morphstore {
             uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
             state_t s(in64, out64);
             for(unsigned i = 0; i < countIn64; i += 64)
-                process_block<countBits, 0>(s);
+                pack_block<countBits, 0>(s);
             
             in8 = reinterpret_cast<const uint8_t *>(s.in64);
             out8 = reinterpret_cast<uint8_t *>(s.out64);
@@ -294,10 +294,10 @@ namespace morphstore {
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(state_t & s) {
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_block(state_t & s) {
             if(t_CycleLen > 1) {
-                process_block<t_CycleLen / 2, t_PosInCycle                 >(s);
-                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+                unpack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                unpack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
             }
             else {
                 if((t_PosInCycle * t_bw) % countBits == 0) {
@@ -326,7 +326,7 @@ namespace morphstore {
             uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
             state_t s(in64, out64);
             for(unsigned i = 0; i < countOut64; i += 64)
-                process_block<countBits, 0>(s);
+                unpack_block<countBits, 0>(s);
             
             in8 = reinterpret_cast<const uint8_t *>(s.in64);
             out8 = reinterpret_cast<uint8_t *>(s.out64);
@@ -486,13 +486,13 @@ namespace morphstore {
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void process_block(
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_and_process_block(
                 state_t & s,
                 typename t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::state_t & opState
         ) {
             if(t_CycleLen > 1) {
-                process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
-                process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
             }
             else {
                 if((t_PosInCycle * t_bw) % countBits == 0) {
@@ -521,7 +521,7 @@ namespace morphstore {
             const uint64_t * const endIn64 = in64 + convert_size<uint8_t, uint64_t>(countIn8);
             state_t s(in64);
             while(s.in64 < endIn64)
-                process_block<countBits, 0>(s, opState);
+                unpack_and_process_block<countBits, 0>(s, opState);
         }
     };
     
