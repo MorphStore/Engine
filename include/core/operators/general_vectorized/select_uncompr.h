@@ -45,10 +45,11 @@ namespace morphstore {
          base_t const *& p_DataPtr,
          base_t const p_Predicate,
          base_t *& p_OutPtr,
-         size_t const p_Count
+         size_t const p_Count,
+         int startid = 0
       ) {
          vector_t const predicateVector = vector::set1<VectorExtension, vector_base_t_granularity::value>(p_Predicate);
-         vector_t positionVector = vector::set_sequence<VectorExtension, vector_base_t_granularity::value>(0,1);
+         vector_t positionVector = vector::set_sequence<VectorExtension, vector_base_t_granularity::value>(startid,1);
          vector_t const addVector = vector::set1<VectorExtension, vector_base_t_granularity::value>(vector_element_count::value);
          for(size_t i = 0; i < p_Count; ++i) {
             vector_t dataVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
@@ -91,8 +92,10 @@ namespace morphstore {
          size_t const vectorCount = inDataCount / vector_element_count::value;
          size_t const remainderCount = inDataCount % vector_element_count::value;
 
+         
          select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-         select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount);
+         
+         select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
 
          size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 
