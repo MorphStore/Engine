@@ -34,9 +34,14 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <vector/general_vector.h>
+#include <vector/primitives/create.h>
 #include <vector/primitives/io.h>
+// @todo The following includes should not be necessary.
+#include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
+#include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/avx2/primitives/compare_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 
 #include <immintrin.h>
@@ -262,9 +267,9 @@ namespace morphstore {
         IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
         
         uint8_t * m_Out;
+        // @todo Think about this number.
         static const size_t m_CountBuffer = vector_size_bit::value * 16;
-        // @todo Alignment for vectorized processing.
-        base_t m_StartBuffer[m_CountBuffer];
+        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[m_CountBuffer + vector_element_count::value - 1];
         base_t * m_Buffer;
         base_t * const m_EndBuffer;
         size_t m_Count;
@@ -286,12 +291,7 @@ namespace morphstore {
                     vector::iov::UNALIGNED, 
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
-            // @todo Use primitive.
-#if 0
-            m_Buffer += __builtin_popcount(p_Mask);
-#else
-            m_Buffer += p_Mask;
-#endif
+            m_Buffer += vector::count_matches<t_vector_extension>::apply(p_Mask);
             if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
@@ -300,14 +300,9 @@ namespace morphstore {
                 pack<t_vector_extension, t_bw, t_step>(
                         buffer8, m_CountBuffer, m_Out
                 );
-#if 0
-                // @todo This is required for vectorized processing.
                 size_t overflow = m_Buffer - m_EndBuffer;
                 memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
                 m_Buffer = m_StartBuffer + overflow;
-#else
-                m_Buffer = m_StartBuffer;
-#endif
                 m_Count += m_CountBuffer;
             }
         }
@@ -315,7 +310,7 @@ namespace morphstore {
         void done() {
             if(m_Buffer != m_StartBuffer)
                 // @todo Error message.
-                throw std::runtime_error("ohoh");
+                throw std::runtime_error("ohoh " + std::to_string(m_Buffer - m_StartBuffer));
         }
         
         size_t get_count() const {
