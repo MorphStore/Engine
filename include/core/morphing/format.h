@@ -70,7 +70,7 @@ template<
         class t_format,
         template<class /*t_vector_extension*/> class t_op_processing_unit
 >
-class decompress_and_process_batch {
+struct decompress_and_process_batch {
     static void apply(
             const uint8_t * & p_In8,
             size_t p_CountIn8,
