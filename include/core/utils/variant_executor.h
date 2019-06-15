@@ -34,7 +34,7 @@
 #define MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
 
 #include <core/morphing/format.h>
-#include <core/morphing/morph.h>
+#include <core/morphing/safe_morph.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/column_cache.h>
@@ -184,12 +184,7 @@ namespace morphstore {
                                             MSV_CXX_ATTRIBUTE_PPUNUSED std::index_sequence<t_Idxs ...>
                                     ) {
                                         STATIC_ASSERT_PARAMPACK_SAMESIZE(t_Idxs, t_uncompr_out_fs)
-                                        return {
-                                            // @todo Do not hardcode the vector extension.
-                                            morph<vector::scalar<vector::v64<uint64_t>>, uncompr_f>(
-                                                    std::get<t_Idxs>(p_Cols)
-                                            ) ...
-                                        };
+                                        return {safe_morph<uncompr_f>(std::get<t_Idxs>(p_Cols)) ...};
                                     }
 
                                     template<size_t t_Count, class t_head_f, class ... t_tail_fs>
