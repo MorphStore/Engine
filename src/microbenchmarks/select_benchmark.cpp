@@ -201,6 +201,7 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
             bw \
     )
 
+#if 0
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
     MAKE_VARIANT_FUNC     (select_handwritten_buffer_compr_out, bw), \
@@ -209,6 +210,10 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
     MAKE_VARIANTS_WIT     (scalar<v64<uint64_t>>, bw), \
     MAKE_VARIANTS_WIT     (sse<v128<uint64_t>>, bw), \
     MAKE_VARIANTS_WIT     (avx2<v256<uint64_t>>, bw)
+#else
+#define MAKE_VARIANTS(bw) \
+    MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw)
+#endif
 
 // ****************************************************************************
 // Main program.
