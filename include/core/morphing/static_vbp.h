@@ -18,8 +18,12 @@
 /**
  * @file static_vbp.h
  * @brief A compressed format using the vertical bit-packed layout with a fixed
- *        bit width for an entire column and the corresponding morph operators
- *        for compression and decompression.
+ * bit width for an entire column and facilities for using this format.
+ * 
+ * This file contains:
+ * - the definition of the compressed format
+ * - morph-operators for compression and decompression
+ * - implementations for accessing the compressed data
  * @todo Documentation.
  */
 
@@ -55,16 +59,22 @@
 
 namespace morphstore {
     
-    // The vertical bit packed format with a static bit width.
+    // ************************************************************************
+    // Format
+    // ************************************************************************
+    
+    /**
+     * @brief The vertical bit packed format with a static bit width.
+     */
     template<unsigned t_bw, unsigned t_step>
     struct static_vbp_f : public format {
         static_assert(
                 (1 <= t_bw) && (t_bw <= std::numeric_limits<uint64_t>::digits),
-                "static_vbp: template parameter t_bw must satisfy 1 <= t_bw <= 64"
+                "static_vbp_f: template parameter t_bw must satisfy 1 <= t_bw <= 64"
         );
         static_assert(
                 t_step > 0,
-                "static_vbp: template parameter t_step must be greater than 0"
+                "static_vbp_f: template parameter t_step must be greater than 0"
         );
         
         static void check_count_values(size_t p_CountValues) {
@@ -87,6 +97,134 @@ namespace morphstore {
         }
     };
     
+    
+    // ************************************************************************
+    // Morph-operators
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Compression
+    // ------------------------------------------------------------------------
+    
+    /**
+     * @brief Morph-operator for the compression to the vertical bit-packed
+     * layout with a static bit width.
+     * 
+     * This operator is completely generic with respect to the configuration of
+     * its template parameters. However, invalid combinations will lack a
+     * template specialization of the `pack`-function and can, thus, be
+     * detected at compile-time.
+     */
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    struct morph_t<
+            t_vector_extension,
+            static_vbp_f<t_bw, t_step>,
+            uncompr_f
+    > {
+        using out_f = static_vbp_f<t_bw, t_step>;
+        using in_f = uncompr_f;
+        
+        static
+        const column<out_f> *
+        apply(const column<in_f> * inCol) {
+            const size_t count64 = inCol->get_count_values();
+            out_f::check_count_values(count64);
+            const uint8_t * in8 = inCol->get_data();
+            
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
+            uint8_t * out8 = outCol->get_data();
+            const uint8_t * const initOut8 = out8;
+
+            pack<t_vector_extension, t_bw, t_step>(in8, count64, out8);
+
+            outCol->set_meta_data(count64, out8 - initOut8);
+            
+            return outCol;
+        }
+    };
+    
+    // ------------------------------------------------------------------------
+    // Decompression
+    // ------------------------------------------------------------------------
+    
+    /**
+     * @brief Morph-operator for the decompression from the vertical bit-packed
+     * layout with a static bit width.
+     * 
+     * This operator is completely generic with respect to the configuration of
+     * its template parameters. However, invalid combinations will lack a
+     * template specialization of the `unpack`-function and can, thus, be
+     * detected at compile-time.
+     */
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    struct morph_t<
+            t_vector_extension,
+            uncompr_f,
+            static_vbp_f<t_bw, t_step>
+    > {
+        using out_f = uncompr_f;
+        using in_f = static_vbp_f<t_bw, t_step>;
+        
+        static
+        const column<out_f> *
+        apply(const column<in_f> * inCol) {
+            const size_t count64 = inCol->get_count_values();
+            const uint8_t * in8 = inCol->get_data();
+            
+            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
+            uint8_t * out8 = outCol->get_data();
+            const uint8_t * const initOut8 = out8;
+
+            unpack<t_vector_extension, t_bw, t_step>(in8, out8, count64);
+            
+            outCol->set_meta_data(count64, out8 - initOut8);
+
+            return outCol;
+        }
+    };
+    
+    
+    // ************************************************************************
+    // Interfaces for accessing compressed data
+    // ************************************************************************
+
+    // ------------------------------------------------------------------------
+    // Sequential read
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            template<class /*t_vector_extension*/> class t_op_processing_unit,
+            unsigned t_bw,
+            unsigned t_step
+    >
+    struct decompress_and_process_batch<
+            t_vector_extension,
+            static_vbp_f<t_bw, t_step>,
+            t_op_processing_unit
+    > {
+        static void apply(
+                const uint8_t * & p_In8,
+                size_t p_CountIn8,
+                typename t_op_processing_unit<t_vector_extension>::state_t & p_State
+        ) {
+            unpack_and_process<
+                    t_vector_extension, t_bw, t_step, t_op_processing_unit
+            >(
+                    p_In8, p_CountIn8, p_State
+            );
+        }
+    };
+    
+    // This is deprecated, we decided not to use this approach.
 #if 1
     // Iterator implementation with a load in each call of next().
     // Seems to be faster for all bit widths.
@@ -153,110 +291,9 @@ namespace morphstore {
     };
 #endif
     
-    /**
-     * @brief Morph-operator for the compression to the vertical bit-packed
-     * layout with a static bit width.
-     * 
-     * This operator is completely generic with respect to the configuration of
-     * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `pack`-function and can, thus, be
-     * detected at compile-time.
-     */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
-            uncompr_f
-    > {
-        using out_f = static_vbp_f<t_bw, t_step>;
-        using in_f = uncompr_f;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const size_t count64 = inCol->get_count_values();
-            out_f::check_count_values(count64);
-            const uint8_t * in8 = inCol->get_data();
-            
-            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
-            uint8_t * out8 = outCol->get_data();
-            const uint8_t * const initOut8 = out8;
-
-            pack<t_vector_extension, t_bw, t_step>(in8, count64, out8);
-
-            outCol->set_meta_data(count64, out8 - initOut8);
-            
-            return outCol;
-        }
-    };
-    
-    /**
-     * @brief Morph-operator for the decompression from the vertical bit-packed
-     * layout with a static bit width.
-     * 
-     * This operator is completely generic with respect to the configuration of
-     * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `unpack`-function and can, thus, be
-     * detected at compile-time.
-     */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            uncompr_f,
-            static_vbp_f<t_bw, t_step>
-    > {
-        using out_f = uncompr_f;
-        using in_f = static_vbp_f<t_bw, t_step>;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const size_t count64 = inCol->get_count_values();
-            const uint8_t * in8 = inCol->get_data();
-            
-            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
-            uint8_t * out8 = outCol->get_data();
-            const uint8_t * const initOut8 = out8;
-
-            unpack<t_vector_extension, t_bw, t_step>(in8, out8, count64);
-            
-            outCol->set_meta_data(count64, out8 - initOut8);
-
-            return outCol;
-        }
-    };
-    
-    template<
-            class t_vector_extension,
-            template<class /*t_vector_extension*/> class t_op_processing_unit,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct decompress_and_process_batch<
-            t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
-            t_op_processing_unit
-    > {
-        static void apply(
-                const uint8_t * & p_In8,
-                size_t p_CountIn8,
-                typename t_op_processing_unit<t_vector_extension>::state_t & p_State
-        ) {
-            unpack_and_process<
-                    t_vector_extension, t_bw, t_step, t_op_processing_unit
-            >(
-                    p_In8, p_CountIn8, p_State
-            );
-        }
-    };
+    // ------------------------------------------------------------------------
+    // Sequential write
+    // ------------------------------------------------------------------------
 
     // @todo Works only if base_t is uint64_t.
     // @todo Take t_step into account correctly.
