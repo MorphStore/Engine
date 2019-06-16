@@ -207,7 +207,7 @@ namespace morphstore {
                                                 const column<t_head_f> * p_HeadCol,
                                                 const column<t_tail_fs> * ... p_TailCols
                                         ) {
-                                            if(typeid(t_head_f) != typeid(uncompr_f))
+                                            if(std::is_same<t_head_f, uncompr_f>::value)
                                                 delete p_HeadCol;
                                         }
                                     };
@@ -234,9 +234,10 @@ namespace morphstore {
                                         );
 
                                         op_func_ptr_t m_OpFuncPtr;
+                                        const bool m_IsNoOpMorph;
 
-                                        for_input_formats(op_func_ptr_t p_OpFuncPtr)
-                                        : m_OpFuncPtr(p_OpFuncPtr) {
+                                        for_input_formats(op_func_ptr_t p_OpFuncPtr, bool p_IsNoOpMorph = false)
+                                        : m_OpFuncPtr(p_OpFuncPtr), m_IsNoOpMorph(p_IsNoOpMorph) {
                                             //
                                         }
 
@@ -279,7 +280,8 @@ namespace morphstore {
                                             // also valid.
                                             auto seq = std::index_sequence_for<t_out_fs ...>();
                                             auto resDecompr = decompress_column_tuple(resInternal, seq);
-                                            delete_column_tuple(resInternal, seq);
+                                            if(!m_IsNoOpMorph)
+                                                delete_column_tuple(resInternal, seq);
                                             return resDecompr;
                                         }
                                     };
