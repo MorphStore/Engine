@@ -38,7 +38,10 @@
 #ifndef MORPHSTORE_CORE_MORPHING_SAFE_MORPH_H
 #define MORPHSTORE_CORE_MORPHING_SAFE_MORPH_H
 
+#include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/morph.h>
+#include <core/morphing/static_vbp.h>
+#include <core/morphing/uncompr.h>
 #include <core/storage/column.h>
 #include <vector/general_vector.h>
 #include <vector/scalar/extension_scalar.h>
@@ -153,6 +156,82 @@ namespace morphstore {
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR
 
+    // ------------------------------------------------------------------------
+    // Format dynamic_vbp_f
+    // ------------------------------------------------------------------------
+    
+    // The step template parameter of the format dynamic_vbp_f corresponds to
+    // the vector extension that naturally fits for working with this format.
+    
+    // Compression
+            
+    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // t_PageSizeBlocks here as well, but the compiler complains then.
+    #define MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector_extension) \
+        template<> \
+        struct safe_morph_t< \
+                dynamic_vbp_f< \
+                        vector_extension::vector_helper_t::size_bit::value, \
+                        vector_extension::vector_helper_t::size_byte::value, \
+                        vector_extension::vector_helper_t::element_count::value \
+                >, \
+                uncompr_f \
+        > { \
+            using dst_f = dynamic_vbp_f< \
+                    vector_extension::vector_helper_t::size_bit::value, \
+                    vector_extension::vector_helper_t::size_byte::value, \
+                    vector_extension::vector_helper_t::element_count::value \
+            >; \
+            using src_f = uncompr_f; \
+             \
+            static \
+            const column<dst_f> * \
+            apply(const column<src_f> * inCol) { \
+                return morph<vector_extension, dst_f, src_f>(inCol); \
+            } \
+        };
+
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
+//    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx512<vector::v512<uint64_t>>)
+
+    #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR
+
+    // Decompression.
+            
+    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // t_PageSizeBlocks here as well, but the compiler complains then.
+    #define MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector_extension) \
+    template<> \
+    struct safe_morph_t< \
+            uncompr_f, \
+            dynamic_vbp_f< \
+                    vector_extension::vector_helper_t::size_bit::value, \
+                    vector_extension::vector_helper_t::size_byte::value, \
+                    vector_extension::vector_helper_t::element_count::value \
+            > \
+    > { \
+        using dst_f = uncompr_f; \
+        using src_f = dynamic_vbp_f< \
+                vector_extension::vector_helper_t::size_bit::value, \
+                vector_extension::vector_helper_t::size_byte::value, \
+                vector_extension::vector_helper_t::element_count::value \
+        >; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vector_extension, dst_f, src_f>(inCol); \
+        } \
+    };
+
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
+//    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx512<vector::v512<uint64_t>>)
+
+    #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_SAFE_MORPH_H
