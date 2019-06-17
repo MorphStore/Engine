@@ -48,7 +48,7 @@ namespace morphstore{
     class Vertex{
 
     private:
-        // Vertex contains a (global) id; (old) ldbc id; entity number for lookup; vector adjList for the adjacency List
+        // Vertex contains a (global) id; entity; vector adjList for the adjacency List
         uint64_t id;
         std::vector<Edge> adjList;
         // properties

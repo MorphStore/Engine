@@ -70,10 +70,12 @@ namespace morphstore{
         void import(morphstore::Graph &graph){
             std::cout << "Importing LDBC-files into graph ... ";
             std::cout.flush();
+
             // (1) generate vertices
             generate_vertices(graph);
             // (2) generate edges
             generate_edges(graph);
+
             std::cout << "--> done" << std::endl;
         }
 
@@ -176,6 +178,7 @@ namespace morphstore{
                                 }
                                 // last attribute
                                 properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
+
                                 //-----------------------------------------------------
                                 // create vertex and insert into graph with properties
                                 uint64_t systemID = graph.add_vertex_with_properties(properties);

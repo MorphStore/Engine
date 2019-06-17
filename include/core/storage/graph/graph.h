@@ -37,6 +37,7 @@ namespace morphstore{
 
     private:
         // main data structure: mapping global id -> vertex
+        // unordered_map hast fast search time -> average = O(1); worst case = O(n):
         std::unordered_map<uint64_t, Vertex> vertices;
 
     public:
