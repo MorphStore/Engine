@@ -58,6 +58,8 @@ IF(CAVX512)
 	message(STATUS "AVX512 and AVX2 support switched on")
 ENDIF(CAVX512)
 
+morph_flag(-march=native)
+
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
 
