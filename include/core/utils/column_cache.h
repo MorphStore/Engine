@@ -27,7 +27,7 @@
 #define MORPHSTORE_CORE_UTILS_COLUMN_CACHE_H
 
 #include <core/morphing/format.h>
-#include <core/morphing/morph.h>
+#include <core/morphing/safe_morph.h>
 #include <core/storage/column.h>
 #include <core/utils/preprocessor.h>
 #include <vector/scalar/extension_scalar.h>
@@ -97,13 +97,10 @@ namespace morphstore {
             auto & formatMap = m_Cache[p_Col];
             std::type_index formatKey(typeid(t_format));
             if(!formatMap.count(formatKey)) {
-                // @todo Do not hardcode the processing style here.
                 formatMap.emplace(
                         formatKey,
                         new column_wrapper<t_format>(
-                                morph<vector::scalar<vector::v64<uint64_t>>, t_format>(
-                                        p_Col
-                                )
+                                safe_morph<t_format>(p_Col)
                         )
                 );
                 return false;

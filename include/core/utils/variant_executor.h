@@ -34,7 +34,7 @@
 #define MORPHSTORE_CORE_UTILS_VARIANT_EXECUTOR_H
 
 #include <core/morphing/format.h>
-#include <core/morphing/morph.h>
+#include <core/morphing/safe_morph.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/column_cache.h>
@@ -184,12 +184,7 @@ namespace morphstore {
                                             MSV_CXX_ATTRIBUTE_PPUNUSED std::index_sequence<t_Idxs ...>
                                     ) {
                                         STATIC_ASSERT_PARAMPACK_SAMESIZE(t_Idxs, t_uncompr_out_fs)
-                                        return {
-                                            // @todo Do not hardcode the vector extension.
-                                            morph<vector::scalar<vector::v64<uint64_t>>, uncompr_f>(
-                                                    std::get<t_Idxs>(p_Cols)
-                                            ) ...
-                                        };
+                                        return {safe_morph<uncompr_f>(std::get<t_Idxs>(p_Cols)) ...};
                                     }
 
                                     template<size_t t_Count, class t_head_f, class ... t_tail_fs>
@@ -212,7 +207,7 @@ namespace morphstore {
                                                 const column<t_head_f> * p_HeadCol,
                                                 const column<t_tail_fs> * ... p_TailCols
                                         ) {
-                                            if(typeid(t_head_f) != typeid(uncompr_f))
+                                            if(std::is_same<t_head_f, uncompr_f>::value)
                                                 delete p_HeadCol;
                                         }
                                     };
@@ -239,9 +234,10 @@ namespace morphstore {
                                         );
 
                                         op_func_ptr_t m_OpFuncPtr;
+                                        const bool m_IsNoOpMorph;
 
-                                        for_input_formats(op_func_ptr_t p_OpFuncPtr)
-                                        : m_OpFuncPtr(p_OpFuncPtr) {
+                                        for_input_formats(op_func_ptr_t p_OpFuncPtr, bool p_IsNoOpMorph = false)
+                                        : m_OpFuncPtr(p_OpFuncPtr), m_IsNoOpMorph(p_IsNoOpMorph) {
                                             //
                                         }
 
@@ -284,7 +280,8 @@ namespace morphstore {
                                             // also valid.
                                             auto seq = std::index_sequence_for<t_out_fs ...>();
                                             auto resDecompr = decompress_column_tuple(resInternal, seq);
-                                            delete_column_tuple(resInternal, seq);
+                                            if(!m_IsNoOpMorph)
+                                                delete_column_tuple(resInternal, seq);
                                             return resDecompr;
                                         }
                                     };

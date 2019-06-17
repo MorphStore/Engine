@@ -127,11 +127,16 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define MAKE_VARIANT_CLASSICAL(out_data_f, outDataFName, in_data_f, inDataFName, bw) { \
+#define STATIC_VBP_NAME "static_vbp_f<bw, step>"
+#define STATIC_VBP_FORMAT(vector_extension, bw) \
+    SINGLE_ARG(static_vbp_f<bw, vector_extension::vector_helper_t::element_count::value>)
+
+#define MAKE_VARIANT_CLASSICAL(vector_extension, out_data_f, outDataFName, in_data_f, inDataFName, bw) { \
     new varex_t::operator_wrapper::for_output_formats<out_data_f>::for_input_formats<in_data_f>( \
-        &morphstore::select<std::equal_to, scalar<v64<uint64_t>>, out_data_f, in_data_f> \
+        &morphstore::select<std::equal_to, vector_extension, out_data_f, in_data_f> \
     ), \
     "classical", \
+    STR_EVAL_MACROS(vector_extension), \
     STR_EVAL_MACROS(outDataFName), \
     STR_EVAL_MACROS(inDataFName), \
     bw \
@@ -142,40 +147,73 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
         &name \
     ), \
     #name, \
-    "static_vbp_f<bw, 1>", \
+    "scalar<v64<uint64_t>>", \
+    STATIC_VBP_NAME, \
     "uncompr_f", \
     bw \
 }
 
-#define MAKE_VARIANT_STRUCT(in_data_f, inDataFName, bw) { \
+#define MAKE_VARIANT_STRUCT(vector_extension, in_data_f, inDataFName, bw) { \
     new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<in_data_f>( \
-        &my_select_t<equal, scalar<v64<uint64_t>>, in_data_f>::apply \
+        &my_select_t<equal, vector_extension, in_data_f>::apply \
     ), \
     "my_select", \
+    STR_EVAL_MACROS(vector_extension), \
     "uncompr_f", \
     STR_EVAL_MACROS(inDataFName), \
     bw \
 }
 
-#define MAKE_VARIANT_STRUCT_WIT(out_pos_f, outPosFName, in_data_f, inDataFName, bw) { \
+#define MAKE_VARIANT_STRUCT_WIT(vector_extension, out_pos_f, outPosFName, in_data_f, inDataFName, bw) { \
     new varex_t::operator_wrapper::for_output_formats<out_pos_f>::for_input_formats<in_data_f>( \
-        &my_select_wit_t<equal, scalar<v64<uint64_t>>, out_pos_f, in_data_f>::apply \
+        &my_select_wit_t<equal, vector_extension, out_pos_f, in_data_f>::apply \
     ), \
     "my_select_wit", \
+    STR_EVAL_MACROS(vector_extension), \
     STR_EVAL_MACROS(outPosFName), \
     STR_EVAL_MACROS(inDataFName), \
     bw \
 }
 
+#define MAKE_VARIANTS_WIT(vector_extension, bw) \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            uncompr_f, "uncompr_f", \
+            uncompr_f, "uncompr_f", \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            uncompr_f, "uncompr_f", \
+            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
+            uncompr_f, "uncompr_f", \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
+            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
+            bw \
+    )
+
+#if 0
 #define MAKE_VARIANTS(bw) \
-    MAKE_VARIANT_CLASSICAL(uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
+    MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
     MAKE_VARIANT_FUNC     (select_handwritten_buffer_compr_out, bw), \
     MAKE_VARIANT_FUNC     (select_handwritten_wit_compr_out, bw), \
-    MAKE_VARIANT_STRUCT   (SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw), \
-    MAKE_VARIANT_STRUCT_WIT(uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
-    MAKE_VARIANT_STRUCT_WIT(uncompr_f, "uncompr_f", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw), \
-    MAKE_VARIANT_STRUCT_WIT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", uncompr_f, "uncompr_f", bw), \
-    MAKE_VARIANT_STRUCT_WIT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw)
+    MAKE_VARIANT_STRUCT   (scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>), STATIC_VBP_NAME, bw), \
+    MAKE_VARIANTS_WIT     (scalar<v64<uint64_t>>, bw), \
+    MAKE_VARIANTS_WIT     (sse<v128<uint64_t>>, bw), \
+    MAKE_VARIANTS_WIT     (avx2<v256<uint64_t>>, bw)
+#else
+#define MAKE_VARIANTS(bw) \
+    MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw)
+#endif
 
 // ****************************************************************************
 // Main program.
@@ -186,11 +224,11 @@ int main(void) {
     fail_if_self_managed_memory();
     
     using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
-        ::for_variant_params<std::string, std::string, std::string, unsigned>
+        ::for_variant_params<std::string, std::string, std::string, std::string, unsigned>
         ::for_setting_params<float>;
     varex_t varex(
             {"pred", "est"},
-            {"variant", "out_pos_f", "in_data_f", "bw"},
+            {"variant", "vector_extension", "out_pos_f", "in_data_f", "bw"},
             {"selectivity"}
     );
     
@@ -279,7 +317,7 @@ int main(void) {
             }
 
             varex.print_datagen_started();
-            const size_t countMatches = static_cast<size_t>(static_cast<float>(countValues) * selectivity) / (64 * 16) * (64 * 16);
+            const size_t countMatches = static_cast<size_t>(static_cast<float>(countValues) * selectivity) / (256 * 16) * (256 * 16);
             auto origCol = generate_exact_number(
                     countValues,
                     countMatches,

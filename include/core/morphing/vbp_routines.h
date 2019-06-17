@@ -18,13 +18,9 @@
 /**
  * @file vbp_routines.h
  * @brief Routines for using the vertical bit-packed layout.
- * @todo Efficient implementations (for now, it must merely work).
  * @todo Somehow include the name of the layout into the way to access these
  *       routines (namespace, struct, name prefix, ...), because we will have
  *       other layouts in the future.
- * @todo It would be great if we could derive the vector datatype (e.g.
- *       __m128i) from the processing style. Then we would not require uint8_t*
- *       parameters and it would also be easier for the callers.
  * @todo Documentation.
  */
 
@@ -34,12 +30,45 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
+#include <vector/general_vector.h>
+#include <vector/primitives/calc.h>
+#include <vector/primitives/create.h>
+#include <vector/primitives/io.h>
+#include <vector/primitives/logic.h>
+// @todo The following includes from the vector-lib should not be necessary, I think.
 #include <vector/scalar/extension_scalar.h>
-#include <vector/simd/sse/extension_sse.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/logic_scalar.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/logic_avx2.h>
+//#include <vector/simd/avx512/primitives/calc_avx512.h>
+//#include <vector/simd/avx512/primitives/create_avx512.h>
+//#include <vector/simd/avx512/primitives/io_avx512.h>
+//#include <vector/simd/avx512/primitives/logic_avx512.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/sse/primitives/logic_sse.h>
 
 #include <cstdint>
 #include <immintrin.h>
 #include <limits>
+
+/**
+ * If this macro is defined, then the functions delegating to the right
+ * (un)packing routine for a given bit width, i.e., `pack_switch`,
+ * `unpack_switch`, and `unpack_and_process_switch` have a default case that throws an exception if
+ * the specified bit width is invalid. For performance reasons, this check
+ * should be left out, but during debugging, it can be quite helpful.
+ */
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#include <stdexcept>
+#endif
 
 namespace morphstore {
     
@@ -84,6 +113,9 @@ namespace morphstore {
     // Template specializations.
     // ------------------------------------------------------------------------
     
+#if 0
+    // Hand-written scalar.
+    
     template<unsigned t_bw>
     class pack_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1> {
         static const size_t countBits = std::numeric_limits<uint64_t>::digits;
@@ -97,7 +129,7 @@ namespace morphstore {
             state_t(const uint64_t * p_In64, uint64_t * p_Out64) {
                 in64 = p_In64;
                 out64 = p_Out64;
-//                // @todo maybe we don't need this
+                // @todo Maybe we don't need this.
                 bitpos = 0;
                 tmp = 0;
             }
@@ -142,6 +174,78 @@ namespace morphstore {
             out8 = reinterpret_cast<uint8_t *>(s.out64);
         }
     };
+#else
+    // Generic with vector-lib.
+    
+    template<class t_vector_extension, unsigned t_bw>
+    class pack_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        
+        struct state_t {
+            const base_t * inBase;
+            base_t * outBase;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase, base_t * p_OutBase) {
+                inBase = p_InBase;
+                outBase = p_OutBase;
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void pack_block(state_t & s) {
+            using namespace vector;
+            if(t_CycleLen > 1) {
+                pack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                pack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                const vector_t tmp2 = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                s.inBase += vector_element_count::value;
+                s.tmp = bitwise_or<t_ve>(s.tmp, shift_left<t_ve>::apply(tmp2, s.bitpos));
+                s.bitpos += t_bw;
+                if(((t_PosInCycle + 1) * t_bw) % countBits == 0) {
+                    store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.tmp);
+                    s.outBase += vector_element_count::value;
+                    s.tmp = set1<t_ve, vector_base_t_granularity::value>(0);
+                    s.bitpos = 0;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.tmp);
+                    s.outBase += vector_element_count::value;
+                    s.tmp = shift_right<t_ve>::apply(tmp2, t_bw - s.bitpos + countBits);
+                    s.bitpos -= countBits;
+                }
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn64,
+                uint8_t * & out8
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            base_t * outBase = reinterpret_cast<base_t *>(out8);
+            state_t s(inBase, outBase);
+            const size_t countInBase = convert_size<uint64_t, base_t>(countIn64);
+            const size_t blockSize = vector_size_bit::value;
+            
+            for(size_t i = 0; i < countInBase; i += blockSize)
+                pack_block<countBits, 0>(s);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
+            out8 = reinterpret_cast<uint8_t *>(s.outBase);
+        }
+    };
+#endif
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
@@ -225,6 +329,12 @@ namespace morphstore {
             case 62: pack<t_vector_extension, 62, t_step>(in8, inCount64, out8); break;
             case 63: pack<t_vector_extension, 63, t_step>(in8, inCount64, out8); break;
             case 64: pack<t_vector_extension, 64, t_step>(in8, inCount64, out8); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "pack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
     
@@ -271,6 +381,9 @@ namespace morphstore {
     // Template specializations.
     // ------------------------------------------------------------------------
     
+#if 0
+    // Hand-written scalar.
+    
     template<unsigned t_bw>
     class unpack_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1> {
         static const size_t countBits = std::numeric_limits<uint64_t>::digits;
@@ -287,7 +400,7 @@ namespace morphstore {
                 in64 = p_In64;
                 out64 = p_Out64;
                 nextOut = 0;
-                // @todo maybe we don't need this
+                // @todo Maybe we don't need this.
                 bitpos = 0;
                 tmp = 0;
             }
@@ -332,6 +445,96 @@ namespace morphstore {
             out8 = reinterpret_cast<uint8_t *>(s.out64);
         }
     };
+#else
+    // Generic with vector-lib.
+    
+    template<class t_vector_extension, unsigned t_bw>
+    class unpack_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        // @todo It would be nice to initialize this in-class. However, the
+        // compiler complains because set1 is not constexpr, even when it is
+        // defined so.
+        static const vector_t mask; // = vector::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        
+        struct state_t {
+            const base_t * inBase;
+            base_t * outBase;
+            vector_t nextOut;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase, base_t * p_OutBase) {
+                inBase = p_InBase;
+                outBase = p_OutBase;
+                nextOut = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_block(state_t & s) {
+            using namespace vector;
+            
+            if(t_CycleLen > 1) {
+                unpack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                unpack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, s.tmp);
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(s.tmp, countBits - s.bitpos + t_bw), s.nextOut));
+                    s.bitpos = s.bitpos - countBits;
+                }
+                store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.nextOut);
+                s.outBase += vector_element_count::value;
+                s.nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(s.tmp, s.bitpos));
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                uint8_t * & out8,
+                size_t countOut64
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            base_t * outBase = reinterpret_cast<base_t *>(out8);
+            state_t s(inBase, outBase);
+            const size_t countOutBase = convert_size<uint64_t, base_t>(countOut64);
+            const size_t blockSize = vector_size_bit::value;
+            for(size_t i = 0; i < countOutBase; i += blockSize)
+                unpack_block<countBits, 0>(s);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
+            out8 = reinterpret_cast<uint8_t *>(s.outBase);
+        }
+    };
+    
+    template<class t_vector_extension, unsigned t_bw>
+    const typename t_vector_extension::vector_t unpack_t<
+            t_vector_extension,
+            t_bw,
+            t_vector_extension::vector_helper_t::element_count::value
+    >::mask = vector::set1<
+            t_vector_extension,
+            t_vector_extension::vector_helper_t::granularity::value
+    >(
+            bitwidth_max<typename t_vector_extension::base_t>(t_bw)
+    );
+#endif
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
@@ -415,6 +618,12 @@ namespace morphstore {
             case 62: unpack<t_vector_extension, 62, t_step>(in8, out8, outCount64); break;
             case 63: unpack<t_vector_extension, 63, t_step>(in8, out8, outCount64); break;
             case 64: unpack<t_vector_extension, 64, t_step>(in8, out8, outCount64); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
     
@@ -464,6 +673,9 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Template specializations.
     // ------------------------------------------------------------------------
+    
+#if 0
+    // Hand-written scalar
     
     template<unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
     class unpack_and_process_t<vector::scalar<vector::v64<uint64_t>>, t_bw, 1, t_op_processing_unit> {
@@ -524,6 +736,92 @@ namespace morphstore {
                 unpack_and_process_block<countBits, 0>(s, opState);
         }
     };
+#else
+    // Generic with vector-lib.
+    
+    template<class t_vector_extension, unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
+    class unpack_and_process_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value, t_op_processing_unit> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        // @todo It would be nice to initialize this in-class. However, the
+        // compiler complains because set1 is not constexpr, even when it is
+        // defined so.
+        static const vector_t mask; // = vector::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        
+        struct state_t {
+            const base_t * inBase;
+            vector_t nextOut;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase) {
+                inBase = p_InBase;
+                nextOut = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_and_process_block(
+                state_t & s,
+                typename t_op_processing_unit<t_ve>::state_t & opState
+        ) {
+            using namespace vector;
+            
+            if(t_CycleLen > 1) {
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, s.tmp);
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(s.tmp, countBits - s.bitpos + t_bw), s.nextOut));
+                    s.bitpos = s.bitpos - countBits;
+                }
+                t_op_processing_unit<t_ve>::apply(s.nextOut, opState);
+                s.nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(s.tmp, s.bitpos));
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_processing_unit<t_ve>::state_t & opState
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            const base_t * const endInBase = inBase + convert_size<uint8_t, base_t>(countIn8);
+            state_t s(inBase);
+            while(s.inBase < endInBase)
+                unpack_and_process_block<countBits, 0>(s, opState);
+        }
+    };
+    
+    template<class t_vector_extension, unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
+    const typename t_vector_extension::vector_t unpack_and_process_t<
+            t_vector_extension,
+            t_bw,
+            t_vector_extension::vector_helper_t::element_count::value,
+            t_op_processing_unit
+    >::mask = vector::set1<
+            t_vector_extension,
+            t_vector_extension::vector_helper_t::granularity::value
+    >(
+            bitwidth_max<typename t_vector_extension::base_t>(t_bw)
+    );
+#endif
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
@@ -608,8 +906,16 @@ namespace morphstore {
             case 62: unpack_and_process<t_vector_extension, 62, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
             case 63: unpack_and_process<t_vector_extension, 63, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
             case 64: unpack_and_process<t_vector_extension, 64, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_and_process_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
 }
+
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H

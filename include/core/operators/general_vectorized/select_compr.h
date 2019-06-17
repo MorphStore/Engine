@@ -170,22 +170,31 @@ struct select_processing_unit_wit {
     // (2) we still want to be generic w.r.t. the comparison operator
     template<class t_vector_extension>
     struct type {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+        
         struct state_t {
-            const uint64_t m_Predicate;
-            size_t m_Pos;
+            const vector_t m_Predicate;
+            vector_t m_Pos;
+            // @todo This can be static.
+            const vector_t m_Inc;
             t_wit m_Wit;
 
-            state_t(uint64_t p_Predicate, uint8_t * p_Out) :
-            m_Predicate(p_Predicate), m_Pos(0), m_Wit(p_Out) {
+            state_t(base_t p_Predicate, uint8_t * p_Out) :
+                    m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
+                    m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(0, 1)),
+                    m_Inc(vector::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
+                    m_Wit(p_Out)
+            {
                 //
             }
         };
 
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(uint64_t p_Data, state_t & p_State) {
-            int mask = p_Data == p_State.m_Predicate;
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(vector_t p_Data, state_t & p_State) {
+            vector_mask_t mask = vector::equal<t_ve>::apply(p_Data, p_State.m_Predicate);
             if(mask)
-                p_State.m_Wit.write(p_State.m_Pos, 1);
-            p_State.m_Pos++;
+                p_State.m_Wit.write(p_State.m_Pos, mask);
+            p_State.m_Pos = vector::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
         }
     };
 };
@@ -199,6 +208,8 @@ template<
 // @todo We cannot call it select or select_t at the moment, because it has
 // other requirements for t_op than the select-struct in the general interface.
 struct my_select_wit_t {
+    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+    
     static const column<t_out_pos_f> * apply(
             const column<t_in_data_f> * const inDataCol,
             const uint64_t val,
@@ -227,6 +238,7 @@ struct my_select_wit_t {
         );
 
         const size_t outPosCount = s.m_Wit.get_count();
+        s.m_Wit.done();
         outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
 
         return outPosCol;

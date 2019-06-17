@@ -24,8 +24,6 @@
 #ifndef MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 #define MORPHSTORE_CORE_UTILS_PREPROCESSOR_H
 
-
-
 #ifndef MSV_CXX_ATTRIBUTE_PPUNUSED
 #  if defined(__clang__) || defined(__GNUC__)
 #     define MSV_CXX_ATTRIBUTE_PPUNUSED __attribute__((unused))
@@ -89,6 +87,12 @@
 #ifndef MSV_CXX_ATTRIBUTE_UNLIKELY
 #  if defined(__GNUC__)
 #     define MSV_CXX_ATTRIBUTE_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#  endif
+#endif
+
+#ifndef MSV_CXX_ATTRIBUTE_ALIGNED
+#  if defined(__GNUC__)
+#     define MSV_CXX_ATTRIBUTE_ALIGNED(x) __attribute__((aligned(x)))
 #  endif
 #endif
 
