@@ -806,6 +806,8 @@ namespace morphstore {
             state_t s(inBase);
             while(s.inBase < endInBase)
                 unpack_and_process_block<countBits, 0>(s, opState);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
         }
     };
     
