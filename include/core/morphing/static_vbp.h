@@ -295,13 +295,13 @@ namespace morphstore {
     // Sequential write
     // ------------------------------------------------------------------------
 
-    // @todo Works only if base_t is uint64_t.
     // @todo Take t_step into account correctly.
     template<class t_vector_extension, unsigned t_bw, unsigned t_step>
     class write_iterator<
             t_vector_extension, static_vbp_f<t_bw, t_step>
     > {
-        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
         uint8_t * m_Out;
         // @todo Think about this number.
@@ -324,17 +324,17 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         void write(vector_t p_Data, vector_mask_t p_Mask) {
             vector::compressstore<
-                    t_vector_extension,
+                    t_ve,
                     vector::iov::UNALIGNED, 
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
-            m_Buffer += vector::count_matches<t_vector_extension>::apply(p_Mask);
+            m_Buffer += vector::count_matches<t_ve>::apply(p_Mask);
             if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
                 );
                 // @todo This should not be inlined.
-                pack<t_vector_extension, t_bw, t_step>(
+                pack<t_ve, t_bw, t_step>(
                         buffer8, m_CountBuffer, m_Out
                 );
                 size_t overflow = m_Buffer - m_EndBuffer;
