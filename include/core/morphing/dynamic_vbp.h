@@ -261,8 +261,6 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            using namespace vector;
-
             const size_t inCountLog = inCol->get_count_values();
             const size_t inCount8 = inCol->get_size_used_byte();
 
@@ -295,6 +293,63 @@ namespace morphstore {
             );
             
             return outCol;
+        }
+    };
+    
+    
+    // ************************************************************************
+    // Interfaces for accessing compressed data
+    // ************************************************************************
+
+    // ------------------------------------------------------------------------
+    // Sequential read
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            template<class /*t_vector_extension*/> class t_op_processing_unit,
+            size_t t_BlockSize64,
+            size_t t_PageSizeBlocks,
+            unsigned t_Step
+    >
+    struct decompress_and_process_batch<
+            t_vector_extension,
+            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>,
+            t_op_processing_unit
+    > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        using in_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        
+        static void apply(
+                const uint8_t * & p_In8,
+                size_t p_CountIn8,
+                typename t_op_processing_unit<t_ve>::state_t & p_State
+        ) {
+            const uint8_t * const endIn8 = p_In8 + p_CountIn8;
+            
+            // Iterate over all pages in the input.
+            while(p_In8 < endIn8) {
+                const uint8_t * const inMeta8 = p_In8;
+                p_In8 += in_f::m_MetaSize8;
+                // Iterate over all blocks in the current input page.
+                for(
+                        unsigned blockIdx = 0;
+                        blockIdx < t_PageSizeBlocks;
+                        blockIdx++
+                ) {
+                    const unsigned bw = inMeta8[blockIdx];
+                    const size_t blockSize8 = t_BlockSize64 * bw / bitsPerByte;
+                    unpack_and_process_switch<
+                            t_ve,
+                            vector_element_count::value,
+                            t_op_processing_unit
+                    >(
+                            bw, p_In8, blockSize8, p_State
+                    );
+                }
+            }
         }
     };
     
