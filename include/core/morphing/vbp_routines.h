@@ -58,6 +58,18 @@
 #include <immintrin.h>
 #include <limits>
 
+/**
+ * If this macro is defined, then the functions delegating to the right
+ * (un)packing routine for a given bit width, i.e., `pack_switch`,
+ * `unpack_switch`, and `unpack_and_process_switch` have a default case that throws an exception if
+ * the specified bit width is invalid. For performance reasons, this check
+ * should be left out, but during debugging, it can be quite helpful.
+ */
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#include <stdexcept>
+#endif
+
 namespace morphstore {
     
     // ************************************************************************
@@ -317,6 +329,12 @@ namespace morphstore {
             case 62: pack<t_vector_extension, 62, t_step>(in8, inCount64, out8); break;
             case 63: pack<t_vector_extension, 63, t_step>(in8, inCount64, out8); break;
             case 64: pack<t_vector_extension, 64, t_step>(in8, inCount64, out8); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "pack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
     
@@ -600,6 +618,12 @@ namespace morphstore {
             case 62: unpack<t_vector_extension, 62, t_step>(in8, out8, outCount64); break;
             case 63: unpack<t_vector_extension, 63, t_step>(in8, out8, outCount64); break;
             case 64: unpack<t_vector_extension, 64, t_step>(in8, out8, outCount64); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
     
@@ -882,8 +906,16 @@ namespace morphstore {
             case 62: unpack_and_process<t_vector_extension, 62, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
             case 63: unpack_and_process<t_vector_extension, 63, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
             case 64: unpack_and_process<t_vector_extension, 64, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_and_process_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
 }
+
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
