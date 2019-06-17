@@ -193,7 +193,7 @@ namespace morphstore {
                                                 const column<t_head_f> * p_HeadCol,
                                                 const column<t_tail_fs> * ... p_TailCols
                                         ) {
-                                            if(std::is_same<t_head_f, uncompr_f>::value)
+                                            if(!std::is_same<t_head_f, uncompr_f>::value)
                                                 delete p_HeadCol;
                                             column_tuple_deleter<t_Count - 1, t_tail_fs ...>::apply(
                                                     p_TailCols ...
@@ -207,7 +207,7 @@ namespace morphstore {
                                                 const column<t_head_f> * p_HeadCol,
                                                 const column<t_tail_fs> * ... p_TailCols
                                         ) {
-                                            if(std::is_same<t_head_f, uncompr_f>::value)
+                                            if(!std::is_same<t_head_f, uncompr_f>::value)
                                                 delete p_HeadCol;
                                         }
                                     };
