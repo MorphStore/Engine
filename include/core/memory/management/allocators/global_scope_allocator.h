@@ -101,7 +101,11 @@ namespace morphstore {
       }
 
       void deallocate( pointer p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_NumElements ) {
-          stdlib_free( static_cast< void * >( p_FreePtr ) );
+//#ifdef USE_MMAP_MM
+          free( static_cast< void* >( p_FreePtr ));
+//#else
+//          stdlib_free( static_cast< void * >( p_FreePtr ) );
+//#endif
       }
    };
    template <class T1, class T2>
