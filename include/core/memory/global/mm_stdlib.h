@@ -47,7 +47,13 @@ extern "C" {
  */
 void *malloc(size_t p_AllocSize) __THROW {
 #ifdef USE_MMAP_MM
-    return mm_malloc(p_AllocSize);
+    if (p_AllocSize == 0)
+        return nullptr;
+
+    void* ptr = mm_malloc(p_AllocSize);
+    if (ptr == nullptr)
+        throw std::runtime_error("Out of memory");
+    return ptr;
 #else
     return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
 #endif
