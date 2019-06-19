@@ -24,6 +24,13 @@ inline void* mm_malloc(size_t p_AllocSize) {
 }
 
 inline void* mm_realloc(void* p_Ptr, size_t p_AllocSize) {
+
+    if (p_Ptr == nullptr)
+        return mm_malloc(p_AllocSize);
+
+    if (p_AllocSize == 0)
+        return nullptr;
+
     morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>( reinterpret_cast<uint64_t>(p_Ptr) - sizeof(morphstore::ObjectInfo));
 
     if (info->size > morphstore::ALLOCATION_SIZE) {
@@ -33,7 +40,10 @@ inline void* mm_realloc(void* p_Ptr, size_t p_AllocSize) {
         return morphstore::mmap_memory_manager::getInstance().reallocate(info, p_AllocSize + sizeof(morphstore::ObjectInfo));
     }
     else {
-        return morphstore::paged_memory_manager::getGlobalInstance().reallocate(info, p_AllocSize + sizeof(morphstore::ObjectInfo));
+        void* ptr = morphstore::paged_memory_manager::getGlobalInstance().reallocate(info, p_AllocSize + sizeof(morphstore::ObjectInfo));
+        morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>(ptr);
+        assert(info->size == p_AllocSize + sizeof(morphstore::ObjectInfo));
+        return &(info[1]);
     }
 }
 
