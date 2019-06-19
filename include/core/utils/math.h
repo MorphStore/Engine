@@ -25,10 +25,12 @@
 #define MORPHSTORE_CORE_UTILS_MATH_H
 
 #include <core/utils/basic_types.h>
+#include <core/utils/preprocessor.h>
 
 #include <limits>
 
 #include <cstdint>
+
 
 namespace morphstore {
 
@@ -55,8 +57,14 @@ constexpr std::size_t log2( size_t n ) {
  * @param denominator
  * @return 
  */
-inline unsigned round_up_div( unsigned numerator, unsigned denominator ) {
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_div( unsigned numerator, unsigned denominator ) {
     return ( numerator + denominator - 1 ) / denominator;
+}
+
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_down_to_multiple(
+        size_t p_Size, size_t p_Factor
+) {
+    return p_Size / p_Factor * p_Factor;
 }
 
 const size_t bitsPerByte = 8;

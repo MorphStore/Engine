@@ -78,14 +78,12 @@ int main(void) {
     
     using varex_t = variant_executor_helper<1, 1>::type
         ::for_variant_params<std::string, std::string>
-        ::for_setting_params<unsigned>;
+        ::for_setting_params<unsigned, size_t>;
     varex_t varex(
             {},
             {"vector_extension", "format"},
-            {"bitwidth"}
+            {"bitwidth", "countValues"}
     );
-    
-    const size_t countValues = 16 * 256 * 32; // == 131072
     
     for(unsigned bw = 1; bw <= std::numeric_limits<uint64_t>::digits; bw++) {
         std::vector<varex_t::variant_t> variants;
@@ -159,20 +157,26 @@ int main(void) {
             case 64: variants = {MAKE_VARIANTS(64)}; break;
         }
 
-        varex.print_datagen_started();
-        auto origCol = generate_with_distr(
-                countValues,
-                std::uniform_int_distribution<uint64_t>(
-                        0,
-                        bitwidth_max<uint64_t>(bw)
-                ),
-                false
-        );
-        varex.print_datagen_done();
+        for(size_t countValues : {
+            16 * 256 * 32, // == 131072
+            16 * 256 * 32 + 17,
+            1234567
+        }) {
+            varex.print_datagen_started();
+            auto origCol = generate_with_distr(
+                    countValues,
+                    std::uniform_int_distribution<uint64_t>(
+                            0,
+                            bitwidth_max<uint64_t>(bw)
+                    ),
+                    false
+            );
+            varex.print_datagen_done();
 
-        varex.execute_variants(variants, bw, origCol);
+            varex.execute_variants(variants, bw, countValues, origCol);
 
-//        delete origCol;
+//            delete origCol;
+        }
     }
     
     varex.done();

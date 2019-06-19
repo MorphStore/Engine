@@ -30,6 +30,7 @@
 #ifndef MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 #define MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
 
+#include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/vbp_routines.h>
@@ -76,25 +77,13 @@ namespace morphstore {
                 t_step > 0,
                 "static_vbp_f: template parameter t_step must be greater than 0"
         );
-        
-        static void check_count_values(size_t p_CountValues) {
-            // @todo Support arbitrary numbers of data elements.
-            const size_t bitsPerReg = t_step * sizeof(uint64_t) * bitsPerByte;
-            if(p_CountValues % bitsPerReg) {
-                std::stringstream s;
-                s
-                        << "static_vbp_f: the number of data elements ("
-                        << p_CountValues << ") must be a mutliple of the "
-                           "number of bits per (vector-)register ("
-                        << bitsPerReg << ')';
-                throw std::runtime_error(s.str());
-            }
-        }
-        
+
+        // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            check_count_values(p_CountValues);
             return p_CountValues * t_bw / bitsPerByte;
         }
+        
+        static const size_t m_BlockSize = t_step * sizeof(uint64_t) * bitsPerByte;
     };
     
     
@@ -131,17 +120,32 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            const size_t count64 = inCol->get_count_values();
-            out_f::check_count_values(count64);
+            const size_t countLog = inCol->get_count_values();
+            const size_t outCountLogCompr = round_down_to_multiple(
+                    countLog, out_f::m_BlockSize
+            );
+            const size_t outCountLogRest = countLog - outCountLogCompr;
+            const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
+                    outCountLogRest
+            );
+            
             const uint8_t * in8 = inCol->get_data();
             
-            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
+            auto outCol = new column<out_f>(get_size_with_alignment_padding(
+                    out_f::get_size_max_byte(outCountLogCompr) + outSizeRestByte
+            ));
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            pack<t_vector_extension, t_bw, t_step>(in8, count64, out8);
+            pack<t_vector_extension, t_bw, t_step>(in8, outCountLogCompr, out8);
+            const size_t sizeComprByte = out8 - initOut8;
+            
+            out8 = create_aligned_ptr(out8);
+            memcpy(out8, in8, outSizeRestByte);
 
-            outCol->set_meta_data(count64, out8 - initOut8);
+            outCol->set_meta_data(
+                    countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
+            );
             
             return outCol;
         }
@@ -176,16 +180,31 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            const size_t count64 = inCol->get_count_values();
             const uint8_t * in8 = inCol->get_data();
             
-            auto outCol = new column<out_f>(out_f::get_size_max_byte(count64));
-            uint8_t * out8 = outCol->get_data();
-            const uint8_t * const initOut8 = out8;
-
-            unpack<t_vector_extension, t_bw, t_step>(in8, out8, count64);
+            const size_t countLog = inCol->get_count_values();
+            const uint8_t * const inRest8 = create_aligned_ptr(
+                    in8 + inCol->get_size_compr_byte()
+            );
+            const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
+                    inCol->get_size_used_byte() - (inRest8 - in8)
+            );
+            const size_t inSizeRestByte = uncompr_f::get_size_max_byte(
+                    inCountLogRest
+            );
+            const size_t inCountLogCompr = countLog - inCountLogRest;
             
-            outCol->set_meta_data(count64, out8 - initOut8);
+            const size_t outSizeByte = out_f::get_size_max_byte(countLog);
+            auto outCol = new column<out_f>(outSizeByte);
+            uint8_t * out8 = outCol->get_data();
+
+            unpack<t_vector_extension, t_bw, t_step>(
+                    in8, out8, inCountLogCompr
+            );
+            
+            memcpy(out8, inRest8, inSizeRestByte);
+            
+            outCol->set_meta_data(countLog, outSizeByte);
 
             return outCol;
         }

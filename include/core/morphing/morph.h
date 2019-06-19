@@ -18,6 +18,12 @@
 /**
  * @file morph.h
  * @brief The template-based interface of the morph-operator.
+ * @todo One generic column-level morph-operator for compression algorithms and
+ * one such operator for decompression algorithms which handle the subdivision
+ * of the data into a compressable main part and a non-compressible (too small)
+ * remainder. Currently, this functionality is duplicated into the existing
+ * morph-operator implementations. The current implementations should become
+ * "internal" functions.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_MORPH_H

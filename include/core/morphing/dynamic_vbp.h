@@ -23,6 +23,7 @@
 #ifndef MORPHSTORE_CORE_MORPHING_DYNAMIC_VBP_H
 #define MORPHSTORE_CORE_MORPHING_DYNAMIC_VBP_H
 
+#include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/vbp_routines.h>
@@ -113,17 +114,8 @@ namespace morphstore {
         static const size_t m_PageSize64 = t_PageSizeBlocks * t_BlockSize64;
         static const size_t m_MetaSize8 = t_PageSizeBlocks * sizeof(uint8_t);
         
-        static void check_count_values(size_t p_CountValues) {
-            // @todo Support arbitrary numbers of data elements.
-            if(p_CountValues % m_PageSize64)
-                throw std::runtime_error(
-                        "dynamic_vbp_f: the number of data elements must be a "
-                        "multiple of the page size in data elements"
-                );
-        }
-        
+        // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            check_count_values(p_CountValues);
             // These numbers are exact (assuming that the check above
             // succeeded).
             const size_t pageCount = p_CountValues / m_PageSize64;
@@ -134,6 +126,8 @@ namespace morphstore {
                     std::numeric_limits<uint64_t>::digits / bitsPerByte;
             return totalDataSizeByte + totalMetaSizeByte;
         }
+        
+        static const size_t m_BlockSize = m_PageSize64;
     };
     
     
@@ -168,24 +162,27 @@ namespace morphstore {
         const column<out_f> *
         apply(const column<in_f> * inCol) {
             using namespace vector;
-
-            const size_t inCountLog = inCol->get_count_values();
-            out_f::check_count_values(inCountLog);
-            const size_t inCountBase = convert_size<uint8_t, base_t>(
-                    inCol->get_size_used_byte()
+            
+            const size_t countLog = inCol->get_count_values();
+            const size_t outCountLogCompr = round_down_to_multiple(
+                    countLog, out_f::m_BlockSize
             );
-
+            const size_t outCountLogRest = countLog - outCountLogCompr;
+            const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
+                    outCountLogRest
+            );
+            
             const base_t * inBase = inCol->get_data();
-            const base_t * const endInBase = inBase + inCountBase;
+            const base_t * const endInComprBase = inBase + outCountLogCompr;
 
-            auto outCol = new column<out_f>(
-                    out_f::get_size_max_byte(inCountLog)
-            );
+            auto outCol = new column<out_f>(get_size_with_alignment_padding(
+                    out_f::get_size_max_byte(outCountLogCompr) + outSizeRestByte
+            ));
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
             // Iterate over all input pages.
-            while(inBase < endInBase) {
+            while(inBase < endInComprBase) {
                 uint8_t * const outMeta8 = out8;
                 out8 += out_f::m_MetaSize8;
                 // Iterate over all blocks in the current input page.
@@ -228,8 +225,14 @@ namespace morphstore {
                     inBase = reinterpret_cast<const base_t *>(in8);
                 }
             }
+            const size_t sizeComprByte = out8 - initOut8;
+            
+            out8 = create_aligned_ptr(out8);
+            memcpy(out8, inBase, outSizeRestByte);
 
-            outCol->set_meta_data(inCountLog, out8 - initOut8);
+            outCol->set_meta_data(
+                    countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
+            );
             
             return outCol;
         }
@@ -261,19 +264,27 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            const size_t inCountLog = inCol->get_count_values();
-            const size_t inCount8 = inCol->get_size_used_byte();
-
             const uint8_t * in8 = inCol->get_data();
-            const uint8_t * const endIn8 = in8 + inCount8;
-
+            const uint8_t * const endInCompr8 = in8 + inCol->get_size_compr_byte();
+            
+            const size_t countLog = inCol->get_count_values();
+            const uint8_t * const inRest8 = create_aligned_ptr(
+                    in8 + inCol->get_size_compr_byte()
+            );
+            const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
+                    inCol->get_size_used_byte() - (inRest8 - in8)
+            );
+            const size_t inSizeRestByte = uncompr_f::get_size_max_byte(
+                    inCountLogRest
+            );
+            
             auto outCol = new column<out_f>(
-                    out_f::get_size_max_byte(inCountLog)
+                    out_f::get_size_max_byte(countLog)
             );
             uint8_t * out8 = outCol->get_data();
 
             // Iterate over all pages in the input.
-            while(in8 < endIn8) {
+            while(in8 < endInCompr8) {
                 const uint8_t * const inMeta8 = in8;
                 in8 += in_f::m_MetaSize8;
                 // Iterate over all blocks in the current input page.
@@ -286,10 +297,11 @@ namespace morphstore {
                             inMeta8[blockIdx], in8, out8, t_BlockSize64
                     );
             }
+            
+            memcpy(out8, inRest8, inSizeRestByte);
 
             outCol->set_meta_data(
-                    inCountLog,
-                    out_f::get_size_max_byte(inCountLog)
+                    countLog, out_f::get_size_max_byte(countLog)
             );
             
             return outCol;

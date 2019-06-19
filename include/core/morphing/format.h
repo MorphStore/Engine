@@ -44,11 +44,16 @@ struct format {
      * allocated for a column. To prevent buffer overflows in all cases, it is
      * very important not to underestimate this size.
      * 
+     * Assumes that the provided number of data elements is a multiple of
+     * `m_BlockSize`.
+     * 
      * @param p_CountValues The number of data elements.
      * @return The maximum size (in bytes) that could be required in this
      * format.
      */
     static size_t get_size_max_byte(size_t p_CountValues) = delete;
+
+    static const size_t m_BlockSize;
 };
 
 /**
@@ -60,6 +65,8 @@ struct uncompr_f : public format {
     static size_t get_size_max_byte(size_t p_CountValues) {
         return convert_size<uint64_t, uint8_t>(p_CountValues);
     }
+    
+    static const size_t m_BlockSize = 1;
 };
 
 template<class t_format>
