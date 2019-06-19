@@ -32,16 +32,24 @@ namespace morphstore {
 struct column_meta_data {
    size_t m_CountLogicalValues;
    size_t m_SizeUsedByte;
+   size_t m_SizeComprByte;
    // TODO make this const again
    size_t /*const*/ m_SizeAllocByte;
 
-   column_meta_data( size_t p_CountLogicalValues, size_t p_SizeUsedByte, size_t p_SizeAllocByte ) :
+   column_meta_data(
+      size_t p_CountLogicalValues,
+      size_t p_SizeUsedByte,
+      size_t p_SizeComprByte,
+      size_t p_SizeAllocByte
+   ) :
       m_CountLogicalValues{ p_CountLogicalValues },
       m_SizeUsedByte{ p_SizeUsedByte },
+      m_SizeComprByte{ p_SizeComprByte },
       m_SizeAllocByte{ p_SizeAllocByte }{
       trace(
          "Column Meta Data - ctor( |Logical Values| =", p_CountLogicalValues,
-         ", |Data| =", p_SizeUsedByte, "Byte",
+         ", |Data total column| =", p_SizeUsedByte, "Byte",
+         ", |Data compressed part| =", p_SizeComprByte, "Byte",
          ", Allocated Size = ", p_SizeAllocByte, " Bytes ).");
    }
       
@@ -51,6 +59,7 @@ struct column_meta_data {
    column_meta_data & operator=( column_meta_data && that) {
        m_CountLogicalValues = that.m_CountLogicalValues;
        m_SizeUsedByte = that.m_SizeUsedByte;
+       m_SizeComprByte = that.m_SizeComprByte;
        m_SizeAllocByte = that.m_SizeAllocByte;
        return *this;
    }

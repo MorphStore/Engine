@@ -85,7 +85,7 @@ class column {
          storage_persistence_type p_PersistenceType,
          size_t p_SizeAllocatedByte
       ) :
-         m_MetaData{ 0, 0, p_SizeAllocatedByte },
+         m_MetaData{ 0, 0, 0, p_SizeAllocatedByte },
 #ifdef MSV_NO_SELFMANAGED_MEMORY
          m_DataUnaligned{
             malloc( get_size_with_alignment_padding( p_SizeAllocatedByte ) )
@@ -119,9 +119,23 @@ class column {
       inline void set_size_used_byte( size_t p_SizeUsedByte ) {
          m_MetaData.m_SizeUsedByte = p_SizeUsedByte;
       }
-      inline void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte )  {
+      inline size_t get_size_compr_byte( void ) const {
+         return m_MetaData.m_SizeComprByte;
+      }
+      inline void set_size_compr_byte( size_t p_SizeComprByte ) {
+         m_MetaData.m_SizeComprByte = p_SizeComprByte;
+      }
+      inline void set_meta_data(
+         size_t p_CountValues,
+         size_t p_SizeUsedByte,
+         size_t p_SizeComprByte
+      )  {
          m_MetaData.m_CountLogicalValues = p_CountValues;
          m_MetaData.m_SizeUsedByte = p_SizeUsedByte;
+         m_MetaData.m_SizeComprByte = p_SizeComprByte;
+      }
+      inline void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte )  {
+          set_meta_data(p_CountValues, p_SizeUsedByte, p_SizeUsedByte);
       }
       
       // Creates a global scoped column. Intended for base data.
