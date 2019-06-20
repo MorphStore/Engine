@@ -129,7 +129,9 @@ public:
                 //trace("should construct");
                 new (page_loc) Page(*this);
                 object_loc = current_page->allocate(size);
-                //1//trace("[PAGED_MM] Allocated object on ", object_loc);
+                if (object_loc == nullptr)
+                    throw std::runtime_error("Allocation failed");
+
                 return object_loc;
             }
             else {
@@ -137,6 +139,9 @@ public:
                 current_page = page;
                 object_loc = page->allocate(size);
                 ////trace("Allocated object on ", object_loc, " with size ", std::hex, size);
+                if (object_loc == nullptr)
+                    throw std::runtime_error("Allocation failed");
+
                 return object_loc;
             }
         }
@@ -166,16 +171,18 @@ public:
     
     void *allocate(abstract_memory_manager *const /*manager*/, size_t /*size*/) override
     {
+         throw std::runtime_error("Not implemented");
          return nullptr;
     }
 
     void deallocate(abstract_memory_manager *const /*manager*/, void *const /*ptr*/) override
     {
-
+        throw std::runtime_error("Not implemented");
     }
 
     void * reallocate(abstract_memory_manager * const /*manager*/, void * /*ptr*/, size_t /*size*/) override
     {
+        throw std::runtime_error("Not implemented");
         return nullptr;
     }
 
@@ -183,9 +190,15 @@ public:
     {
         //TODO: do proper impl
         void* ret = allocate(size);
+        if (ret == nullptr) {
+            throw std::runtime_error("Reallocation failed");
+            return nullptr;
+        }
         ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         memcpy(ret, ptr, info->size > size ? size : info->size); 
         deallocate(ptr);
+        info = reinterpret_cast<ObjectInfo*>(ret);
+        info->size = size;
         return ret;
     }
 

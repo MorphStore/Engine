@@ -177,8 +177,6 @@ public:
         // Mask which starts with 1s at the first allocation bits
         volatile uint64_t* word_in_bitmap = reinterpret_cast<volatile uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
         (void) word_in_bitmap;
-        //trace("bitmap: ", std::hex, getBitmapAddress(), ", this: ", this);
-        //trace("got addr ", reinterpret_cast<uint64_t>(word_in_bitmap), " in bitmap ", std::hex, getBitmapAddress(), " with value ", *word_in_bitmap);
         
         // probe for start bits
         volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
@@ -381,6 +379,7 @@ public:
         char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_POPULATE | MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
         if (reinterpret_cast<void*>(given_ptr) == reinterpret_cast<void*>(~0l)) {
             //Out of memory...
+            throw std::runtime_error("Allocation of memory failed, OOM...");
             return nullptr;
         }
         char* end_of_region = given_ptr + mmap_alloc_size;
@@ -448,8 +447,9 @@ public:
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
         void* ptr = header->findNextAllocatableSlot(size);
         ////trace( "header on ", header, " found next allocatable slot as ", ptr);
-        if (ptr == nullptr)
+        if (ptr == nullptr) {
             return nullptr;
+        }
         header->setAllocated(ptr, size);
 
         return ptr;
@@ -480,13 +480,23 @@ public:
     {
         //trace("Using allocate size=", size);
         if (size > ALLOCATION_SIZE) {
-            return allocateLarge(size);
+            void* ptr = allocateLarge(size);
+            if (ptr == nullptr)
+                throw std::runtime_error("Out of memory");
+            return ptr;
         }
         else {
             // TODO: concurrency
             if (m_current_chunk == nullptr)
                 m_current_chunk = allocateContinuous();
-            return allocatePages(size, m_current_chunk);
+            void* ptr = allocatePages(size, m_current_chunk);
+            if (ptr == nullptr) {
+                m_current_chunk = allocateContinuous();
+                if (m_current_chunk == nullptr)
+                    throw std::runtime_error("Out of memory");
+                ptr = allocatePages(size, m_current_chunk);
+            }
+            return ptr;
         }
     }
 
@@ -525,16 +535,19 @@ public:
 
     void *allocate(abstract_memory_manager *const /*manager*/, size_t size) override
     {
+        throw std::runtime_error("Not implemented");
          return allocate(size);
     }
 
     void deallocate(abstract_memory_manager *const /*manager*/, void *const ptr) override
     {
+        throw std::runtime_error("Not implemented");
         deallocate(ptr);
     }
 
     void * reallocate(abstract_memory_manager * const /*manager*/, void * ptr, size_t size) override
     {
+        throw std::runtime_error("Not implemented");
         return reallocate(ptr, size);
     }
 
@@ -555,9 +568,15 @@ public:
         //TODO: this is a wip implementation for testing of normal alloc functions
         //
         void* ret = allocate(size);
+        if (ret == nullptr) {
+            throw std::runtime_error("Allocation failed");
+            return nullptr;
+        }
         ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         memcpy(ret, ptr, info->size > size ? size : info->size);
         deallocate(ptr);
+        info = reinterpret_cast<ObjectInfo*>(ret);
+        info->size = size;
         return ret;
     }
 
