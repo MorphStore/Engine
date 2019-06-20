@@ -23,6 +23,7 @@
 #ifndef MORPHSTORE_CORE_MORPHING_FORMAT_H
 #define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
+#include <core/memory/management/utils/alignment_helper.h>
 #include <core/utils/math.h>
 #include <core/utils/basic_types.h>
 #include <vector/general_vector.h>
@@ -36,18 +37,20 @@ namespace morphstore {
  */
 struct format {
     /**
-     * @brief Provides a pessimistic estimation of the maximum possible size a
-     * column containing the given number of data elements could have when
-     * represented in this format.
+     * @brief Provides a pessimistic estimation of the maximum possible size
+     * (in byte) a buffer containing the given number of data elements could
+     * have when represented in this format.
      * 
-     * This size can be used for determining the number of bytes that must be
-     * allocated for a column. To prevent buffer overflows in all cases, it is
-     * very important not to underestimate this size.
+     * The number of data elements must be a multiple of `m_BlockSize`. Thus,
+     * it should not be used to determine the allocation size for a column. For
+     * arbitrary numbers of data elements, see function
+     * `morphstore::get_size_max_byte_any_len`.
      * 
-     * Assumes that the provided number of data elements is a multiple of
+     * To prevent buffer overflows in all cases, it is very important not to
+     * underestimate this size.
+     * 
+     * @param p_CountValues The number of data elements, must be a multiple of
      * `m_BlockSize`.
-     * 
-     * @param p_CountValues The number of data elements.
      * @return The maximum size (in bytes) that could be required in this
      * format.
      */
@@ -68,6 +71,44 @@ struct uncompr_f : public format {
     
     static const size_t m_BlockSize = 1;
 };
+
+ /**
+  * @brief Provides a pessimistic estimation of the maximum possible size (in
+  * byte) a column containing the given number of data elements could have when
+  * represented in this format.
+  * 
+  * This function can handle arbitrary numbers of data elements, by taking into
+  * account that compressed columns consist of a compressed part and, perhaps,
+  * an uncompressed remainder (which is too small to be represented in the
+  * respective format).
+  * 
+  * This size can be used for determining the number of bytes that must be
+  * allocated for a column.
+  *
+  * @param p_CountValues The number of data elements.
+  * @return The maximum size (in bytes) that could be required in this format.
+  */
+template<class t_format>
+MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len(
+        size_t p_CountValues
+) {
+    const size_t countValuesCompr = round_down_to_multiple(
+            p_CountValues, t_format::m_BlockSize
+    );
+    return get_size_with_alignment_padding(
+            t_format::get_size_max_byte(countValuesCompr) +
+            uncompr_f::get_size_max_byte(p_CountValues - countValuesCompr)
+    );
+}
+
+template<>
+MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len<uncompr_f>(
+        size_t p_CountValues
+) {
+    // The data buffer of an uncompressed column is, of course, not subdivided
+    // into a compressed and an uncompressed part.
+    return uncompr_f::get_size_max_byte(p_CountValues);
+}
 
 template<class t_format>
 class read_iterator;

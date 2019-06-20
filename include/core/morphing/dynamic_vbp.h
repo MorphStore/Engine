@@ -49,12 +49,13 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
 
-#include <cstdint>
 #include <immintrin.h>
 #include <limits>
 #include <stdexcept>
 #include <string>
     
+#include <cstdint>
+#include <cstring>
 
 #define DYNAMIC_VBP_STATIC_ASSERTS_VECTOR_EXTENSION \
     static_assert( \
@@ -167,17 +168,16 @@ namespace morphstore {
             const size_t outCountLogCompr = round_down_to_multiple(
                     countLog, out_f::m_BlockSize
             );
-            const size_t outCountLogRest = countLog - outCountLogCompr;
             const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
-                    outCountLogRest
+                    countLog - outCountLogCompr
             );
             
             const base_t * inBase = inCol->get_data();
             const base_t * const endInComprBase = inBase + outCountLogCompr;
 
-            auto outCol = new column<out_f>(get_size_with_alignment_padding(
-                    out_f::get_size_max_byte(outCountLogCompr) + outSizeRestByte
-            ));
+            auto outCol = new column<out_f>(
+                    get_size_max_byte_any_len<out_f>(countLog)
+            );
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
