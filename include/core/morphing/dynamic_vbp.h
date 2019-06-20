@@ -227,8 +227,10 @@ namespace morphstore {
             }
             const size_t sizeComprByte = out8 - initOut8;
             
-            out8 = create_aligned_ptr(out8);
-            memcpy(out8, inBase, outSizeRestByte);
+            if(outSizeRestByte) {
+                out8 = create_aligned_ptr(out8);
+                memcpy(out8, inBase, outSizeRestByte);
+            }
 
             outCol->set_meta_data(
                     countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte

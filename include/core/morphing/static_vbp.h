@@ -139,8 +139,10 @@ namespace morphstore {
             pack<t_vector_extension, t_bw, t_step>(in8, outCountLogCompr, out8);
             const size_t sizeComprByte = out8 - initOut8;
             
-            out8 = create_aligned_ptr(out8);
-            memcpy(out8, in8, outSizeRestByte);
+            if(outSizeRestByte) {
+                out8 = create_aligned_ptr(out8);
+                memcpy(out8, in8, outSizeRestByte);
+            }
 
             outCol->set_meta_data(
                     countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
