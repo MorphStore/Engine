@@ -44,6 +44,16 @@ target_compile_options( project_benchmark PRIVATE
                         -Wall
                         -Wextra
                         -pedantic
-                        -fstack-protector-all
-                        $<$<CONFIG:DEBUG>:-DDEBUG> )
+                        -fstack-protector-all)
+                       # $<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( project_benchmark PRIVATE "-ldl" )
+
+add_executable( calc_binary_benchmark calc_binary_benchmark.cpp )
+target_compile_options( calc_binary_benchmark PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+                        -fstack-protector-all)
+                       # $<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( calc_binary_benchmark PRIVATE "-ldl" )

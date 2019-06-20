@@ -16,6 +16,7 @@
 #include <vector/simd/avx512/primitives/calc_avx512.h>
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/create_avx512.h>
+
 #endif
 
 #ifdef AVX2
@@ -23,6 +24,7 @@
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/create_avx2.h>
+
 #endif
 
 
@@ -31,56 +33,63 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 
-#include <core/operators/general_vectorized/project_uncompr.h>
+
+#include <core/operators/general_vectorized/calc_uncompr.h>
 
 #include <core/utils/variant_executor.h>
 
-#define TEST_DATA_COUNT 100
 
-#define MAKE_VARIANT(ps) \
+
+#define MAKE_VARIANT(fn,ps) \
 { \
     new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<uncompr_f, uncompr_f>( \
-            &project<ps, uncompr_f, uncompr_f, uncompr_f> \
+            &calc_binary< fn, ps, uncompr_f, uncompr_f, uncompr_f> \
     ), \
-    STR_EVAL_MACROS(ps) \
+    STR_EVAL_MACROS(ps), \
+    STR_EVAL_MACROS(fn) \
 }
+
+
 
 int main( void ) {
     
     using namespace morphstore;
     using namespace vector;
    
-    using varex_t = variant_executor_helper<1, 2>::type
-        ::for_variant_params<std::string>
+    using varex_t = variant_executor_helper<1, 2, const size_t>::type
+        ::for_variant_params<std::string, std::string>
         ::for_setting_params<size_t,size_t>;
     
     varex_t varex(
-        {}, // names of the operator's additional parameters
-        {"ps"}, // names of the variant parameters
+        {"out-estimate"}, // names of the operator's additional parameters
+        {"fn","ps"}, // names of the variant parameters
         {"inDataCount", "inPosCount"} // names of the setting parameters
     );
 
-    // This is a std::tuple.
-    varex_t::variant_t myVariant = {
-            // Wrapper for the function pointer.
-             new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<uncompr_f, uncompr_f>(
-                    // Function pointer to the actual operator function.
-                    &project<scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f> 
-            ),
-            // The variant key.
-            "scalar"
-    };
+
     
-    const std::vector<varex_t::variant_t> variants = {
-        MAKE_VARIANT(scalar<v64<uint64_t>>),
-        MAKE_VARIANT(sse<v128<uint64_t>>),
+    const std::vector<varex_t::variant_t> variants_minus = {
+        MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
+        MAKE_VARIANT(sub,sse<v128<uint64_t>>),
         #ifdef AVX2
-        MAKE_VARIANT(avx2<v256<uint64_t>>)
+        MAKE_VARIANT(sub,avx2<v256<uint64_t>>)
         #endif
         #ifdef AVX512
-        , MAKE_VARIANT(avx512<v512<uint64_t>>)
+        , MAKE_VARIANT(sub,avx512<v512<uint64_t>>)
         #endif
     };
+    
+    const std::vector<varex_t::variant_t> variants_plus = {
+        MAKE_VARIANT(add,scalar<v64<uint64_t>>),
+        MAKE_VARIANT(add,sse<v128<uint64_t>>),
+        #ifdef AVX2
+        MAKE_VARIANT(add,avx2<v256<uint64_t>>)
+        #endif
+        #ifdef AVX512
+        , MAKE_VARIANT(add,avx512<v512<uint64_t>>)
+        #endif
+    };
+
     
     // Define the setting parameters.
     const std::vector<varex_t::setting_t> settingParams = {
@@ -113,11 +122,21 @@ int main( void ) {
         // Execute the variants.
         varex.execute_variants(
             // Variants to execute
-            variants,
+            variants_minus,
             // Setting parameters
             inDataCount, inPosCount,
             // Input columns / setting
-            inDataCol, inPosCol
+            inDataCol, inPosCol, 0
+        );     
+        
+        // Execute the variants.
+        varex.execute_variants(
+            // Variants to execute
+            variants_plus,
+            // Setting parameters
+            inDataCount, inPosCount, 
+            // Input columns / setting
+            inDataCol, inPosCol, 0
         );
     }
     
