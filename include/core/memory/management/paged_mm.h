@@ -66,8 +66,7 @@ public:
 
         if (header.m_sumOffset == 0) {
             //trace( "Triggered deallocation on ", this, " due to address ", addr);
-            //TODO: Fix bug after 0x7be deallocations
-            mmap_memory_manager::getInstance().deallocate(this);
+            //mmap_memory_manager::getInstance().deallocate(this);
         }
     }
 
