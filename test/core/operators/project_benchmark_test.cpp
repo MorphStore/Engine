@@ -33,9 +33,31 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/variant_executor.h>
+
 #include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/logic_scalar.h>
+#ifdef AVXTWO
 #include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/logic_avx2.h>
+#endif
+#ifdef AVX512
+#include <vector/simd/avx512/extension_avx512.h>
+#include <vector/simd/avx512/primitives/calc_avx512.h>
+#include <vector/simd/avx512/primitives/create_avx512.h>
+#include <vector/simd/avx512/primitives/io_avx512.h>
+#include <vector/simd/avx512/primitives/logic_avx512.h>
+#endif
 #include <vector/simd/sse/extension_sse.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/sse/primitives/logic_sse.h>
 
 #include <iostream>
 #include <random>
