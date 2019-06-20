@@ -65,21 +65,30 @@ namespace morphstore {
 #else
     // Generic with vector-lib.
     
-    template<class t_vector_extension, template<class> class t_op_processing_unit>
-    struct decompress_and_process_batch<t_vector_extension, uncompr_f, t_op_processing_unit> {
+    template<
+            class t_vector_extension,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    struct decompress_and_process_batch<
+            t_vector_extension,
+            uncompr_f,
+            t_op_vector,
+            t_extra_args ...
+    > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountIn8,
-                typename t_op_processing_unit<t_ve>::state_t & p_State
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
             const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
             const size_t countInBase = convert_size<uint8_t, base_t>(p_CountIn8);
 
             for(size_t i = 0; i < countInBase; i += vector_element_count::value)
-                t_op_processing_unit<t_ve>::apply(
+                t_op_vector<t_ve, t_extra_args ...>::apply(
                         vector::load<
                                 t_ve,
                                 vector::iov::ALIGNED,

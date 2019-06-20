@@ -626,13 +626,17 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_bw,
             unsigned t_step,
-            template<class /*t_vector_extension*/> class t_op_processing_unit
+            template<class, class ...> class t_op_processing_unit,
+            class ... t_extra_args
     >
     struct unpack_and_process_t {
         static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
-                typename t_op_processing_unit<t_vector_extension>::state_t & opState
+                typename t_op_processing_unit<
+                        t_vector_extension,
+                        t_extra_args ...
+                >::state_t & opState
         ) = delete;
     };
     
@@ -641,14 +645,20 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_bw,
             unsigned t_step,
-            template<class /*t_vector_extension*/> class t_op_processing_unit
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
     >
     MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process(
             const uint8_t * & in8,
             size_t countIn8,
-            typename t_op_processing_unit<t_vector_extension>::state_t & opState
+            typename t_op_vector<
+                    t_vector_extension,
+                    t_extra_args ...
+            >::state_t & opState
     ) {
-        unpack_and_process_t<t_vector_extension, t_bw, t_step, t_op_processing_unit>::apply(
+        unpack_and_process_t<
+                t_vector_extension, t_bw, t_step, t_op_vector, t_extra_args ...
+        >::apply(
                 in8, countIn8, opState
         );
     }
@@ -723,8 +733,19 @@ namespace morphstore {
 #else
     // Generic with vector-lib.
     
-    template<class t_vector_extension, unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
-    class unpack_and_process_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value, t_op_processing_unit> {
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    class unpack_and_process_t<
+            t_vector_extension,
+            t_bw,
+            t_vector_extension::vector_helper_t::element_count::value,
+            t_op_vector,
+            t_extra_args ...
+    > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
@@ -752,7 +773,7 @@ namespace morphstore {
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_and_process_block(
                 state_t & s,
-                typename t_op_processing_unit<t_ve>::state_t & opState
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
         ) {
             using namespace vector;
             
@@ -773,7 +794,7 @@ namespace morphstore {
                     s.nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(s.tmp, countBits - s.bitpos + t_bw), s.nextOut));
                     s.bitpos = s.bitpos - countBits;
                 }
-                t_op_processing_unit<t_ve>::apply(s.nextOut, opState);
+                t_op_vector<t_ve, t_extra_args ...>::apply(s.nextOut, opState);
                 s.nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(s.tmp, s.bitpos));
                 s.bitpos += t_bw;
             }
@@ -783,7 +804,7 @@ namespace morphstore {
         static void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
-                typename t_op_processing_unit<t_ve>::state_t & opState
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
         ) {
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);
             const base_t * const endInBase = inBase + convert_size<uint8_t, base_t>(countIn8);
@@ -795,12 +816,18 @@ namespace morphstore {
         }
     };
     
-    template<class t_vector_extension, unsigned t_bw, template<class /*t_vector_extension*/> class t_op_processing_unit>
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
     const typename t_vector_extension::vector_t unpack_and_process_t<
             t_vector_extension,
             t_bw,
             t_vector_extension::vector_helper_t::element_count::value,
-            t_op_processing_unit
+            t_op_vector,
+            t_extra_args ...
     >::mask = vector::set1<
             t_vector_extension,
             t_vector_extension::vector_helper_t::granularity::value
@@ -816,82 +843,87 @@ namespace morphstore {
     template<
             class t_vector_extension,
             unsigned t_step,
-            template<class /*t_vector_extension*/> class t_op_processing_unit
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
     >
     MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             size_t countIn8,
-            typename t_op_processing_unit<t_vector_extension>::state_t & opState
+            typename t_op_vector<
+                    t_vector_extension, t_extra_args ...
+            >::state_t & opState
     ) {
+        using t_ve = t_vector_extension;
+        
         switch(bitwidth) {
             // Generated with Python:
             // for bw in range(1, 64+1):
-            //   print("case {: >2}: unpack_and_process<t_vector_extension, {: >2}, t_step, t_op_processing_unit>(in8, countIn8, opState); break;".format(bw, bw))
-            case  1: unpack_and_process<t_vector_extension,  1, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  2: unpack_and_process<t_vector_extension,  2, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  3: unpack_and_process<t_vector_extension,  3, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  4: unpack_and_process<t_vector_extension,  4, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  5: unpack_and_process<t_vector_extension,  5, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  6: unpack_and_process<t_vector_extension,  6, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  7: unpack_and_process<t_vector_extension,  7, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  8: unpack_and_process<t_vector_extension,  8, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case  9: unpack_and_process<t_vector_extension,  9, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 10: unpack_and_process<t_vector_extension, 10, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 11: unpack_and_process<t_vector_extension, 11, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 12: unpack_and_process<t_vector_extension, 12, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 13: unpack_and_process<t_vector_extension, 13, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 14: unpack_and_process<t_vector_extension, 14, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 15: unpack_and_process<t_vector_extension, 15, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 16: unpack_and_process<t_vector_extension, 16, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 17: unpack_and_process<t_vector_extension, 17, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 18: unpack_and_process<t_vector_extension, 18, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 19: unpack_and_process<t_vector_extension, 19, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 20: unpack_and_process<t_vector_extension, 20, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 21: unpack_and_process<t_vector_extension, 21, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 22: unpack_and_process<t_vector_extension, 22, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 23: unpack_and_process<t_vector_extension, 23, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 24: unpack_and_process<t_vector_extension, 24, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 25: unpack_and_process<t_vector_extension, 25, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 26: unpack_and_process<t_vector_extension, 26, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 27: unpack_and_process<t_vector_extension, 27, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 28: unpack_and_process<t_vector_extension, 28, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 29: unpack_and_process<t_vector_extension, 29, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 30: unpack_and_process<t_vector_extension, 30, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 31: unpack_and_process<t_vector_extension, 31, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 32: unpack_and_process<t_vector_extension, 32, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 33: unpack_and_process<t_vector_extension, 33, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 34: unpack_and_process<t_vector_extension, 34, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 35: unpack_and_process<t_vector_extension, 35, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 36: unpack_and_process<t_vector_extension, 36, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 37: unpack_and_process<t_vector_extension, 37, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 38: unpack_and_process<t_vector_extension, 38, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 39: unpack_and_process<t_vector_extension, 39, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 40: unpack_and_process<t_vector_extension, 40, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 41: unpack_and_process<t_vector_extension, 41, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 42: unpack_and_process<t_vector_extension, 42, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 43: unpack_and_process<t_vector_extension, 43, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 44: unpack_and_process<t_vector_extension, 44, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 45: unpack_and_process<t_vector_extension, 45, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 46: unpack_and_process<t_vector_extension, 46, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 47: unpack_and_process<t_vector_extension, 47, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 48: unpack_and_process<t_vector_extension, 48, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 49: unpack_and_process<t_vector_extension, 49, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 50: unpack_and_process<t_vector_extension, 50, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 51: unpack_and_process<t_vector_extension, 51, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 52: unpack_and_process<t_vector_extension, 52, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 53: unpack_and_process<t_vector_extension, 53, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 54: unpack_and_process<t_vector_extension, 54, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 55: unpack_and_process<t_vector_extension, 55, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 56: unpack_and_process<t_vector_extension, 56, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 57: unpack_and_process<t_vector_extension, 57, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 58: unpack_and_process<t_vector_extension, 58, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 59: unpack_and_process<t_vector_extension, 59, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 60: unpack_and_process<t_vector_extension, 60, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 61: unpack_and_process<t_vector_extension, 61, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 62: unpack_and_process<t_vector_extension, 62, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 63: unpack_and_process<t_vector_extension, 63, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
-            case 64: unpack_and_process<t_vector_extension, 64, t_step, t_op_processing_unit>(in8, countIn8, opState); break;
+            //   print("case {: >2}: unpack_and_process<t_ve, {: >2}, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;".format(bw, bw))
+            case  1: unpack_and_process<t_ve,  1, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  2: unpack_and_process<t_ve,  2, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  3: unpack_and_process<t_ve,  3, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  4: unpack_and_process<t_ve,  4, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  5: unpack_and_process<t_ve,  5, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  6: unpack_and_process<t_ve,  6, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  7: unpack_and_process<t_ve,  7, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  8: unpack_and_process<t_ve,  8, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  9: unpack_and_process<t_ve,  9, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 10: unpack_and_process<t_ve, 10, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 11: unpack_and_process<t_ve, 11, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 12: unpack_and_process<t_ve, 12, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 13: unpack_and_process<t_ve, 13, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 14: unpack_and_process<t_ve, 14, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 15: unpack_and_process<t_ve, 15, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 16: unpack_and_process<t_ve, 16, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 17: unpack_and_process<t_ve, 17, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 18: unpack_and_process<t_ve, 18, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 19: unpack_and_process<t_ve, 19, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 20: unpack_and_process<t_ve, 20, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 21: unpack_and_process<t_ve, 21, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 22: unpack_and_process<t_ve, 22, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 23: unpack_and_process<t_ve, 23, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 24: unpack_and_process<t_ve, 24, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 25: unpack_and_process<t_ve, 25, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 26: unpack_and_process<t_ve, 26, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 27: unpack_and_process<t_ve, 27, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 28: unpack_and_process<t_ve, 28, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 29: unpack_and_process<t_ve, 29, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 30: unpack_and_process<t_ve, 30, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 31: unpack_and_process<t_ve, 31, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 32: unpack_and_process<t_ve, 32, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 33: unpack_and_process<t_ve, 33, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 34: unpack_and_process<t_ve, 34, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 35: unpack_and_process<t_ve, 35, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 36: unpack_and_process<t_ve, 36, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 37: unpack_and_process<t_ve, 37, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 38: unpack_and_process<t_ve, 38, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 39: unpack_and_process<t_ve, 39, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 40: unpack_and_process<t_ve, 40, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 41: unpack_and_process<t_ve, 41, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 42: unpack_and_process<t_ve, 42, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 43: unpack_and_process<t_ve, 43, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 44: unpack_and_process<t_ve, 44, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 45: unpack_and_process<t_ve, 45, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 46: unpack_and_process<t_ve, 46, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 47: unpack_and_process<t_ve, 47, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 48: unpack_and_process<t_ve, 48, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 49: unpack_and_process<t_ve, 49, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 50: unpack_and_process<t_ve, 50, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 51: unpack_and_process<t_ve, 51, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 52: unpack_and_process<t_ve, 52, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 53: unpack_and_process<t_ve, 53, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 54: unpack_and_process<t_ve, 54, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 55: unpack_and_process<t_ve, 55, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 56: unpack_and_process<t_ve, 56, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 57: unpack_and_process<t_ve, 57, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 58: unpack_and_process<t_ve, 58, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 59: unpack_and_process<t_ve, 59, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 60: unpack_and_process<t_ve, 60, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 61: unpack_and_process<t_ve, 61, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 62: unpack_and_process<t_ve, 62, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 63: unpack_and_process<t_ve, 63, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 64: unpack_and_process<t_ve, 64, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
                     "unpack_and_process_switch: unsupported bit width: " +

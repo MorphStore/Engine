@@ -321,15 +321,17 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            template<class /*t_vector_extension*/> class t_op_processing_unit,
             size_t t_BlockSize64,
             size_t t_PageSizeBlocks,
-            unsigned t_Step
+            unsigned t_Step,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
     >
     struct decompress_and_process_batch<
             t_vector_extension,
             dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>,
-            t_op_processing_unit
+            t_op_vector,
+            t_extra_args ...
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -339,7 +341,7 @@ namespace morphstore {
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountIn8,
-                typename t_op_processing_unit<t_ve>::state_t & p_State
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
             const uint8_t * const endIn8 = p_In8 + p_CountIn8;
             
@@ -358,7 +360,8 @@ namespace morphstore {
                     unpack_and_process_switch<
                             t_ve,
                             vector_element_count::value,
-                            t_op_processing_unit
+                            t_op_vector,
+                            t_extra_args ...
                     >(
                             bw, p_In8, blockSize8, p_State
                     );

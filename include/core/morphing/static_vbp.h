@@ -222,22 +222,31 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            template<class /*t_vector_extension*/> class t_op_processing_unit,
             unsigned t_bw,
-            unsigned t_step
+            unsigned t_step,
+            template<class, class...> class t_op_vector,
+            class ... t_extra_args
     >
     struct decompress_and_process_batch<
             t_vector_extension,
             static_vbp_f<t_bw, t_step>,
-            t_op_processing_unit
+            t_op_vector,
+            t_extra_args ...
     > {
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountIn8,
-                typename t_op_processing_unit<t_vector_extension>::state_t & p_State
+                typename t_op_vector<
+                        t_vector_extension,
+                        t_extra_args ...
+                >::state_t & p_State
         ) {
             unpack_and_process<
-                    t_vector_extension, t_bw, t_step, t_op_processing_unit
+                    t_vector_extension,
+                    t_bw,
+                    t_step,
+                    t_op_vector,
+                    t_extra_args ...
             >(
                     p_In8, p_CountIn8, p_State
             );

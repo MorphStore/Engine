@@ -115,7 +115,7 @@ struct select_processing_unit {
     };
 };
 #endif
-    
+
 template<
         template<class, int> class t_op,
         class t_vector_extension,
@@ -161,46 +161,57 @@ struct my_select_t {
 
 
 
-// Hand-written scalar implementation, fast.
-template<template<class, int> class t_op, class t_wit>
+// @todo It would be nice if the core-operator's template argument for the
+// comparison operation/primitive could be a template-class. However, the
+// compiler does not like this. Maybe I'm doing something wrong...
+// If the following macro is defined, then the template parameter is a template
+// class, otherwise, it is a (specialized) class.
+#undef COMPARE_OP_AS_TEMPLATE_CLASS
+
+template<
+        class t_vector_extension,
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+        template<class, int> class t_compare,
+#else
+        class t_compare,
+#endif
+        class t_out_f
+>
 struct select_processing_unit_wit {
-    // We need a nested struct, because
-    // (1) we must be able to hand a class with a single template argument (for
-    //     the vector extension) to decompress_and_process
-    // (2) we still want to be generic w.r.t. the comparison operator
-    template<class t_vector_extension>
-    struct type {
-        using t_ve = t_vector_extension;
-        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
-        
-        struct state_t {
-            const vector_t m_Predicate;
-            vector_t m_Pos;
-            // @todo This can be static.
-            const vector_t m_Inc;
-            t_wit m_Wit;
+    using t_ve = t_vector_extension;
+    IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
-            state_t(base_t p_Predicate, uint8_t * p_Out) :
-                    m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
-                    m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(0, 1)),
-                    m_Inc(vector::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
-                    m_Wit(p_Out)
-            {
-                //
-            }
-        };
+    struct state_t {
+        const vector_t m_Predicate;
+        vector_t m_Pos;
+        // @todo This can be static.
+        const vector_t m_Inc;
+        write_iterator<t_ve, t_out_f> m_Wit;
 
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(vector_t p_Data, state_t & p_State) {
-            vector_mask_t mask = vector::equal<t_ve>::apply(p_Data, p_State.m_Predicate);
-            if(mask)
-                p_State.m_Wit.write(p_State.m_Pos, mask);
-            p_State.m_Pos = vector::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+        state_t(base_t p_Predicate, uint8_t * p_Out) :
+                m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
+                m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(0, 1)),
+                m_Inc(vector::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
+                m_Wit(p_Out)
+        {
+            //
         }
     };
+
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(vector_t p_Data, state_t & p_State) {
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+        vector_mask_t mask = t_compare<t_ve, vector_base_t_granularity::value>::apply(p_Data, p_State.m_Predicate);
+#else
+        vector_mask_t mask = t_compare::apply(p_Data, p_State.m_Predicate);
+#endif
+        if(mask)
+            p_State.m_Wit.write(p_State.m_Pos, mask);
+        p_State.m_Pos = vector::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+    }
 };
     
 template<
-        template<class, int> class t_op,
+        template<class, int> class t_compare,
         class t_vector_extension,
         class t_out_pos_f,
         class t_in_data_f
@@ -208,7 +219,11 @@ template<
 // @todo We cannot call it select or select_t at the moment, because it has
 // other requirements for t_op than the select-struct in the general interface.
 struct my_select_wit_t {
-    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+    using t_ve = t_vector_extension;
+    IMPORT_VECTOR_BOILER_PLATE(t_ve)
+#ifndef COMPARE_OP_AS_TEMPLATE_CLASS
+    using t_compare_special = t_compare<t_ve, vector_base_t_granularity::value>;
+#endif
     
     static const column<t_out_pos_f> * apply(
             const column<t_in_data_f> * const inDataCol,
@@ -230,9 +245,24 @@ struct my_select_wit_t {
         
         uint8_t * outPos = outPosCol->get_data();
 
-        typename select_processing_unit_wit<t_op, write_iterator<t_vector_extension, t_out_pos_f>>::template type<t_vector_extension>::state_t s(val, outPos);
+        typename select_processing_unit_wit<
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                t_ve, t_compare, t_out_pos_f
+#else
+                t_ve, t_compare_special, t_out_pos_f
+#endif
+        >::state_t s(val, outPos);
+        
         decompress_and_process_batch<
-                t_vector_extension, t_in_data_f, select_processing_unit_wit<t_op, write_iterator<t_vector_extension, t_out_pos_f>>::template type
+                t_ve,
+                t_in_data_f,
+                select_processing_unit_wit,
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                t_compare,
+#else
+                t_compare_special,
+#endif
+                t_out_pos_f
         >::apply(
                 inData, inDataCol->get_size_used_byte(), s
         );
@@ -244,6 +274,8 @@ struct my_select_wit_t {
         return outPosCol;
     }
 };
+
+#undef COMPARE_OP_AS_TEMPLATE_CLASS
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H

@@ -116,13 +116,18 @@ class read_iterator;
 template<
         class t_vector_extension,
         class t_format,
-        template<class /*t_vector_extension*/> class t_op_processing_unit
+        template<
+                class /*t_vector_extension*/, class ... /*t_extra_args*/
+        > class t_op_vector,
+        class ... t_extra_args
 >
 struct decompress_and_process_batch {
     static void apply(
             const uint8_t * & p_In8,
             size_t p_CountIn8,
-            typename t_op_processing_unit<t_vector_extension>::state_t & p_State
+            typename t_op_vector<
+                    t_vector_extension, t_extra_args ...
+            >::state_t & p_State
     );
 };
 
