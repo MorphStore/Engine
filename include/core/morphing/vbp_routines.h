@@ -37,22 +37,6 @@
 #include <vector/primitives/logic.h>
 // @todo The following includes from the vector-lib should not be necessary, I think.
 #include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/logic_scalar.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#include <vector/simd/avx2/primitives/logic_avx2.h>
-#include <vector/simd/avx512/primitives/calc_avx512.h>
-#include <vector/simd/avx512/primitives/create_avx512.h>
-#include <vector/simd/avx512/primitives/io_avx512.h>
-#include <vector/simd/avx512/primitives/logic_avx512.h>
-#include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/sse/primitives/logic_sse.h>
 
 #include <cstdint>
 #include <immintrin.h>
