@@ -20,8 +20,8 @@ class PageHeader {
     friend class Page;
 
 public:
-    PageHeader(uint32_t curr_offset, abstract_memory_manager& manager)
-        : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_manager(manager)
+    PageHeader(uint32_t curr_offset)
+        : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_canDeallocate(false)
     {
         ////trace("called constructor");
     }
@@ -34,13 +34,13 @@ public:
     uint32_t m_currOffset;
     uint32_t m_sumOffset;
     std::mutex m_sema;
-    abstract_memory_manager& m_manager;
+    bool m_canDeallocate;
 };
 static_assert( sizeof(PageHeader) > 0, "PageHeader must be larger than 0");
 
 class Page {
 public:
-    Page(abstract_memory_manager& manager) : header(sizeof(PageHeader), manager) {
+    Page() : header(sizeof(PageHeader) /*manager*/) {
         ////trace("called page constructor"); 
     }
 
@@ -54,6 +54,7 @@ public:
             return loc;
         }
         else {
+            header.m_canDeallocate = true;
             return nullptr;
         }
     }
@@ -64,9 +65,9 @@ public:
         header.m_sumOffset -= offset;
         //trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", offset calculated ", std::hex, offset);
 
-        if (header.m_sumOffset == 0) {
+        if (header.m_sumOffset == 0 && header.m_canDeallocate) {
             //trace( "Triggered deallocation on ", this, " due to address ", addr);
-            //mmap_memory_manager::getInstance().deallocate(this);
+            mmap_memory_manager::getInstance().deallocate(this);
         }
     }
 
@@ -126,7 +127,7 @@ public:
                 page_loc = manager.allocate(PAGE_SIZE, current_chunk);
                 current_page = reinterpret_cast<Page*>(page_loc);
                 //trace("should construct");
-                new (page_loc) Page(*this);
+                new (page_loc) Page();
                 object_loc = current_page->allocate(size);
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
@@ -134,7 +135,7 @@ public:
                 return object_loc;
             }
             else {
-                Page* page = new (page_loc) Page(*this);
+                Page* page = new (page_loc) Page();
                 current_page = page;
                 object_loc = page->allocate(size);
                 ////trace("Allocated object on ", object_loc, " with size ", std::hex, size);
