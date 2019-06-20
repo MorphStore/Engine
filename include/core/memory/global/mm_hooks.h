@@ -132,8 +132,12 @@ void * operator new( size_t p_AllocSize ) {
 #endif
 }
 
-void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& manager ) {
-    return manager.allocate(p_AllocSize);
+void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& /*manager*/ ) {
+#ifdef USE_MMAP_MM
+    return mm_malloc(p_AllocSize);
+#else
+    return malloc(p_AllocSize);
+#endif
 }
 /**
  * @brief Global replacement for operator new[].
@@ -163,8 +167,12 @@ void operator delete( void * p_FreePtr ) noexcept {
 #endif
 }
 
-void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& manager ) noexcept {
-    manager.deallocate(p_FreePtr);
+void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& /*manager*/ ) noexcept {
+#ifdef USE_MMAP_MM
+    mm_free(p_FreePtr);
+#else
+    free( p_FreePtr );
+#endif
 }
 /**
  * @brief Global replacement for operator delete.
