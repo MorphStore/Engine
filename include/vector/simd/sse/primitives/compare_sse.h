@@ -124,7 +124,7 @@ namespace vector{
          trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
-         return _mm_popcnt_u32(p_mask);
+         return _mm_popcnt_u64(p_mask);
       }
    };
 

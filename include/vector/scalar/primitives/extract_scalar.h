@@ -28,7 +28,7 @@ namespace vector {
    struct extract<scalar<v64<T>>,64> {
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< U > >::base_t
       extract_value( scalar< v64< uint64_t > >::vector_t p_vec, int idx) {
          trace( "[VECTOR] - extract value from scalar register." );

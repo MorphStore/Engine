@@ -45,10 +45,10 @@
 #include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/logic_avx2.h>
-//#include <vector/simd/avx512/primitives/calc_avx512.h>
-//#include <vector/simd/avx512/primitives/create_avx512.h>
-//#include <vector/simd/avx512/primitives/io_avx512.h>
-//#include <vector/simd/avx512/primitives/logic_avx512.h>
+#include <vector/simd/avx512/primitives/calc_avx512.h>
+#include <vector/simd/avx512/primitives/create_avx512.h>
+#include <vector/simd/avx512/primitives/io_avx512.h>
+#include <vector/simd/avx512/primitives/logic_avx512.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>

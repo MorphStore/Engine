@@ -26,7 +26,7 @@ namespace vector{
     struct manipulate<avx2<v256<T>>, 64> {
         
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-        MSV_CXX_ATTRIBUTE_INLINE
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v256< U > >::vector_t
         rotate( avx2< v256< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (avx2)" );

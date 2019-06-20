@@ -29,7 +29,7 @@ namespace vector {
    template<typename T, int IOGranularity>
    struct io<scalar<v64<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
@@ -37,9 +37,9 @@ namespace vector {
       }
       
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::scalar<v64< uint64_t > >::vector_t p_vec ) {
+      store( U *& p_DataPtr, vector::scalar<v64< uint64_t > >::vector_t & p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;
@@ -50,15 +50,15 @@ namespace vector {
             
      
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return *p_DataPtr;
       }
       
-     template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, vector::scalar<v64< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned double values to memory" );
@@ -71,8 +71,8 @@ namespace vector {
    template<typename T, int IOGranularity>   
    struct io<scalar<v64<T>>,iov::UNALIGNED, IOGranularity> {
       
-       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< U > >::vector_t
       gather( U const * const p_DataPtr, vector::scalar<v64< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
@@ -81,7 +81,7 @@ namespace vector {
       }
        
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
          trace( "[VECTOR] - Loading unaligned double value (scalar)" );
@@ -89,7 +89,7 @@ namespace vector {
       }
              
        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
@@ -100,7 +100,7 @@ namespace vector {
       }
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, vector::scalar<v64< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );

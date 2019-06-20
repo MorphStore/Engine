@@ -32,10 +32,16 @@
 #include <core/utils/basic_types.h>
 #include <vector/scalar/extension_scalar.h>
 
+#include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/compare_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+
 #include <cstdint>
 
 namespace morphstore {
-    
+    using namespace vector;
 template<>
 struct project_t<
         vector::scalar<vector::v64<uint64_t>>,
@@ -43,22 +49,26 @@ struct project_t<
         uncompr_f,
         uncompr_f
 > {
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
             const column<uncompr_f> * const inPosCol
     ) {
+        
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
-        const uint64_t * const inPos = inPosCol->get_data();
+        const uint64_t *  inPos = inPosCol->get_data();
 
         const size_t inPosSize = inPosCol->get_size_used_byte();
         // Exact allocation size (for uncompressed data).
         auto outDataCol = new column<uncompr_f>(inPosSize);
         uint64_t * outData = outDataCol->get_data();
 
+
         for(unsigned i = 0; i < inPosCount; i++) {
+              
             *outData = inData[inPos[i]];
             outData++;
         }
