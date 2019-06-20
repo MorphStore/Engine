@@ -69,6 +69,7 @@ morph_flag(-pedantic)
 morph_flag(-Wall)
 morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)
+morph_flag(-Wno-comment)
 morph_flag(-pedantic)
 morph_flag(-fstack-protector-all)
 
