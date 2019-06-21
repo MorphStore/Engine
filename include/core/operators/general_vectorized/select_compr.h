@@ -187,7 +187,7 @@ struct select_processing_unit_wit {
         vector_t m_Pos;
         // @todo This can be static.
         const vector_t m_Inc;
-        write_iterator<t_ve, t_out_f> m_Wit;
+        selective_write_iterator<t_ve, t_out_f> m_Wit;
 
         state_t(base_t p_Predicate, uint8_t * p_Out) :
                 m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
@@ -257,7 +257,7 @@ struct my_select_wit_t {
         size_t outCountLog;
         size_t outSizeComprByte;
 
-        // The state of the write_iterator for the compressed output.
+        // The state of the selective_write_iterator for the compressed output.
         typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                 t_ve, t_compare, t_out_pos_f
@@ -337,7 +337,8 @@ struct my_select_wit_t {
                 if(!outAddedPadding)
                     outPos = create_aligned_ptr(outPos);
                 
-                // The state of the write_iterator for the uncompressed output.
+                // The state of the selective write_iterator for the
+                // uncompressed output.
                 typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                         scalar<v64<uint64_t>>, t_compare, uncompr_f

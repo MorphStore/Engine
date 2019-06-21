@@ -327,7 +327,7 @@ namespace morphstore {
 
     // @todo Take t_step into account correctly.
     template<class t_vector_extension, unsigned t_bw, unsigned t_step>
-    class write_iterator<
+    class selective_write_iterator<
             t_vector_extension, static_vbp_f<t_bw, t_step>
     > {
         using t_ve = t_vector_extension;
@@ -347,7 +347,7 @@ namespace morphstore {
         size_t m_Count;
         
     public:
-        write_iterator(uint8_t * p_Out) :
+        selective_write_iterator(uint8_t * p_Out) :
                 m_Out(p_Out),
                 m_InitOut(m_Out),
                 m_Buffer(m_StartBuffer),

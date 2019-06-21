@@ -133,11 +133,14 @@ struct decompress_and_process_batch {
     );
 };
 
+/**
+ * @brief The interface for writing compressed data selectively.
+ */
 template<class t_vector_extension, class t_format>
-struct write_iterator {
+struct selective_write_iterator {
     IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
             
-    write_iterator(uint8_t * p_Out);
+    selective_write_iterator(uint8_t * p_Out);
     
     /**
      * @brief Stores the elements of the given data vector selected by the
@@ -152,7 +155,9 @@ struct write_iterator {
      * @param p_Data
      * @param p_Mask
      */
-    void write(vector_t p_Data, vector_mask_t p_Mask);
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
+            vector_t p_Data, vector_mask_t p_Mask
+    );
     
     /**
      * @brief Makes sure that all possibly buffered data is stored to the
@@ -179,6 +184,65 @@ struct write_iterator {
      * @return The number of logical data elements stored using this instance.
      */
     size_t get_count_values() const;
+};
+
+/**
+ * The interface for writing compressed data non-selectively.
+ */
+// Currently, we have no implementations for non-selective write-iterators yet.
+// Therefore, we delegate to the selective counterpart. This enables the
+// implementation of non-selective operators against the non-selective
+// interface.
+// @todo Implement the non-selective write-iterators.
+template<class t_vector_extension, class t_format>
+class nonselective_write_iterator {
+    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+    
+    selective_write_iterator<t_vector_extension, t_format> m_Wit;
+    
+public:
+    nonselective_write_iterator(uint8_t * p_Out) : m_Wit(p_Out) {
+        //
+    };
+    
+    /**
+     * @brief Stores the given data vector to the output.
+     * 
+     * Internally, buffering may take place, such that it is not guaranteed
+     * that the data is stored to the output immediately.
+     * 
+     * `done` must be called after the last call to this function to
+     * guarantee that the data is stores to the output in any case.
+     * 
+     * @param p_Data
+     */
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data) {
+        m_Wit.write(
+                p_Data,
+                bitwidth_max<vector_mask_t>(vector_element_count::value)
+        );
+    }
+    
+    /**
+     * @brief Makes sure that all possibly buffered data is stored to the
+     * output and returns useful information for further processing.
+     * 
+     * This function should always be called after the last call to `write`.
+     * 
+     * For compressed output formats, the output's uncompressed rest part is
+     * initialized if the number of data elements stored using this instance is
+     * not compressible in the output format.
+     * 
+     * @return A tuple with the following elements:
+     * 1. The size of the output's *compressed* part in bytes.
+     * 2. `true` if the output's *uncompressed* part has been initialized,
+     *    `false` otherwise.
+     * 3. A pointer to the end of the stored (un)compressed data, which can be
+     *    used to continue storing data to the output.
+     */
+    std::tuple<size_t, bool, uint8_t *> done() {
+        return m_Wit.done();
+    }
 };
 
 }
