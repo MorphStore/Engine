@@ -28,6 +28,8 @@
 #include <core/utils/basic_types.h>
 #include <vector/general_vector.h>
 
+#include <tuple>
+
 #include <cstdint>
 
 namespace morphstore {
@@ -136,9 +138,47 @@ struct write_iterator {
     IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
             
     write_iterator(uint8_t * p_Out);
+    
+    /**
+     * @brief Stores the elements of the given data vector selected by the
+     * given mask to the output.
+     * 
+     * Internally, buffering may take place, such that it is not guaranteed
+     * that the data is stored to the output immediately.
+     * 
+     * `done` must be called after the last call to this function to
+     * guarantee that the data is stores to the output in any case.
+     * 
+     * @param p_Data
+     * @param p_Mask
+     */
     void write(vector_t p_Data, vector_mask_t p_Mask);
-    void done();
-    size_t get_count() const;
+    
+    /**
+     * @brief Makes sure that all possibly buffered data is stored to the
+     * output and returns useful information for further processing.
+     * 
+     * This function should always be called after the last call to `write`.
+     * 
+     * For compressed output formats, the output's uncompressed rest part is
+     * initialized if the number of data elements stored using this instance is
+     * not compressible in the output format.
+     * 
+     * @return A tuple with the following elements:
+     * 1. The size of the output's *compressed* part in bytes.
+     * 2. `true` if the output's *uncompressed* part has been initialized,
+     *    `false` otherwise.
+     * 3. A pointer to the end of the stored (un)compressed data, which can be
+     *    used to continue storing data to the output.
+     */
+    std::tuple<size_t, bool, uint8_t *> done();
+    
+    /**
+     * @brief Returns the number of logical data elements that were stored
+     * using this instance.
+     * @return The number of logical data elements stored using this instance.
+     */
+    size_t get_count_values() const;
 };
 
 }

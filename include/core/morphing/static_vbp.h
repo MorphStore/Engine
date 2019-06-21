@@ -54,6 +54,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <tuple>
 
 #include <cstdint>
 #include <cstring>
@@ -332,10 +333,15 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
+        using out_f = static_vbp_f<t_bw, t_step>;
+        
         uint8_t * m_Out;
+        const uint8_t * const m_InitOut;
         // @todo Think about this number.
-        static const size_t m_CountBuffer = vector_size_bit::value * 16;
-        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[m_CountBuffer + vector_element_count::value - 1];
+        static const size_t m_CountBuffer = out_f::m_BlockSize * 16;
+        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
+                m_CountBuffer + vector_element_count::value - 1
+        ];
         base_t * m_Buffer;
         base_t * const m_EndBuffer;
         size_t m_Count;
@@ -343,6 +349,7 @@ namespace morphstore {
     public:
         write_iterator(uint8_t * p_Out) :
                 m_Out(p_Out),
+                m_InitOut(m_Out),
                 m_Buffer(m_StartBuffer),
                 m_EndBuffer(m_StartBuffer + m_CountBuffer),
                 m_Count(0)
@@ -373,13 +380,19 @@ namespace morphstore {
             }
         }
         
-        void done() {
+        std::tuple<size_t, bool, uint8_t *> done() {
+            // @todo Handle this case.
             if(m_Buffer != m_StartBuffer)
                 // @todo Error message.
                 throw std::runtime_error("ohoh " + std::to_string(m_Buffer - m_StartBuffer));
+            return std::make_tuple(
+                    m_Out - m_InitOut,
+                    false,
+                    m_Out
+            );
         }
         
-        size_t get_count() const {
+        size_t get_count_values () const {
             return m_Count;
         }
     };

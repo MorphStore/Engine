@@ -40,6 +40,8 @@
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
+#include <tuple>
+
 #include <cstdint>
 
 namespace morphstore {
@@ -166,11 +168,15 @@ namespace morphstore {
             m_OutBase += vector::count_matches<t_ve>::apply(p_Mask);
         }
 
-        void done() {
-            //
+        std::tuple<size_t, bool, uint8_t *> done() {
+            return std::make_tuple(
+                    convert_size<uint64_t, uint8_t>(m_OutBase - m_InitOutBase),
+                    false,
+                    reinterpret_cast<uint8_t *>(m_OutBase)
+            );
         }
 
-        size_t get_count() const {
+        size_t get_count_values() const {
             return m_OutBase - m_InitOutBase;
         }
     };
