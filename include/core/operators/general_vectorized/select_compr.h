@@ -26,8 +26,7 @@
 
 // @todo Include this as soon as the interfaces are harmonized.
 //#include <core/operators/interfaces/select.h>
-// @todo Include this for the operator on the processing-unit-level.
-//#include <core/operators/general_vectorized/select_uncompr.h>
+#include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
@@ -39,6 +38,8 @@
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/create_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
+
+#include <tuple>
 
 #include <cstdint>
 
@@ -186,7 +187,7 @@ struct select_processing_unit_wit {
         vector_t m_Pos;
         // @todo This can be static.
         const vector_t m_Inc;
-        write_iterator<t_ve, t_out_f> m_Wit;
+        selective_write_iterator<t_ve, t_out_f> m_Wit;
 
         state_t(base_t p_Predicate, uint8_t * p_Out) :
                 m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
@@ -222,7 +223,8 @@ struct my_select_wit_t {
     using t_ve = t_vector_extension;
     IMPORT_VECTOR_BOILER_PLATE(t_ve)
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
-    using t_compare_special = t_compare<t_ve, vector_base_t_granularity::value>;
+    using t_compare_special_ve = t_compare<t_ve, vector_base_t_granularity::value>;
+    using t_compare_special_sc = t_compare<vector::scalar<vector::v64<uint64_t>>, vector::scalar<vector::v64<uint64_t>>::vector_helper_t::granularity::value>;
 #endif
     
     static const column<t_out_pos_f> * apply(
@@ -230,29 +232,42 @@ struct my_select_wit_t {
             const uint64_t val,
             const size_t outPosCountEstimate = 0
     ) {
+        using namespace vector;
+        
         const uint8_t * inData = inDataCol->get_data();
+        const uint8_t * const initInData = inData;
+        const size_t inDataSizeComprByte = inDataCol->get_size_compr_byte();
+        const size_t inDataSizeUsedByte = inDataCol->get_size_used_byte();
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
         // selection.
+        // @todo Due to the input column's uncompressed rest part, we might
+        // actually need more space, if the input column is the product of some
+        // other query operator.
         auto outPosCol = new column<t_out_pos_f>(
                 bool(outPosCountEstimate)
                 // use given estimate
-                ? (outPosCountEstimate * sizeof(uint64_t))
+                ? get_size_max_byte_any_len<t_out_pos_f>(outPosCountEstimate)
                 // use pessimistic estimate
-                : t_out_pos_f::get_size_max_byte(inDataCol->get_count_values())
+                : get_size_max_byte_any_len<t_out_pos_f>(inDataCol->get_count_values())
         );
-        
         uint8_t * outPos = outPosCol->get_data();
+        const uint8_t * const initOutPos = outPos;
+        size_t outCountLog;
+        size_t outSizeComprByte;
 
+        // The state of the selective_write_iterator for the compressed output.
         typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                 t_ve, t_compare, t_out_pos_f
 #else
-                t_ve, t_compare_special, t_out_pos_f
+                t_ve, t_compare_special_ve, t_out_pos_f
 #endif
-        >::state_t s(val, outPos);
+        >::state_t witComprState(val, outPos);
         
+        // Processing of the input column's compressed part using the specified
+        // vector extension, compressed output.
         decompress_and_process_batch<
                 t_ve,
                 t_in_data_f,
@@ -260,16 +275,108 @@ struct my_select_wit_t {
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                 t_compare,
 #else
-                t_compare_special,
+                t_compare_special_ve,
 #endif
                 t_out_pos_f
         >::apply(
-                inData, inDataCol->get_size_used_byte(), s
+                inData, inDataSizeComprByte, witComprState
         );
+        
+        if(inDataSizeComprByte == inDataSizeUsedByte) {
+            // If the input column has no uncompressed rest part, we are done.
+            std::tie(
+                    outSizeComprByte, std::ignore, outPos
+            ) = witComprState.m_Wit.done();
+            outCountLog = witComprState.m_Wit.get_count_values();
+        }
+        else {
+            // If the input column has an uncompressed rest part.
+            
+            // Pad the input pointer such that it points to the beginning of
+            // the input column's uncompressed rest part.
+            inData = create_aligned_ptr(inData);
+            // The size of the input column's uncompressed rest part.
+            const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
+            
+            // Vectorized processing of the input column's uncompressed rest
+            // part using the specified vector extension, compressed output.
+            decompress_and_process_batch<
+                    t_ve,
+                    uncompr_f,
+                    select_processing_unit_wit,
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                    t_compare,
+#else
+                    t_compare_special_ve,
+#endif
+                    t_out_pos_f
+            >::apply(
+                    inData,
+                    round_down_to_multiple(
+                            inSizeRestByte, vector_size_byte::value
+                    ),
+                    witComprState
+            );
+            
+            // Finish the compressed output. This might already initialize the
+            // output column's uncompressed rest part.
+            bool outAddedPadding;
+            std::tie(
+                    outSizeComprByte, outAddedPadding, outPos
+            ) = witComprState.m_Wit.done();
+            outCountLog = witComprState.m_Wit.get_count_values();
+            
+            // The size of the input column's uncompressed rest that can only
+            // be processed with scalar instructions.
+            const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
+            if(inSizeScalarRemainderByte) {
+                // If there is such an uncompressed scalar rest.
+                
+                // Pad the output pointer such that it points to the beginning
+                // of the output column's uncompressed rest, if this has not
+                // already been done when finishing the output column's
+                // compressed part.
+                if(!outAddedPadding)
+                    outPos = create_aligned_ptr(outPos);
+                
+                // The state of the selective write_iterator for the
+                // uncompressed output.
+                typename select_processing_unit_wit<
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                        scalar<v64<uint64_t>>, t_compare, uncompr_f
+#else
+                        scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f
+#endif
+                >::state_t witUncomprState(val, outPos);
 
-        const size_t outPosCount = s.m_Wit.get_count();
-        s.m_Wit.done();
-        outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
+                // Processing of the input column's uncompressed scalar rest
+                // part using scalar instructions, uncompressed output.
+                decompress_and_process_batch<
+                        scalar<v64<uint64_t>>,
+                        uncompr_f,
+                        select_processing_unit_wit,
+#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                        t_compare,
+#else
+                        t_compare_special_sc,
+#endif
+                        uncompr_f
+                >::apply(
+                        inData, inSizeScalarRemainderByte, witUncomprState
+                );
+                
+                // Finish the output column's uncompressed rest part.
+                std::tie(
+                        std::ignore, std::ignore, outPos
+                ) = witUncomprState.m_Wit.done();
+                outCountLog += witUncomprState.m_Wit.get_count_values();
+            }
+        }
+
+        // Finish the output column.
+        outPosCol->set_meta_data(
+                outCountLog, outPos - initOutPos, outSizeComprByte
+        );
 
         return outPosCol;
     }

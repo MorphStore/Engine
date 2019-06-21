@@ -54,6 +54,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <tuple>
 
 #include <cstdint>
 #include <cstring>
@@ -326,23 +327,29 @@ namespace morphstore {
 
     // @todo Take t_step into account correctly.
     template<class t_vector_extension, unsigned t_bw, unsigned t_step>
-    class write_iterator<
+    class selective_write_iterator<
             t_vector_extension, static_vbp_f<t_bw, t_step>
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
+        using out_f = static_vbp_f<t_bw, t_step>;
+        
         uint8_t * m_Out;
+        const uint8_t * const m_InitOut;
         // @todo Think about this number.
-        static const size_t m_CountBuffer = vector_size_bit::value * 16;
-        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[m_CountBuffer + vector_element_count::value - 1];
+        static const size_t m_CountBuffer = out_f::m_BlockSize * 16;
+        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
+                m_CountBuffer + vector_element_count::value - 1
+        ];
         base_t * m_Buffer;
         base_t * const m_EndBuffer;
         size_t m_Count;
         
     public:
-        write_iterator(uint8_t * p_Out) :
+        selective_write_iterator(uint8_t * p_Out) :
                 m_Out(p_Out),
+                m_InitOut(m_Out),
                 m_Buffer(m_StartBuffer),
                 m_EndBuffer(m_StartBuffer + m_CountBuffer),
                 m_Count(0)
@@ -373,13 +380,47 @@ namespace morphstore {
             }
         }
         
-        void done() {
-            if(m_Buffer != m_StartBuffer)
-                // @todo Error message.
-                throw std::runtime_error("ohoh " + std::to_string(m_Buffer - m_StartBuffer));
+        std::tuple<size_t, bool, uint8_t *> done() {
+            const size_t countLog = m_Buffer - m_StartBuffer;
+            bool startetUncomprPart = false;
+            size_t outSizeComprByte;
+            if(countLog) {
+                const size_t outCountLogCompr = round_down_to_multiple(
+                        countLog, out_f::m_BlockSize
+                );
+
+                const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
+                        m_StartBuffer
+                );
+                pack<t_ve, t_bw, t_step>(buffer8, outCountLogCompr, m_Out);
+                outSizeComprByte = m_Out - m_InitOut;
+
+                const size_t outCountLogRest = countLog - outCountLogCompr;
+                if(outCountLogRest) {
+                    m_Out = create_aligned_ptr(m_Out);
+                    const size_t sizeOutLogRest = uncompr_f::get_size_max_byte(outCountLogRest);
+                    memcpy(
+                            m_Out,
+                            m_StartBuffer + outCountLogCompr,
+                            sizeOutLogRest
+                    );
+                    m_Out += sizeOutLogRest;
+                    startetUncomprPart = true;
+                }
+                
+                m_Count += countLog;
+            }
+            else
+                outSizeComprByte = m_Out - m_InitOut;
+
+            return std::make_tuple(
+                    outSizeComprByte,
+                    startetUncomprPart,
+                    m_Out
+            );
         }
         
-        size_t get_count() const {
+        size_t get_count_values () const {
             return m_Count;
         }
     };

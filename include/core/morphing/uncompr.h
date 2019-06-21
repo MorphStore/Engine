@@ -40,6 +40,8 @@
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
+#include <tuple>
+
 #include <cstdint>
 
 namespace morphstore {
@@ -111,7 +113,7 @@ namespace morphstore {
         const uint64_t * const m_InitOut64;
 
     public:
-        write_iterator(uint8_t * p_Out) :
+        selective_write_iterator(uint8_t * p_Out) :
                 m_Out64(reinterpret_cast<uint64_t *>(p_Out)),
                 m_InitOut64(m_Out64)
         {
@@ -141,7 +143,7 @@ namespace morphstore {
     // Generic with vector-lib.
     
     template<class t_vector_extension>
-    class write_iterator<t_vector_extension, uncompr_f> {
+    class selective_write_iterator<t_vector_extension, uncompr_f> {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
@@ -149,7 +151,7 @@ namespace morphstore {
         const base_t * const m_InitOutBase;
 
     public:
-        write_iterator(uint8_t * p_Out) :
+        selective_write_iterator(uint8_t * p_Out) :
                 m_OutBase(reinterpret_cast<base_t *>(p_Out)),
                 m_InitOutBase(m_OutBase)
         {
@@ -166,11 +168,15 @@ namespace morphstore {
             m_OutBase += vector::count_matches<t_ve>::apply(p_Mask);
         }
 
-        void done() {
-            //
+        std::tuple<size_t, bool, uint8_t *> done() {
+            return std::make_tuple(
+                    convert_size<uint64_t, uint8_t>(m_OutBase - m_InitOutBase),
+                    false,
+                    reinterpret_cast<uint8_t *>(m_OutBase)
+            );
         }
 
-        size_t get_count() const {
+        size_t get_count_values() const {
             return m_OutBase - m_InitOutBase;
         }
     };
