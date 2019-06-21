@@ -381,13 +381,41 @@ namespace morphstore {
         }
         
         std::tuple<size_t, bool, uint8_t *> done() {
-            // @todo Handle this case.
-            if(m_Buffer != m_StartBuffer)
-                // @todo Error message.
-                throw std::runtime_error("ohoh " + std::to_string(m_Buffer - m_StartBuffer));
+            const size_t countLog = m_Buffer - m_StartBuffer;
+            bool startetUncomprPart = false;
+            size_t outSizeComprByte;
+            if(countLog) {
+                const size_t outCountLogCompr = round_down_to_multiple(
+                        countLog, out_f::m_BlockSize
+                );
+
+                const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
+                        m_StartBuffer
+                );
+                pack<t_ve, t_bw, t_step>(buffer8, outCountLogCompr, m_Out);
+                outSizeComprByte = m_Out - m_InitOut;
+
+                const size_t outCountLogRest = countLog - outCountLogCompr;
+                if(outCountLogRest) {
+                    m_Out = create_aligned_ptr(m_Out);
+                    const size_t sizeOutLogRest = uncompr_f::get_size_max_byte(outCountLogRest);
+                    memcpy(
+                            m_Out,
+                            m_StartBuffer + outCountLogCompr,
+                            sizeOutLogRest
+                    );
+                    m_Out += sizeOutLogRest;
+                    startetUncomprPart = true;
+                }
+                
+                m_Count += countLog;
+            }
+            else
+                outSizeComprByte = m_Out - m_InitOut;
+
             return std::make_tuple(
-                    m_Out - m_InitOut,
-                    false,
+                    outSizeComprByte,
+                    startetUncomprPart,
                     m_Out
             );
         }
