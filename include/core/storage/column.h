@@ -135,7 +135,7 @@ class column {
          m_MetaData.m_SizeComprByte = p_SizeComprByte;
       }
       inline void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte )  {
-          set_meta_data(p_CountValues, p_SizeUsedByte, p_SizeUsedByte);
+          set_meta_data(p_CountValues, p_SizeUsedByte, 0);
       }
       
       // Creates a global scoped column. Intended for base data.

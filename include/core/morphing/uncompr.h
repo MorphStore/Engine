@@ -170,9 +170,7 @@ namespace morphstore {
 
         std::tuple<size_t, bool, uint8_t *> done() {
             return std::make_tuple(
-                    convert_size<uint64_t, uint8_t>(m_OutBase - m_InitOutBase),
-                    false,
-                    reinterpret_cast<uint8_t *>(m_OutBase)
+                    0, true, reinterpret_cast<uint8_t *>(m_OutBase)
             );
         }
 
