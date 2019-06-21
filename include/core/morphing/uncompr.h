@@ -98,6 +98,8 @@ namespace morphstore {
                         >(inBase + i),
                         p_State
                 );
+            
+            p_In8 += p_CountIn8;
         }
     };
 #endif
