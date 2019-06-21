@@ -312,7 +312,9 @@ struct my_select_wit_t {
                     t_out_pos_f
             >::apply(
                     inData,
-                    inSizeRestByte / vector_size_byte::value,
+                    round_down_to_multiple(
+                            inSizeRestByte, vector_size_byte::value
+                    ),
                     witComprState
             );
             
@@ -373,7 +375,7 @@ struct my_select_wit_t {
 
         // Finish the output column.
         outPosCol->set_meta_data(
-                outCountLog, outSizeComprByte, outPos - initOutPos
+                outCountLog, outPos - initOutPos, outSizeComprByte
         );
 
         return outPosCol;
