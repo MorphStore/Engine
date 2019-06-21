@@ -37,12 +37,19 @@
 namespace morphstore {
     
 template<>
-const column<uncompr_f> *
-merge_sorted<vector::scalar<vector::v64<uint64_t>>>(
-        const column<uncompr_f> * const inPosLCol,
-        const column<uncompr_f> * const inPosRCol,
-        const size_t outPosCountEstimate
-) {
+struct merge_sorted_t<
+    vector::scalar<vector::v64<uint64_t>>,
+        uncompr_f,
+        uncompr_f,
+        uncompr_f
+>{
+    static
+    const column<uncompr_f> *
+    apply( 
+            const column<uncompr_f> * const inPosLCol,
+            const column<uncompr_f> * const inPosRCol
+    )
+    {
     const uint64_t * inPosL = inPosLCol->get_data();
     const uint64_t * inPosR = inPosRCol->get_data();
     const uint64_t * const inPosLEnd = inPosL + inPosLCol->get_count_values();
@@ -51,14 +58,10 @@ merge_sorted<vector::scalar<vector::v64<uint64_t>>>(
     // If no estimate is provided: Pessimistic allocation size (for
     // uncompressed data), reached only if the two input columns are disjoint.
     auto outPosCol = new column<uncompr_f>(
-            bool(outPosCountEstimate)
-            // use given estimate
-            ? (outPosCountEstimate * sizeof(uint64_t))
-            // use pessimistic estimate
-            : (
+            
                     inPosLCol->get_size_used_byte() +
                     inPosRCol->get_size_used_byte()
-            )
+            
     );
     uint64_t * outPos = outPosCol->get_data();
     const uint64_t * const initOutPos = outPos;
@@ -97,6 +100,6 @@ merge_sorted<vector::scalar<vector::v64<uint64_t>>>(
     
     return outPosCol;
 }
-
+};
 }
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_UNCOMPR_H

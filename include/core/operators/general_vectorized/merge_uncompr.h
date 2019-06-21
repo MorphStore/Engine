@@ -28,7 +28,7 @@
 #include <vector/primitives/compare.h>
 #include <vector/primitives/manipulate.h>
 #include <core/utils/preprocessor.h>
-#include <core/operators/interfaces/merge.h>
+
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
@@ -205,8 +205,8 @@ using namespace vector;
       column<uncompr_f> const *
       apply(
          column< uncompr_f > const * const p_Data1Column,
-         column< uncompr_f > const * const p_Data2Column,
-         const size_t p_OutPosCountEstimate = 0
+         column< uncompr_f > const * const p_Data2Column
+         
       ) {
          const size_t inData1Count = p_Data1Column->get_count_values();
          const size_t inData2Count = p_Data2Column->get_count_values();
@@ -217,9 +217,7 @@ using namespace vector;
 
 
          size_t const sizeByte =
-            bool(p_OutPosCountEstimate)
-            ? (p_OutPosCountEstimate * sizeof(base_t))
-            : p_Data1Column->get_size_used_byte()+p_Data2Column->get_size_used_byte();
+             p_Data1Column->get_size_used_byte()+p_Data2Column->get_size_used_byte();
 
          typename merge_sorted_processing_unit<VectorExtension>::state_t vectorState;
          typename merge_sorted_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState;
@@ -244,10 +242,10 @@ using namespace vector;
     template<class VectorExtension, class t_out_pos_f, class t_in_pos_l_f, class t_in_pos_r_f>
     column<uncompr_f> const * merge_sorted(
          column< uncompr_f > const * const p_Data1Column,
-         column< uncompr_f > const * const p_Data2Column,
-         const size_t p_OutPosCountEstimate = 0
+         column< uncompr_f > const * const p_Data2Column
+        
       ){
-        return merge_sorted_t<VectorExtension>::apply(p_Data1Column,p_Data2Column,p_OutPosCountEstimate);
+        return merge_sorted_t<VectorExtension>::apply(p_Data1Column,p_Data2Column);
     }
 
 

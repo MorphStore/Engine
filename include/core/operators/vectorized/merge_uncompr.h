@@ -31,8 +31,8 @@ template<>
 const column<uncompr_f> *
 merge_sorted<vector::avx2<vector::v256<uint64_t>>>(
         const column<uncompr_f> * const inPosLCol,
-        const column<uncompr_f> * const inPosRCol,
-        const size_t outPosCountEstimate
+        const column<uncompr_f> * const inPosRCol
+   
 ) {
     
     const uint64_t * inPosL;
@@ -57,14 +57,10 @@ merge_sorted<vector::avx2<vector::v256<uint64_t>>>(
     // If no estimate is provided: Pessimistic allocation size (for
     // uncompressed data), reached only if the two input columns are disjoint.
     auto outPosCol = new column<uncompr_f>(
-            bool(outPosCountEstimate)
-            // use given estimate
-            ? (outPosCountEstimate * sizeof(uint64_t))
-            // use pessimistic estimate
-            : (
+           
                     inPosLCol->get_size_used_byte() +
                     inPosRCol->get_size_used_byte()
-            )
+          
     );
     
     uint64_t * outPos = outPosCol->get_data();

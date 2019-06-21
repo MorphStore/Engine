@@ -177,9 +177,8 @@ struct calc_binary_t {
     template<template<class,int> class t_binary_op, class VectorExtension, class t_out_data_f, class t_in_data_l_f, class t_in_data_r_f>
     column<uncompr_f> const *
     calc_binary(  column< uncompr_f > const * const p_Data1Column,
-         column< uncompr_f > const * const p_Data2Column,
-         const size_t p_OutPosCountEstimate = 0){
-            return calc_binary_t< VectorExtension,  t_binary_op>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+         column< uncompr_f > const * const p_Data2Column){
+            return calc_binary_t< VectorExtension,  t_binary_op>::apply(p_Data1Column, p_Data2Column);
     }
    
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
@@ -275,9 +274,8 @@ struct compare_binary_t {
     template<template<class,int> class t_binary_op, class VectorExtension, class t_out_data_f, class t_in_data_l_f, class t_in_data_r_f>
     column<uncompr_f> const *
     compare_binary(  column< uncompr_f > const * const p_Data1Column,
-         column< uncompr_f > const * const p_Data2Column,
-         const size_t p_OutPosCountEstimate = 0){
-       return compare_binary_t< VectorExtension, t_binary_op>::apply(p_Data1Column, p_Data2Column, p_OutPosCountEstimate);
+         column< uncompr_f > const * const p_Data2Column){
+       return compare_binary_t< VectorExtension, t_binary_op>::apply(p_Data1Column, p_Data2Column);
    }
 
 

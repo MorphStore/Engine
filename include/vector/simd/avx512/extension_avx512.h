@@ -11,8 +11,8 @@
  * Created on 12. April 2019, 12:21
  */
 
-#ifndef EXTENSION_AVX512_H
-#define EXTENSION_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_EXTENSION_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_EXTENSION_AVX512_H
 
 #include <cstdint>
 #include <type_traits>
@@ -88,5 +88,5 @@ namespace vector{
    };
 }
 
-#endif /* EXTENSION_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_EXTENSION_AVX512_H */
 

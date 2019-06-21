@@ -10,34 +10,46 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
+#include <core/memory/noselfmanaging_helper.h>
+
+#include <core/utils/variant_executor.h>
+
+#include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/scalar/primitives/logic_scalar.h>
+
+#include <vector/simd/sse/extension_sse.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
+#include <vector/simd/sse/primitives/logic_sse.h>
+
+
+#ifdef AVXTWO
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/logic_avx2.h>
+#endif
 
 #ifdef AVX512
 #include <vector/simd/avx512/extension_avx512.h>
 #include <vector/simd/avx512/primitives/calc_avx512.h>
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/create_avx512.h>
-
+#include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
 
-#ifdef AVX2
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/general_vector.h>
+#include <vector/primitives/io.h>
+#include <core/utils/preprocessor.h>
 
-#endif
-
-
-#include <vector/simd/sse/extension_sse.h>
-#include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
-
-
-#include <core/operators/general_vectorized/calc_uncompr.h>
-
-#include <core/utils/variant_executor.h>
-
+//#include <core/operators/general_vectorized/calc_uncompr.h> //For operators using the vector lib
+#include <core/operators/scalar/calc_uncompr.h>
+#include <core/operators/vectorized/calc_uncompr.h>
 
 
 #define MAKE_VARIANT(fn,ps) \
@@ -56,12 +68,14 @@ int main( void ) {
     using namespace morphstore;
     using namespace vector;
    
-    using varex_t = variant_executor_helper<1, 2, const size_t>::type
+    //using varex_t = variant_executor_helper<1, 2, const size_t>::type
+    using varex_t = variant_executor_helper<1, 2>::type
         ::for_variant_params<std::string, std::string>
         ::for_setting_params<size_t,size_t>;
     
     varex_t varex(
-        {"out-estimate"}, // names of the operator's additional parameters
+        {},
+        //{"out-estimate"}, // names of the operator's additional parameters
         {"fn","ps"}, // names of the variant parameters
         {"inDataCount", "inPosCount"} // names of the setting parameters
     );
@@ -69,26 +83,44 @@ int main( void ) {
 
     
     const std::vector<varex_t::variant_t> variants_minus = {
-        MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
-        MAKE_VARIANT(sub,sse<v128<uint64_t>>),
-        #ifdef AVX2
-        MAKE_VARIANT(sub,avx2<v256<uint64_t>>)
-        #endif
-        #ifdef AVX512
-        , MAKE_VARIANT(sub,avx512<v512<uint64_t>>)
+        MAKE_VARIANT(std::minus,scalar<v64<uint64_t>>),
+        #ifdef AVXTWO
+        MAKE_VARIANT(std::minus,avx2<v256<uint64_t>>)
         #endif
     };
     
     const std::vector<varex_t::variant_t> variants_plus = {
-        MAKE_VARIANT(add,scalar<v64<uint64_t>>),
-        MAKE_VARIANT(add,sse<v128<uint64_t>>),
-        #ifdef AVX2
-        MAKE_VARIANT(add,avx2<v256<uint64_t>>)
+        MAKE_VARIANT(std::plus,scalar<v64<uint64_t>>),
+        #ifdef AVXTWO
+        MAKE_VARIANT(std::plus,avx2<v256<uint64_t>>),
+        #endif
+        
+    };
+    
+    //The following are the variants for the general_vectorized version
+    /*
+    const std::vector<varex_t::variant_t> variants_minus = {
+        MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
+        MAKE_VARIANT(sub,sse<v128<uint64_t>>),
+        #ifdef AVXTWO
+        MAKE_VARIANT(sub,avx2<v256<uint64_t>>),
         #endif
         #ifdef AVX512
-        , MAKE_VARIANT(add,avx512<v512<uint64_t>>)
+        MAKE_VARIANT(sub,avx512<v512<uint64_t>>)
         #endif
     };
+        
+    const std::vector<varex_t::variant_t> variants_plus = {
+        MAKE_VARIANT(add,scalar<v64<uint64_t>>),
+        MAKE_VARIANT(add,sse<v128<uint64_t>>),
+        #ifdef AVXTWO
+        MAKE_VARIANT(add,avx2<v256<uint64_t>>),
+        #endif
+        #ifdef AVX512
+        MAKE_VARIANT(add,avx512<v512<uint64_t>>)
+        #endif
+    };
+    */
 
     
     // Define the setting parameters.
@@ -126,7 +158,8 @@ int main( void ) {
             // Setting parameters
             inDataCount, inPosCount,
             // Input columns / setting
-            inDataCol, inPosCol, 0
+            //inDataCol, inPosCol, 0
+                inDataCol, inPosCol
         );     
         
         // Execute the variants.
@@ -136,7 +169,8 @@ int main( void ) {
             // Setting parameters
             inDataCount, inPosCount, 
             // Input columns / setting
-            inDataCol, inPosCol, 0
+            //inDataCol, inPosCol, 0
+            inDataCol, inPosCol
         );
     }
     

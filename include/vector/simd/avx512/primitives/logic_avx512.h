@@ -17,7 +17,7 @@ namespace vector {
    struct logic<avx512<v512<T>>, avx512<v512<T>>::vector_helper_t::size_bit::value > {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      typename avx512<v512<T>>::vector_t
+      typename avx512<v512<uint64_t>>::vector_t
       bitwise_and( typename avx512<v512<T>>::vector_t const & p_In1, typename avx512<v512<T>>::vector_t const & p_In2) {
          return _mm512_and_si512( p_In1, p_In2 );
       }

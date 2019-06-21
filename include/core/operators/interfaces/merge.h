@@ -29,6 +29,21 @@
 
 namespace morphstore {
     
+    template<
+        class t_vector_extension,
+        class t_out_data_f,
+        class t_in_data1_f,
+        class t_in_data2_f
+    >
+    struct merge_sorted_t{
+            static
+            const column<t_out_data_f> *
+            apply(
+                    const column<t_in_data1_f> * const inData1Col,
+                    const column<t_in_data2_f> * const inData2Col
+            );
+        };
+    
 /**
  * Merge-operator for sorted inputs. Merges the two given columns, each of
  * which is assumed to be sorted in ascending order and to contain only unique
@@ -49,18 +64,21 @@ namespace morphstore {
  * Otherwise, a pessimistic estimation will be done.
  * @return The union of the two input columns, which is also sorted and unique.
  */
-template<
-        class t_vector_extension,
-        class t_out_pos_f,
-        class t_in_pos_l_f,
-        class t_in_pos_r_f
->
-const column<t_out_pos_f> *
-merge_sorted(
-        const column<t_in_pos_l_f> * const inPosLCol,
-        const column<t_in_pos_r_f> * const inPosRCol,
-        const size_t outPosCountEstimate = 0
-);
-
+    template<
+            class t_vector_extension,
+            class t_out_pos_f,
+            class t_in_pos_l_f,
+            class t_in_pos_r_f
+    >
+    const column<t_out_pos_f> *
+    merge_sorted(
+            const column<t_in_pos_l_f> * const inPosLCol,
+            const column<t_in_pos_r_f> * const inPosRCol
+    ){
+        return merge_sorted_t<t_vector_extension,t_out_pos_f,t_in_pos_l_f,t_in_pos_r_f>::apply(
+                inPosLCol,
+                inPosRCol
+        );
+    }
 }
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_MERGE_H
