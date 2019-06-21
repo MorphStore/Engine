@@ -189,9 +189,9 @@ struct select_processing_unit_wit {
         const vector_t m_Inc;
         selective_write_iterator<t_ve, t_out_f> m_Wit;
 
-        state_t(base_t p_Predicate, uint8_t * p_Out) :
+        state_t(base_t p_Predicate, uint8_t * p_Out, base_t p_Pos) :
                 m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
-                m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(0, 1)),
+                m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(p_Pos, 1)),
                 m_Inc(vector::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
                 m_Wit(p_Out)
         {
@@ -236,8 +236,18 @@ struct my_select_wit_t {
         
         const uint8_t * inData = inDataCol->get_data();
         const uint8_t * const initInData = inData;
+        const size_t inDataCountLog = inDataCol->get_count_values();
         const size_t inDataSizeComprByte = inDataCol->get_size_compr_byte();
         const size_t inDataSizeUsedByte = inDataCol->get_size_used_byte();
+        
+        // @todo Simplify this.
+        const uint8_t * const inDataRest8 = create_aligned_ptr(
+                inData + inDataSizeComprByte
+        );
+        const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
+                inDataSizeUsedByte - (inDataRest8 - inData)
+        );
+        const size_t inCountLogCompr = inDataCountLog - inCountLogRest;
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
@@ -250,7 +260,7 @@ struct my_select_wit_t {
                 // use given estimate
                 ? get_size_max_byte_any_len<t_out_pos_f>(outPosCountEstimate)
                 // use pessimistic estimate
-                : get_size_max_byte_any_len<t_out_pos_f>(inDataCol->get_count_values())
+                : get_size_max_byte_any_len<t_out_pos_f>(inDataCountLog)
         );
         uint8_t * outPos = outPosCol->get_data();
         const uint8_t * const initOutPos = outPos;
@@ -264,7 +274,7 @@ struct my_select_wit_t {
 #else
                 t_ve, t_compare_special_ve, t_out_pos_f
 #endif
-        >::state_t witComprState(val, outPos);
+        >::state_t witComprState(val, outPos, 0);
         
         // Processing of the input column's compressed part using the specified
         // vector extension, compressed output.
@@ -300,6 +310,9 @@ struct my_select_wit_t {
             
             // Vectorized processing of the input column's uncompressed rest
             // part using the specified vector extension, compressed output.
+            const size_t inDataSizeUncomprVecByte = round_down_to_multiple(
+                    inSizeRestByte, vector_size_byte::value
+            );
             decompress_and_process_batch<
                     t_ve,
                     uncompr_f,
@@ -311,11 +324,7 @@ struct my_select_wit_t {
 #endif
                     t_out_pos_f
             >::apply(
-                    inData,
-                    round_down_to_multiple(
-                            inSizeRestByte, vector_size_byte::value
-                    ),
-                    witComprState
+                    inData, inDataSizeUncomprVecByte, witComprState
             );
             
             // Finish the compressed output. This might already initialize the
@@ -347,7 +356,11 @@ struct my_select_wit_t {
 #else
                         scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f
 #endif
-                >::state_t witUncomprState(val, outPos);
+                >::state_t witUncomprState(
+                        val,
+                        outPos,
+                        inCountLogCompr + inDataSizeUncomprVecByte / sizeof(base_t)
+                );
 
                 // Processing of the input column's uncompressed scalar rest
                 // part using scalar instructions, uncompressed output.
