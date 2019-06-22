@@ -179,16 +179,39 @@ int main(void) {
         }
 
         for(size_t countValues : {
-            16 * 256 * 32, // == 131072
-            16 * 256 * 32 + 17,
-            1234567
+            // The following numbers of data elements represent all
+            // combinations of the following features for all vector
+            // extensions:
+            // - uncompressed rest (17)
+            // - complete pages of dynamic_vbp_f
+            //   (vector size [byte] * vector size [bit])
+            // - incomplete pages of dynamic_vbp_f (3 * vector size [bit])
+            17,
+            // for scalar
+            3 * 64,
+            3 * 64 + 17,
+            10 * 8 * 64,
+            10 * 8 * 64 + 3 * 64,
+            10 * 8 * 64 + 17,
+            10 * 8 * 64 + 3 * 64 + 17,
+            // for sse
+            3 * 128,
+            3 * 128 + 17,
+            10 * 16 * 128,
+            10 * 16 * 128 + 3 * 128,
+            10 * 16 * 128 + 3 * 128 + 17,
+            // for avx2
+            3 * 256,
+            3 * 256 + 17,
+            10 * 32 * 256,
+            10 * 32 * 256 + 3 * 256,
+            10 * 32 * 256 + 3 * 256 + 17
         }) {
             varex.print_datagen_started();
             auto origCol = generate_with_distr(
                     countValues,
                     std::uniform_int_distribution<uint64_t>(
-                            0,
-                            bitwidth_max<uint64_t>(bw)
+                            0, bitwidth_max<uint64_t>(bw)
                     ),
                     false
             );
