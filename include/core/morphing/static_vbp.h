@@ -382,7 +382,7 @@ namespace morphstore {
         
         std::tuple<size_t, bool, uint8_t *> done() {
             const size_t countLog = m_Buffer - m_StartBuffer;
-            bool startetUncomprPart = false;
+            bool startedUncomprPart = false;
             size_t outSizeComprByte;
             if(countLog) {
                 const size_t outCountLogCompr = round_down_to_multiple(
@@ -405,7 +405,7 @@ namespace morphstore {
                             sizeOutLogRest
                     );
                     m_Out += sizeOutLogRest;
-                    startetUncomprPart = true;
+                    startedUncomprPart = true;
                 }
                 
                 m_Count += countLog;
@@ -415,7 +415,7 @@ namespace morphstore {
 
             return std::make_tuple(
                     outSizeComprByte,
-                    startetUncomprPart,
+                    startedUncomprPart,
                     m_Out
             );
         }
