@@ -54,6 +54,14 @@
 #include <stdexcept>
 #endif
 
+/**
+ * This pseudo-bit width can be used to indicate to unpack_switch and
+ * unpack_and_process_switch that no action shall be performed. We need this
+ * for the non-existent last blocks of the possible incomplete last page of
+ * dynamic_vbp_f.
+ */
+#define VBP_BW_NOBLOCK 0xff
+
 namespace morphstore {
     
     // ************************************************************************
@@ -313,6 +321,7 @@ namespace morphstore {
             case 62: pack<t_vector_extension, 62, t_step>(in8, inCount64, out8); break;
             case 63: pack<t_vector_extension, 63, t_step>(in8, inCount64, out8); break;
             case 64: pack<t_vector_extension, 64, t_step>(in8, inCount64, out8); break;
+            // Packing does not require the case for VBP_BW_NOBLOCK.
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
                     "pack_switch: unsupported bit width: " +
@@ -602,6 +611,7 @@ namespace morphstore {
             case 62: unpack<t_vector_extension, 62, t_step>(in8, out8, outCount64); break;
             case 63: unpack<t_vector_extension, 63, t_step>(in8, out8, outCount64); break;
             case 64: unpack<t_vector_extension, 64, t_step>(in8, out8, outCount64); break;
+            case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
                     "unpack_switch: unsupported bit width: " +
@@ -924,6 +934,7 @@ namespace morphstore {
             case 62: unpack_and_process<t_ve, 62, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 63: unpack_and_process<t_ve, 63, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 64: unpack_and_process<t_ve, 64, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
                     "unpack_and_process_switch: unsupported bit width: " +

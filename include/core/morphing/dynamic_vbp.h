@@ -32,6 +32,7 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <vector/general_vector.h>
+#include <vector/primitives/compare.h>
 #include <vector/primitives/create.h>
 #include <vector/primitives/io.h>
 #include <vector/primitives/logic.h>
@@ -128,7 +129,45 @@ namespace morphstore {
             return totalDataSizeByte + totalMetaSizeByte;
         }
         
-        static const size_t m_BlockSize = m_PageSize64;
+        static const size_t m_BlockSize = t_BlockSize64;
+        
+        template<class t_vector_extension>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        static unsigned determine_max_bitwidth(
+                const typename t_vector_extension::base_t * & p_Buffer
+        ) {
+            using t_ve = t_vector_extension;
+            IMPORT_VECTOR_BOILER_PLATE(t_ve)
+            
+            using namespace vector;
+            
+            vector_t pseudoMaxVec = set1<
+                    t_ve, vector_base_t_granularity::value
+            >(0);
+            for(
+                    unsigned baseIdx = 0;
+                    baseIdx < convert_size<uint64_t, base_t>(t_BlockSize64);
+                    baseIdx += vector_element_count::value
+            )
+                pseudoMaxVec = bitwise_or<t_ve>(
+                        pseudoMaxVec,
+                        load<t_ve, iov::ALIGNED, vector_size_bit::value>(
+                                p_Buffer + baseIdx
+                        )
+                );
+
+            // @todo Use vector::hor-primitive when it exists.
+            MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value)
+            base_t tmp[vector_element_count::value];
+            store<t_ve, iov::ALIGNED, vector_size_bit::value>(
+                    tmp, pseudoMaxVec
+            );
+            base_t pseudoMaxBase = 1;
+            for(unsigned i = 0; i < vector_element_count::value; i++)
+                pseudoMaxBase |= tmp[i];
+
+            return effective_bitwidth(pseudoMaxBase);
+        }
     };
     
     
@@ -168,12 +207,18 @@ namespace morphstore {
             const size_t outCountLogCompr = round_down_to_multiple(
                     countLog, out_f::m_BlockSize
             );
+            const size_t outCountLogComprComplPages = round_down_to_multiple(
+                    outCountLogCompr, out_f::m_PageSize64
+            );
+            const size_t outCountLogComprIncomplPage =
+                    outCountLogCompr - outCountLogComprComplPages;
             const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
                     countLog - outCountLogCompr
             );
             
             const base_t * inBase = inCol->get_data();
-            const base_t * const endInComprBase = inBase + outCountLogCompr;
+            const base_t * const endInComprComplPagesBase =
+                    inBase + outCountLogComprComplPages;
 
             auto outCol = new column<out_f>(
                     get_size_max_byte_any_len<out_f>(countLog)
@@ -181,8 +226,8 @@ namespace morphstore {
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            // Iterate over all input pages.
-            while(inBase < endInComprBase) {
+            // Iterate over all complete input pages.
+            while(inBase < endInComprComplPagesBase) {
                 uint8_t * const outMeta8 = out8;
                 out8 += out_f::m_MetaSize8;
                 // Iterate over all blocks in the current input page.
@@ -192,38 +237,58 @@ namespace morphstore {
                         blockIdx++
                 ) {
                     // Determine maximum bit width.
-                    vector_t pseudoMaxVec = set1<t_ve, vector_base_t_granularity::value>(0);
-                    for(
-                            unsigned baseIdx = 0;
-                            baseIdx < convert_size<uint64_t, base_t>(
-                                    t_BlockSize64
-                            );
-                            baseIdx += vector_element_count::value
-                    )
-                        pseudoMaxVec = bitwise_or<t_ve>(
-                                pseudoMaxVec,
-                                load<t_ve, iov::ALIGNED, vector_size_bit::value>(inBase + baseIdx)
-                        );
-                    
-                    // @todo Use vector::hor-primitive when it exists.
-                    MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t tmp[vector_element_count::value];
-                    store<t_ve, iov::ALIGNED, vector_size_bit::value>(tmp, pseudoMaxVec);
-                    base_t pseudoMaxBase = 1;
-                    for(unsigned i = 0; i < vector_element_count::value; i++)
-                        pseudoMaxBase |= tmp[i];
-                    
-                    const unsigned bw = effective_bitwidth(pseudoMaxBase);
+                    const unsigned bw = out_f::template determine_max_bitwidth<
+                            t_ve
+                    >(inBase);
 
                     // Store the bit width to the meta data.
                     outMeta8[blockIdx] = static_cast<uint8_t>(bw);
 
                     // Pack the data with that bit width.
-                    const uint8_t * in8 = reinterpret_cast<const uint8_t *>(inBase);
+                    const uint8_t * in8 = reinterpret_cast<const uint8_t *>(
+                            inBase
+                    );
                     pack_switch<t_ve, vector_element_count::value>(
                             bw, in8, t_BlockSize64, out8
                     );
                     inBase = reinterpret_cast<const base_t *>(in8);
                 }
+            }
+            // Handle the incomplete page at the end, if necessary.
+            if(outCountLogComprIncomplPage) {
+                uint8_t * const outMeta8 = out8;
+                out8 += out_f::m_MetaSize8;
+                const size_t countBlocksIncomplPage =
+                        outCountLogComprIncomplPage / t_BlockSize64;
+                for(
+                        unsigned blockIdx = 0;
+                        blockIdx < countBlocksIncomplPage;
+                        blockIdx++
+                ) {
+                    // Determine maximum bit width.
+                    const unsigned bw = out_f::template determine_max_bitwidth<
+                            t_ve
+                    >(inBase);
+
+                    // Store the bit width to the meta data.
+                    outMeta8[blockIdx] = static_cast<uint8_t>(bw);
+
+                    // Pack the data with that bit width.
+                    const uint8_t * in8 = reinterpret_cast<const uint8_t *>(
+                            inBase
+                    );
+                    pack_switch<t_ve, vector_element_count::value>(
+                            bw, in8, t_BlockSize64, out8
+                    );
+                    inBase = reinterpret_cast<const base_t *>(in8);
+                }
+                // Fill the meta data of remaining blocks with a marker to
+                // indicate that they are unused.
+                memset(
+                        outMeta8 + countBlocksIncomplPage,
+                        VBP_BW_NOBLOCK,
+                        out_f::m_MetaSize8 - countBlocksIncomplPage
+                );
             }
             const size_t sizeComprByte = out8 - initOut8;
             
@@ -267,29 +332,27 @@ namespace morphstore {
         const column<out_f> *
         apply(const column<in_f> * inCol) {
             const uint8_t * in8 = inCol->get_data();
-            const uint8_t * const endInCompr8 = in8 + inCol->get_size_compr_byte();
+            const uint8_t * const initIn8 = in8;
+            const size_t inSizeComprByte = inCol->get_size_compr_byte();
+            const size_t inSizeUsedByte = inCol->get_size_used_byte();
+            const uint8_t * const endInCompr8 = in8 + inSizeComprByte;
             
             const size_t countLog = inCol->get_count_values();
-            const uint8_t * const inRest8 = create_aligned_ptr(
-                    in8 + inCol->get_size_compr_byte()
-            );
-            const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
-                    inCol->get_size_used_byte() - (inRest8 - in8)
-            );
-            const size_t inSizeRestByte = uncompr_f::get_size_max_byte(
-                    inCountLogRest
-            );
             
             auto outCol = new column<out_f>(
                     out_f::get_size_max_byte(countLog)
             );
             uint8_t * out8 = outCol->get_data();
 
-            // Iterate over all pages in the input.
+            // Iterate over all complete pages and possibly the final
+            // incomplete page in the input.
             while(in8 < endInCompr8) {
                 const uint8_t * const inMeta8 = in8;
                 in8 += in_f::m_MetaSize8;
-                // Iterate over all blocks in the current input page.
+                // Iterate over all blocks in the current input page. In the
+                // final incomplete page, a block could be non-existent, which
+                // is marked by a bit width of VBP_BW_NOBLOCK and handled in
+                // unpack_switch.
                 for(
                         unsigned blockIdx = 0;
                         blockIdx < t_PageSizeBlocks;
@@ -300,7 +363,17 @@ namespace morphstore {
                     );
             }
             
-            memcpy(out8, inRest8, inSizeRestByte);
+            if(inSizeComprByte < inSizeUsedByte) {
+                // If the input column has an uncompressed rest part.
+                const uint8_t * const inRest8 = create_aligned_ptr(endInCompr8);
+                const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
+                        inSizeUsedByte - (inRest8 - initIn8)
+                );
+                const size_t inSizeRestByte = uncompr_f::get_size_max_byte(
+                        inCountLogRest
+                );
+                memcpy(out8, inRest8, inSizeRestByte);
+            }
 
             outCol->set_meta_data(
                     countLog, out_f::get_size_max_byte(countLog)
@@ -345,11 +418,15 @@ namespace morphstore {
         ) {
             const uint8_t * const endIn8 = p_In8 + p_CountIn8;
             
-            // Iterate over all pages in the input.
+            // Iterate over all complete pages and possibly the final
+            // incomplete page in the input.
             while(p_In8 < endIn8) {
                 const uint8_t * const inMeta8 = p_In8;
                 p_In8 += in_f::m_MetaSize8;
-                // Iterate over all blocks in the current input page.
+                // Iterate over all blocks in the current input page. In the
+                // final incomplete page, a block could be non-existent, which
+                // is marked by a bit width of VBP_BW_NOBLOCK and handled in
+                // unpack_switch.
                 for(
                         unsigned blockIdx = 0;
                         blockIdx < t_PageSizeBlocks;
