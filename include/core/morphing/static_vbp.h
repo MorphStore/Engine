@@ -183,17 +183,18 @@ namespace morphstore {
         const column<out_f> *
         apply(const column<in_f> * inCol) {
             const uint8_t * in8 = inCol->get_data();
+            const size_t inSizeComprByte = inCol->get_size_compr_byte();
+            const size_t inSizeUsedByte = inCol->get_size_used_byte();
             
             const size_t countLog = inCol->get_count_values();
             const uint8_t * const inRest8 = create_aligned_ptr(
-                    in8 + inCol->get_size_compr_byte()
+                    in8 + inSizeComprByte
             );
-            const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
-                    inCol->get_size_used_byte() - (inRest8 - in8)
-            );
-            const size_t inSizeRestByte = uncompr_f::get_size_max_byte(
-                    inCountLogRest
-            );
+            const size_t inCountLogRest = (inSizeComprByte < inSizeUsedByte)
+                    ? convert_size<uint8_t, uint64_t>(
+                            inSizeUsedByte - (inRest8 - in8)
+                    )
+                    : 0;
             const size_t inCountLogCompr = countLog - inCountLogRest;
             
             const size_t outSizeByte = out_f::get_size_max_byte(countLog);
@@ -204,7 +205,9 @@ namespace morphstore {
                     in8, out8, inCountLogCompr
             );
             
-            memcpy(out8, inRest8, inSizeRestByte);
+            memcpy(
+                    out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
+            );
             
             outCol->set_meta_data(countLog, outSizeByte);
 
