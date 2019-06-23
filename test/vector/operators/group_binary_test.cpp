@@ -114,6 +114,7 @@ int main( void ) {
          avx2<v256<uint64_t>>,
            uncompr_f,
            uncompr_f,
+           uncompr_f,
            uncompr_f
         >
       (outGrColTmp, testDataColumnSorted2, TEST_DATA_COUNT);
