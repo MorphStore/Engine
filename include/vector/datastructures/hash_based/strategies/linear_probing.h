@@ -7,10 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 
-#include <vector/general_vector.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/io.h>
-#include <vector/primitives/compare.h>
+#include <vector/primitives.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 
 #include <cstddef>

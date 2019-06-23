@@ -7,10 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 
-#include <vector/general_vector.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/calc.h>
-#include <vector/primitives/logic.h>
+#include <vector/primitives.h>
 
 #include <cstddef>
 #include <type_traits>

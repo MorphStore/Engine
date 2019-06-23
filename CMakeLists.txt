@@ -40,6 +40,12 @@ ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
 	message( SEND_ERROR "No known build type specified. Use either Debug, Release or HighPerf" )
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+IF(CSSE)
+	morph_flag(-DSSE)
+	morph_flag(-msse4.2)
+	message(STATUS "SSE4.2 support switched on")
+ENDIF(CSSE)
+
 IF(CAVXTWO)
 	morph_flag(-DAVXTWO)
 	morph_flag(-mavx2)
