@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 20.05.19.
 //
 
-#ifndef MORPHSTORE_LOGIC_AVX2_H
-#define MORPHSTORE_LOGIC_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_LOGIC_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_LOGIC_AVX2_H
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
 #include <vector/simd/avx2/extension_avx2.h>
@@ -32,4 +32,4 @@ namespace vector {
 
 
 }
-#endif //MORPHSTORE_LOGIC_AVX2_H
+#endif //MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_LOGIC_AVX2_H

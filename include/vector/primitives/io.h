@@ -8,7 +8,7 @@
 #ifndef MORPHSTORE_VECTOR_PRIMITIVES_IO_H
 #define MORPHSTORE_VECTOR_PRIMITIVES_IO_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 namespace vector {
 

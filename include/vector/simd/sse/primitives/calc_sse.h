@@ -11,8 +11,8 @@
  * Created on 17. April 2019, 11:07
  */
 
-#ifndef CALC_SSE_H
-#define CALC_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -193,5 +193,5 @@ namespace vector{
    };
 
 }
-#endif /* CALC_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H */
 

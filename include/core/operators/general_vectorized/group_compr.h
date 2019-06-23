@@ -9,7 +9,7 @@
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
 
-#include <vector/primitives.h>
+#include <vector/vector_primitives.h>
 
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>

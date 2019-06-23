@@ -5,27 +5,19 @@
 #ifndef MORPHSTORE_JOIN_H
 #define MORPHSTORE_JOIN_H
 
-#include <vector/simd/avx2/extension_avx2.h>
 
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
 
-#include <vector/general_vector.h>
-#include <vector/primitives/io.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/calc.h>
-
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
 #include <vector/datastructures/hash_based/hash_set.h>
 #include <vector/complex/hash.h>
-#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstddef>
 #include <cstdint>

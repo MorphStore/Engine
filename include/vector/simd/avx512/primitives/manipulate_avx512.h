@@ -11,8 +11,8 @@
  * Created on 24. April 2019, 17:17
  */
 
-#ifndef MANIPULATE_AVX512_H
-#define MANIPULATE_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -37,5 +37,5 @@ namespace vector{
     };
 }
 
-#endif /* MANIPULATE_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H */
 

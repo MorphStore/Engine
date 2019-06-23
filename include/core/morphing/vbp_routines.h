@@ -30,7 +30,7 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 #include <vector/primitives/calc.h>
 #include <vector/primitives/create.h>
 #include <vector/primitives/io.h>

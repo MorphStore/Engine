@@ -11,8 +11,8 @@
  * Created on 23. April 2019, 16:57
  */
 
-#ifndef COMPARE_AVX2_H
-#define COMPARE_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_COMPARE_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_COMPARE_AVX2_H
 
 
 #include <core/utils/preprocessor.h>
@@ -239,5 +239,5 @@ namespace vector{
     };*/
 }
 
-#endif /* COMPARE_AVX2_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_COMPARE_AVX2_H */
 

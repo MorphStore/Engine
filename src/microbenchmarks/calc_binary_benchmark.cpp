@@ -43,7 +43,7 @@
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 #include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 

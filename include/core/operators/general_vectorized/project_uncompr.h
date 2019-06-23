@@ -5,15 +5,10 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_UNCOMPR_H
 
-#include <vector/general_vector.h>
-#include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 namespace morphstore {
 

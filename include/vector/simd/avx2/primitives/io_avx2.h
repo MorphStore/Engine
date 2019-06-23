@@ -5,8 +5,8 @@
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_IO_AVX2_H
-#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_IO_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_IO_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_IO_AVX2_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -31,7 +31,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< uint64_t > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          _mm256_store_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -48,7 +48,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< float > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned float values to memory" );
          _mm256_store_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -65,7 +65,7 @@ namespace vector {
      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< double > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned double values to memory" );
          _mm256_store_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -86,7 +86,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Stream store integer values to memory" );
          _mm256_stream_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return ;
@@ -109,7 +109,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned integer values to memory" );
           _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *> (p_DataPtr),p_vec);
           return;
@@ -128,7 +128,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< float > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned float values to memory" );
          _mm256_storeu_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -145,7 +145,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< double > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned double values to memory" );
          _mm256_storeu_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -213,7 +213,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::avx2< v256< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -238,4 +238,4 @@ namespace vector {
     };
 }
 
-#endif //MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_IO_AVX2_H
+#endif //MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_IO_AVX2_H

@@ -11,8 +11,8 @@
  * Created on 23. April 2019, 16:56
  */
 
-#ifndef COMPARE_SSE_H
-#define COMPARE_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_COMPARE_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_COMPARE_SSE_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -239,5 +239,5 @@ namespace vector{
     };*/
 }
 
-#endif /* COMPARE_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_COMPARE_SSE_H */
 

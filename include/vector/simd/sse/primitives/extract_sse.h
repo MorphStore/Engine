@@ -11,8 +11,8 @@
  * Created on 25. April 2019, 14:01
  */
 
-#ifndef EXTRACT_SSE_H
-#define EXTRACT_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_EXTRACT_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_EXTRACT_SSE_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -60,5 +60,5 @@ namespace vector {
 }
       
 
-#endif /* EXTRACT_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_EXTRACT_SSE_H */
 

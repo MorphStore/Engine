@@ -30,14 +30,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/general_vector.h>
-#include <vector/primitives/calc.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/io.h>
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <tuple>
 

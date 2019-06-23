@@ -11,8 +11,8 @@
  * Created on 23. April 2019, 16:57
  */
 
-#ifndef COMPARE_AVX512_H
-#define COMPARE_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_COMPARE_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_COMPARE_AVX512_H
 
 
 #include <core/utils/preprocessor.h>
@@ -423,5 +423,5 @@ namespace vector{
     };*/
 }
 
-#endif /* COMPARE_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_COMPARE_AVX512_H */
 

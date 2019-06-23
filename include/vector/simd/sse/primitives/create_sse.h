@@ -11,8 +11,8 @@
  * Created on 25. April 2019, 11:10
  */
 
-#ifndef CREATE_SSE_H
-#define CREATE_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H
 
 
 #include <core/utils/preprocessor.h>
@@ -85,5 +85,5 @@ namespace vector {
    };
 }
 
-#endif /* CREATE_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H */
 

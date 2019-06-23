@@ -32,7 +32,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          _mm_store_si128(reinterpret_cast<typename sse< v128< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -51,7 +51,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< float > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned float values to memory" );
          _mm_store_ps(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
@@ -68,7 +68,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< double > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned double values to memory" );
          _mm_store_pd(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
@@ -88,7 +88,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Stream store integer values to memory" );
          return _mm_stream_si128(reinterpret_cast<typename sse< v128< U > >::vector_t *>(p_DataPtr),p_vec);
       }
@@ -110,7 +110,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
@@ -129,7 +129,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< float > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< float > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned float values to memory" );
          _mm_storeu_ps(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
@@ -146,7 +146,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< double > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< double > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned double values to memory" );
          _mm_storeu_pd(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;
@@ -198,7 +198,7 @@ namespace vector {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vector::sse< v128< int > >::vector_t p_vec ) {
+      store( U * p_DataPtr, sse< v128< int > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
          return;

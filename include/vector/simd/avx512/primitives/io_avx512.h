@@ -11,8 +11,8 @@
  * Created on 12. April 2019, 12:21
  */
 
-#ifndef IO_AVX512_H
-#define IO_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_IO_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_IO_AVX512_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -223,5 +223,5 @@ namespace vector {
 
 }
 
-#endif /* IO_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_IO_AVX512_H */
 

@@ -15,7 +15,7 @@
 #include <core/morphing/static_vbp.h>
 
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 #include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 #include <core/operators/general_vectorized/project_uncompr.h>

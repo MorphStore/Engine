@@ -11,8 +11,8 @@
  * Created on 25. April 2019, 14:00
  */
 
-#ifndef EXTRACT_AVX2_H
-#define EXTRACT_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_EXTRACT_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_EXTRACT_AVX2_H
 
 
 #include <core/utils/preprocessor.h>
@@ -68,5 +68,5 @@ namespace vector {
    };
 }
 
-#endif /* EXTRACT_AVX2_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_EXTRACT_AVX2_H */
 

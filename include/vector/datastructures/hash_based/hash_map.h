@@ -7,7 +7,7 @@
 
 #include <core/memory/mm_glob.h>
 #include <core/utils/preprocessor.h>
-#include <vector/primitives.h>
+#include <vector/vector_primitives.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 
 #ifdef MSV_NO_SELFMANAGED_MEMORY

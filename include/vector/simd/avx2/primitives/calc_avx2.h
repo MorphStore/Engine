@@ -11,8 +11,8 @@
  * Created on 17. April 2019, 11:07
  */
 
-#ifndef CALC_AVX2_H
-#define CALC_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
 
 
 #include <core/utils/logger.h>
@@ -187,5 +187,5 @@ namespace vector{
    };
 }
 
-#endif /* CALC_AVX2_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H */
 

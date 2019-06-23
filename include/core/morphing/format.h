@@ -26,7 +26,7 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/utils/math.h>
 #include <core/utils/basic_types.h>
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 #include <tuple>
 

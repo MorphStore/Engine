@@ -18,7 +18,7 @@
 #include <type_traits>
 #include "immintrin.h"
 
-#include "vector/general_vector.h"
+#include "vector/vector_extension_structs.h"
 
 namespace vector{
    template<class VectorReg>

@@ -7,7 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 
-#include <vector/primitives.h>
+#include <vector/vector_primitives.h>
 
 namespace vector {
 

@@ -43,7 +43,7 @@
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/storage/column.h>
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 #include <vector/scalar/extension_scalar.h>
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx512/extension_avx512.h>

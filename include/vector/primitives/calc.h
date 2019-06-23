@@ -14,7 +14,7 @@
 #ifndef CALC_H
 #define CALC_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 namespace vector{
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
