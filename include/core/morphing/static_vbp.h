@@ -349,6 +349,20 @@ namespace morphstore {
         base_t * const m_EndBuffer;
         size_t m_Count;
         
+        void compress_buffer() {
+            const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
+                    m_StartBuffer
+            );
+            // @todo This should not be inlined.
+            pack<t_ve, t_bw, t_step>(
+                    buffer8, m_CountBuffer, m_Out
+            );
+            size_t overflow = m_Buffer - m_EndBuffer;
+            memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
+            m_Buffer = m_StartBuffer + overflow;
+            m_Count += m_CountBuffer;
+        }
+        
     public:
         selective_write_iterator(uint8_t * p_Out) :
                 m_Out(p_Out),
@@ -368,19 +382,8 @@ namespace morphstore {
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
             m_Buffer += vector::count_matches<t_ve>::apply(p_Mask);
-            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
-                const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
-                        m_StartBuffer
-                );
-                // @todo This should not be inlined.
-                pack<t_ve, t_bw, t_step>(
-                        buffer8, m_CountBuffer, m_Out
-                );
-                size_t overflow = m_Buffer - m_EndBuffer;
-                memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
-                m_Buffer = m_StartBuffer + overflow;
-                m_Count += m_CountBuffer;
-            }
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer))
+                compress_buffer();
         }
         
         std::tuple<size_t, bool, uint8_t *> done() {

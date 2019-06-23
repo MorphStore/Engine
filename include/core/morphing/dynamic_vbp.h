@@ -479,6 +479,40 @@ namespace morphstore {
         base_t * m_Buffer;
         base_t * const m_EndBuffer;
         size_t m_Count;
+        
+        void compress_buffer() {
+            // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
+            // where i <= 0, i.e., the buffer is as large as a page or a
+            // half of it, our a quarter of it, ....
+            const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
+                    m_StartBuffer
+            );
+            for(
+                    unsigned blockIdx = 0;
+                    blockIdx < m_CountBufferBlocks;
+                    blockIdx++
+            ) {
+                    const unsigned bw = out_f::template determine_max_bitwidth<
+                            t_ve
+                    >(reinterpret_cast<const base_t *>(buffer8));
+                m_OutMeta[m_BlockIdxInPage + blockIdx] =
+                        static_cast<uint8_t>(bw);
+                pack_switch<t_ve, t_Step>(
+                        bw, buffer8, t_BlockSize64, m_OutData
+                );
+            }
+            m_BlockIdxInPage += m_CountBufferBlocks;
+            if(m_BlockIdxInPage == t_PageSizeBlocks) {
+                m_OutMeta = m_OutData;
+                m_OutData += out_f::m_MetaSize8;
+                m_BlockIdxInPage = 0;
+            }
+
+            size_t overflow = m_Buffer - m_EndBuffer;
+            memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
+            m_Buffer = m_StartBuffer + overflow;
+            m_Count += m_CountBuffer;
+        }
 
     public:
         selective_write_iterator(uint8_t * p_Out) :
@@ -501,39 +535,8 @@ namespace morphstore {
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
             m_Buffer += vector::count_matches<t_ve>::apply(p_Mask);
-            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
-                // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
-                // where i <= 0, i.e., the buffer is as large as a page or a
-                // half of it, our a quarter of it, ....
-                const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
-                        m_StartBuffer
-                );
-                for(
-                        unsigned blockIdx = 0;
-                        blockIdx < m_CountBufferBlocks;
-                        blockIdx++
-                ) {
-                    const unsigned bw = out_f::template determine_max_bitwidth<
-                            t_ve
-                    >(reinterpret_cast<const base_t *>(buffer8));
-                    m_OutMeta[m_BlockIdxInPage + blockIdx] =
-                            static_cast<uint8_t>(bw);
-                    pack_switch<t_ve, t_Step>(
-                            bw, buffer8, t_BlockSize64, m_OutData
-                    );
-                }
-                m_BlockIdxInPage += m_CountBufferBlocks;
-                if(m_BlockIdxInPage == t_PageSizeBlocks) {
-                    m_OutMeta = m_OutData;
-                    m_OutData += out_f::m_MetaSize8;
-                    m_BlockIdxInPage = 0;
-                }
-                
-                size_t overflow = m_Buffer - m_EndBuffer;
-                memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
-                m_Buffer = m_StartBuffer + overflow;
-                m_Count += m_CountBuffer;
-            }
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer))
+                compress_buffer();
         }
 
         std::tuple<size_t, bool, uint8_t *> done() {
