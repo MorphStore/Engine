@@ -2,7 +2,7 @@
 // Created by jpietrzyk on 05.06.19.
 //
 
-#include <vector/primitives/logic.h>
+/*#include <vector/primitives/logic.h>
 #include <vector/primitives/io.h>
 
 #include <vector/scalar/extension_scalar.h>
@@ -24,14 +24,15 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/simd/sse/primitives/compare_sse.h>*/
+
 
 /*
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
 #include <vector/datastructures/hash_based/hash_binary_key_map.h>*/
-#include <core/operators/general_vectorized/group_uncompr.h>
+
 
 //#include <vector/complex/hash.h>
 
@@ -49,6 +50,8 @@
 #include <core/utils/equality_check.h>
 #include "../../core/operators/operator_test_frames.h"
 
+#include <vector/primitives.h>
+#include <core/operators/general_vectorized/group_uncompr.h>
 
 #include <vector>
 #include <algorithm>

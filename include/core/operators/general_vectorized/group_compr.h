@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 28.05.19.
 //
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
 
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
@@ -174,8 +174,8 @@ namespace morphstore {
          return std::make_tuple(outGrCol, outExtCol);
       }
 
-       
-      
+
+
       static
       const std::tuple<
          const column<uncompr_f> *,
@@ -241,45 +241,45 @@ namespace morphstore {
       }
    };
 
-   
-   
+
+
    template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
    static
-      const std::tuple<
-         const column<uncompr_f> *,
-         const column<uncompr_f> *
-      > group(
-         column<uncompr_f> const * const  p_InDataCol,
-         size_t const outCountEstimate = 0
-      ) {
-       return group1_t<VectorExtension, 
-                hash_map<
-                VectorExtension,
-                multiply_mod_hash,
-                size_policy_hash::EXPONENTIAL,
-                scalar_key_vectorized_linear_search,
-                60>
-                >::apply(p_InDataCol,outCountEstimate);
-      }
-     
-
-      template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
-   static
-      const std::tuple<
-         const column<uncompr_f> *,
-         const column<uncompr_f> *
-      > group(
-         column<uncompr_f> const * const p_InGrCol,
-         column<uncompr_f> const * const p_InDataCol,
-         size_t const outCountEstimate = 0
-      ) {
-       return group1_t<VectorExtension, hash_binary_key_map<
+   const std::tuple<
+      const column<uncompr_f> *,
+      const column<uncompr_f> *
+   > group(
+      column<uncompr_f> const * const  p_InDataCol,
+      size_t const outCountEstimate = 0
+   ) {
+      return group1_t<VectorExtension,
+         hash_map<
             VectorExtension,
             multiply_mod_hash,
             size_policy_hash::EXPONENTIAL,
             scalar_key_vectorized_linear_search,
             60>
-            >::apply(p_InGrCol,p_InDataCol,outCountEstimate);
-      }
+      >::apply(p_InDataCol,outCountEstimate);
+   }
+
+
+   template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
+   static
+   const std::tuple<
+      const column<uncompr_f> *,
+      const column<uncompr_f> *
+   > group(
+      column<uncompr_f> const * const p_InGrCol,
+      column<uncompr_f> const * const p_InDataCol,
+      size_t const outCountEstimate = 0
+   ) {
+      return group1_t<VectorExtension, hash_binary_key_map<
+         VectorExtension,
+         multiply_mod_hash,
+         size_policy_hash::EXPONENTIAL,
+         scalar_key_vectorized_linear_search,
+         60>
+      >::apply(p_InGrCol,p_InDataCol,outCountEstimate);
+   }
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
