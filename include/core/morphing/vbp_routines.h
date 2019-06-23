@@ -62,7 +62,30 @@
  */
 #define VBP_BW_NOBLOCK 0xff
 
+/**
+ * If this macro is defined, then the routines generated via template recursion
+ * and forced inlining process only the minimum number of input/output vectors
+ * required to guarantee that only full vectors are stored/loaded. If it is not
+ * defined, then 64 (= number of digits of an uncompressed data element)
+ * vectors will be processed in any case.
+ */
+#define VBP_USE_MIN_CYCLE_LEN
+
 namespace morphstore {
+    
+    // ************************************************************************
+    // Special utilities
+    // ************************************************************************
+    
+    constexpr unsigned minimum_cycle_len(unsigned p_Bw) {
+        unsigned cycleLen = std::numeric_limits<uint64_t>::digits;
+        while(!(p_Bw & 1)) {
+            p_Bw >>= 1;
+            cycleLen >>= 1;
+        }
+        return cycleLen;
+    }
+    
     
     // ************************************************************************
     // Packing routines
@@ -228,10 +251,16 @@ namespace morphstore {
             base_t * outBase = reinterpret_cast<base_t *>(out8);
             state_t s(inBase, outBase);
             const size_t countInBase = convert_size<uint64_t, base_t>(countIn64);
-            const size_t blockSize = vector_size_bit::value;
             
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const unsigned cycleLen = minimum_cycle_len(t_bw);
+            for(size_t i = 0; i < countInBase; i += cycleLen)
+                pack_block<cycleLen, 0>(s);
+#else
+            const size_t blockSize = vector_size_bit::value;
             for(size_t i = 0; i < countInBase; i += blockSize)
                 pack_block<countBits, 0>(s);
+#endif
             
             in8 = reinterpret_cast<const uint8_t *>(s.inBase);
             out8 = reinterpret_cast<uint8_t *>(s.outBase);
@@ -507,9 +536,15 @@ namespace morphstore {
             base_t * outBase = reinterpret_cast<base_t *>(out8);
             state_t s(inBase, outBase);
             const size_t countOutBase = convert_size<uint64_t, base_t>(countOut64);
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const unsigned cycleLen = minimum_cycle_len(t_bw);
+            for(size_t i = 0; i < countOutBase; i += cycleLen)
+                unpack_block<cycleLen, 0>(s);
+#else
             const size_t blockSize = vector_size_bit::value;
             for(size_t i = 0; i < countOutBase; i += blockSize)
                 unpack_block<countBits, 0>(s);
+#endif
             
             in8 = reinterpret_cast<const uint8_t *>(s.inBase);
             out8 = reinterpret_cast<uint8_t *>(s.outBase);
@@ -819,8 +854,14 @@ namespace morphstore {
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);
             const base_t * const endInBase = inBase + convert_size<uint8_t, base_t>(countIn8);
             state_t s(inBase);
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const unsigned cycleLen = minimum_cycle_len(t_bw);
+            while(s.inBase < endInBase)
+                unpack_and_process_block<cycleLen, 0>(s, opState);
+#else
             while(s.inBase < endInBase)
                 unpack_and_process_block<countBits, 0>(s, opState);
+#endif
             
             in8 = reinterpret_cast<const uint8_t *>(s.inBase);
         }
@@ -946,5 +987,6 @@ namespace morphstore {
 }
 
 #undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#undef VBP_USE_MIN_CYCLE_LEN
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
