@@ -133,6 +133,11 @@ struct decompress_and_process_batch {
     );
 };
 
+// @todo If a write-iterator knows that its data is sorted then it could do
+// more optimizations, e.g., when determining the bit width, only the last
+// value in the block would need to be considered, since it is always the
+// greatest.
+
 /**
  * @brief The interface for writing compressed data selectively.
  */

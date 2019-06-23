@@ -24,6 +24,7 @@
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/operators/general_vectorized/select_compr.h>
@@ -126,7 +127,7 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
 
     uint8_t * outPos = outPosCol->get_data();
 
-    write_iterator<scalar<v64<uint64_t>>, out_f> wit(outPos);
+    selective_write_iterator<scalar<v64<uint64_t>>, out_f> wit(outPos);
 
     for(unsigned i = 0; i < inDataCount; i++) {
         int mask = inData[i] == val;
@@ -150,9 +151,17 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define STATIC_VBP_NAME "static_vbp_f<bw, step>"
+#define STATIC_VBP_NAME "static_vbp_f<>"
 #define STATIC_VBP_FORMAT(vector_extension, bw) \
     SINGLE_ARG(static_vbp_f<bw, vector_extension::vector_helper_t::element_count::value>)
+
+#define DYNAMIC_VBP_NAME "dynamic_vbp_f<>"
+#define DYNAMIC_VBP_FORMAT(vector_extension) \
+    SINGLE_ARG(dynamic_vbp_f< \
+            vector_extension::vector_helper_t::size_bit::value, \
+            vector_extension::vector_helper_t::size_byte::value, \
+            vector_extension::vector_helper_t::element_count::value \
+    >)
 
 #define MAKE_VARIANT_CLASSICAL(vector_extension, out_data_f, outDataFName, in_data_f, inDataFName, bw) { \
     new varex_t::operator_wrapper::for_output_formats<out_data_f>::for_input_formats<in_data_f>( \
@@ -222,6 +231,24 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
             STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
             STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
             bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            uncompr_f, "uncompr_f", \
+            DYNAMIC_VBP_FORMAT(vector_extension), DYNAMIC_VBP_NAME, \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            DYNAMIC_VBP_FORMAT(vector_extension), DYNAMIC_VBP_NAME, \
+            uncompr_f, "uncompr_f", \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            DYNAMIC_VBP_FORMAT(vector_extension), DYNAMIC_VBP_NAME, \
+            DYNAMIC_VBP_FORMAT(vector_extension), DYNAMIC_VBP_NAME, \
+            bw \
     )
 
 #if 0
@@ -235,7 +262,10 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
     MAKE_VARIANTS_WIT     (avx2<v256<uint64_t>>, bw)
 #else
 #define MAKE_VARIANTS(bw) \
-    MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw)
+    MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw)//, \
+//    MAKE_VARIANTS_WIT     (scalar<v64<uint64_t>>, bw), \
+//    MAKE_VARIANTS_WIT     (sse<v128<uint64_t>>, bw), \
+//    MAKE_VARIANTS_WIT     (avx2<v256<uint64_t>>, bw)
 #endif
 
 // ****************************************************************************
@@ -248,19 +278,16 @@ int main(void) {
     
     using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
         ::for_variant_params<std::string, std::string, std::string, std::string, unsigned>
-        ::for_setting_params<float>;
+        ::for_setting_params<size_t, float>;
     varex_t varex(
             {"pred", "est"},
             {"variant", "vector_extension", "out_pos_f", "in_data_f", "bw"},
-            {"selectivity"}
+            {"countValues", "selectivity"}
     );
     
-    const size_t countValues = 128 * 1000 * 1000;
     const uint64_t pred = 0;
     
     for(float selectivity : {
-//        0.001,
-//        0.01,
         0.1,
         0.5,
         0.9
@@ -338,20 +365,54 @@ int main(void) {
                 case 63: variants = {MAKE_VARIANTS(63)}; break;
                 case 64: variants = {MAKE_VARIANTS(64)}; break;
             }
+            
+            for(size_t countValues : {
+                // The following numbers of data elements represent all
+                // combinations of the following features for all vector
+                // extensions:
+                // - uncompressed rest (17)
+                // - complete pages of dynamic_vbp_f
+                //   (vector size [byte] * vector size [bit])
+                // - incomplete pages of dynamic_vbp_f (3 * vector size [bit])
+                17,
+                // for scalar
+                3 * 64,
+                3 * 64 + 17,
+                10 * 8 * 64,
+                10 * 8 * 64 + 3 * 64,
+                10 * 8 * 64 + 17,
+                10 * 8 * 64 + 3 * 64 + 17,
+                // for sse
+                3 * 128,
+                3 * 128 + 17,
+                10 * 16 * 128,
+                10 * 16 * 128 + 3 * 128,
+                10 * 16 * 128 + 3 * 128 + 17,
+                // for avx2
+                3 * 256,
+                3 * 256 + 17,
+                10 * 32 * 256,
+                10 * 32 * 256 + 3 * 256,
+                10 * 32 * 256 + 3 * 256 + 17
+            }) {
+                varex.print_datagen_started();
+                const size_t countMatches = static_cast<size_t>(
+                        static_cast<float>(countValues) * selectivity
+                );
+                auto origCol = generate_exact_number(
+                        countValues,
+                        countMatches,
+                        0,
+                        bitwidth_max<uint64_t>(bw)
+                );
+                varex.print_datagen_done();
 
-            varex.print_datagen_started();
-            const size_t countMatches = static_cast<size_t>(static_cast<float>(countValues) * selectivity) / (256 * 16) * (256 * 16);
-            auto origCol = generate_exact_number(
-                    countValues,
-                    countMatches,
-                    0,
-                    bitwidth_max<uint64_t>(bw)
-            );
-            varex.print_datagen_done();
+                varex.execute_variants(
+                        variants, countValues, selectivity, origCol, pred, 0
+                );
 
-            varex.execute_variants(variants, selectivity, origCol, pred, 0);
-
-            delete origCol;
+                delete origCol;
+            }
         }
     
     varex.done();
