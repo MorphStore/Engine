@@ -134,7 +134,7 @@ namespace morphstore {
         template<class t_vector_extension>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static unsigned determine_max_bitwidth(
-                const typename t_vector_extension::base_t * & p_Buffer
+                const typename t_vector_extension::base_t * p_Buffer
         ) {
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -444,6 +444,168 @@ namespace morphstore {
                     );
                 }
             }
+        }
+    };
+    
+    // ------------------------------------------------------------------------
+    // Sequential write
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            size_t t_BlockSize64,
+            size_t t_PageSizeBlocks,
+            unsigned t_Step
+    >
+    class selective_write_iterator<
+            t_vector_extension,
+            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>
+    > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        using out_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        
+        uint8_t * m_OutMeta;
+        uint8_t * m_OutData;
+        size_t m_BlockIdxInPage;
+        const uint8_t * const m_InitOut;
+        // @todo Think about this number.
+        static const size_t m_CountBuffer = out_f::m_PageSize64;
+        static const size_t m_CountBufferBlocks = m_CountBuffer / t_BlockSize64;
+        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
+                m_CountBuffer + vector_element_count::value - 1
+        ];
+        base_t * m_Buffer;
+        base_t * const m_EndBuffer;
+        size_t m_Count;
+
+    public:
+        selective_write_iterator(uint8_t * p_Out) :
+                m_OutMeta(p_Out),
+                m_OutData(m_OutMeta + out_f::m_MetaSize8),
+                m_BlockIdxInPage(0),
+                m_InitOut(p_Out),
+                m_Buffer(m_StartBuffer),
+                m_EndBuffer(m_StartBuffer + m_CountBuffer),
+                m_Count(0)
+        {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        void write(vector_t p_Data, vector_mask_t p_Mask) {
+            vector::compressstore<
+                    t_ve,
+                    vector::iov::UNALIGNED,
+                    vector_base_t_granularity::value
+            >(m_Buffer, p_Data, p_Mask);
+            m_Buffer += vector::count_matches<t_ve>::apply(p_Mask);
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(m_Buffer >= m_EndBuffer)) {
+                // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
+                // where i <= 0, i.e., the buffer is as large as a page or a
+                // half of it, our a quarter of it, ....
+                const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
+                        m_StartBuffer
+                );
+                for(
+                        unsigned blockIdx = 0;
+                        blockIdx < m_CountBufferBlocks;
+                        blockIdx++
+                ) {
+                    const unsigned bw = out_f::template determine_max_bitwidth<
+                            t_ve
+                    >(reinterpret_cast<const base_t *>(buffer8));
+                    m_OutMeta[m_BlockIdxInPage + blockIdx] =
+                            static_cast<uint8_t>(bw);
+                    pack_switch<t_ve, t_Step>(
+                            bw, buffer8, t_BlockSize64, m_OutData
+                    );
+                }
+                m_BlockIdxInPage += m_CountBufferBlocks;
+                if(m_BlockIdxInPage == t_PageSizeBlocks) {
+                    m_OutMeta = m_OutData;
+                    m_OutData += out_f::m_MetaSize8;
+                    m_BlockIdxInPage = 0;
+                }
+                
+                size_t overflow = m_Buffer - m_EndBuffer;
+                memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
+                m_Buffer = m_StartBuffer + overflow;
+                m_Count += m_CountBuffer;
+            }
+        }
+
+        std::tuple<size_t, bool, uint8_t *> done() {
+            const size_t countLog = m_Buffer - m_StartBuffer;
+            bool startedUncomprPart = false;
+            size_t outSizeComprByte;
+            uint8_t * endOut;
+            if(countLog) {
+                const size_t outCountLogCompr = round_down_to_multiple(
+                        countLog, t_BlockSize64
+                );
+
+                // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
+                // where i <= 0, i.e., the buffer is as large as a page or a
+                // half of it, our a quarter of it, ....
+                const size_t countFullBlocks = countLog / t_BlockSize64;
+                const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
+                        m_StartBuffer
+                );
+                for(
+                        unsigned blockIdx = 0;
+                        blockIdx < countFullBlocks;
+                        blockIdx++
+                ) {
+                    const unsigned bw = out_f::template determine_max_bitwidth<
+                            t_ve
+                    >(reinterpret_cast<const base_t *>(buffer8));
+                    m_OutMeta[m_BlockIdxInPage + blockIdx] =
+                            static_cast<uint8_t>(bw);
+                    pack_switch<t_ve, t_Step>(
+                            bw, buffer8, t_BlockSize64, m_OutData
+                    );
+                }
+                m_BlockIdxInPage += countFullBlocks;
+                // Fill the meta data of remaining blocks with a marker to
+                // indicate that they are unused.
+                memset(
+                        m_OutMeta + m_BlockIdxInPage,
+                        VBP_BW_NOBLOCK,
+                        out_f::m_MetaSize8 - m_BlockIdxInPage
+                );
+                endOut = m_BlockIdxInPage ? m_OutData : m_OutMeta;
+                outSizeComprByte = endOut - m_InitOut;
+
+                const size_t outCountLogRest = countLog - outCountLogCompr;
+                if(outCountLogRest) {
+                    endOut = create_aligned_ptr(endOut);
+                    const size_t sizeOutLogRest =
+                            uncompr_f::get_size_max_byte(outCountLogRest);
+                    memcpy(
+                            endOut,
+                            m_StartBuffer + outCountLogCompr,
+                            sizeOutLogRest
+                    );
+                    endOut += sizeOutLogRest;
+                    startedUncomprPart = true;
+                }
+                
+                m_Count += countLog;
+            }
+            else {
+                endOut = m_BlockIdxInPage ? m_OutData : m_OutMeta;
+                outSizeComprByte = endOut - m_InitOut;
+            }
+
+            return std::make_tuple(
+                    outSizeComprByte, startedUncomprPart, endOut
+            );
+        }
+
+        size_t get_count_values() const {
+            return m_Count;
         }
     };
     
