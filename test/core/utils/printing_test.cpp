@@ -27,7 +27,9 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/printing.h>
-#include <vector/simd/sse/extension_sse.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
 
 #include <cstdint>
 #include <immintrin.h>
