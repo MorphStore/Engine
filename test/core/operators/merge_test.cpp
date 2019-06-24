@@ -35,7 +35,7 @@ using namespace morphstore;
 using namespace vector;
 
 int main(void) {
-    const bool allGood = test_op_2in_1out_1val(
+    const bool allGood = test_op_2in_1out(
             "Merge",
             &merge_sorted<scalar<v64<uint64_t>>, uncompr_f>,
             make_column({1, 4, 5, 8, 9, 12}),
@@ -43,8 +43,7 @@ int main(void) {
             "inPosLCol",
             "inPosRCol",
             make_column({1, 4, 5, 6, 8, 9, 12, 15}),
-            "outPosCol",
-            0 // use pessimistic output size estimation
+            "outPosCol"
     );
     
     return !allGood;

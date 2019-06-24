@@ -45,7 +45,7 @@ int main(void) {
                     uncompr_f,
                     uncompr_f,
                     uncompr_f
-            >
+            >,
             make_column({10, 20, 0, 3, 100}),
             make_column({5, 33, 3, 4, 10}),
             "inDataLCol",

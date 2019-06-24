@@ -44,7 +44,7 @@ int main( void ) {
                     scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >
+            >,
             make_column({95, 102, 100, 87, 120}),
             "inDataCol",
             make_column({0, 3}),

@@ -50,9 +50,10 @@
 #include <core/utils/equality_check.h>
 #include "../../core/operators/operator_test_frames.h"
 
+
+#include <core/operators/general_vectorized/group_uncompr.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
-#include <core/operators/general_vectorized/group_uncompr.h>
 
 #include <vector>
 #include <algorithm>

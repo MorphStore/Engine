@@ -106,7 +106,7 @@ template<
         class t_in_data_l_f,
         class t_in_data_r_f
 >
-static
+
 const column<t_out_data_f> *
     calc_binary(const column<t_in_data_l_f> * const inDataLCol,
             const column<t_in_data_r_f> * const inDataRCol){
@@ -124,7 +124,7 @@ template<
         class t_out_data_f,
         class t_in_data_f
 >
-static
+
 const column<t_out_data_f> *
     calc_unary(const column<t_in_data_f> * const inDataLCol){
 
