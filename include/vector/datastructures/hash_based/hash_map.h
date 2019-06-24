@@ -36,6 +36,8 @@ namespace vector {
    >
    class hash_map{
    public:
+      using strategy MSV_CXX_ATTRIBUTE_PPUNUSED = LookupInsertStrategy;
+   public:
 
       template< class VectorExtension >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
