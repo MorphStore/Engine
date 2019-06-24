@@ -27,6 +27,7 @@
 #include <core/utils/math.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <tuple>
 
@@ -162,7 +163,15 @@ struct selective_write_iterator {
      */
     MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
             vector_t p_Data, vector_mask_t p_Mask
-    );
+    ) {
+       write(
+         p_Data, p_Mask, vector::count_matches<t_vector_extension>::apply(p_Mask)
+       );
+    }
+
+   MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
+      vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
+   );
     
     /**
      * @brief Makes sure that all possibly buffered data is stored to the
