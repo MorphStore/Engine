@@ -71,6 +71,17 @@
  */
 #define VBP_USE_MIN_CYCLE_LEN
 
+/**
+ * The following macros control whether the respective kind of routine is
+ * declared to be always inlined.
+ */
+#undef VBP_FORCE_INLINE_PACK
+#undef VBP_FORCE_INLINE_PACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK
+#undef VBP_FORCE_INLINE_UNPACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
+
 namespace morphstore {
     
     // ************************************************************************
@@ -102,7 +113,10 @@ namespace morphstore {
             unsigned t_step
     >
     struct pack_t {
-        static /*MSV_CXX_ATTRIBUTE_FORCE_INLINE*/ void apply(
+#ifdef VBP_FORCE_INLINE_PACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 size_t countIn64,
                 uint8_t * & out8
@@ -115,7 +129,10 @@ namespace morphstore {
             unsigned t_bw,
             unsigned t_step
     >
-    /*MSV_CXX_ATTRIBUTE_FORCE_INLINE*/ void pack(
+#ifdef VBP_FORCE_INLINE_PACK
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void pack(
             const uint8_t * & in8,
             size_t countIn64,
             uint8_t * & out8
@@ -242,6 +259,9 @@ namespace morphstore {
         }
         
     public:
+#ifdef VBP_FORCE_INLINE_PACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
         static void apply(
                 const uint8_t * & in8,
                 size_t countIn64,
@@ -276,7 +296,10 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack_switch(
+#ifdef VBP_FORCE_INLINE_PACK_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void pack_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             size_t inCount64,
@@ -377,7 +400,10 @@ namespace morphstore {
             unsigned t_step
     >
     struct unpack_t {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+#ifdef VBP_FORCE_INLINE_UNPACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countOut64
@@ -390,7 +416,10 @@ namespace morphstore {
             unsigned t_bw,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack(
+#ifdef VBP_FORCE_INLINE_UNPACK
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack(
             const uint8_t * & in8,
             uint8_t * & out8,
             size_t countOut64
@@ -527,6 +556,9 @@ namespace morphstore {
         }
         
     public:
+#ifdef VBP_FORCE_INLINE_UNPACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
         static void apply(
                 const uint8_t * & in8,
                 uint8_t * & out8,
@@ -572,7 +604,10 @@ namespace morphstore {
             class t_vector_extension,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_switch(
+#ifdef VBP_FORCE_INLINE_UNPACK_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             uint8_t * & out8,
@@ -675,7 +710,10 @@ namespace morphstore {
             class ... t_extra_args
     >
     struct unpack_and_process_t {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
                 typename t_op_processing_unit<
@@ -693,7 +731,10 @@ namespace morphstore {
             template<class, class ...> class t_op_vector,
             class ... t_extra_args
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process(
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_and_process(
             const uint8_t * & in8,
             size_t countIn8,
             typename t_op_vector<
@@ -846,6 +887,9 @@ namespace morphstore {
         }
         
     public:
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
         static void apply(
                 const uint8_t * & in8,
                 size_t countIn8,
@@ -897,7 +941,10 @@ namespace morphstore {
             template<class, class ...> class t_op_vector,
             class ... t_extra_args
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_and_process_switch(
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_and_process_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             size_t countIn8,
@@ -988,5 +1035,11 @@ namespace morphstore {
 
 #undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
 #undef VBP_USE_MIN_CYCLE_LEN
+#undef VBP_FORCE_INLINE_PACK
+#undef VBP_FORCE_INLINE_PACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK
+#undef VBP_FORCE_INLINE_UNPACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H
