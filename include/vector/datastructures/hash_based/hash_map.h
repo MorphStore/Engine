@@ -36,8 +36,6 @@ namespace vector {
    >
    class hash_map{
    public:
-      using strategy MSV_CXX_ATTRIBUTE_PPUNUSED = LookupInsertStrategy;
-   public:
 
       template< class VectorExtension >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -149,8 +147,17 @@ namespace vector {
       }
 
       template< class VectorExtension >
-      typename
-      LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_single_value_t
+      using strategy_state =
+         typename
+         LookupInsertStrategy<
+            VectorExtension,
+            BiggestSupportedVectorExtension,
+            HashFunction,
+            SPH
+         >::state_single_key_single_value_t;
+
+      template< class VectorExtension >
+      strategy_state<VectorExtension>
       get_lookup_insert_strategy_state( void ) {
          return
             typename

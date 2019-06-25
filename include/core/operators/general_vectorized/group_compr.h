@@ -36,7 +36,7 @@ namespace morphstore {
    >
    struct group_processing_unit_wit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      struct group_state_t {
+      struct state_t {
          DataStructure    & m_Ds;
          nonselective_write_iterator<
             VectorExtension,
@@ -48,27 +48,26 @@ namespace morphstore {
          >                 m_WitGroupExtents;
          base_t          & m_CurrentDataInPosition;
          base_t          & m_CurrentGroupId;
-         size_t            m_ResultCount;
-         auto              m_StrategyState = hs.template get_lookup_insert_strategy_state< VectorExtension >();
+//         size_t            m_ResultCount;
+         typename DataStructure::template strategy_state<VectorExtension> m_StrategyState;
 
-         group_state_t(
-            DataStructure  &        ds,
+         state_t(
+            DataStructure  &        p_Ds,
             uint8_t        * const  p_GroupIdsOut,
             uint8_t        * const  p_GroupExtentsOut,
-            base_t         &        p_CurrentDataInPosition = 0,
-            base_t         &        p_CurrentGroupId = 0,
-            size_t                  p_ResultCount = 0
+            base_t         &        p_CurrentDataInPosition,
+            base_t         &        p_CurrentGroupId
          ):
-            m_Ds{ds},
+            m_Ds{p_Ds},
             m_WitGroupIds{p_GroupIdsOut},
             m_WitGroupExtents{p_GroupExtentsOut},
             m_CurrentDataInPosition{p_CurrentDataInPosition},
             m_CurrentGroupId{p_CurrentGroupId},
-            m_ResultCount{p_ResultCount}{}
+            m_StrategyState{p_Ds.template get_lookup_insert_strategy_state< VectorExtension >()}{}
       };
 
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static void apply( vector_t p_DataVector, group_state_t & p_State ) {
+      static void apply( vector_t p_DataVector, state_t & p_State ) {
          vector_t       groupIdVector, groupExtVector;
          vector_mask_t  activeGroupExtMask;
          uint8_t        activeGroupExtCount;
@@ -78,7 +77,7 @@ namespace morphstore {
             activeGroupExtMask,
             activeGroupExtCount
          ) =
-            hs.template insert_and_lookup<VectorExtension>(
+            p_State.m_Ds.template insert_and_lookup<VectorExtension>(
                p_DataVector,
                //@todo: this should be a vector register!
                p_State.m_CurrentDataInPosition,
@@ -87,7 +86,6 @@ namespace morphstore {
             );
          p_State.m_WitGroupIds.write(groupIdVector);
          p_State.m_WitGroupExtents.write(groupExtVector, activeGroupExtMask, activeGroupExtCount);
-         p_State.m_ResultCount += activeGroupExtCount;
       }
    };
 
@@ -99,6 +97,7 @@ namespace morphstore {
       class DataStructure
    >
    struct group_wit_t {
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       static
       std::tuple<
          column<OutFormatGroupIds> const *,
@@ -114,15 +113,17 @@ namespace morphstore {
          size_t  const           inDataSizeComprByte  = p_InDataCol->get_size_compr_byte();
          size_t  const           inDataSizeUsedByte   = p_InDataCol->get_size_used_byte();
 
+         base_t                  currentDataInPosition = 0;
+         base_t                  currentGroupId = 0;
+
          DataStructure ds( inDataCountLog );
 
-         const uint8_t * const inDataRest8 = create_aligned_ptr(
-            inData + inDataSizeComprByte
-         );
-         const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
-            inDataSizeUsedByte - (inDataRest8 - inData)
-         );
-         const size_t inCountLogCompr = inDataCountLog - inCountLogRest;
+//         const uint8_t * const inDataRest8 = create_aligned_ptr(
+//            inData + inDataSizeComprByte
+//         );
+//         const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
+//            inDataSizeUsedByte - (inDataRest8 - inData)
+//         );
 
          auto outGroupExtentsCol = new column<OutFormatGroupExtents>(
             bool(outCountGroupExtentsEstimate)
@@ -136,18 +137,24 @@ namespace morphstore {
             get_size_max_byte_any_len<OutFormatGroupIds>(inDataCountLog)
          );
 
-         uint8_t * outGroupExtentsPos = outGroupExtentsCol->get_data();
-         uint8_t * outGroupIdsPos = outGroupIdsCol->get_data();
+         uint8_t       *         outGroupExtentsPos      = outGroupExtentsCol->get_data();
+         uint8_t const * const   initOutGroupExtentsPos  = outGroupExtentsPos;
+         uint8_t       *         outGroupIdsPos          = outGroupIdsCol->get_data();
+         uint8_t const * const   initOutGroupIdsPos      = outGroupIdsPos;
+
+
 
          typename group_processing_unit_wit<
             VectorExtension,
             OutFormatGroupIds,
             OutFormatGroupExtents,
             DataStructure
-         >::group_state_t witComprState(
+         >::state_t witComprState(
             ds,
             outGroupIdsPos,
-            outGroupExtentsPos
+            outGroupExtentsPos,
+            currentDataInPosition,
+            currentGroupId
          );
 
          decompress_and_process_batch<
@@ -161,256 +168,131 @@ namespace morphstore {
             inData, inDataSizeComprByte, witComprState
          );
 
+         size_t outSizeGroupIdComprByte, outSizeGroupExtentsComprByte;
+         uint8_t * outPosGroupId;
+         uint8_t * outPosGroupExtents;
+
+         size_t groupExtentsCount;
+         if(inDataSizeComprByte == inDataSizeUsedByte) {
+            // If the input column has no uncompressed rest part, we are done.
+            std::tie(
+               outSizeGroupIdComprByte, std::ignore, outPosGroupId
+            ) = witComprState.m_WitGroupIds.done();
+            std::tie(
+               outSizeGroupExtentsComprByte, std::ignore, outPosGroupExtents
+            ) = witComprState.m_WitGroupExtents.done();
+            groupExtentsCount = witComprState.m_CurrentGroupId;
+         } else {
+            inData = create_aligned_ptr(inData);
+            // The size of the input column's uncompressed rest part.
+            const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
+
+            // Vectorized processing of the input column's uncompressed rest
+            // part using the specified vector extension, compressed output.
+            const size_t inDataSizeUncomprVecByte = round_down_to_multiple(
+               inSizeRestByte, vector_size_byte::value
+            );
+            decompress_and_process_batch<
+               VectorExtension,
+               uncompr_f,
+               group_processing_unit_wit,
+               OutFormatGroupIds,
+               OutFormatGroupExtents,
+               DataStructure
+            >::apply(
+               inData, inDataSizeUncomprVecByte, witComprState
+            );
+
+            bool outAddedPaddingGroupIds, outAddedPaddingGroupExtents;
+
+            std::tie(
+               outSizeGroupIdComprByte, outAddedPaddingGroupIds, outPosGroupId
+            ) = witComprState.m_WitGroupIds.done();
+            std::tie(
+               outSizeGroupExtentsComprByte, outAddedPaddingGroupExtents, outPosGroupExtents
+            ) = witComprState.m_WitGroupExtents.done();
 
 
-      }
-   };
+            const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
+            if(inSizeScalarRemainderByte) {
+               if(!outAddedPaddingGroupIds)
+                  outPosGroupId = create_aligned_ptr(outPosGroupId);
+               if(!outAddedPaddingGroupExtents)
+                  outPosGroupExtents = create_aligned_ptr(outPosGroupExtents);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   template<
-      class VectorExtension,
-      class DataStructure
-   >
-   struct group_batch {
-      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t apply(
-         base_t *& p_InDataPtr,
-         base_t *& p_OutGroupIdPtr,
-         base_t *& p_OutGroupExtPtr,
-         size_t const p_Count,
-         base_t & p_InPositionIn,
-         base_t & p_GroupIdIn,
-         DataStructure & hs
-      ) {
-         using namespace vector;
-         base_t groupId = 0;
-         size_t result = 0;
-         auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
-         vector_t groupIdVector, groupExtVector;
-         vector_mask_t activeGroupExtMask;
-         uint8_t activeGroupExtCount;
-         for(size_t i = 0; i < p_Count; ++i) {
-            std::tie( groupIdVector, groupExtVector, activeGroupExtMask, activeGroupExtCount ) =
-               hs.template insert_and_lookup<VectorExtension>(
-                  load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InDataPtr ),
-                  p_InPositionIn,
-                  p_GroupIdIn,
-                  state
+               typename group_processing_unit_wit<
+                  scalar<v64<uint64_t>>,
+                  uncompr_f,
+                  uncompr_f,
+                  DataStructure
+               >::state_t witUncomprState(
+                  ds,
+                  outPosGroupId,
+                  outPosGroupExtents,
+                  witComprState.m_CurrentDataInPosition,
+                  witComprState.m_CurrentGroupId
                );
 
-            store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
-               p_OutGroupIdPtr,
-               groupIdVector
-            );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
-               p_OutGroupExtPtr, groupExtVector, activeGroupExtMask);
-            p_InDataPtr += vector_element_count::value;
-            p_OutGroupIdPtr += vector_element_count::value;
-            p_OutGroupExtPtr += activeGroupExtCount;
-            result += activeGroupExtCount;
-         }
-         return result;
-      }
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t apply(
-         base_t *& p_InDataPtr,
-         base_t *& p_InGrPtr,
-         base_t *& p_OutGroupIdPtr,
-         base_t *& p_OutGroupExtPtr,
-         size_t const p_Count,
-         base_t & p_InPositionIn,
-         base_t & p_GroupIdIn,
-         DataStructure & hs
-      ) {
-         using namespace vector;
-         base_t groupId = 0;
-         size_t result = 0;
-         auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
-         vector_t groupIdVector, groupExtVector;
-         vector_mask_t activeGroupExtMask;
-         uint8_t activeGroupExtCount;
-         for(size_t i = 0; i < p_Count; ++i) {
-            std::tie( groupIdVector, groupExtVector, activeGroupExtMask, activeGroupExtCount ) =
-               hs.template insert_and_lookup<VectorExtension>(
-                  load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InDataPtr ),
-                  load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InGrPtr ),
-                  p_InPositionIn,
-                  p_GroupIdIn,
-                  state
+
+               // Processing of the input column's uncompressed scalar rest
+               // part using scalar instructions, uncompressed output.
+               decompress_and_process_batch<
+                  scalar<v64<uint64_t>>,
+                  uncompr_f,
+                  group_processing_unit_wit,
+                  uncompr_f,
+                  uncompr_f,
+                  DataStructure
+               >::apply(
+                  inData, inSizeScalarRemainderByte, witUncomprState
                );
-            store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
-               p_OutGroupIdPtr,
-               groupIdVector
-            );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
-               p_OutGroupExtPtr, groupExtVector, activeGroupExtMask);
-            p_InDataPtr += vector_element_count::value;
-            p_InGrPtr += vector_element_count::value;
-            p_OutGroupIdPtr += vector_element_count::value;
-            p_OutGroupExtPtr += activeGroupExtCount;
-            result += activeGroupExtCount;
+
+               // Finish the output column's uncompressed rest part.
+               std::tie(
+                  std::ignore, std::ignore, outPosGroupId
+               ) = witUncomprState.m_WitGroupIds.done();
+               std::tie(
+                  std::ignore, std::ignore, outPosGroupExtents
+               ) = witUncomprState.m_WitGroupExtents.done();
+
+               groupExtentsCount = witUncomprState.m_CurrentGroupId;
+            } else {
+               groupExtentsCount = witComprState.m_CurrentGroupId;
+            }
          }
-         return result;
+
+         outGroupIdsCol->set_meta_data(
+            inDataCountLog, outPosGroupId - initOutGroupIdsPos, outSizeGroupIdComprByte
+         );
+         outGroupExtentsCol->set_meta_data(
+            groupExtentsCount, outPosGroupExtents - initOutGroupExtentsPos, outSizeGroupExtentsComprByte
+         );
+
+         return std::make_tuple(outGroupIdsCol, outGroupExtentsCol);
       }
    };
 
-   template<
-      class VectorExtension,
-      class DataStructure
-   >
-   struct group1_t {
-      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-
-      static
-      const std::tuple<
-         const column<uncompr_f> *,
-         const column<uncompr_f> *
-      >
-      apply(
-         column<uncompr_f> const * const  p_InDataCol,
-         size_t const outCountEstimate = 0
-      ) {
-         using namespace vector;
-
-         const size_t inDataCount = p_InDataCol->get_count_values();
-         const size_t inDataSize = p_InDataCol->get_size_used_byte();
-
-         const size_t outCount = bool(outCountEstimate) ? (outCountEstimate): inDataCount;
-         auto outGrCol = new column<uncompr_f>(inDataSize);
-         auto outExtCol = new column<uncompr_f>( outCount * sizeof( uint64_t ) );
-
-         base_t * inDataPtr = p_InDataCol->get_data( );
-         base_t * outGr = outGrCol->get_data();
-         base_t * outExt = outExtCol->get_data();
-//         base_t * const initOutExt = outExt;
-
-         DataStructure hs( inDataCount );
-         size_t const dataVectorCount = inDataCount / vector_element_count::value;
-         size_t const dataRemainderCount = inDataCount % vector_element_count::value;
-
-         base_t currentGrId = 0;
-         base_t currentPos = 0;
-
-         size_t resultCount = group_batch<VectorExtension, DataStructure>::apply(
-            inDataPtr,
-            outGr,
-            outExt,
-            dataVectorCount,
-            currentPos,
-            currentGrId,
-            hs
-         );
-         resultCount += group_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
-            inDataPtr,
-            outGr,
-            outExt,
-            dataRemainderCount,
-            currentPos,
-            currentGrId,
-            hs
-         );
-
-         outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
-         outExtCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
-
-         return std::make_tuple(outGrCol, outExtCol);
-      }
 
 
 
-      static
-      const std::tuple<
-         const column<uncompr_f> *,
-         const column<uncompr_f> *
-      >
-      apply(
-         column<uncompr_f> const * const p_InGrCol,
-         column<uncompr_f> const * const p_InDataCol,
-         size_t const outCountEstimate = 0
-      ) {
-         using namespace vector;
 
-         const size_t inDataCount = p_InDataCol->get_count_values();
-         const size_t inDataSize = p_InDataCol->get_size_used_byte();
-         if(inDataCount != p_InGrCol->get_count_values())
-            throw std::runtime_error(
-               "binary group: inGrCol and inDataCol must contain the same "
-               "number of data elements"
-            );
 
-         const size_t outCount = bool(outCountEstimate) ? (outCountEstimate): inDataCount;
-         auto outGrCol = new column<uncompr_f>(inDataSize);
-         auto outExtCol = new column<uncompr_f>( outCount * sizeof( uint64_t ) );
-
-         base_t * inDataPtr = p_InDataCol->get_data( );
-         base_t * inGrPtr = p_InGrCol->get_data( );
-         base_t * outGr = outGrCol->get_data();
-         base_t * outExt = outExtCol->get_data();
-//         base_t * const initOutExt = outExt;
-
-         DataStructure hs( inDataCount );
-         size_t const dataVectorCount = inDataCount / vector_element_count::value;
-         size_t const dataRemainderCount = inDataCount % vector_element_count::value;
-
-         base_t currentGrId = 0;
-         base_t currentPos = 0;
-
-         size_t resultCount = group_batch<VectorExtension, DataStructure>::apply(
-            inDataPtr,
-            inGrPtr,
-            outGr,
-            outExt,
-            dataVectorCount,
-            currentPos,
-            currentGrId,
-            hs
-         );
-         resultCount += group_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
-            inDataPtr,
-            inGrPtr,
-            outGr,
-            outExt,
-            dataRemainderCount,
-            currentPos,
-            currentGrId,
-            hs
-         );
-
-         outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
-         outExtCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
-
-         return std::make_tuple(outGrCol, outExtCol);
-      }
-   };
 
 
 
    template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
    static
    const std::tuple<
-      const column<uncompr_f> *,
-      const column<uncompr_f> *
-   > group(
-      column<uncompr_f> const * const  p_InDataCol,
+      const column<t_out_gr_f> *,
+      const column<t_out_ext_f> *
+   > group_vec(
+      column<t_in_data_f> const * const  p_InDataCol,
       size_t const outCountEstimate = 0
    ) {
-      return group1_t<VectorExtension,
+      return group_wit_t<VectorExtension,
+         t_out_gr_f,
+         t_out_ext_f,
+         t_in_data_f,
          hash_map<
             VectorExtension,
             multiply_mod_hash,
@@ -420,24 +302,5 @@ namespace morphstore {
       >::apply(p_InDataCol,outCountEstimate);
    }
 
-
-   template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
-   static
-   const std::tuple<
-      const column<uncompr_f> *,
-      const column<uncompr_f> *
-   > group(
-      column<uncompr_f> const * const p_InGrCol,
-      column<uncompr_f> const * const p_InDataCol,
-      size_t const outCountEstimate = 0
-   ) {
-      return group1_t<VectorExtension, hash_binary_key_map<
-         VectorExtension,
-         multiply_mod_hash,
-         size_policy_hash::EXPONENTIAL,
-         scalar_key_vectorized_linear_search,
-         60>
-      >::apply(p_InGrCol,p_InDataCol,outCountEstimate);
-   }
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H

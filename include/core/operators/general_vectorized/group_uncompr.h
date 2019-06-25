@@ -249,7 +249,7 @@ namespace morphstore {
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
-      > group(
+      > group_vec(
          column<uncompr_f> const * const  p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
@@ -269,7 +269,7 @@ namespace morphstore {
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
-      > group(
+      > group_vec(
          column<uncompr_f> const * const p_InGrCol,
          column<uncompr_f> const * const p_InDataCol,
          size_t const outCountEstimate = 0
