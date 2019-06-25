@@ -209,9 +209,11 @@ namespace morphstore {
             const size_t countInBase = convert_size<uint64_t, base_t>(countIn64);
             
 #ifdef VBP_USE_MIN_CYCLE_LEN
-            const unsigned cycleLen = minimum_cycle_len(t_bw);
-            for(size_t i = 0; i < countInBase; i += cycleLen)
-                pack_block<cycleLen, 0>(s);
+            const size_t cycleLenVec = minimum_cycle_len(t_bw);
+            const size_t cycleLenBase = cycleLenVec * vector_element_count::value;
+            const size_t cycleCount = countInBase / cycleLenBase;
+            for(size_t i = 0; i < cycleCount; i++)
+                pack_block<cycleLenVec, 0>(s);
 #else
             const size_t blockSize = vector_size_bit::value;
             for(size_t i = 0; i < countInBase; i += blockSize)
@@ -437,9 +439,11 @@ namespace morphstore {
             state_t s(inBase, outBase);
             const size_t countOutBase = convert_size<uint64_t, base_t>(countOut64);
 #ifdef VBP_USE_MIN_CYCLE_LEN
-            const unsigned cycleLen = minimum_cycle_len(t_bw);
-            for(size_t i = 0; i < countOutBase; i += cycleLen)
-                unpack_block<cycleLen, 0>(s);
+            const size_t cycleLenVec = minimum_cycle_len(t_bw);
+            const size_t cycleLenBase = cycleLenVec * vector_element_count::value;
+            const size_t cycleCount = countOutBase / cycleLenBase;
+            for(size_t i = 0; i < cycleCount; i++)
+                unpack_block<cycleLenVec, 0>(s);
 #else
             const size_t blockSize = vector_size_bit::value;
             for(size_t i = 0; i < countOutBase; i += blockSize)
