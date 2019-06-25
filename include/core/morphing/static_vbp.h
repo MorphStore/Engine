@@ -374,8 +374,9 @@ namespace morphstore {
             //
         }
         
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE
-        void write(vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount) {
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
+                vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
+        ) {
             vector::compressstore<
                     t_ve,
                     vector::iov::UNALIGNED,
@@ -386,6 +387,15 @@ namespace morphstore {
                 compress_buffer();
         }
 
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
+                vector_t p_Data, vector_mask_t p_Mask
+        ) {
+            write(
+                    p_Data,
+                    p_Mask,
+                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+            );
+        }
         
         std::tuple<size_t, bool, uint8_t *> done() {
             const size_t countLog = m_Buffer - m_StartBuffer;
