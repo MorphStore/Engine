@@ -98,10 +98,16 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len(
     const size_t countValuesCompr = round_down_to_multiple(
             p_CountValues, t_format::m_BlockSize
     );
-    return get_size_with_alignment_padding(
-            t_format::get_size_max_byte(countValuesCompr) +
-            uncompr_f::get_size_max_byte(p_CountValues - countValuesCompr)
+    const size_t sizeComprByte = t_format::get_size_max_byte(countValuesCompr);
+    // We pessimistically assume that an extra t_format::m_BlockSize data
+    // elements need to be stored uncompressed. This way, we account for the
+    // case that the final number of logical data elements in the column is
+    // less than p_CountValues, which could have the consequence that less data
+    // elements can be stored compressed.
+    const size_t sizeUncomprByte = uncompr_f::get_size_max_byte(
+                    p_CountValues - countValuesCompr + t_format::m_BlockSize
     );
+    return get_size_with_alignment_padding(sizeComprByte + sizeUncomprByte);
 }
 
 template<>
