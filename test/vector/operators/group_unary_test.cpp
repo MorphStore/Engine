@@ -93,7 +93,7 @@ int main( void ) {
 //      MAKE_VARIANT_VECTORIZED(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64,8,1>), SINGLE_ARG(dynamic_vbp_f<64,8,1>), SINGLE_ARG(dynamic_vbp_f<64,8,1>)),
 
 
-      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
+//      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, uncompr_f, uncompr_f, SINGLE_ARG(dynamic_vbp_f<128,16,2>)),
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<128,16,2>), uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>)),
@@ -102,7 +102,7 @@ int main( void ) {
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>), uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>)),
 #ifdef AVXTWO
-      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
+//      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>)),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>), uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>), SINGLE_ARG(dynamic_vbp_f<256,32,4>)),

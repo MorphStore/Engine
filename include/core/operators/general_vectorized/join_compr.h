@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 28.05.19.
 //
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_COMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_COMPR_H
 
 
 #include <core/utils/preprocessor.h>
@@ -26,7 +26,38 @@
 #include <tuple>
 
 namespace morphstore {
-    using namespace vector;
+   using namespace vector;
+
+
+   //We assume, that the input column has unique keys!
+   template<
+      class VectorExtension,
+      class DataStructure,
+      class OutFormatCol
+   >
+   struct semi_join_build_processing_unit_wit {
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      struct state_t {
+         DataStructure & m_Ds;
+         typename DataStructure::template strategy_state< VectorExtension > m_StrategyState;
+
+         state_t(
+            DataStructure & p_Ds
+         ):
+            m_Ds{ p_Ds },
+            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state()} {}
+      };
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void apply( vector_t & const p_DataVector, state_t & p_State ) {
+         p_State.m_Ds.template insert<VectorExtension>(
+            p_DataVector,
+            state
+         );
+      }
+
+   };
+
+
 
    template<
       class VectorExtension,
@@ -60,9 +91,9 @@ namespace morphstore {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t
       apply(
          base_t *& p_InProbeDataPtr,
-         size_t const p_Count,
+      size_t const p_Count,
          base_t *& p_OutPosCol,
-         base_t const p_InPositionIn,
+      base_t const p_InPositionIn,
          DataStructure & hs
       ) {
          using namespace vector;
@@ -132,8 +163,8 @@ namespace morphstore {
             );
          resultCount +=
             semi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
-               inProbeDataPtr, probeRemainderCount, outPtr, (inProbeDataPtr-startProbeDataPrt), hs
-            );
+            inProbeDataPtr, probeRemainderCount, outPtr, (inProbeDataPtr-startProbeDataPrt), hs
+         );
          outPosCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
 
          return outPosCol;
@@ -178,11 +209,11 @@ namespace morphstore {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t
       apply(
          base_t *& p_InProbeDataPtr,
-         size_t const p_Count,
+      size_t const p_Count,
          base_t *& p_OutPosLCol,
-         base_t *& p_OutPosRCol,
+      base_t *& p_OutPosRCol,
          base_t const p_InPositionIn,
-         DataStructure & hs
+      DataStructure & hs
       ) {
          using namespace vector;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -240,10 +271,10 @@ namespace morphstore {
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
 
          const size_t outCount = bool(outCountEstimate)
-                             // use given estimate
-                             ? (outCountEstimate)
-                             // use pessimistic estimate
-                             : (inBuildDataCount * inProbeDataCount);
+                                 // use given estimate
+                                 ? (outCountEstimate)
+                                 // use pessimistic estimate
+                                 : (inBuildDataCount * inProbeDataCount);
 
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
@@ -271,10 +302,10 @@ namespace morphstore {
          size_t resultCount =
             equi_join_probe_batch<VectorExtension, DataStructure>::apply(
                inProbeDataPtr, probeVectorCount, outLPtr, outRPtr, 0, hs
-         );
+            );
          resultCount +=
             equi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
-               inProbeDataPtr, probeRemainderCount, outLPtr, outRPtr, (inProbeDataPtr-startProbeDataPtr), hs
+            inProbeDataPtr, probeRemainderCount, outLPtr, outRPtr, (inProbeDataPtr-startProbeDataPtr), hs
          );
          outPosLCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
          outPosRCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
@@ -284,4 +315,4 @@ namespace morphstore {
    };
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_COMPR_H
