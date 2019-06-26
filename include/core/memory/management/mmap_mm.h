@@ -181,15 +181,11 @@ public:
         // probe for start bits
         volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
         uint64_t start_offset = (bit_offset_in_word);
-        //trace("start offset: ", start_offset, ", start word: ", std::hex, *start_word);
 
         //if( (*start_word >> (62 - start_offset) & 0b11) != 0b10 )
             //warn("Address on ", address, " was indicated as not have been allocated, word in allocation bitmap is ", std::hex, *start_word);
 
-        //trace("*word is ", std::hex, *start_word);
         *start_word = *start_word & ~(0b11l << (62 - start_offset));
-        //trace("*word is now ", std::hex, *start_word);
-
         // increment due to start
         bit_offset_in_word += ALLOC_BITS;
 
@@ -199,9 +195,7 @@ public:
             volatile uint64_t* word = reinterpret_cast<uint64_t*>(getBitmapAddress() + (word_aligned_pos_in_bitmap + (i>>6)) * sizeof(uint64_t));
             uint64_t offset = i & 0x3fl;
             if ( ((*word >> (64 - offset)) & 0b11) == 0b11 ) {
-                //trace("*word is ", std::hex, *word);
                 *word = *word & ~(0l + (0b11 << offset));
-                //trace("*word is now ", std::hex, *word);
             }
             else {
                 endFound = true;
@@ -213,6 +207,39 @@ public:
         //if (m_info.status.m_totalRegions < 10 )
             //std::cout << "Total number of used regions " << m_info.status.m_totalRegions << std::endl;
 
+    }
+
+    void setDeallocatedEnd(void* address, size_t original_size, size_t new_size)
+    {
+        uint64_t location_chunk = reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1);
+        uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) + new_size - (location_chunk );
+        location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
+
+        uint64_t bit_offset = ALLOC_BITS * location_in_chunk;
+        uint64_t bits_to_be_set_to_zero = (original_size - new_size) / DB_PAGE_SIZE * ALLOC_BITS;
+        uint64_t word_aligned_pos_in_bitmap = bit_offset >> 6;
+        uint64_t bit_offset_in_word = bit_offset & 0x3fl;
+
+        volatile uint64_t* word_in_bitmap = reinterpret_cast<volatile uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
+        (void) word_in_bitmap;
+
+        volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
+        uint64_t start_offset = (bit_offset_in_word);
+
+        *start_word = *start_word & ~(0b11l << (62 - start_offset));
+        // increment due to start
+        bit_offset_in_word += ALLOC_BITS;
+
+        for (uint64_t i = bit_offset_in_word + ALLOC_BITS; bits_to_be_set_to_zero > 0; bits_to_be_set_to_zero -= ALLOC_BITS) {
+            volatile uint64_t* word = reinterpret_cast<uint64_t*>(getBitmapAddress() + (word_aligned_pos_in_bitmap + (i>>6)) * sizeof(uint64_t));
+            uint64_t offset = i & 0x3fl;
+            if ( ((*word >> (64 - offset)) & 0b11) == 0b11 ) {
+                *word = *word & ~(0l + (0b11 << offset));
+            }
+            else {
+                throw std::runtime_error("Area was not allocated");
+            }
+        }
     }
 
     // used to decide whether we can reallocate in front or behind a memory location
@@ -274,6 +301,12 @@ public:
         }
 
         return nullptr;
+    }
+
+    bool isReallocatable(void* /*address*/, size_t /*size*/)
+    {
+        //TODO: implement
+        return false;
     }
 
     inline uint64_t getBitmapAddress()
@@ -563,16 +596,32 @@ public:
         return nullptr;
     }
 
+    bool isReallocatable(void* ptr, size_t size)
+    {
+        ChunkHeader* header = getChunkHeader(ptr);
+
+        return header->isReallocatable(ptr, size);
+    }
+
     void * reallocate_back(void* ptr, size_t size)
     {
         //TODO: this is a wip implementation for testing of normal alloc functions
-        //
+         
+        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
+        ChunkHeader* header = getChunkHeader(ptr);
+        if (info->size == size)
+            return ptr;
+
+        if (info->size < size) {
+            header->setDeallocatedEnd(ptr, info->size, size);
+            return ptr;
+        }
+
         void* ret = allocate(size);
         if (ret == nullptr) {
             throw std::runtime_error("Allocation failed");
             return nullptr;
         }
-        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         memcpy(ret, ptr, info->size > size ? size : info->size);
         deallocate(ptr);
         info = reinterpret_cast<ObjectInfo*>(ret);
