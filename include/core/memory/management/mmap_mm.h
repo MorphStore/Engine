@@ -211,13 +211,15 @@ public:
 
     void setDeallocatedEnd(void* address, size_t original_size, size_t new_size)
     {
-        uint64_t location_chunk = reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1);
-        uint64_t location_in_chunk = reinterpret_cast<uint64_t>(address) + new_size - (location_chunk );
-        location_in_chunk = location_in_chunk / DB_PAGE_SIZE;
+        size_t blocks_original = original_size / DB_PAGE_SIZE + (original_size % DB_PAGE_SIZE == 0 ? 0 : 1);
+        size_t blocks_new = new_size / DB_PAGE_SIZE + (new_size % DB_PAGE_SIZE == 0 ? 0 : 1);
 
-        uint64_t bit_offset = ALLOC_BITS * location_in_chunk;
-        uint64_t bits_to_be_set_to_zero = (original_size - new_size) / DB_PAGE_SIZE * ALLOC_BITS;
-        uint64_t word_aligned_pos_in_bitmap = bit_offset >> 6;
+        if (blocks_new == blocks_original)
+            return;
+
+        uint64_t bit_offset = ALLOC_BITS * blocks_new;
+        uint64_t bits_to_be_set_to_zero = (blocks_original - blocks_new) * ALLOC_BITS;
+        uint64_t word_aligned_pos_in_bitmap = reinterpret_cast<uint64_t>(address) + (bit_offset >> 6);
         uint64_t bit_offset_in_word = bit_offset & 0x3fl;
 
         volatile uint64_t* word_in_bitmap = reinterpret_cast<volatile uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
@@ -226,6 +228,7 @@ public:
         volatile uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
         uint64_t start_offset = (bit_offset_in_word);
 
+        // set first ALLOC_BITS to zero
         *start_word = *start_word & ~(0b11l << (62 - start_offset));
         // increment due to start
         bit_offset_in_word += ALLOC_BITS;
@@ -614,6 +617,7 @@ public:
 
         if (info->size < size) {
             header->setDeallocatedEnd(ptr, info->size, size);
+            info->size = size;
             return ptr;
         }
 
