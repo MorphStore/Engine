@@ -379,12 +379,6 @@ namespace vector {
 
 
 
-
-
-
-
-
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       std::tuple<
          vector_t,      // groupID vector register

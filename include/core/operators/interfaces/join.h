@@ -19,7 +19,7 @@
  * @file join.h
  * @brief The template-based interfaces of join-operators. So far, there is
  * only a nested-loop-join.
- * @todo TODOS?
+ * @todo Harmonize interface names for scalar reference and extraordinary vectorized variants.
  */
 
 #ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_JOIN_H
@@ -27,6 +27,12 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
+
+#include <vector/complex/hash.h>
+#include <vector/datastructures/hash_based/strategies/linear_probing.h>
+#include <vector/datastructures/hash_based/hash_utils.h>
+#include <vector/datastructures/hash_based/hash_map.h>
+#include <vector/datastructures/hash_based/hash_set.h>
 
 #include <tuple>
 
@@ -107,6 +113,110 @@ left_semi_nto1_nested_loop_join(
         const column<t_in_data_r_f> * const inDataRCol,
         const size_t outCountEstimate = 0
 );
+
+
+//vectorized part
+template<
+   class VectorExtension,
+   class DataStructure,
+   class OutFormatCol,
+   class InFormatLCol,
+   class InFormatRCol
+>
+struct semi_join_t {
+   static
+   column< OutFormatCol > const *
+   apply(
+      column< InFormatLCol > const * const p_InDataLCol,
+      column< InFormatRCol > const * const p_InDataRCol,
+      size_t const outCountEstimate = 0
+   ) = delete;
+};
+
+
+template<
+   class VectorExtension,
+   class DataStructure,
+   class OutFormatLCol,
+   class OutFormatRCol,
+   class InFormatLCol,
+   class InFormatRCol
+>
+struct join_t {
+   static
+   std::tuple<
+      column< OutFormatLCol > const *,
+      column< OutFormatRCol > const *
+   > const
+   apply(
+      column< InFormatLCol > const * const p_InDataLCol,
+      column< InFormatRCol > const * const p_InDataRCol,
+      size_t const outCountEstimate = 0
+   ) = delete;
+};
+
+
+
+template<
+   class VectorExtension,
+   class OutFormatLCol,
+   class OutFormatRCol,
+   class InFormatLCol,
+   class InFormatRCol
+>
+std::tuple<
+   column< OutFormatLCol > const *,
+   column< OutFormatRCol > const *
+> const
+join(
+   column< InFormatLCol > const * const p_InDataLCol,
+   column< InFormatRCol > const * const p_InDataRCol,
+   size_t const outCountEstimate = 0
+) {
+   return join_t<
+      VectorExtension,
+      vector::hash_map<
+         VectorExtension,
+         vector::multiply_mod_hash,
+         vector::size_policy_hash::EXPONENTIAL,
+         vector::scalar_key_vectorized_linear_search,
+         60
+      >,
+      OutFormatLCol,
+      OutFormatRCol,
+      InFormatLCol,
+      InFormatRCol
+   >::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
+}
+
+
+template<
+   class VectorExtension,
+   class OutFormatCol,
+   class InFormatLCol,
+   class InFormatRCol
+>
+column<OutFormatCol> const *
+semi_join(
+   column< InFormatLCol > const * const p_InDataLCol,
+   column< InFormatRCol > const * const p_InDataRCol,
+   size_t const outCountEstimate = 0
+) {
+   return semi_join_t<
+      VectorExtension,
+      vector::hash_set<
+         VectorExtension,
+         vector::multiply_mod_hash,
+         vector::size_policy_hash::EXPONENTIAL,
+         vector::scalar_key_vectorized_linear_search,
+         60
+      >,
+      OutFormatCol,
+      InFormatLCol,
+      InFormatRCol
+   >::apply(p_InDataLCol,p_InDataRCol, outCountEstimate);
+}
+
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_JOIN_H
