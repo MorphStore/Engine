@@ -10,6 +10,8 @@
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
 
+#include <core/operators/interfaces/join.h>
+
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
@@ -92,18 +94,17 @@ namespace morphstore {
    };
 
    template<
-      class Format,
       class VectorExtension,
       class DataStructure
    >
-   struct semi_join_t {
+   struct semi_join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-
       static
-      const column<Format> *
+      const column<uncompr_f> *
       apply(
-         column< Format > const * const p_InDataLCol,
-         column< Format > const * const p_InDataRCol
+         column< uncompr_f > const * const p_InDataLCol,
+         column< uncompr_f > const * const p_InDataRCol,
+         size_t const outCountEstimate MSV_CXX_ATTRIBUTE_PPUNUSED = 0
       ) {
          using namespace vector;
 
@@ -113,7 +114,7 @@ namespace morphstore {
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );
          base_t * const startProbeDataPrt = inProbeDataPtr;
          DataStructure hs( inBuildDataCount );
-         auto outPosCol = new column<Format>(
+         auto outPosCol = new column<uncompr_f>(
             (inProbeDataCount * sizeof(uint64_t))
          );
          base_t * outPtr = outPosCol->get_data( );
@@ -216,23 +217,21 @@ namespace morphstore {
       }
    };
 
-
+   //<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f, uncompr_f>
    template<
-      class Format,
       class VectorExtension,
       class DataStructure
    >
-   struct equi_join_t {
+   struct join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-
       static
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
       >
       apply(
-         column< Format > const * const p_InDataLCol,
-         column< Format > const * const p_InDataRCol,
+         column< uncompr_f > const * const p_InDataLCol,
+         column< uncompr_f > const * const p_InDataRCol,
          size_t const outCountEstimate = 0
       ) {
          using namespace vector;
@@ -251,10 +250,10 @@ namespace morphstore {
          base_t * const startBuildDataPtr = inBuildDataPtr;
          base_t * const startProbeDataPtr = inProbeDataPtr;
          DataStructure hs( inBuildDataCount );
-         auto outPosLCol = new column<Format>(
+         auto outPosLCol = new column<uncompr_f>(
             (outCount * sizeof(uint64_t))
          );
-         auto outPosRCol = new column<Format>(
+         auto outPosRCol = new column<uncompr_f>(
             (outCount * sizeof(uint64_t))
          );
          base_t * outLPtr = outPosLCol->get_data( );
@@ -284,41 +283,5 @@ namespace morphstore {
       }
    };
 
-    template<class Format, class VectorExtension>
-    static
-      const std::tuple<
-         const column<uncompr_f> *,
-         const column<uncompr_f> *
-      >
-    equi_join(           
-         column< Format > const * const p_InDataLCol,
-         column< Format > const * const p_InDataRCol,
-         size_t const outCountEstimate = 0
-      ) {
-        return equi_join_t<Format,VectorExtension, hash_map<
-            VectorExtension,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60>
-         >::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
-    }
-    
-    template<class Format, class VectorExtension>
-   static
-      const column<Format> *
-    semi_join(           
-         column< Format > const * const p_InDataLCol,
-         column< Format > const * const p_InDataRCol
-         
-      ) {
-        return semi_join_t<Format,VectorExtension,hash_set<
-            VectorExtension,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60>
-         >::apply(p_InDataLCol,p_InDataRCol);
-    }
 }
 #endif //MORPHSTORE_JOIN_H

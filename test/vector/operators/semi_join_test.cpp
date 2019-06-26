@@ -26,6 +26,7 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
+#include <core/operators/interfaces/join.h>
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_set.h>
@@ -59,9 +60,10 @@ int main( void ) {
 
    auto col3 =
       semi_join<
+         sse<v128<uint64_t>>,
          uncompr_f,
-         sse<v128<uint64_t>>
-         
+         uncompr_f,
+         uncompr_f
       >(col1, col2);
 
    print_columns(

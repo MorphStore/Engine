@@ -26,7 +26,7 @@
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
 
-
+#include <core/operators/interfaces/join.h>
 #include <core/operators/general_vectorized/join_uncompr.h>
 
 
@@ -58,10 +58,12 @@ int main( void ) {
    const column<uncompr_f> * col3;
    const column<uncompr_f> * col4;
    std::tie(col3, col4) =
-      equi_join<
+      join<
+         sse<v128<uint64_t>>,
          uncompr_f,
-         sse<v128<uint64_t>>
-        
+         uncompr_f,
+         uncompr_f,
+         uncompr_f
       >(col1, col2);
 
    print_columns(
