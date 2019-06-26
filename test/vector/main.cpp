@@ -9,7 +9,7 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>

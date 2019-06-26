@@ -26,7 +26,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <cstdint>
 
@@ -38,11 +37,11 @@ namespace morphstore {
  */
 template<
         template<typename> class t_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_f,
         class t_in_data_f
 >
-struct select {
+struct select_t {
     /**
      * Select-operator. Outputs the positions of all data elements in the given
      * column which fulfil the given predicate.
@@ -71,7 +70,28 @@ struct select {
     );
 };
 
-
+template<
+        template<typename> class t_op,
+        class t_vector_extension,
+        class t_out_pos_f,
+        class t_in_data_f
+>
+    static
+    const column<t_out_pos_f> *
+select(
+        const column<t_in_data_f> * const inDataCol,
+        const uint64_t val,
+        const size_t outPosCountEstimate = 0
+) {
+    return select_t<t_op,
+        t_vector_extension,
+        t_out_pos_f,
+        t_in_data_f>::apply(
+            inDataCol,
+            val,
+            outPosCountEstimate
+    );
+}
 
 
 }

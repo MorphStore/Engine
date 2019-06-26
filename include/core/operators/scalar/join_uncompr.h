@@ -30,7 +30,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <tuple>
@@ -42,7 +42,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<processing_style_t::scalar>(
+nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -54,7 +54,7 @@ nested_loop_join<processing_style_t::scalar>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                processing_style_t::scalar,
+                vector::scalar<vector::v64<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(
@@ -95,6 +95,44 @@ nested_loop_join<processing_style_t::scalar>(
     outPosRCol->set_meta_data(iOut, outSize);
     
     return std::make_tuple(outPosLCol, outPosRCol);
+}
+
+template<>
+const column<uncompr_f> *
+left_semi_nto1_nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
+        const column<uncompr_f> * const inDataLCol,
+        const column<uncompr_f> * const inDataRCol,
+        const size_t outCountEstimate
+) {
+    const size_t inDataLCount = inDataLCol->get_count_values();
+    const size_t inDataRCount = inDataRCol->get_count_values();
+    
+    const uint64_t * const inDataL = inDataLCol->get_data();
+    const uint64_t * const inDataR = inDataRCol->get_data();
+    
+    // If no estimate is provided: Pessimistic allocation size (for
+    // uncompressed data), reached only if all data elements in the left input
+    // column have a join partner in the right input column.
+    const size_t size = bool(outCountEstimate)
+            // use given estimate
+            ? (outCountEstimate * sizeof(uint64_t))
+            // use pessimistic estimate
+            : (inDataLCount * sizeof(uint64_t));
+    auto outPosLCol = new column<uncompr_f>(size);
+    uint64_t * const outPosL = outPosLCol->get_data();
+    
+    unsigned iOut = 0;
+    for(unsigned iL = 0; iL < inDataLCount; iL++)
+        for(unsigned iR = 0; iR < inDataRCount; iR++)
+            if(inDataL[iL] == inDataR[iR]) {
+                outPosL[iOut] = iL;
+                iOut++;
+                break;
+            }
+    
+    outPosLCol->set_meta_data(iOut, iOut * sizeof(uint64_t));
+    
+    return outPosLCol;
 }
 
 }

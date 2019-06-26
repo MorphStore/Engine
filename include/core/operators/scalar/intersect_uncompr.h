@@ -30,7 +30,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -40,7 +40,7 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-intersect_sorted<processing_style_t::scalar>(
+intersect_sorted<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inPosLCol,
         const column<uncompr_f> * const inPosRCol,
         const size_t outPosCountEstimate

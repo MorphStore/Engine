@@ -29,21 +29,22 @@
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <functional>
 
 using namespace morphstore;
+using namespace vector;
 
 int main( void ) {
     const bool allGood = test_op_1in_1out_2val(
             "Select",
             &morphstore::select<
-                    std::less
-,                    processing_style_t::scalar,
+                    std::less,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply,
+            >,
             make_column({95, 102, 100, 87, 120}),
             "inDataCol",
             make_column({0, 3}),

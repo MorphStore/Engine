@@ -11,10 +11,11 @@
  * Created on 17. April 2019, 11:07
  */
 
-#ifndef CALC_AVX2_H
-#define CALC_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
 
 
+#include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
 #include <vector/simd/avx2/extension_avx2.h>
@@ -78,7 +79,7 @@ namespace vector{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx2)" );
-         warn( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm256_mul_epu32( p_vec1, p_vec2);
       }
    };
@@ -121,7 +122,7 @@ namespace vector{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx2)" );
-         warn( "[VECTOR] - MODULO IS A WORKAROUND" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m256d divhelper = _mm256_set1_pd(0x0010000000000000);
          __m256d intermediate =
             _mm256_add_pd(
@@ -158,7 +159,33 @@ namespace vector{
          return _mm256_sub_epi64( _mm256_set1_epi64x(0), p_vec1);
       }
    };
+   template<>
+   struct shift_left<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint64_t>>::vector_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (avx2)" );
+         return _mm256_slli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_right<avx2<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint64_t>>::vector_t
+      apply(
+         typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (avx2)" );
+         return _mm256_srli_epi64(p_vec1, p_distance);
+      }
+   };
 }
 
-#endif /* CALC_AVX2_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H */
 

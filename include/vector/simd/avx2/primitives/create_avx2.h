@@ -11,8 +11,8 @@
  * Created on 25. April 2019, 11:11
  */
 
-#ifndef CREATE_AVX2_H
-#define CREATE_AVX2_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CREATE_AVX2_H
+#define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CREATE_AVX2_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -28,7 +28,7 @@ namespace vector {
    struct create<avx2<v256<T>>,64> {
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set( int a3, int a2, int a1, int a0) {
          trace( "[VECTOR] - set sse register." );
@@ -37,7 +37,7 @@ namespace vector {
       
     
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set_sequence( int a, int b) {
          trace( "[VECTOR] - set_sequence sse register." );
@@ -45,7 +45,7 @@ namespace vector {
       }
             
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set1( int a0) {
          trace( "[VECTOR] - set1 sse register." );
@@ -58,7 +58,7 @@ namespace vector {
    struct create<avx2<v256<T>>,32> {
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set( int a7, int a6, int a5, int a4, int a3, int a2, int a1, int a0) {
          trace( "[VECTOR] - set sse register." );
@@ -66,7 +66,7 @@ namespace vector {
       }
       
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set_sequence( int a, int b) {
          trace( "[VECTOR] - set_sequence sse register." );
@@ -74,7 +74,7 @@ namespace vector {
       }
           
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       set1( int a0) {
          trace( "[VECTOR] - set1 sse register." );
@@ -84,5 +84,5 @@ namespace vector {
    };
 }
 
-#endif /* CREATE_AVX2_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CREATE_AVX2_H */
 

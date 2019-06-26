@@ -16,22 +16,28 @@
  **********************************************************************************************/
 
 /**
- * @file processing_style.h
- * @brief An enum to denote different processing styles.
- * @todo TODOS?
+ * @file noselfmanaging_helper.h
+ * @brief A utility for ensuring that self-managed memory is turned off.
  */
 
-#ifndef MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H
-#define MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H
+#ifndef MORPHSTORE_CORE_MEMORY_NOSELFMANAGING_HELPER_H
+#define MORPHSTORE_CORE_MEMORY_NOSELFMANAGING_HELPER_H
+
+#include <stdexcept>
+
 
 namespace morphstore {
 
-enum class processing_style_t {
-    scalar,
-    vec128,
-    vec256,
-    vec512
-};
-
+    // @todo This should not be required anywhere. Remove this feature as soon
+    // as MorphStore's memory manager is fit for all our use cases.
+    void fail_if_self_managed_memory() {
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+        throw std::runtime_error(
+                "Currently, this executable only works with non-self-managed "
+                "memory. Compile MorphStore with build.sh -noSelfManaging ."
+        );
+#endif
+    }
+    
 }
-#endif //MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H
+#endif //MORPHSTORE_CORE_MEMORY_NOSELFMANAGING_HELPER_H

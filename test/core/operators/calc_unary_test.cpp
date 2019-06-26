@@ -29,9 +29,10 @@
 #include <core/operators/scalar/calc_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vector;
 
 /**
  * Unary functor for the "+5"-operation with an interface in the style of the
@@ -49,10 +50,10 @@ int main(void) {
             "Unary calculation",
             &calc_unary<
                     plus_5,
-                    processing_style_t::scalar,
+                    scalar<v64<uint64_t>>,
                     uncompr_f,
                     uncompr_f
-            >::apply,
+            >,
             make_column({10, 20, 0, 3, 100}),
             "inDataCol",
             make_column({15, 25, 5, 8, 105}),

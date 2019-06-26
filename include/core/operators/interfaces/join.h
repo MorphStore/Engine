@@ -27,7 +27,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 #include <tuple>
 
@@ -58,7 +57,7 @@ namespace morphstore {
  * predicate/operation just like the selection.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_l_f,
         class t_out_pos_r_f,
         class t_in_data_l_f,
@@ -69,6 +68,41 @@ const std::tuple<
         const column<t_out_pos_r_f> *
 >
 nested_loop_join(
+        const column<t_in_data_l_f> * const inDataLCol,
+        const column<t_in_data_r_f> * const inDataRCol,
+        const size_t outCountEstimate = 0
+);
+
+/**
+ * Left-semi-N:1-nested-loop-join-operator. Joins the two given columns and
+ * returns the positions of the left input's data elements having a join
+ * partner in the rigth input. Every data element in the left input is assumed
+ * to have at most one match in the rigth input (N:1), i.e., the right input is
+ * assumed to be unique.
+ * 
+ * Example:
+ * - inDataLCol: [11, 22, 33, 11, 44, 55]
+ * - inDataRCol: [22, 22, 33, 44, 33]
+ * - outPosLCol: [     1,  2,      4]
+ * 
+ * @param inDataLCol The left column to join on.
+ * @param inDataRCol The right column to join on, containing only unique data
+ * elements.
+ * @param outCountEstimate An optional estimate of the number of data
+ * elements in the output column. If specified, the output column will allocate
+ * enough memory for exactly this number of data elements. Otherwise, a
+ * pessimistic estimation will be done.
+ * @return A column containing the positions (referring to the left input) of
+ * all data elements in the left input which have a match in the right input.
+ */
+template<
+        class t_vector_extension,
+        class t_out_pos_l_f,
+        class t_in_data_l_f,
+        class t_in_data_r_f
+>
+const column<t_out_pos_l_f> *
+left_semi_nto1_nested_loop_join(
         const column<t_in_data_l_f> * const inDataLCol,
         const column<t_in_data_r_f> * const inDataRCol,
         const size_t outCountEstimate = 0

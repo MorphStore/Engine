@@ -18,7 +18,6 @@
 /**
  * @file printing.h
  * @brief Some utilities for printing columns.
- * @todo TODOS?
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_PRINTING_H
@@ -33,6 +32,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -52,7 +52,7 @@ template< typename uintX_t >
 void print_binary(
         std::ostream & os,
         uintX_t val,
-        size_t countBytes,
+        size_t countBytes = sizeof( uintX_t ),
         char zeroChar = '.',
         char oneChar = 'I'
 ) {
@@ -71,6 +71,41 @@ void print_binary(
  */
 void repeat_char( std::ostream & os, char c, size_t n ) {
     os << std::setw( n ) << std::setfill( c ) << "";
+}
+
+struct colored {
+    enum class color {
+        black   = 30,
+        red     = 31,
+        green   = 32,
+        yellow  = 33,
+        blue    = 34,
+        magenta = 35,
+        cyan    = 36,
+        white   = 37
+    };
+    
+    std::string m_Text;
+    color m_Color;
+    
+    colored(std::string p_Text, color p_Color)
+    : m_Text(p_Text), m_Color(p_Color) {
+        //
+    }
+};
+
+std::ostream & operator<<(std::ostream & os, const colored & c) {
+    os
+            << "\033[1;" << static_cast<unsigned>(c.m_Color) << "m"
+            << c.m_Text << "\033[0m";
+    return os;
+}
+
+template<typename t_type>
+size_t get_text_length(t_type val) {
+    std::stringstream s;
+    s << val;
+    return s.tellp();
 }
 
 /**
@@ -280,7 +315,7 @@ void print_buffers(
                 // Print the uintX_t-word in the specified base.
                 switch( p_Base ) {
                     case print_buffer_base::binary:
-                        print_binary( std::cout, value, sizeof( uintX_t ) );
+                        print_binary( std::cout, value );
                         break;
                     case print_buffer_base::decimal:
                         std::cout << std::setw( colW ) << std::dec << value;

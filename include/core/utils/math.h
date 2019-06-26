@@ -25,10 +25,12 @@
 #define MORPHSTORE_CORE_UTILS_MATH_H
 
 #include <core/utils/basic_types.h>
+#include <core/utils/preprocessor.h>
 
 #include <limits>
 
 #include <cstdint>
+
 
 namespace morphstore {
 
@@ -55,8 +57,14 @@ constexpr std::size_t log2( size_t n ) {
  * @param denominator
  * @return 
  */
-inline unsigned round_up_div( unsigned numerator, unsigned denominator ) {
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_div( unsigned numerator, unsigned denominator ) {
     return ( numerator + denominator - 1 ) / denominator;
+}
+
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_down_to_multiple(
+        size_t p_Size, size_t p_Factor
+) {
+    return p_Size / p_Factor * p_Factor;
 }
 
 const size_t bitsPerByte = 8;
@@ -96,6 +104,25 @@ constexpr inline unsigned effective_bitwidth(uint64_t p_Val) {
     // then don't forget that the return value of __builtin_clzll is undefined
     // for 0.
     return std::numeric_limits<uint64_t>::digits - __builtin_clzll(p_Val | 1);
+}
+
+/**
+ * @brief Calculates the maximum unsigned integer of the given bit width.
+ * 
+ * The template parameter `t_uintX_t` should be one of the `uint*_t` types from
+ * the header `&lt;cstdint&gt;`.
+ * 
+ * @param p_Bw The bit width.
+ * @return The highest unsigned integer of the given bit width.
+ */
+template<typename t_uintX_t>
+constexpr inline t_uintX_t bitwidth_max(unsigned p_Bw) {
+    // The special case for the maximum bit width is necessary since it is
+    // (unfortunately) not allowed to left-shift an integer by the number of
+    // its digits.
+    return (p_Bw == std::numeric_limits<t_uintX_t>::digits)
+            ? std::numeric_limits<t_uintX_t>::max()
+            : (static_cast<t_uintX_t>(1) << p_Bw) - 1;
 }
 
 }

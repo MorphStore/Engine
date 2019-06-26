@@ -31,13 +31,14 @@
 #include "../../include/core/storage/column_gen.h"
 #include "../../include/core/utils/basic_types.h"
 #include "../../include/core/utils/printing.h"
-#include "../../include/core/utils/processing_style.h"
+#include "../../include/vector/scalar/extension_scalar.h"
 
 #include <functional>
 #include <iostream>
 #include <random>
 
 using namespace morphstore;
+using namespace vector;
 
 // ****************************************************************************
 // * Example query
@@ -71,7 +72,7 @@ int main( void ) {
     // * Query execution
     // ************************************************************************
     
-    const processing_style_t scalar = processing_style_t::scalar;
+    using ve = scalar<v64<uint64_t> >;
     
     std::cout << "Query execution started... ";
     std::cout.flush();
@@ -79,14 +80,14 @@ int main( void ) {
     // Positions fulfilling "baseCol1 = 150"
     auto i1 = morphstore::select<
             std::equal_to,
-            scalar,
+            ve,
             uncompr_f,
             uncompr_f
-    >::apply(baseCol1, 150);
+    >(baseCol1, 150);
     // Data elements of "baseCol2" fulfilling "baseCol1 = 150"
-    auto i2 = project<scalar, uncompr_f>(baseCol2, i1);
+    auto i2 = project<ve, uncompr_f>(baseCol2, i1);
     // Sum over the data elements of "baseCol2" fulfilling "baseCol1 = 150"
-    auto i3 = agg_sum<scalar, uncompr_f>(i2);
+    auto i3 = agg_sum<ve, uncompr_f>(i2);
     
     std::cout << "done." << std::endl << std::endl;
     

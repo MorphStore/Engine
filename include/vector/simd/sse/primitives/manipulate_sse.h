@@ -11,8 +11,8 @@
  * Created on 24. April 2019, 17:17
  */
 
-#ifndef MANIPULATE_SSE_H
-#define MANIPULATE_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_MANIPULATE_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_MANIPULATE_SSE_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -26,7 +26,7 @@ namespace vector{
     struct manipulate<sse<v128<T>>, 64> {
         
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-        MSV_CXX_ATTRIBUTE_INLINE
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename sse< v128< U > >::vector_t
         rotate( sse< v128< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (sse)" );
@@ -37,5 +37,5 @@ namespace vector{
     };
 }
 
-#endif /* MANIPULATE_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_MANIPULATE_SSE_H */
 

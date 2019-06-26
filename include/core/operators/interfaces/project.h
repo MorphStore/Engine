@@ -24,7 +24,6 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_H
 
 #include <core/storage/column.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
     
@@ -35,7 +34,7 @@ namespace morphstore {
  * required, since some compressed formats have their own template parameters.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f,
         class t_in_pos_f
@@ -79,7 +78,7 @@ struct project_t {
  * `inPosCol`.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f,
         class t_in_pos_f
@@ -89,7 +88,7 @@ project(
         const column<t_in_data_f> * const inDataCol,
         const column<t_in_pos_f> * const inPosCol
 ) {
-    return project_t<t_ps, t_out_data_f, t_in_data_f, t_in_pos_f>::apply(
+    return project_t<t_vector_extension, t_out_data_f, t_in_data_f, t_in_pos_f>::apply(
             inDataCol,
             inPosCol
     );

@@ -14,7 +14,7 @@
 #ifndef COMPARE_H
 #define COMPARE_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 namespace vector{
 
@@ -70,6 +70,16 @@ namespace vector{
       apply(
          typename VectorExtension::vector_t const & p_vec1,
          typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+
+   template<class VectorExtension>
+   struct count_matches {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      uint8_t
+      apply(
+         typename VectorExtension::mask_t const & p_mask
       ) = delete;
    };
 

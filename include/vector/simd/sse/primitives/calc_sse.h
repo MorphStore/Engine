@@ -11,8 +11,8 @@
  * Created on 17. April 2019, 11:07
  */
 
-#ifndef CALC_SSE_H
-#define CALC_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -80,7 +80,7 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (sse)" );
-         warn( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm_mul_epu32( p_vec1, p_vec2);
       }
    };
@@ -95,7 +95,6 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const &p_vec2
       ) {
          trace("[VECTOR] - Divide 64 bit integer values from two registers (sse)");
-         __m128d intermediate;
          __m128d divhelper=_mm_set1_pd(0x0010000000000000);
 
          return
@@ -126,7 +125,7 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (sse)" );
-         warn( "[VECTOR] - MODULO IS A WORKAROUND" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m128d divhelper = _mm_set1_pd(0x0010000000000000);
          __m128d intermediate =
             _mm_add_pd(
@@ -165,6 +164,34 @@ namespace vector{
       }
    };
 
+   template<>
+   struct shift_left<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (sse)" );
+         return _mm_slli_epi64(p_vec1, p_distance);
+      }
+   };
+
+   template<>
+   struct shift_right<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (sse)" );
+         return _mm_srli_epi64(p_vec1, p_distance);
+      }
+   };
+
 }
-#endif /* CALC_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H */
 

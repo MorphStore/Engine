@@ -30,7 +30,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 #include <core/memory/management/allocators/global_scope_allocator.h>
@@ -50,7 +50,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<processing_style_t::scalar>(
+group<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
@@ -141,11 +141,11 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<processing_style_t::scalar>(
+group<vector::scalar<vector::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
 ) {
-    return group<processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>(
+    return group<vector::scalar<vector::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(
             nullptr,
             inDataCol,
             outExtCountEstimate

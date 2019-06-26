@@ -5,26 +5,24 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_UNCOMPR_H
 
-#include <vector/general_vector.h>
-#include <vector/primitives/io.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/compare.h>
-#include <vector/primitives/calc.h>
 #include <core/utils/preprocessor.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 namespace morphstore {
 
-   template<class VectorExtension, template<class> class Comparator>
+    using namespace vector;
+   template<class VectorExtension,  template< class, int > class Operator>
    struct select_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      vector_mask_t const &
+      vector_mask_t 
       apply(
-         vector_t const & p_DataVector
-         vector_t const & p_PredicateVector
+         vector_t const p_DataVector,
+         vector_t const p_PredicateVector
       ) {
-         return Comparator<VectorExtension>::apply(
+         return Operator<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(
             p_DataVector,
             p_PredicateVector
          );
@@ -32,36 +30,38 @@ namespace morphstore {
    };
 
    //@todo: SCALAR SEEMS TO BE SUPER INEFFICIENT, because of __builtin_popcount
-   template<class VectorExtension, template<class> class Comparator>
+   template<class VectorExtension,  template< class, int > class Operator>
    struct select_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
          base_t const *& p_DataPtr,
          base_t const p_Predicate,
          base_t *& p_OutPtr,
-         size_t const p_Count
+         size_t const p_Count,
+         int startid = 0
       ) {
          vector_t const predicateVector = vector::set1<VectorExtension, vector_base_t_granularity::value>(p_Predicate);
-         vector_t positionVector = vector::set_sequence<VectorExtension, vector_base_t_granularity::value>(0,1);
+         vector_t positionVector = vector::set_sequence<VectorExtension, vector_base_t_granularity::value>(startid,1);
          vector_t const addVector = vector::set1<VectorExtension, vector_base_t_granularity::value>(vector_element_count::value);
          for(size_t i = 0; i < p_Count; ++i) {
             vector_t dataVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
             vector_mask_t resultMask =
-               select_processing_unit<VectorExtension,Comparator>::apply(
+               select_processing_unit<VectorExtension,Operator>::apply(
                   dataVector,
                   predicateVector
                );
             vector::compressstore<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
             positionVector = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
 
-            p_OutPtr += __builtin_popcount( resultMask );
+            //p_OutPtr += __builtin_popcount( resultMask );
+            p_OutPtr += vector::count_matches<VectorExtension>::apply( resultMask );
             p_DataPtr += vector_element_count::value;
          }
       }
    };
 
-   template<class VectorExtension, template<class> class Comparator>
-   struct select {
+   template<class VectorExtension, template< class, int > class Operator>
+   struct select_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -82,11 +82,13 @@ namespace morphstore {
          base_t * outDataPtr = outDataCol->get_data( );
          base_t * const outDataPtrOrigin = const_cast< base_t * const >(outDataPtr);
 
-         size_t const vectorCount = inPosCount / vector_element_count::value;
-         size_t const remainderCount = inPosCount % vector_element_count::value;
+         size_t const vectorCount = inDataCount / vector_element_count::value;
+         size_t const remainderCount = inDataCount % vector_element_count::value;
 
-         select_batch<VectorExtension, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-         select_batch<vector::scalar<base_t>, Comparator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount);
+         
+         select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
+         
+         select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
 
          size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 
@@ -95,6 +97,15 @@ namespace morphstore {
          return outDataCol;
       }
    };
+
+    template<template< class, int > class Operator, class t_vector_extension, class t_out_pos_f, class t_in_data_f>
+    column<uncompr_f> const * select(
+        column< uncompr_f > const * const p_DataColumn,
+         typename t_vector_extension::vector_helper_t::base_t const p_Predicate,
+         const size_t outPosCountEstimate = 0
+      ){
+        return select_t<t_vector_extension, Operator>::apply(p_DataColumn,p_Predicate,outPosCountEstimate);
+    }
 
 
 }

@@ -14,7 +14,7 @@
 #ifndef MANIPULATE_H
 #define MANIPULATE_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 namespace vector{
     

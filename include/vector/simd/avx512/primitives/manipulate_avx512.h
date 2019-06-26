@@ -11,8 +11,8 @@
  * Created on 24. April 2019, 17:17
  */
 
-#ifndef MANIPULATE_AVX512_H
-#define MANIPULATE_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
@@ -26,7 +26,7 @@ namespace vector{
     struct manipulate<avx512<v512<T>>, 64> {
         
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-        MSV_CXX_ATTRIBUTE_INLINE
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx512< v512< U > >::vector_t
         rotate( avx512< v512< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (sse)" );
@@ -37,5 +37,5 @@ namespace vector{
     };
 }
 
-#endif /* MANIPULATE_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_MANIPULATE_AVX512_H */
 

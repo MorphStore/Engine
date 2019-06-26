@@ -235,7 +235,7 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo -DCSSE=True"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"

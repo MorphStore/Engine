@@ -11,8 +11,8 @@
  * Created on 17. April 2019, 11:07
  */
 
-#ifndef CALC_AVX512_H
-#define CALC_AVX512_H
+#ifndef MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H
+#define MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H
 
 
 
@@ -72,7 +72,7 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
-         warn( "[VECTOR] - _mm512_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         info( "[VECTOR] - _mm512_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm512_mul_epu32( p_vec1, p_vec2);
       }
    };
@@ -114,7 +114,7 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx512)" );
-         warn( "[VECTOR] - MODULO IS A WORKAROUND" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
          __m512d intermediate =
             _mm512_add_pd(
@@ -151,6 +151,32 @@ namespace vector{
          return _mm512_sub_epi64( _mm512_set1_epi64(0), p_vec1);
       }
    };
+   template<>
+   struct shift_left<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (avx512)" );
+         return _mm512_slli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_right<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (avx512)" );
+         return _mm512_srli_epi64(p_vec1, p_distance);
+      }
+   };
 }
-#endif /* CALC_AVX512_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H */
 

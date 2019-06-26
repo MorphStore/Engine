@@ -7,7 +7,7 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
-#include <vector/scalar/extension_skalar.h>
+#include <vector/scalar/extension_scalar.h>
 #include <vector/primitives/compare.h>
 
 #include <functional>
@@ -72,6 +72,17 @@ namespace vector{
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 >= p_vec2 );
+      }
+   };
+   template<>
+   struct count_matches<scalar<v64<uint64_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename scalar<v64<uint64_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
+         return p_mask;
       }
    };
 

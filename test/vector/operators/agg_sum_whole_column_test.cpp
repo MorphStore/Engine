@@ -55,8 +55,8 @@ int main( void ) {
    std::cout << "Done...\n";
 
 
-   /*const column<uncompr_f> **/ auto result = agg_sum<avx2<v256<uint64_t>>>::apply( testDataColumnSorted );
-   /*const column<uncompr_f> **/ auto result1 = agg_sum<sse<v128<uint64_t>>>::apply( testDataColumnSorted );
+   /*const column<uncompr_f> **/ auto result = agg_sum<avx2<v256<uint64_t>>, uncompr_f>( testDataColumnSorted );
+   /*const column<uncompr_f> **/ auto result1 = agg_sum<sse<v128<uint64_t>>, uncompr_f>( testDataColumnSorted );
 
    const bool allGood =
       ( ((uint64_t*)result->get_data())[0] == ((TEST_DATA_COUNT*TEST_DATA_COUNT + TEST_DATA_COUNT ) / 2)) &&

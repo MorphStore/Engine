@@ -18,8 +18,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 #include <core/operators/vectorized/select_uncompr.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstdint>
 #include <tuple>
@@ -32,7 +32,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<processing_style_t::vec256>(
+nested_loop_join<vector::avx2<vector::v256<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -44,7 +44,7 @@ nested_loop_join<processing_style_t::vec256>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                processing_style_t::vec256,
+                vector::avx2<vector::v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(
@@ -71,6 +71,11 @@ nested_loop_join<processing_style_t::vec256>(
     __m256i * outPosL = outPosLCol->get_data();
     __m256i * outPosR = outPosRCol->get_data();
     
+   
+    
+    uint64_t * endR = ((uint64_t *)inDataR) + inDataRCount;
+    uint64_t * endL = ((uint64_t *)inDataL) + inDataLCount;
+    
     unsigned iOut = 0;
     __m256i cmpres;
     int mask=0;
@@ -82,14 +87,16 @@ nested_loop_join<processing_style_t::vec256>(
     __m256i add=_mm256_set_epi64x(4,4,4,4);//!We will use this vector later to increase the IDs in every iteration
     
     //Iterate over all elements of the left column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-    for(unsigned iL = 0; iL < inDataLCount/4; iL++){
+    unsigned iL;
+    for(iL = 0; iL < inDataLCount/4; iL++){
         //Load 4 values of the left relation into a vector register
         left=_mm256_load_si256(inDataL+iL);
      
         
         rightIDs=_mm256_set_epi64x(3,2,1,0);
         //Iterate over all elements of the right column, 4 in each iteration because we can store 4 64-bit values in a 128 bit register
-        for(unsigned iR = 0; iR < inDataRCount/4; iR++){
+        unsigned iR;
+        for(iR = 0; iR < inDataRCount/4; iR++){
             //Load 4 values of the right relation into a vector register
            right=_mm256_load_si256(inDataR+iR);
               
@@ -102,7 +109,7 @@ nested_loop_join<processing_style_t::vec256>(
             * 5. Increase the output address for the right relation by the number of results in this iteration
             * 6. Rotate the right relation by 64 bit
             * 7. Rotate the indexes of the right relation by 64 bit
-            * 8. Increas ethe output counter by thenumber of results in this iteration
+            * 8. Increase the output counter by the number of results in this iteration
             */
             for (int i=0; i<4;i++){
                 cmpres=_mm256_cmpeq_epi64(left,right);
@@ -116,11 +123,93 @@ nested_loop_join<processing_style_t::vec256>(
                 iOut+=__builtin_popcountl(mask);
             }
            
-           //Increase IDs for the right relation
-           rightIDs=_mm256_add_epi64(rightIDs,add);
+            //Increase IDs for the right relation
+            rightIDs=_mm256_add_epi64(rightIDs,add);
+          
         }
+        
+       iR*=4;
+       
+
+       while ( ((uint64_t*)inDataR)+iR < endR){
+           right=_mm256_set1_epi64x(*(((uint64_t*)inDataR)+iR));
+           cmpres=_mm256_cmpeq_epi64(left,right);
+           mask = _mm256_movemask_pd((__m256d)cmpres);
+           
+          
+           if (mask!=0) {
+               compress_store256(outPosL,mask,leftIDs);
+               outPosL=(__m256i*)(((uint64_t *)outPosL)+__builtin_popcountl(mask));
+               
+               for (int k=0; k < __builtin_popcountl(mask); k++)
+               {
+                    ((uint64_t*)outPosR)[k] = iR;
+                    
+               }
+               outPosR=(__m256i*)(((uint64_t *)outPosR)+__builtin_popcountl(mask));
+           }
+           iOut+=__builtin_popcountl(mask);
+           iR++;
+       }
+         
         //Increase IDs for the left relation
         leftIDs=_mm256_add_epi64(leftIDs,add);
+    }
+    
+    iL*=4;
+    
+    
+    while ( ((uint64_t*)inDataL)+iL < endL){
+        left=_mm256_set1_epi64x(*(((uint64_t*)inDataL)+iL)); 
+        rightIDs=_mm256_set_epi64x(3,2,1,0);
+                
+        unsigned iR=0;
+        for(iR = 0; iR < inDataRCount/4; iR++){
+            //Load 4 values of the right relation into a vector register
+           right=_mm256_load_si256(inDataR+iR);
+              
+        
+            
+                cmpres=_mm256_cmpeq_epi64(left,right);
+                mask = _mm256_movemask_pd((__m256d)cmpres);
+                               
+                
+                if (mask!=0){
+                    compress_store256(outPosR,mask,rightIDs);
+                    outPosR=(__m256i*)(((uint64_t *)outPosR)+__builtin_popcountl(mask));
+                    for (int k=0; k < __builtin_popcountl(mask); k++)
+                    {
+                       ((uint64_t*)outPosL)[k] = iL;
+                       
+                    }
+                    outPosL=(__m256i*)(((uint64_t *)outPosL)+__builtin_popcountl(mask));
+                }
+                
+       
+                    
+                iOut+=__builtin_popcountl(mask);
+            
+           
+            //Increase IDs for the right relation
+            rightIDs=_mm256_add_epi64(rightIDs,add);
+          
+        }
+        
+       iR*=4;
+
+       while ( ((uint64_t*)inDataR)+iR < endR){
+          if(*(((uint64_t*)inDataL)+iL) == *(((uint64_t*)inDataR)+iR)) {
+                ((uint64_t *)outPosL)[0] = iL;
+                ((uint64_t *)outPosR)[0] = iR;
+                outPosL=(__m256i*)(((uint64_t *)outPosL)+sizeof(uint64_t));
+                outPosR=(__m256i*)(((uint64_t *)outPosR)+sizeof(uint64_t));
+                iOut++;
+            }
+          
+          iR++;
+       }
+        
+        iL++;
     }
     
     const size_t outSize = iOut * sizeof(uint64_t);//How large is our result set?

@@ -11,8 +11,8 @@
  * Created on 25. April 2019, 11:10
  */
 
-#ifndef CREATE_SSE_H
-#define CREATE_SSE_H
+#ifndef MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H
+#define MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H
 
 
 #include <core/utils/preprocessor.h>
@@ -29,7 +29,7 @@ namespace vector {
    struct create<sse<v128<T>>,64> {
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set( int a1, int a0) {
          trace( "[VECTOR] - set sse register." );
@@ -38,7 +38,7 @@ namespace vector {
       
     
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set1( int a0) {
          trace( "[VECTOR] - set1 sse register." );
@@ -46,7 +46,7 @@ namespace vector {
       }
    
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set_sequence( int a, int b) {
          trace( "[VECTOR] - set_sequence sse register." );
@@ -59,7 +59,7 @@ namespace vector {
    struct create<sse<v128<T>>,32> {
        
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set( int a3, int a2, int a1, int a0) {
          trace( "[VECTOR] - set sse register." );
@@ -67,7 +67,7 @@ namespace vector {
       }
       
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set_sequence( int a, int b) {
          trace( "[VECTOR] - set_sequence sse register." );
@@ -75,7 +75,7 @@ namespace vector {
       }
           
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
       set1( int a0) {
          trace( "[VECTOR] - set1 sse register." );
@@ -85,5 +85,5 @@ namespace vector {
    };
 }
 
-#endif /* CREATE_SSE_H */
+#endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CREATE_SSE_H */
 

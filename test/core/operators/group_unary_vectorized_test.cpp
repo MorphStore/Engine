@@ -9,12 +9,15 @@
 #include <core/utils/printing.h>
 #include <core/operators/scalar/group_uncompr.h>
 #include <core/utils/equality_check.h>
+#include <vector/scalar/extension_scalar.h>
+#include <vector/simd/avx2/extension_avx2.h>
 #include "operator_test_frames.h"
 #define TEST_DATA_COUNT 10000000
 
 int main( void ) {
 
    using namespace morphstore;
+   using namespace vector;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
@@ -29,9 +32,9 @@ int main( void ) {
    const column<uncompr_f> * outExtCol2;
    const column<uncompr_f> * outExtColScalar2;
    std::cout << "Done\nVectorized..." << std::flush;
-   std::tie(outGrCol1, outExtCol1) = group<processing_style_t::vec256, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrCol1, outExtCol1) = group<avx2<v256<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nScalar..." << std::flush;
-   std::tie(outGrColScalar1, outExtColScalar1) = group<processing_style_t::scalar, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nGenerating..." << std::flush;
 
    testDataColumnSorted = generate_with_distr(
@@ -43,9 +46,9 @@ int main( void ) {
       false
    );
    std::cout << "Done\nVectorized..." << std::flush;
-   std::tie(outGrCol2, outExtCol2) = group<processing_style_t::vec256, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrCol2, outExtCol2) = group<avx2<v256<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nScalar..." << std::flush;
-   std::tie(outGrColScalar2, outExtColScalar2) = group<processing_style_t::scalar, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
+   std::tie(outGrColScalar2, outExtColScalar2) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\n" << std::flush;
 
 
