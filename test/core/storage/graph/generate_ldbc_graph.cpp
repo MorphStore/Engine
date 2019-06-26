@@ -21,7 +21,7 @@
  * @todo
  */
 
-#include <core/storage/graph/graph.h>
+#include <core/storage/graph/adj_list/graph.h>
 #include <core/storage/graph/ldbc_import.h>
 #include <chrono>  // for high_resolution_clock
 
