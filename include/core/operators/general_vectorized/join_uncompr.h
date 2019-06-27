@@ -243,7 +243,7 @@ namespace morphstore {
                              // use given estimate
                              ? (outCountEstimate)
                              // use pessimistic estimate
-                             : (inBuildDataCount * inProbeDataCount);
+                             : (inProbeDataCount);
 
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );

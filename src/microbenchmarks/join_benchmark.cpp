@@ -4,10 +4,12 @@
  * and open the template in the editor.
  */
 
+#include <core/memory/mm_glob.h>
+
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/memory/noselfmanaging_helper.h>
+//#include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/static_vbp.h>
 
