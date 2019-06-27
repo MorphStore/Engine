@@ -84,6 +84,32 @@ namespace morphstore {
             p_In8 += p_CountIn8;
         }
     };
+
+    // ------------------------------------------------------------------------
+    // Random read
+    // ------------------------------------------------------------------------
+
+    template<class t_vector_extension>
+    class random_read_access<t_vector_extension, uncompr_f> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        const base_t * const m_Data;
+                
+    public:
+        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions) {
+            return vector::gather<
+                    t_ve,
+                    vector::iov::UNALIGNED,
+                    vector_base_t_granularity::value
+            >(m_Data, p_Positions);
+        }
+    };
     
     // ------------------------------------------------------------------------
     // Sequential write
