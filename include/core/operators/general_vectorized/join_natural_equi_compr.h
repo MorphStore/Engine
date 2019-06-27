@@ -40,23 +40,23 @@ namespace morphstore {
          vector_t m_BuildPos;
          vector_t const m_Inc;
          typename DataStructure::template strategy_state< VectorExtension > m_StrategyState;
-         state(
+         state_t(
             DataStructure &         p_Ds,
             base_t          const   p_BuildPos
          ):
             m_Ds{ p_Ds },
             m_BuildPos{ set_sequence< VectorExtension, vector_base_t_granularity::value >( p_BuildPos, 1 ) },
             m_Inc{ set1< VectorExtension, vector_base_t_granularity::value >( vector_element_count::value ) },
-            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state()} {}
+            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state< VectorExtension >()} {}
       };
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static void apply( vector_t & const p_DataVector, state_t & p_State ) {
+      static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          p_State.m_Ds.template insert<VectorExtension>(
             p_DataVector,
             p_State.m_BuildPos,
             p_State.m_StrategyState
          );
-         p_State.m_BuildPos = add< VectorExtension >::apply( p_State.m_BuildPs, p_State.m_Inc );
+         p_State.m_BuildPos = add< VectorExtension >::apply( p_State.m_BuildPos, p_State.m_Inc );
       }
    };
 
@@ -82,26 +82,26 @@ namespace morphstore {
             VectorExtension,
             OutFormatRCol
          >                 m_WitOutRData;
-         state(
+         state_t(
             DataStructure  &        p_Ds,
             uint8_t        * const  p_OutLData,
             uint8_t        * const  p_OutRData,
             base_t           const  p_ProbePos
          ):
             m_Ds{ p_Ds },
-            m_ProbedPos{ set_sequence< VectorExtension, vector_base_t_granularity::value >( p_ProbePos, 1 ) },
+            m_ProbePos{ set_sequence< VectorExtension, vector_base_t_granularity::value >( p_ProbePos, 1 ) },
             m_Inc{ set1< VectorExtension, vector_base_t_granularity::value >( vector_element_count::value ) },
-            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state()},
+            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state< VectorExtension >()},
             m_WitOutLData{ p_OutLData },
             m_WitOutRData{ p_OutRData } {}
       };
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static void apply( vector_t & const p_DataVector, state_t & p_State ) {
+      static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          vector_t lookupResultValuesVector;
          vector_mask_t lookupResultMask;
          uint8_t hitResultCount;
          std::tie( lookupResultValuesVector, lookupResultMask, hitResultCount ) =
-            hs.template lookup<VectorExtension>(
+            p_State.m_Ds.template lookup<VectorExtension>(
                p_DataVector,
                p_State.m_StrategyState
             );
@@ -167,19 +167,19 @@ namespace morphstore {
          size_t outCountLog;
          DataStructure ds( inBuildDataCountLog );
 
-         auto outPosLCol = new column<OutFormatCol>(
+         auto outPosLCol = new column<OutFormatLCol>(
             bool(outCountEstimate)
             // use given estimate
-            ? get_size_max_byte_any_len<OutFormatCol>(outCountEstimate)
+            ? get_size_max_byte_any_len<OutFormatLCol>(outCountEstimate)
             // use pessimistic estimate
-            : get_size_max_byte_any_len<OutFormatCol>(inProbeDataCountLog)
+            : get_size_max_byte_any_len<OutFormatLCol>(inProbeDataCountLog)
          );
-         auto outPosRCol = new column<OutFormatCol>(
+         auto outPosRCol = new column<OutFormatRCol>(
             bool(outCountEstimate)
             // use given estimate
-            ? get_size_max_byte_any_len<OutFormatCol>(outCountEstimate)
+            ? get_size_max_byte_any_len<OutFormatRCol>(outCountEstimate)
             // use pessimistic estimate
-            : get_size_max_byte_any_len<OutFormatCol>(inProbeDataCountLog)
+            : get_size_max_byte_any_len<OutFormatRCol>(inProbeDataCountLog)
          );
 
 
@@ -259,7 +259,9 @@ namespace morphstore {
             VectorExtension,
             InFormatRCol,
             natural_equi_join_probe_processing_unit_wit,
-            DataStructure
+            DataStructure,
+            OutFormatLCol,
+            OutFormatRCol
          >::apply(
             inProbeDataPtr, inProbeDataSizeComprByte, witProbeComprState
          );
@@ -269,7 +271,7 @@ namespace morphstore {
          if( inProbeDataSizeComprByte == inProbeDataSizeUsedByte ) {
             std::tie(
                outSizeLComprByte, std::ignore, outLPtr
-            ) = witProbeComprState.m_WitOutLData.done()
+            ) = witProbeComprState.m_WitOutLData.done();
             std::tie(
                outSizeRComprByte, std::ignore, outRPtr
             ) = witProbeComprState.m_WitOutRData.done();
@@ -284,7 +286,9 @@ namespace morphstore {
                VectorExtension,
                uncompr_f,
                natural_equi_join_probe_processing_unit_wit,
-               DataStructure
+               DataStructure,
+               OutFormatLCol,
+               OutFormatRCol
             >::apply(
                inProbeDataPtr, inProbeDataSizeUncomprVecByte, witProbeComprState
             );
@@ -292,7 +296,7 @@ namespace morphstore {
             bool outRAddedPadding;
             std::tie(
                outSizeLComprByte, outLAddedPadding, outLPtr
-            ) = witProbeComprState.m_WitOutLData.done()
+            ) = witProbeComprState.m_WitOutLData.done();
             std::tie(
                outSizeRComprByte, outRAddedPadding, outRPtr
             ) = witProbeComprState.m_WitOutRData.done();
@@ -319,7 +323,9 @@ namespace morphstore {
                   scalar<v64<uint64_t>>,
                   uncompr_f,
                   natural_equi_join_probe_processing_unit_wit,
-                  DataStructure
+                  DataStructure,
+                  uncompr_f,
+                  uncompr_f
                >::apply(
                   inProbeDataPtr, inProbeSizeScalarRemainderByte, witProbeUncomprState
                );

@@ -105,8 +105,18 @@ namespace vector {
          }
 
          template< class VectorExtension >
+         using strategy_state =
          typename
-         LookupInsertStrategy< VectorExtension, BiggestSupportedVectorExtension, HashFunction, SPH >::state_single_key_t
+         LookupInsertStrategy<
+            VectorExtension,
+            BiggestSupportedVectorExtension,
+            HashFunction,
+            SPH
+         >::state_single_key_t;
+
+
+         template< class VectorExtension >
+         strategy_state<VectorExtension>
          get_lookup_insert_strategy_state( void ) {
             return
                typename

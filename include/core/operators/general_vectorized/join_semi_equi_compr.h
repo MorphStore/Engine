@@ -43,10 +43,10 @@ namespace morphstore {
             DataStructure & p_Ds
          ):
             m_Ds{ p_Ds },
-            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state()} {}
+            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state< VectorExtension >()} {}
       };
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static void apply( vector_t & const p_DataVector, state_t & p_State ) {
+      static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          p_State.m_Ds.template insert<VectorExtension>(
             p_DataVector,
             p_State.m_StrategyState
@@ -79,15 +79,15 @@ namespace morphstore {
             m_Pos{ set_sequence< VectorExtension, vector_base_t_granularity::value >( p_Pos, 1 ) },
             m_Inc{ set1< VectorExtension, vector_base_t_granularity::value >( vector_element_count::value ) },
             m_WitOutData{p_OutPtr},
-            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state()} {}
+            m_StrategyState{ p_Ds.template get_lookup_insert_strategy_state< VectorExtension >()} {}
       };
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static void apply( vector_t & const p_DataVector, state_t & p_State ) {
+      static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          vector_mask_t lookupResultMask;
          uint8_t hitResultCount;
          std::tie( lookupResultMask, hitResultCount ) =
             p_State.m_Ds.template lookup<VectorExtension>(
-               load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InProbeDataPtr ),
+               p_DataVector,
                p_State.m_StrategyState
             );
          p_State.m_WitOutData.write(p_State.m_Pos, lookupResultMask, hitResultCount);
@@ -216,7 +216,8 @@ namespace morphstore {
             VectorExtension,
             InFormatRCol,
             semi_equi_join_probe_processing_unit_wit,
-            DataStructure
+            DataStructure,
+            OutFormatCol
          >::apply(
             inProbeDataPtr, inProbeDataSizeComprByte, witProbeComprState
          );
@@ -237,7 +238,8 @@ namespace morphstore {
                VectorExtension,
                uncompr_f,
                semi_equi_join_probe_processing_unit_wit,
-               DataStructure
+               DataStructure,
+               OutFormatCol
             >::apply(
                inProbeDataPtr, inProbeDataSizeUncomprVecByte, witProbeComprState
             );
@@ -264,7 +266,8 @@ namespace morphstore {
                   scalar<v64<uint64_t>>,
                   uncompr_f,
                   semi_equi_join_probe_processing_unit_wit,
-                  DataStructure
+                  DataStructure,
+                  uncompr_f
                >::apply(
                   inProbeDataPtr, inProbeSizeScalarRemainderByte, witProbeUncomprState
                );
