@@ -29,16 +29,7 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
-#include <vector/primitives/compare.h>
-#include <vector/primitives/io.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/vector_primitives.h>
 
 #include <tuple>
 
