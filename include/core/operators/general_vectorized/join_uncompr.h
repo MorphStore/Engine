@@ -97,7 +97,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct semi_join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f> {
+   struct semi_equi_join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       static
       const column<uncompr_f> *
@@ -222,7 +222,7 @@ namespace morphstore {
       class VectorExtension,
       class DataStructure
    >
-   struct join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f, uncompr_f> {
+   struct natural_equi_join_t<VectorExtension,DataStructure,uncompr_f, uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       static
       const std::tuple<
@@ -243,7 +243,7 @@ namespace morphstore {
                              // use given estimate
                              ? (outCountEstimate)
                              // use pessimistic estimate
-                             : (inBuildDataCount * inProbeDataCount);
+                             : (inProbeDataCount);
 
          base_t * inBuildDataPtr = p_InDataLCol->get_data( );
          base_t * inProbeDataPtr = p_InDataRCol->get_data( );

@@ -123,7 +123,7 @@ template<
    class InFormatLCol,
    class InFormatRCol
 >
-struct semi_join_t {
+struct semi_equi_join_t /* {
    static
    column< OutFormatCol > const *
    apply(
@@ -131,7 +131,7 @@ struct semi_join_t {
       column< InFormatRCol > const * const p_InDataRCol,
       size_t const outCountEstimate = 0
    ) = delete;
-};
+}*/;
 
 
 template<
@@ -142,7 +142,7 @@ template<
    class InFormatLCol,
    class InFormatRCol
 >
-struct join_t {
+struct natural_equi_join_t/* {
    static
    std::tuple<
       column< OutFormatLCol > const *,
@@ -153,7 +153,7 @@ struct join_t {
       column< InFormatRCol > const * const p_InDataRCol,
       size_t const outCountEstimate = 0
    ) = delete;
-};
+}*/;
 
 
 
@@ -173,7 +173,7 @@ join(
    column< InFormatRCol > const * const p_InDataRCol,
    size_t const outCountEstimate = 0
 ) {
-   return join_t<
+   return natural_equi_join_t<
       VectorExtension,
       vector::hash_map<
          VectorExtension,
@@ -202,7 +202,7 @@ semi_join(
    column< InFormatRCol > const * const p_InDataRCol,
    size_t const outCountEstimate = 0
 ) {
-   return semi_join_t<
+   return semi_equi_join_t<
       VectorExtension,
       vector::hash_set<
          VectorExtension,
