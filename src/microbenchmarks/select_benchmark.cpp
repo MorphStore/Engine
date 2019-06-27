@@ -27,7 +27,7 @@
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
-#include <core/operators/general_vectorized/select_compr.h>
+//#include <core/operators/general_vectorized/select_compr.h>
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>

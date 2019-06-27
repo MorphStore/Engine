@@ -28,6 +28,16 @@ target_compile_options( select_benchmark PRIVATE
                         $<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( select_benchmark PRIVATE "-ldl" )
 
+add_executable( select_uncompr_benchmark select_uncompr.cpp )
+target_compile_options( select_uncompr_benchmark PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+                        -fstack-protector-all
+                        $<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( select_uncompr_benchmark PRIVATE "-ldl" )
+
 add_executable( inc_benchmark inc_benchmark.cpp )
 target_compile_options( inc_benchmark PRIVATE
                         -Werror
@@ -68,3 +78,14 @@ target_compile_options( merge_benchmark PRIVATE
                         -fstack-protector-all)
                         #$<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( merge_benchmark PRIVATE "-ldl" )
+
+add_executable( join_benchmark join_benchmark.cpp )
+target_compile_options( join_benchmark PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+			-Wno-unused-parameter
+                        -fstack-protector-all)
+                        #$<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( join_benchmark PRIVATE "-ldl" )

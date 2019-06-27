@@ -19,8 +19,8 @@
 #include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 #include <core/operators/general_vectorized/project_uncompr.h>
-//#include <core/operators/scalar/project_uncompr.h>
-//#include <core/operators/vectorized/project_uncompr.h>
+/*#include <core/operators/scalar/project_uncompr.h>
+#include <core/operators/vectorized/project_uncompr.h>*/
 
 #include <core/utils/variant_executor.h>
 
@@ -124,12 +124,12 @@ int main( void ) {
         auto inDataCol = generate_with_distr(
             inDataCount,
             std::uniform_int_distribution<uint64_t>(100, 200),
-            false
+                true
         );
         auto inPosCol = generate_with_distr(
             inPosCount,
             std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
-            false
+                true
         );
         varex.print_datagen_done();
         

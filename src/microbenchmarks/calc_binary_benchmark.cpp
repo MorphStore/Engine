@@ -47,9 +47,9 @@
 #include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 
-//#include <core/operators/general_vectorized/calc_uncompr.h> //For operators using the vector lib
-#include <core/operators/scalar/calc_uncompr.h>
-#include <core/operators/vectorized/calc_uncompr.h>
+#include <core/operators/general_vectorized/calc_uncompr.h> //For operators using the vector lib
+//#include <core/operators/scalar/calc_uncompr.h>
+//#include <core/operators/vectorized/calc_uncompr.h>
 
 
 #define MAKE_VARIANT(fn,ps) \
@@ -82,7 +82,7 @@ int main( void ) {
 
 
     
-    const std::vector<varex_t::variant_t> variants_minus = {
+   /* const std::vector<varex_t::variant_t> variants_minus = {
         MAKE_VARIANT(std::minus,scalar<v64<uint64_t>>),
         #ifdef AVXTWO
         MAKE_VARIANT(std::minus,avx2<v256<uint64_t>>)
@@ -95,10 +95,10 @@ int main( void ) {
         MAKE_VARIANT(std::plus,avx2<v256<uint64_t>>),
         #endif
         
-    };
+    };*/
     
     //The following are the variants for the general_vectorized version
-    /*
+    
     const std::vector<varex_t::variant_t> variants_minus = {
         MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
         MAKE_VARIANT(sub,sse<v128<uint64_t>>),
@@ -120,7 +120,7 @@ int main( void ) {
         MAKE_VARIANT(add,avx512<v512<uint64_t>>)
         #endif
     };
-    */
+    
 
     
     // Define the setting parameters.
