@@ -84,28 +84,28 @@ int main( void ) {
 
     const std::vector<varex_t_ej::variant_t> variants_ej = {
         MAKE_VARIANT_EJ(scalar<v64<uint64_t>>,uncompr_f,uncompr_f,uncompr_f,uncompr_f),
-        /*MAKE_VARIANT_EJ(scalar<v64<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<64,8,1>),SINGLE_ARG(dynamic_vbp_f<64,8,1>),uncompr_f,uncompr_f),
+        MAKE_VARIANT_EJ(scalar<v64<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<64,8,1>),SINGLE_ARG(dynamic_vbp_f<64,8,1>),uncompr_f,uncompr_f),
         MAKE_VARIANT_EJ(sse<v128<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<128,16,2>),SINGLE_ARG(dynamic_vbp_f<128,16,2>),uncompr_f,uncompr_f),
         #ifdef AVXTWO
         MAKE_VARIANT_EJ(avx2<v256<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<256,32,4>),SINGLE_ARG(dynamic_vbp_f<256,32,4>),uncompr_f,uncompr_f),
         #endif
         #ifdef AVX512
         MAKE_VARIANT_EJ(avx512<v512<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<512,64,8>),SINGLE_ARG(dynamic_vbp_f<512,64,8>),uncompr_f,uncompr_f)
-        #endif*/
+        #endif
         
     }; 
 
 
     const std::vector<varex_t_sj::variant_t> variants_sj = {
         MAKE_VARIANT_SJ(scalar<v64<uint64_t>>,uncompr_f,uncompr_f,uncompr_f),
-        /*MAKE_VARIANT_SJ(scalar<v64<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<64,8,1>),SINGLE_ARG(dynamic_vbp_f<64,8,1>),uncompr_f),
+        MAKE_VARIANT_SJ(scalar<v64<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<64,8,1>),SINGLE_ARG(dynamic_vbp_f<64,8,1>),uncompr_f),
         MAKE_VARIANT_SJ(sse<v128<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<128,16,2>),SINGLE_ARG(dynamic_vbp_f<128,16,2>),uncompr_f),
         #ifdef AVXTWO
         MAKE_VARIANT_SJ(avx2<v256<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<256,32,4>),SINGLE_ARG(dynamic_vbp_f<256,32,4>),uncompr_f),
         #endif
         #ifdef AVX512
         MAKE_VARIANT_SJ(avx512<v512<uint64_t>>,SINGLE_ARG(dynamic_vbp_f<512,64,8>),SINGLE_ARG(dynamic_vbp_f<512,64,8>),uncompr_f)
-        #endif*/
+        #endif
     };
        
     
