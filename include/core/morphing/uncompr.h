@@ -45,28 +45,19 @@
 #include <cstdint>
 
 namespace morphstore {
+    
+    // Note that the format uncompr_f is currently defined in "format.h".
+    // @todo Move it here.
+    
+    
+    // ************************************************************************
+    // Interfaces for accessing compressed data
+    // ************************************************************************
 
-#if 0
-    // Hand-written scalar.
-    
-    template<template<class> class t_op_processing_unit>
-    struct decompress_and_process_batch<vector::scalar<vector::v64<uint64_t>>, uncompr_f, t_op_processing_unit> {
-        static void apply(
-                const uint8_t * & p_In8,
-                size_t p_CountIn8,
-                typename t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::state_t & p_State
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(p_In8);
-            const size_t countIn64 = convert_size<uint8_t, uint64_t>(p_CountIn8);
+    // ------------------------------------------------------------------------
+    // Sequential read
+    // ------------------------------------------------------------------------
 
-            for(size_t i = 0; i < countIn64; i++)
-                t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::apply(in64[i], p_State);
-        }
-    };
-    
-#else
-    // Generic with vector-lib.
-    
     template<
             class t_vector_extension,
             template<class, class ...> class t_op_vector,
@@ -102,48 +93,11 @@ namespace morphstore {
             p_In8 += p_CountIn8;
         }
     };
-#endif
-
-#if 0
-    // Hand-written scalar.
     
-    template<>
-    class write_iterator<vector::scalar<vector::v64<uint64_t>>, uncompr_f> {
-        IMPORT_VECTOR_BOILER_PLATE(vector::scalar<vector::v64<uint64_t>>)
+    // ------------------------------------------------------------------------
+    // Sequential write
+    // ------------------------------------------------------------------------
 
-        uint64_t * m_Out64;
-        const uint64_t * const m_InitOut64;
-
-    public:
-        selective_write_iterator(uint8_t * p_Out) :
-                m_Out64(reinterpret_cast<uint64_t *>(p_Out)),
-                m_InitOut64(m_Out64)
-        {
-            //
-        }
-
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE
-        void write(vector_t p_Data, vector_mask_t p_Mask) {
-            vector::compressstore<
-                    vector::scalar<vector::v64<uint64_t>>,
-                    vector::iov::UNALIGNED, 
-                    vector_base_t_granularity::value
-            >(m_Out64, p_Data, p_Mask);
-            // @todo Use primitive.
-            m_Out64 += p_Mask;
-        }
-
-        void done() {
-            //
-        }
-
-        size_t get_count() const {
-            return m_Out64 - m_InitOut64;
-        }
-    };
-#else
-    // Generic with vector-lib.
-    
     template<class t_vector_extension>
     class selective_write_iterator<t_vector_extension, uncompr_f> {
         using t_ve = t_vector_extension;
@@ -191,7 +145,6 @@ namespace morphstore {
             return m_OutBase - m_InitOutBase;
         }
     };
-#endif
     
 }
 #endif //MORPHSTORE_CORE_MORPHING_UNCOMPR_H
