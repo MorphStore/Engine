@@ -1,15 +1,4 @@
-//#define USE_MMAP_MM
-
-#include <core/memory/management/abstract_mm.h>
-#include <core/memory/management/mmap_mm.h>
-#include <core/memory/management/paged_mm.h>
-
-//#include <core/memory/global/mm_hooks.h>
 #include <core/memory/morphstore_mm.h>
-/*#include <core/memory/management/allocators/global_scope_allocator.h>
-#include <core/memory/management/query_mm.h>*/
-//#include <core/memory/global/mm_override.h>
-    // load capacity output
 
 #include <cstdio>
 #include <vector>

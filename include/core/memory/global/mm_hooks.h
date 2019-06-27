@@ -26,9 +26,7 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/management/abstract_mm.h>
-#ifdef USE_MMAP_MM
-#include <core/memory/global/mm_override.h>
-#endif
+//#include <core/utils/logger.h>
 
 //#define MSV_DEBUG_MALLOC
 
@@ -125,19 +123,11 @@ extern "C" {
  */
 void * operator new( size_t p_AllocSize ) {
     //const size_t CACHE_LINE_SIZE = 64;
-#ifdef USE_MMAP_MM
-    return mm_malloc(p_AllocSize);
-#else
     return malloc(p_AllocSize);
-#endif
 }
 
 void * operator new( size_t p_AllocSize, morphstore::abstract_memory_manager& /*manager*/ ) {
-#ifdef USE_MMAP_MM
-    return mm_malloc(p_AllocSize);
-#else
     return malloc(p_AllocSize);
-#endif
 }
 /**
  * @brief Global replacement for operator new[].
@@ -160,19 +150,11 @@ void* operator new[]( size_t p_AllocSize ) {
  * @param p_FreePtr Pointer to allocated memory which should be freed.
  */
 void operator delete( void * p_FreePtr ) noexcept {
-#ifdef USE_MMAP_MM
-    mm_free(p_FreePtr);
-#else
     free( p_FreePtr );
-#endif
 }
 
 void operator delete( void * p_FreePtr, morphstore::abstract_memory_manager& /*manager*/ ) noexcept {
-#ifdef USE_MMAP_MM
-    mm_free(p_FreePtr);
-#else
     free( p_FreePtr );
-#endif
 }
 /**
  * @brief Global replacement for operator delete.

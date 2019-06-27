@@ -29,9 +29,6 @@
 #include <core/memory/global/mm_override.h>
 #include <core/memory/morphstore_mm.h>
 
-#include <core/memory/management/mmap_mm.h>
-#include <core/memory/management/paged_mm.h>
-
 extern "C" {
 #if !defined( MSV_DEBUG_MALLOC ) || defined( MSV_NO_LOG )
 /**

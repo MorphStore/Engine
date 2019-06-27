@@ -33,8 +33,6 @@
 #include <core/memory/management/allocators/global_scope_allocator.h>
 #include <core/memory/stl_wrapper/ostream.h>
 
-
-
 #include <core/memory/stl_wrapper/string.h>
 #ifdef MSV_MEMORY_LEAK_CHECK
 #  include <core/memory/global/leak_detection.h>
@@ -42,12 +40,19 @@
 
 #include <core/utils/logger.h>
 
+#ifdef USE_MMAP_MM
+#include <core/memory/management/abstract_mm.h>
+#include <core/memory/global/mm_override.h>
+#endif
+
 #include <core/utils/helper_types.h>
 #include <core/memory/management/abstract_mm.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/memory/management/utils/memory_bin_handler.h>
 #include <core/memory/management/general_mm.h>
 #include <core/memory/management/query_mm.h>
+#include <core/memory/management/mmap_mm.h>
+#include <core/memory/management/paged_mm.h>
 
 #include <core/memory/global/mm_stdlib.h>
 

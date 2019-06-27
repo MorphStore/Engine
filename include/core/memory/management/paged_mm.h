@@ -5,7 +5,14 @@
 #include <core/memory/management/allocators/global_scope_allocator.h>
 #include <core/utils/logger.h>*/
 
-#include "core/memory/management/abstract_mm.h"
+#ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
+#  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before general memory manager."
+#endif
+
+#ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
+#  error "Memory Hooks ( global/mm_hooks.h ) has to be included before general memory manager."
+#endif
+
 #include "core/memory/management/mmap_mm.h"
 
 #include <string.h>
@@ -23,7 +30,7 @@ public:
     PageHeader(uint32_t curr_offset)
         : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_canDeallocate(false)
     {
-        ////trace("called constructor");
+        trace("called constructor");
     }
 
     void init()

@@ -1,17 +1,10 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_MMAP_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_MMAP_MM_H
 
-#ifndef USE_MMAP_MM
-#include <core/memory/global/mm_hooks.h>
-#include <core/memory/management/allocators/global_scope_allocator.h>
-#include <core/utils/logger.h>
-#endif
 
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
 #  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before mmap memory manager."
 #endif
-
-#include <core/memory/management/abstract_mm.h>
 
 #include <mutex>
 #include <sys/mman.h>
@@ -346,7 +339,7 @@ public:
     void dumpBitmap()
     {
         uint64_t bitmap_pos = getBitmapAddress();
-        //trace( "Dumping bitmap on ", std::hex, bitmap_pos, ", this being ", this);
+        trace( "Dumping bitmap on ", std::hex, bitmap_pos, ", this being ", this);
         uint64_t bitmap_end = bitmap_pos + LINUX_PAGE_SIZE;
         uint32_t cycles = 0;
 
@@ -444,7 +437,7 @@ public:
         // memset bitmap to initialize status
         header->reset();
 
-        //trace("[MMAP_MM] returning ", reinterpret_cast<void*>(aligned_ptr), " as new chunk");
+        trace("[MMAP_MM] returning ", reinterpret_cast<void*>(aligned_ptr), " as new chunk");
         return reinterpret_cast<void*>(aligned_ptr);
     }
 
@@ -474,7 +467,7 @@ public:
 
     void* allocatePages(size_t size, void* chunk_location)
     {
-        //trace( "Page allocation request for size ", size, " on location ", chunk_location);
+        trace( "Page allocation request for size ", size, " on location ", chunk_location);
         if (size < DB_PAGE_SIZE) {
             size = DB_PAGE_SIZE;
         }
@@ -482,7 +475,7 @@ public:
         assert((reinterpret_cast<uint64_t>(chunk_location) & (ALLOCATION_SIZE-1)) == 0);
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
         void* ptr = header->findNextAllocatableSlot(size);
-        ////trace( "header on ", header, " found next allocatable slot as ", ptr);
+        trace( "header on ", header, " found next allocatable slot as ", ptr);
         if (ptr == nullptr) {
             return nullptr;
         }
@@ -494,17 +487,17 @@ public:
     void* allocate(size_t size, void* chunk_location) 
     {
         if (size > ALLOCATION_SIZE) {
-            //warn("Allocating large object of size");
+            warn("Allocating large object of size");
             return allocateLarge(size);
         }
         else {
             // TODO: concurrency
             if (chunk_location != nullptr) {
-                ////trace("Allocating pages with chunk ", chunk_location);
+                trace("Allocating pages with chunk ", chunk_location);
                 return allocatePages(size, chunk_location);
             }
             else if (m_current_chunk == nullptr) {
-                //trace("Using allocator specific chunk on ", m_current_chunk);
+                trace("Using allocator specific chunk on ", m_current_chunk);
                 m_current_chunk = allocateContinuous();
             }
 
@@ -608,8 +601,6 @@ public:
 
     void * reallocate_back(void* ptr, size_t size)
     {
-        //TODO: this is a wip implementation for testing of normal alloc functions
-         
         ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         ChunkHeader* header = getChunkHeader(ptr);
         if (info->size == size)
