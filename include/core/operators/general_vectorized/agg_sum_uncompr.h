@@ -98,7 +98,7 @@ namespace morphstore {
    };
 
    template<class VectorExtension>
-   struct agg_sum_t {
+   struct agg_sum_t<VectorExtension, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       const column<uncompr_f> *
@@ -125,12 +125,6 @@ namespace morphstore {
          return outDataCol;
       }
    };
-
-
-   template<class t_vector_extension, class t_in_data_f>
-    const column<uncompr_f> * agg_sum(column< uncompr_f > const * const p_DataColumn){
-       return agg_sum_t<t_vector_extension>::apply(p_DataColumn);
-   }
    
  
 }
