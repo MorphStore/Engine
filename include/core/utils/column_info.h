@@ -75,6 +75,27 @@ namespace morphstore{
         return 1;
     }
     
+    /*We assume that elements in a column are unique when its first 1000 elements are unique.
+     * 
+     */
+    template<class t_src_f>
+    int get_unique_estimate(const column<t_src_f> * inCol){
+        
+        auto uncompr_column = safe_morph<uncompr_f,t_src_f>(inCol);
+        uint64_t * data = (uint64_t *) (uncompr_column->get_data());
+        
+        if (uncompr_column->get_count_values() == 1) return 1;
+        
+        for (size_t i=0; i < (uncompr_column->get_count_values() < 1000 ? uncompr_column->get_count_values() : 1000) ; i++){
+            
+                for (size_t j=0; j < (uncompr_column->get_count_values() < 1000 ? uncompr_column->get_count_values() : 1000); j++){
+                    if ((data[j]==data[i]) && (i != j)) return 0;
+                }
+        }
+        
+        return 1;
+    }
+    
 }
 
 #endif /* COLUMN_INFO_H */
