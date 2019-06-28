@@ -25,6 +25,7 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/uncompr.h>
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
@@ -59,10 +60,10 @@
 }
 
 #define MAKE_VARIANTS(bw) \
-    MAKE_VARIANT(scalar<v64<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw)/*, \
-    MAKE_VARIANT(sse<v128<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw), \
-    MAKE_VARIANT(avx2<v256<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw), \
-    MAKE_VARIANT(avx512<v512<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw)
+    MAKE_VARIANT(scalar<v64<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw), \
+    MAKE_VARIANT(sse<v128<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 2>), "static_vbp_f<bw, 1>",bw), \
+    MAKE_VARIANT(avx2<v256<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 4>), "static_vbp_f<bw, 1>",bw),/* \
+    MAKE_VARIANT(avx512<v512<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 8>), "static_vbp_f<bw, 1>",bw)
     */
     
 

@@ -30,15 +30,16 @@
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H
 
 #include <core/morphing/format.h>
-#include <core/operators/general_vectorized/agg_sum_uncompr.h>
 #include <core/operators/interfaces/agg_sum.h>
+
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 #include <cstdint>
 
 namespace morphstore {
-
+   using namespace vector;
 
    template<
       class VectorExtension
@@ -83,16 +84,16 @@ namespace morphstore {
       ) {
          uint8_t const *         inDataPtr            = p_InDataCol->get_data();
          uint8_t const * const   startDataPtr         = inDataPtr;
-         size_t  const           inDataCountLog       = p_InDataCol->get_count_values();
+//         size_t  const           inDataCountLog       = p_InDataCol->get_count_values();
          size_t  const           inDataSizeComprByte  = p_InDataCol->get_size_compr_byte();
          size_t  const           inDataSizeUsedByte   = p_InDataCol->get_size_used_byte();
-         uint8_t const * const   inDataRest8          = create_aligned_ptr(
-            inDataPtr + inDataSizeComprByte
-         );
-         size_t  const           inCountLogRest       = convert_size<uint8_t, uint64_t>(
-            inDataSizeUsedByte - ( inDataRest8 - inDataPtr )
-         );
-         size_t  const           inCountLogCompr      = inDataCountLog - inCountLogRest;
+//         uint8_t const * const   inDataRest8          = create_aligned_ptr(
+//            inDataPtr + inDataSizeComprByte
+//         );
+//         size_t  const           inCountLogRest       = convert_size<uint8_t, uint64_t>(
+//            inDataSizeUsedByte - ( inDataRest8 - inDataPtr )
+//         );
+//         size_t  const           inCountLogCompr      = inDataCountLog - inCountLogRest;
 
          auto outCol = new column< uncompr_f >( sizeof( base_t ) );
          base_t        *         outPtr               = outCol->get_data();
@@ -139,7 +140,7 @@ namespace morphstore {
                >::apply(
                   inDataPtr, inSizeScalarRemainderByte, witUncomprState
                );
-               result = agg_sum_processing_unit_wit<scalar<v64<uitn64_t>>>::finalize( witUncomprState );
+               result = agg_sum_processing_unit_wit<scalar<v64<uint64_t>>>::finalize( witUncomprState );
             }
             *outPtr = result;
          }
