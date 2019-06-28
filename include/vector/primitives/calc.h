@@ -96,6 +96,16 @@ namespace vector{
       ) = delete;
    };
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_left_individual {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_data,
+         typename VectorExtension::vector_t const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    struct shift_right {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
@@ -103,6 +113,16 @@ namespace vector{
       apply(
          typename VectorExtension::vector_t const & p_vec1,
          int const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_right_individual {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_data,
+         typename VectorExtension::vector_t const & p_distance
       ) = delete;
    };
 

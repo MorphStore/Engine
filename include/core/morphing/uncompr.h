@@ -29,16 +29,7 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
-#include <vector/primitives/compare.h>
-#include <vector/primitives/io.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/vector_primitives.h>
 
 #include <tuple>
 
@@ -91,6 +82,32 @@ namespace morphstore {
                 );
             
             p_In8 += p_CountIn8;
+        }
+    };
+
+    // ------------------------------------------------------------------------
+    // Random read
+    // ------------------------------------------------------------------------
+
+    template<class t_vector_extension>
+    class random_read_access<t_vector_extension, uncompr_f> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        const base_t * const m_Data;
+                
+    public:
+        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions) {
+            return vector::gather<
+                    t_ve,
+                    vector::iov::UNALIGNED,
+                    vector_base_t_granularity::value
+            >(m_Data, p_Positions);
         }
     };
     

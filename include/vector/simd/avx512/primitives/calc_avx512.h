@@ -160,8 +160,21 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (avx512)" );
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_left_individual<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_data,
+         typename avx512<v512<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
+         return _mm512_sllv_epi64(p_data, p_distance);
       }
    };
    template<>
@@ -173,8 +186,21 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (avx512)" );
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_right_individual<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_data,
+         typename avx512<v512<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
+         return _mm512_srlv_epi64(p_data, p_distance);
       }
    };
 }

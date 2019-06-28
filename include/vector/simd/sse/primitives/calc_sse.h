@@ -173,8 +173,30 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (sse)" );
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_slli_epi64(p_vec1, p_distance);
+      }
+   };
+
+   template<>
+   struct shift_left_individual<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_data,
+         typename sse<v128<uint64_t>>::vector_t const & p_distance
+      ){
+         // SSE does not have an intrinsic for this.
+         // The comparison with 64 is necessary, since the scalar shift behaves
+         // strangely in that case.
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (sse)" );
+         uint64_t distance0 = _mm_extract_epi64(p_distance, 0);
+         uint64_t distance1 = _mm_extract_epi64(p_distance, 1);
+         return _mm_set_epi64x(
+                 (distance1 == 64) ? 0 : (_mm_extract_epi64(p_data, 1) << distance1),
+                 (distance0 == 64) ? 0 : (_mm_extract_epi64(p_data, 0) << distance0)
+         );
       }
    };
 
@@ -187,8 +209,32 @@ namespace vector{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (sse)" );
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_srli_epi64(p_vec1, p_distance);
+      }
+   };
+
+   template<>
+   struct shift_right_individual<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_data,
+         typename sse<v128<uint64_t>>::vector_t const & p_distance
+      ){
+         // SSE does not have an intrinsic for this.
+         // The comparison with 64 is necessary, since the scalar shift behaves
+         // strangely in that case.
+         // The static_cast to an unsigned type is necessary, since the scalar
+         // shift shifts in sign-bits otherwise.
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (sse)" );
+         uint64_t distance0 = _mm_extract_epi64(p_distance, 0);
+         uint64_t distance1 = _mm_extract_epi64(p_distance, 1);
+         return _mm_set_epi64x(
+                 (distance1 == 64) ? 0 : (static_cast<uint64_t>(_mm_extract_epi64(p_data, 1)) >> distance1),
+                 (distance0 == 64) ? 0 : (static_cast<uint64_t>(_mm_extract_epi64(p_data, 0)) >> distance0)
+         );
       }
    };
 

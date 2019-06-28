@@ -323,6 +323,127 @@ namespace morphstore {
         };
     };
 #endif
+
+    // ------------------------------------------------------------------------
+    // Random read
+    // ------------------------------------------------------------------------
+
+    template<class t_vector_extension, unsigned t_bw, unsigned t_step>
+    class random_read_access<t_vector_extension, static_vbp_f<t_bw, t_step> > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        const base_t * const m_Data;
+        
+        static const unsigned m_Shift4DivStep = (t_step == 1) ? 0 : effective_bitwidth(t_step - 1);
+        static const unsigned m_ShiftDivBaseBits = effective_bitwidth(std::numeric_limits<base_t>::digits - 1);
+        
+        // @todo It would be nice if these were const, but this is currently
+        // not possible, because vector::set1 cannot be used as a constant
+        // expression.
+        static vector_t m_BaseBitsVec;
+        static vector_t m_Mask4ModStep;
+        static vector_t m_MaskModBaseBits;
+        static vector_t m_BwVec;
+        static vector_t m_StepVec;
+        static vector_t m_MaskDecompr;
+        
+    public:
+        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions) {
+            using namespace vector;
+            
+            const vector_t elemIdxInVec = bitwise_and<t_ve>(
+                    p_Positions, m_Mask4ModStep
+            );
+            const vector_t bitPosInBuf = mul<t_ve>::apply(
+                    shift_right<t_ve>::apply(p_Positions, m_Shift4DivStep),
+                    m_BwVec
+            );
+            const vector_t vecIdxs = shift_right<t_ve>::apply(
+                    bitPosInBuf, m_ShiftDivBaseBits
+            );
+            const vector_t baseIdxs = add<t_ve>::apply(
+                    shift_left<t_ve>::apply(vecIdxs, m_Shift4DivStep),
+                    elemIdxInVec
+            );
+            
+            vector_t res = vector::gather<
+                    t_ve, iov::UNALIGNED, vector_base_t_granularity::value
+            >(m_Data, baseIdxs);
+            
+            const vector_t bitPosInElem = bitwise_and<t_ve>(
+                    bitPosInBuf, m_MaskModBaseBits
+            );
+            
+            res = shift_right_individual<t_ve>::apply(res, bitPosInElem);
+            
+            const vector_t nextBaseIdxs = add<t_ve>::apply(baseIdxs, m_StepVec);
+            
+            const vector_t shiftUpper = sub<t_ve>::apply(
+                    m_BaseBitsVec, bitPosInElem
+            );
+            const vector_t gatherUpper = vector::gather<
+                    t_ve,
+                    iov::UNALIGNED,
+                    vector_base_t_granularity::value
+            >(m_Data, nextBaseIdxs);
+            const vector_t resUpper = shift_left_individual<t_ve>::apply(
+                    gatherUpper, shiftUpper
+            );
+            res = bitwise_and<t_ve>(
+                    m_MaskDecompr, bitwise_or<t_ve>(resUpper, res)
+            );
+            
+            return res;
+        }
+    };
+
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_BaseBitsVec = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(std::numeric_limits<typename t_ve::base_t>::digits);
+
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_Mask4ModStep = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(t_step - 1);
+
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_MaskModBaseBits = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(std::numeric_limits<typename t_ve::base_t>::digits - 1);
+
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_BwVec = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(t_bw);
+
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_StepVec = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(t_step);
+    
+    template<class t_ve, unsigned t_bw, unsigned t_step>
+    typename t_ve::vector_t random_read_access<
+            t_ve, static_vbp_f<t_bw, t_step>
+    >::m_MaskDecompr = vector::set1<
+            t_ve, t_ve::vector_helper_t::granularity::value
+    >(bitwidth_max<typename t_ve::base_t>(t_bw));
     
     // ------------------------------------------------------------------------
     // Sequential write
