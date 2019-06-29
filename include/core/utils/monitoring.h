@@ -137,7 +137,7 @@ namespace morphstore {
 
 		monitoring_parameter(const morphstore::string name, size_t id, T value) :
 			monitoring_info(name, id),
-			maxValues(1024),
+			maxValues(1024000),
 			lastValue(0)
 		{
 			values = (T*) malloc( maxValues * sizeof(T) );
