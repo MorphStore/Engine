@@ -15,11 +15,11 @@
 namespace morphstore {
 
    template< typename Key, typename Value >
-   typedef std::map<
+   using map = std::map<
       Key,
       Value,
       std::less< Key >,
-      global_scope_stdlib_allocator< std::pair< const Key, Value > > > map;
+      global_scope_stdlib_allocator< std::pair< const Key, Value > > >;
 
 }
 #endif //MORPHSTORE_CORE_MEMORY_STL_WRAPPTER_MAP_H
