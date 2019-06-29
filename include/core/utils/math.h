@@ -61,6 +61,12 @@ MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_div( unsigned numerator, unsigned den
     return ( numerator + denominator - 1 ) / denominator;
 }
 
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_to_multiple(
+        size_t p_Size, size_t p_Factor
+) {
+    return round_up_div(p_Size, p_Factor) * p_Factor;
+}
+
 MSV_CXX_ATTRIBUTE_INLINE unsigned round_down_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
