@@ -22,7 +22,7 @@
 #include <core/utils/preprocessor.h>
 
 //#include <core/operators/general_vectorized/join_uncompr.h>
-#include <core/operators/general_vectorized/join_compr.h>
+#include <core/operators/general_vectorized/join.h>
 
 
 
