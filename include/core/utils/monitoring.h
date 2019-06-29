@@ -61,7 +61,7 @@ namespace morphstore {
 		template<int index, typename... Ts>
 		struct printTupleRecursive {
 			morphstore::string operator() (char delim, const tuple<Ts...>& t) {
-				morphstore::stringstream ss;
+				std::stringstream ss;
 				ss << get<index>(t) << delim;
 				ss << printTupleRecursive<index - 1, Ts...>{}(delim, t);
 				return ss.str();
@@ -71,7 +71,7 @@ namespace morphstore {
 		template<typename... Ts>
 		struct printTupleRecursive<0, Ts...> {
 			morphstore::string operator() (char delim, const tuple<Ts...>& t) {
-				morphstore::stringstream ss;
+				std::stringstream ss;
 				ss << get<0>(t);
 				return ss.str();
 			}
@@ -393,7 +393,7 @@ namespace morphstore {
 		morphstore::string printAllData(/*monitoring_logger& log, */char delim, const size_t idx ) const {
 			morphstore::vector< monitoring_info* > sortedInfo = createSortedCounterList();
 
-			morphstore::stringstream ss;
+			std::stringstream ss;
 			ss << getTupleAsString(delim);
 			for (size_t i = 0; i < sortedInfo.size(); ++i) {
 				ss << sortedInfo[i]->getAsString(idx);
@@ -499,7 +499,7 @@ private:
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-		morphstore::stringstream ss;
+		std::stringstream ss;
 		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X_monitoringLog");
 		logFileName = new morphstore::string( ss.str().c_str() );
 		std::cout << "LogFilename: " << *logFileName << std::endl;
@@ -578,7 +578,7 @@ private:
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-		morphstore::stringstream ss;
+		std::stringstream ss;
 		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X_monitoringLog");
 		logFileName = new morphstore::string(ss.str().c_str());
 		std::cout << "JSonLogFilename: " << *logFileName << std::endl;
@@ -602,7 +602,7 @@ public:
 	void write(MSV_CXX_ATTRIBUTE_PPUNUSED double val) override {};
 
 	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED morphstore::vector< SuperMon* > monitors) {
-		/*morphstore::stringstream json = "[";
+		/*std::stringstream json = "[";
 		
 		for (size_t idx = 0; idx < monitors.size(); ++idx ) {
 			SuperMon* mon = monitors[idx];
@@ -639,7 +639,7 @@ public:
 	}
 
 	morphstore::string getAllheads(char delim) const override {
-		morphstore::stringstream ss;
+		std::stringstream ss;
 		for (size_t i = 0; i < keyHeads.size(); ++i) {
 			ss << keyHeads[i] << delim;
 		}

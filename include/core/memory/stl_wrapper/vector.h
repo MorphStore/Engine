@@ -17,7 +17,7 @@ namespace morphstore {
    template< typename Value >
    using vector = std::vector<
       Value,
-      global_scope_stdlib_allocator< Value >;
+      global_scope_stdlib_allocator< Value >>;
 
 }
 #endif //MORPHSTORE_CORE_MEMORY_STL_WRAPPTER_VECTOR_H
