@@ -43,7 +43,6 @@
 #include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/variadic.h>
-#include
 
 namespace morphstore {
 
