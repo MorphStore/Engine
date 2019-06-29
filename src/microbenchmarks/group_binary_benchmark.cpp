@@ -41,10 +41,12 @@ using namespace vector;
                     ve1, \
                     uncompr_f, \
                     uncompr_f, \
+                    uncompr_f, \
                     uncompr_f \
                    > \
     ), \
     STR_EVAL_MACROS(ve1), \
+    STR_EVAL_MACROS("uncompr_f"), \
     STR_EVAL_MACROS("uncompr_f"), \
     STR_EVAL_MACROS("uncompr_f"), \
     STR_EVAL_MACROS("uncompr_f") \
@@ -59,23 +61,25 @@ using namespace vector;
                     ve1, \
                     form_groupid, \
                     form_groupext, \
+                    uncompr_f, \
                     form_in \
                    > \
     ), \
     STR_EVAL_MACROS(ve1), \
     STR_EVAL_MACROS(form_groupid), \
     STR_EVAL_MACROS(form_groupext), \
+    STR_EVAL_MACROS("uncompr_f"), \
     STR_EVAL_MACROS(form_in) \
 }
 
 int main( void ) {
 
    using varex_t = variant_executor_helper<2, 1, size_t>::type
-   ::for_variant_params<std::string, std::string, std::string, std::string>
+   ::for_variant_params<std::string, std::string, std::string, std::string, std::string>
    ::for_setting_params<size_t>;
    varex_t varex(
       {"Estimate"}, // names of the operator's additional parameters
-      {"VectorExtension Process", "Format_OutGroupId", "Format_OutGroupExt", "Format_In"}, // names of the variant parameters
+      {"VectorExtension Process", "Format_OutGroupId", "Format_OutGroupExt", "Format_GroupId_In", "Format_In"}, // names of the variant parameters
       {"inDataCount"} // names of the setting parameters
    );
 
@@ -102,7 +106,7 @@ int main( void ) {
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>), uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>), SINGLE_ARG(dynamic_vbp_f<128,16,2>)),
 #ifdef AVXTWO
-//      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
+   //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>)),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>), uncompr_f),
 //      MAKE_VARIANT_VECTORIZED(avx2<v256<uint64_t>>, uncompr_f, SINGLE_ARG(dynamic_vbp_f<256,32,4>), SINGLE_ARG(dynamic_vbp_f<256,32,4>)),
