@@ -201,7 +201,7 @@ case $key in
 	shift # past argument
 	;;
   -sse4)
-        avxtwo="-DCSSE=True"
+        sse4="-DCSSE=True"
 	shift # past argument
 	;;
 	-tVt|--testVectoring)
