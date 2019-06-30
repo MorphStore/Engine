@@ -59,6 +59,8 @@ function printHelp {
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
 	echo "	     Builds with avx2 support"
+  echo "	-sse4"
+	echo "	     Builds with sse4.2 support"
 }
 
 buildType=""
@@ -83,6 +85,7 @@ testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
+sse4="-DCSSE=False"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -197,6 +200,10 @@ case $key in
         avxtwo="-DCAVXTWO=True"
 	shift # past argument
 	;;
+  -sse4)
+        avxtwo="-DCSSE=True"
+	shift # past argument
+	;;
 	-tVt|--testVectoring)
 	runCtest=true
 	testVectors="-DCTEST_VECTOR=True"
@@ -242,7 +249,7 @@ else
 fi
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
