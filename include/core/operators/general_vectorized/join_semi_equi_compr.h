@@ -72,7 +72,7 @@ namespace morphstore {
          typename DataStructure::template strategy_state< VectorExtension > m_StrategyState;
          state_t(
             DataStructure  &        p_Ds,
-            uint8_t        * const  p_OutPtr,
+            uint8_t        * &/*const*/  p_OutPtr,
             base_t                  p_Pos
          ):
             m_Ds{ p_Ds },
@@ -275,7 +275,7 @@ namespace morphstore {
                std::tie(
                   std::ignore, std::ignore, outPtr
                ) = witProbeUncomprState.m_WitOutData.done();
-               outCountLog += witProbeComprState.m_WitOutData.get_count_values();
+               outCountLog += witProbeUncomprState.m_WitOutData.get_count_values();
             }
          }
          //Probe Part Ends Here
