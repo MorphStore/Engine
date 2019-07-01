@@ -336,7 +336,7 @@ namespace morphstore {
                std::tie(
                   std::ignore, std::ignore, outRPtr
                ) = witProbeUncomprState.m_WitOutRData.done();
-               outCountLog = witProbeComprState.m_WitOutLData.get_count_values();
+               outCountLog += witProbeComprState.m_WitOutLData.get_count_values();
             }
          }
          //Probe Part Ends Here
