@@ -1,9 +1,6 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_PAGED_MM_H
 
-/*#include <core/memory/global/mm_hooks.h>
-#include <core/memory/management/allocators/global_scope_allocator.h>
-#include <core/utils/logger.h>*/
 
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ABSTRACT_MM_H
 #  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before general memory manager."
@@ -48,7 +45,6 @@ static_assert( sizeof(PageHeader) > 0, "PageHeader must be larger than 0");
 class Page {
 public:
     Page() : header(sizeof(PageHeader) /*manager*/) {
-        ////trace("called page constructor"); 
     }
 
     void* allocate(size_t size)
@@ -57,7 +53,6 @@ public:
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_sumOffset += header.m_currOffset;
             header.m_currOffset += size;
-            ////trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", current offset ", std::hex, header.m_currOffset);
             return loc;
         }
         else {
@@ -70,10 +65,9 @@ public:
     {
         uint64_t offset = reinterpret_cast<uint64_t>(addr) - reinterpret_cast<uint64_t>(this);
         header.m_sumOffset -= offset;
-        //trace( "[PAGE] sum offset is now ", std::hex, header.m_sumOffset, ", offset calculated ", std::hex, offset);
 
         if (header.m_sumOffset == 0 && header.m_canDeallocate) {
-            //trace( "Triggered deallocation on ", this, " due to address ", addr);
+            trace( "Triggered page deallocation on ", this, " due to address ", addr);
             mmap_memory_manager::getInstance().deallocate(this);
         }
     }

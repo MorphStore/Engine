@@ -6,6 +6,8 @@
 #include <iostream>
 #include <map>
 
+#include <core/storage/column.h>
+#include <fstream>
 
 namespace morphstore {
 
@@ -31,6 +33,21 @@ int main(int /*argc*/, char** /*argv*/) {
 
     morphstore::paged_memory_manager& page_instance = morphstore::paged_memory_manager::getGlobalInstance();
 
+    std::ifstream ifs( "testfile", std::ios::in | std::ios::binary );
+
+// Testing columns
+    const int COL_COUNT = 16;
+    morphstore::column<morphstore::uncompr_f>* col[COL_COUNT];
+
+    for (int i = COL_COUNT-1; i>=0; --i) {
+        std::cout << "Allocating column " << i << std::endl;
+        col[i] = morphstore::column<morphstore::uncompr_f>::create_global_column(11000000);
+    }
+
+    for (int i = COL_COUNT-1; i>=0; --i)
+        delete col[i];
+
+// Testing Realloc
     void* obj_ptr = mm_malloc(32);
     *reinterpret_cast<uint64_t*>(obj_ptr) = 64;
     obj_ptr = mm_realloc(obj_ptr, 64);
@@ -44,6 +61,7 @@ int main(int /*argc*/, char** /*argv*/) {
     mm_free(obj_ptr);
     std::cout << "Done realloc" << std::endl;
 
+// Testing Speed
     unsigned inDataCount = 234000;
     uint64_t* columns[128];
     for (int j = 0; j < 128; j+=2) {
@@ -66,7 +84,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
 
     //obj_ptr = malloc(72704);
-    //free(obj_ptr);*/
+    //free(obj_ptr);
 
     header = reinterpret_cast<morphstore::ChunkHeader*>( reinterpret_cast<uint64_t>(ptr) - sizeof(morphstore::ChunkHeader) );
     
