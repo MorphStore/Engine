@@ -114,6 +114,7 @@ class query_memory_manager : public abstract_memory_manager {
    public:
 
       void * allocate( size_t p_AllocSize ) override {
+         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
 
          //increasing the allocated size by one size_t, so the actual size can be stored at the very first item.
@@ -158,18 +159,21 @@ class query_memory_manager : public abstract_memory_manager {
       }
 
       void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager * const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
+         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( Caller = ", p_Caller, ". Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( abstract_memory_manager * const, void * const ) ",
                "should not be invoked on the Query Memory Manager." );
       }
 
       void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
+         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( void * const ) should not be invoked on the Query Memory Manager." );
       }
 
 
       void * reallocate(void * p_Ptr, size_t p_AllocSize) override {
+         throw std::runtime_error("This should not be called anymore");
          if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_Ptr == nullptr))
             return allocate(p_AllocSize);
          if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_AllocSize == 0))
