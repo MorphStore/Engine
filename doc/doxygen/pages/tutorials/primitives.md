@@ -1,4 +1,4 @@
-\page PageMainTopic Vector Primitives
+\page VectorPrimitives Vector Primitives
 [TOC]
 \subpage PageSubTopicA
 
@@ -35,6 +35,15 @@ The general interface is included into the operator code via
 
 The primitive groups can be found in 
 {Morphstore/Engine/inlcude/}vector/simd/{vector extension}/primitives/{primitive group}_{vector extension}.h.
+
+<div class=new>Instead of including all the individual headers, vector/vector_extension_structs.h contains all headers for the extensions.
+Note that the corresponding flags for the usable vector extensions have to be provided when building a source using these headers. Otherwise, only the scalar versions will be available.
+ <div class=userCode>
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+~~~
+</div>
+</div>
 
 ###Primitive groups
 There are 6 primitive groups:
@@ -75,6 +84,17 @@ The corresponding interfaces can be included into the operator code like the fol
 <b>When implementing a new operator, the operator includes the generic interfaces. The concrete extension headers only have 
 to be included when calling this new operator. The remainder of this tutorial shows how to implement such an operator and 
 how to call it. </b>
+
+<div class=new>Instead of including all the individual headers, vector/vector_primitives.h contains all primitives and primitive interfaces.
+Note that the corresponding flags for the usable vector extensions have to be provided when building a source using these headers.
+Otherwise, only the scalar versions will be available.
+<div class=morphStoreDeveloperCode>
+~~~{.cpp}
+#include <vector/vector_primitives.h>
+~~~
+</div>
+</div>
+
 
 Vector Extensions and Sizes
 ---------------------------

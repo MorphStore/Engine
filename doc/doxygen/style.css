@@ -65,3 +65,44 @@
   font-weight: bold;
   content: "TODO ";
 }
+
+.new{
+  border-style: none none none solid;
+  border-color: #ee5253;
+  border-width: 5px; 
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: auto;
+  padding: 5px;
+  display: block;
+}
+.new::before{
+  font-weight: bold;
+  color:  #ee5253;
+  content: "NEW ";
+}
+
+.box-grid{
+  display: grid;
+  grid-template-columns: auto auto; 
+}
+
+.BoxPink{
+  border-style: solid solid hidden solid;
+  border-width: 10px 2px 5px 2px;
+  border-color: #f368e0;
+  background-color: #ff9ff3;
+  margin: 5px;
+  padding: 5px;
+
+}
+
+.BoxBlue{
+  border-style: solid solid hidden solid;
+  border-width: 10px 2px 5px 2px;
+  border-color: #0abde3;
+  background-color: #48dbfb;
+  margin: 5px;
+  padding: 5px;
+}
+
