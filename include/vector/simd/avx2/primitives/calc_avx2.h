@@ -1,15 +1,26 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**********************************************************************************************
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
+ *                                                                                            *
+ * This file is part of MorphStore - a compression aware vectorized column store.             *
+ *                                                                                            *
+ * This program is free software: you can redistribute it and/or modify it under the          *
+ * terms of the GNU General Public License as published by the Free Software Foundation,      *
+ * either version 3 of the License, or (at your option) any later version.                    *
+ *                                                                                            *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  *
+ * See the GNU General Public License for more details.                                       *
+ *                                                                                            *
+ * You should have received a copy of the GNU General Public License along with this program. *
+ * If not, see <http://www.gnu.org/licenses/>.                                                *
+ **********************************************************************************************/
+
+/**
+ * @file calc_avx2.h
+ * @brief This file contains calculation primitives for AVX2
+ * @todo benchmarks: VL_BENCHMARK_CALC_AVX2_HADD_VARIANT_USING_SSE
  */
 
-/* 
- * File:   calc_avx2.h
- * Author: Annett
- *
- * Created on 17. April 2019, 11:07
- */
 
 #ifndef MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
 #define MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_CALC_AVX2_H
@@ -24,8 +35,9 @@
 #include <functional>
 
 namespace vector{
+   //SIMDI ADDITION
    template<>
-   struct add<avx2<v256<uint64_t>>/*, 64*/> {
+   struct add<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx2<v256<uint64_t>>::vector_t
@@ -38,7 +50,48 @@ namespace vector{
       }
    };
    template<>
-   struct sub<avx2<v256<uint64_t>>/*, 64*/> {
+   struct add<avx2<v256<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint32_t>>::vector_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 32 bit integer values from two registers (avx2)" );
+         return _mm256_add_epi32( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct add<avx2<v256<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint16_t>>::vector_t
+      apply(
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 16 bit integer values from two registers (avx2)" );
+         return _mm256_add_epi16( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct add<avx2<v256<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint8_t>>::vector_t
+      apply(
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 8 bit integer values from two registers (avx2)" );
+         return _mm256_add_epi8( p_vec1, p_vec2);
+      }
+   };
+
+   //SIMDI SUBTRACTION
+   template<>
+   struct sub<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx2<v256<uint64_t>>::vector_t
@@ -51,14 +104,55 @@ namespace vector{
       }
    };
    template<>
-   struct hadd<avx2<v256<uint64_t>>/*, 64*/> {
+   struct sub<avx2<v256<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint32_t>>::vector_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Subtract 32 bit integer values from two registers (avx2)" );
+         return _mm256_sub_epi32( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct sub<avx2<v256<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint16_t>>::vector_t
+      apply(
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Subtract 16 bit integer values from two registers (avx2)" );
+         return _mm256_sub_epi16( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct sub<avx2<v256<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint8_t>>::vector_t
+      apply(
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Subtract 8 bit integer values from two registers (avx2)" );
+         return _mm256_sub_epi8( p_vec1, p_vec2);
+      }
+   };
+
+   //SIMDI HORIZONTAL ADDITION
+   template<>
+   struct hadd<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx2<v256<uint64_t>>::base_t
       apply(
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1
       ){
-         trace( "[VECTOR] - Horizontally add 64 bit integer values one register (avx2)" );
+         trace( "[VECTOR] - Horizontally add 64 bit integer values within one register (avx2)" );
          __m256i tmp =
             _mm256_castpd_si256(
                _mm256_hadd_pd(
@@ -70,7 +164,111 @@ namespace vector{
       }
    };
    template<>
-   struct mul<avx2<v256<uint64_t>>/*, 64*/> {
+   struct hadd<avx2<v256<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint32_t>>::base_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1
+      ) {
+#ifdef VL_BENCHMARK_CALC_AVX2_HADD_VARIANT_USING_SSE
+         trace( "[VECTOR] - Horizontally add 32 bit integer values within one register (avx2) using extract and sse intrinsics" );
+         typename sse<v128<uint32_t>>::vector_t const tmp0 =
+            _mm_add_epi32(
+               _mm256_extracti128_si256( p_vec1, 0 ),
+               _mm256_extracti128_si256( p_vec1, 1 )
+            );
+         /*__m128i tmp1 =
+            _mm_hadd_epi32( tmp0, tmp0 );*/
+         typename sse<v128<uint32_t>>::vector_t const tmp1 =
+            _mm_add_epi32( tmp0, _mm_shuffle_epi32( tmp0, 0x4E ) );
+         return _mm_extract_epi32( tmp1, 0 ) + _mm_extract_epi32( tmp1, 1 );
+#else
+         trace( "[VECTOR] - Horizontally add 32 bit integer values within one register (avx2)" );
+         typename avx2<v256<uint32_t>>::vector_t const tmp0 =
+            _mm256_hadd_epi32( p_vec1, p_vec1 );
+         typename avx2<v256<uint32_t>>::vector_t const tmp1 =
+            _mm256_hadd_epi32( tmp0, tmp0 );
+         return _mm256_extract_epi32( tmp1, 0 ) + _mm256_extract_epi32( tmp1, 4 );
+#endif
+      }
+   };
+   template<>
+   struct hadd<avx2<v256<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint16_t>>::base_t
+      apply(
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec1
+      ) {
+#ifdef VL_BENCHMARK_CALC_AVX2_HADD_VARIANT_USING_SSE
+         trace( "[VECTOR] - Horizontally add 16 bit integer values within one register (avx2) using extract and sse intrinsics" );
+         typename sse<v128<uint16_t>>::vector_t const tmp0 =
+            _mm_add_epi32(
+               _mm256_extracti128_si256( p_vec1, 0 ),
+               _mm256_extracti128_si256( p_vec1, 1 )
+            );
+         typename sse<v128<uint16_t>>::vector_t const tmp1 =
+            _mm_add_epi16(
+               tmp0,
+               _mm_shuffle_epi32( tmp0, 0x4E )
+            );
+         typename sse<v128<uint16_t>>::vector_t const tmp2 =
+            _mm_add_epi16(
+               tmp1,
+               _mm_shuffle_epi32( tmp1, 0xE1 )
+            );
+         return _mm_extract_epi16( tmp2, 0 ) + _mm_extract_epi16( tmp2, 1 );
+#else
+         trace( "[VECTOR] - Horizontally add 16 bit integer values within one register (avx2)" );
+         typename avx2<v256<uint16_t>>::vector_t const tmp0 =
+            _mm256_hadd_epi16( p_vec1, p_vec1 );
+         typename avx2<v256<uint16_t>>::vector_t const tmp1 =
+            _mm256_hadd_epi16( tmp0, tmp0 );
+         typename avx2<v256<uint16_t>>::vector_t const tmp2 =
+            _mm256_hadd_epi16( tmp1, tmp1 );
+         return _mm256_extract_epi16( tmp2, 0 ) + _mm256_extract_epi16( tmp2, 8 );
+#endif
+      }
+   };
+
+
+   template<>
+   struct hadd<avx2<v256<uint8_t>>> {
+      //@todo: look out for better solution.
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint8_t>>::base_t
+      apply(
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec1
+      ) {
+         typename sse<v128<uint8_t>>::vector_t const tmp0 =
+            _mm_add_epi8(
+               _mm256_extracti128_si256( p_vec1, 0 ),
+               _mm256_extracti128_si256( p_vec1, 1 )
+            );
+         typename sse<v128<uint8_t>>::vector_t const tmp1 =
+            _mm_add_epi8(
+               tmp0,
+               _mm_shuffle_epi32( tmp0, 0x4E)
+            );
+         typename sse<v128<uint8_t>>::vector_t const tmp2 =
+            _mm_add_epi8(
+               tmp1,
+               _mm_shuffle_epi32( tmp1, 0x39 )
+            );
+         typename sse<v128<uint8_t>>::vector_t  const tmp3 =
+            _mm_add_epi8(
+               tmp2,
+               _mm_shufflelo_epi16( tmp2, 0x1 )
+            );
+         return _mm_extract_epi8( tmp3, 0 ) + _mm_extract_epi8( tmp3, 1 );
+      }
+   };
+
+   //SIMDI MULTIPLICATION
+   template<>
+   struct mul<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx2<v256<uint64_t>>::vector_t
@@ -83,6 +281,8 @@ namespace vector{
          return _mm256_mul_epu32( p_vec1, p_vec2);
       }
    };
+
+
    template<>
    struct div<avx2<v256<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
