@@ -38,6 +38,9 @@ namespace vector {
    template<typename T>
    using v512 = vector_view<512, T>;
 
+   template< typename T >
+   using v16k = vector_view<(1<<14), T>;
+
 }
 
 #endif //MORPHSTORE_VECTOR_GENERAL_VECTOR_EXTENSION_H

@@ -16,11 +16,12 @@
 
 namespace vector {
    template<class VectorReg>
-   struct sse;
+   struct aurora;
 
    template<typename T>
-   struct sse< v128< T > > {
+   struct aurora< v16k< T > > {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
+      static_assert(sizeof(T) == 8, )
       using vector_helper_t = v128<T>;
 
       using vector_t =
