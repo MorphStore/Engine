@@ -17,8 +17,39 @@ This documentation is about __How__ MorphStore works and __How__ to use it
 
 @section mainpage_roadmap Roadmap to begin with MorphStore
 This section is designed to hand a plan to staff members and students, who never worked with MorphStore before, but also as quick reference.
+<br />
+<b>Dear SIGMOD 2019 visitors, we are working on the documentation. Please have a little patience.</b>
 
-<div class="ToDo">Sinnvolle Struktur für die Doku?</div>
+<div class="box-grid">
+<div class="BoxPink" style="grid-column: 1">
+<b>Getting started</b>
+<ul>
+<li>\ref Download and compile</li>
+<li>\ref Test cases</li>
+<li>\ref Conceptual Overview</li>
+</ul>
+</div>
+<div class="BoxBlue" style="grid-column: 2">
+<b>Vector Lib</b>
+<ul>
+<li>Using the \ref veclib - A short walk through</li>
+<li>\ref VectorPrimitives</li>
+<li>VectorLib w/o MorphStore</li>
+</ul>
+</div>
+<div class="BoxBlue" style="grid-column: 1">
+<b></b>
+</div>
+<div class="BoxPink" style="grid-column: 2">
+<b>Writing Queries</b>
+<ul>
+<li>Hello World!</li>
+<li>Available Operators and Compressions</li>
+</ul>
+</div>
+
+</div>
+
 Each section/tutorial is roughly divided into 3 parts:
 - **Usage:** How can the described feature be used by the end-user (i.e. the one writing a query)
 - **Developer Interface** How can a developer add more functionality to the described feature

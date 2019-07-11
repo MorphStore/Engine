@@ -1,10 +1,13 @@
+\page veclib VectorLib
+
 VectorLib
 =========
-SIMD (Single Instruction Multiple Data) or Vectorization denotes a data processing scheme, where multiple data elements where processed in parallel by the same operation. 
+SIMD (Single Instruction Multiple Data) or Vectorization denotes a data processing scheme, where multiple data elements are processed in parallel by the same operation. 
 
 The SIMD paradigma comes in two different flavours. On the one hand there are "real" vector processors using specialized cpu's alongside pipelines. This type of maschines has their origin in the CRAY-1. 
 
-On the other hand, SIMD was introduced by Intel as an extension (MMX) to their general purpose CPU in 1997. Back then 124 instructions, operating with 64-bit wide vector registers were available. Multiple successing extensions with wider vector registers and increasing instruction sets from different have been released on the market ever since (see table 1).
+On the other hand, SIMD was introduced by Intel as an extension (MMX) to their general purpose CPU in 1997. Back then, 124 instructions, operating with 64-bit wide vector registers were available. 
+Multiple successing extensions with wider vector registers and increasing instruction sets from different domains have been released on the market ever since (see table 1).
 
 |             | Extension | Vector size (Bit) |
 | ----------- | --------- | ----------------- |
@@ -15,9 +18,7 @@ On the other hand, SIMD was introduced by Intel as an extension (MMX) to their g
 | Intel (AMD) | AVX(2)    | 256               |
 |             | AVX512    | 512               |
 
-<p style="text-align: center;">Table 1: Different SIMD extension sorted by vector size</p>
-
-While writing vectorizable or even 
+<p style="text-align: center;">Table 1: Different SIMD extensions sorted by vector size</p>
 
 General remarks
 ---------------
@@ -31,7 +32,7 @@ E.g.:
 
 ### Exception
 
-Thus AVX-512 has special subsets which may or may not appear together onto a processor, a distinction where be made:
+Thus AVX-512 has special subsets which may or may not appear together onto a processor, a distinction was made:
 
 - AVX512 = { AVX-512, AVX-512F }
 - AVX512BW = AVX-512BW
@@ -57,6 +58,9 @@ Usage
 ~~~
 </div>
 
+Compilation
+-------------
+<div class="ToDo">Explain compile flags</div>
 
 How to implement additional functionality for the VectorLib 
 ------------------

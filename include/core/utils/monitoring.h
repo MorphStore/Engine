@@ -27,7 +27,8 @@
 #include <core/memory/mm_glob.h>
 #include <core/memory/stl_wrapper/vector.h>
 #include <core/memory/stl_wrapper/map.h>
-#include <core/memory/stl_wrapper/string.h>
+//#include <core/memory/stl_wrapper/string.h>
+#include <string>
 #include <iostream>
 #include <algorithm>
 #include <tuple>
@@ -60,8 +61,8 @@ namespace morphstore {
 
 		template<int index, typename... Ts>
 		struct printTupleRecursive {
-			morphstore::string operator() (char delim, const tuple<Ts...>& t) {
-				morphstore::stringstream ss;
+			std::string operator() (char delim, const tuple<Ts...>& t) {
+				std::stringstream ss;
 				ss << get<index>(t) << delim;
 				ss << printTupleRecursive<index - 1, Ts...>{}(delim, t);
 				return ss.str();
@@ -70,15 +71,15 @@ namespace morphstore {
 
 		template<typename... Ts>
 		struct printTupleRecursive<0, Ts...> {
-			morphstore::string operator() (char delim, const tuple<Ts...>& t) {
-				morphstore::stringstream ss;
+			std::string operator() (char delim, const tuple<Ts...>& t) {
+				std::stringstream ss;
 				ss << get<0>(t);
 				return ss.str();
 			}
 		};
 
 		template<typename... Ts>
-		morphstore::string printTuple(char delim, const tuple<Ts...>& t) {
+		std::string printTuple(char delim, const tuple<Ts...>& t) {
 			const auto size = tuple_size<tuple<Ts...>>::value;
 			return printTupleRecursive<size - 1, Ts...>{}(delim, t);
 		}
@@ -108,10 +109,10 @@ namespace morphstore {
 
 	class monitoring_info {
 	public:
-		const morphstore::string name;
+		const std::string name;
 		size_t id;
 
-		monitoring_info(const morphstore::string name, size_t id) :
+		monitoring_info(const std::string name, size_t id) :
 			name(name),
 			id(id)
 		{
@@ -120,11 +121,11 @@ namespace morphstore {
 		virtual ~monitoring_info() {
 		}
 
-		morphstore::string getName() const {
+		std::string getName() const {
 			return name;
 		}
 
-		virtual morphstore::string getAsString(const size_t idx) const = 0;
+		virtual std::string getAsString(const size_t idx) const = 0;
 		//virtual void print(monitoring_logger& log) = 0;
 	};
 
@@ -135,9 +136,9 @@ namespace morphstore {
 		uint32_t lastValue;
 		T* values;
 
-		monitoring_parameter(const morphstore::string name, size_t id, T value) :
+		monitoring_parameter(const std::string name, size_t id, T value) :
 			monitoring_info(name, id),
-			maxValues(1024),
+			maxValues(1024000),
 			lastValue(0)
 		{
 			values = (T*) malloc( maxValues * sizeof(T) );
@@ -161,7 +162,7 @@ namespace morphstore {
 			}
 		}
 
-		morphstore::string getAsString(const size_t idx) const override {
+		std::string getAsString(const size_t idx) const override {
 			if (idx >= lastValue) {
 				throw std::runtime_error("[MONITORING ERROR] Trying to get a parameter with out-of-bounds index. Did you add an uneven amount of parameters/intervals?");
 			}
@@ -187,7 +188,7 @@ namespace morphstore {
 		uint32_t lastValue;
 		uint64_t* values;
 
-		explicit monitoring_counter(const morphstore::string name, size_t id) :
+		explicit monitoring_counter(const std::string name, size_t id) :
 			monitoring_info(name, id),
 			started(false),
 			maxValues(1024),
@@ -217,7 +218,7 @@ namespace morphstore {
 			}
 		}
 
-		morphstore::string getAsString(const size_t idx) const override {
+		std::string getAsString(const size_t idx) const override {
 			if (idx >= lastValue) {
 				throw std::runtime_error("[MONITORING ERROR] Trying to get an interval with out-of-bounds index. Did you add an uneven amount of parameters/intervals?");
 			}
@@ -233,10 +234,10 @@ namespace morphstore {
 	} CompareMonitorInfo;
 
 
-	typedef morphstore::map< morphstore::string, monitoring_counter* > monitorIntervalMap;
-	typedef morphstore::map< morphstore::string, monitoring_parameter<bool>* > monitorBoolParameterMap;
-	typedef morphstore::map< morphstore::string, monitoring_parameter<int64_t>* > monitorIntegerParameterMap;
-	typedef morphstore::map< morphstore::string, monitoring_parameter<double>* > monitorDoubleParameterMap;
+	typedef morphstore::map< std::string, monitoring_counter* > monitorIntervalMap;
+	typedef morphstore::map< std::string, monitoring_parameter<bool>* > monitorBoolParameterMap;
+	typedef morphstore::map< std::string, monitoring_parameter<int64_t>* > monitorIntegerParameterMap;
+	typedef morphstore::map< std::string, monitoring_parameter<double>* > monitorDoubleParameterMap;
 
 	class SuperMon {
 	public:
@@ -247,10 +248,10 @@ namespace morphstore {
 
 		virtual ~SuperMon() {};
 
-		virtual morphstore::string getTupleAsString(char delim) const = 0;
-		virtual void addHeadKeys(const morphstore::vector< morphstore::string >& hKeys) = 0;
+		virtual std::string getTupleAsString(char delim) const = 0;
+		virtual void addHeadKeys(const morphstore::vector< std::string >& hKeys) = 0;
 
-		void startInterval(const morphstore::string& ident) {
+		void startInterval(const std::string& ident) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
 			if (counter != intervalData.cend()) {
 				if (!counter->second->started) {
@@ -268,7 +269,7 @@ namespace morphstore {
 			}
 		}
 
-		void stopInterval(const morphstore::string& ident) {
+		void stopInterval(const std::string& ident) {
 			chrono_tp stopTp = chronoHighRes::now();
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
 			if (counter != intervalData.cend()) {
@@ -282,7 +283,7 @@ namespace morphstore {
 			}
 		}
 
-		void addBoolProperty(const morphstore::string& ident, const bool val) {
+		void addBoolProperty(const std::string& ident, const bool val) {
 			monitorBoolParameterMap::iterator counter = boolParams.find(ident);
 			if (counter != boolParams.cend()) {
 				counter->second->addValue(val);
@@ -292,7 +293,7 @@ namespace morphstore {
 			}
 		}
 
-		void addIntegerProperty(const morphstore::string& ident, const int64_t val) {
+		void addIntegerProperty(const std::string& ident, const int64_t val) {
 			monitorIntegerParameterMap::iterator counter = integerParams.find(ident);
 			if (counter != integerParams.cend()) {
 				counter->second->addValue(val);
@@ -302,7 +303,7 @@ namespace morphstore {
 			}
 		}
 
-		//void incrementIntegerProperty(const morphstore::string& ident, const int64_t val) {
+		//void incrementIntegerProperty(const std::string& ident, const int64_t val) {
 		//	monitorIntegerParameterMap::iterator counter = integerParams.find(ident);
 		//	if (counter != integerParams.end()) {
 		//		std::cout << "[Monitoring] Updated integer parameter " << ident << " old value: " << counter->second->getValue();
@@ -314,7 +315,7 @@ namespace morphstore {
 		//	}
 		//}
 
-		void addDoubleProperty(const morphstore::string& ident, const double val) {
+		void addDoubleProperty(const std::string& ident, const double val) {
 			monitorDoubleParameterMap::iterator counter = doubleParams.find(ident);
 			if (counter != doubleParams.cend()) {
 				counter->second->addValue(val);
@@ -324,7 +325,7 @@ namespace morphstore {
 			}
 		}
 
-		//void incrementDoubleProperty(const morphstore::string& ident, const double val) {
+		//void incrementDoubleProperty(const std::string& ident, const double val) {
 		//	monitorDoubleParameterMap::iterator counter = doubleParams.find(ident);
 		//	if (counter != doubleParams.end()) {
 		//		std::cout << "[Monitoring] Updated double parameter " << ident << " old value: " << counter->second->getValue();
@@ -388,12 +389,12 @@ namespace morphstore {
 			return integerParams;
 		}
 
-		virtual morphstore::string getAllheads(char delim) const = 0;
+		virtual std::string getAllheads(char delim) const = 0;
 
-		morphstore::string printAllData(/*monitoring_logger& log, */char delim, const size_t idx ) const {
+		std::string printAllData(/*monitoring_logger& log, */char delim, const size_t idx ) const {
 			morphstore::vector< monitoring_info* > sortedInfo = createSortedCounterList();
 
-			morphstore::stringstream ss;
+			std::stringstream ss;
 			ss << getTupleAsString(delim);
 			for (size_t i = 0; i < sortedInfo.size(); ++i) {
 				ss << sortedInfo[i]->getAsString(idx);
@@ -493,15 +494,15 @@ public:
 
 class monitoring_file_logger : public monitoring_logger {
 private:
-	morphstore::string* logFileName;
+	std::string* logFileName;
 
 	monitoring_file_logger() {
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-		morphstore::stringstream ss;
+		std::stringstream ss;
 		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X_monitoringLog");
-		logFileName = new morphstore::string( ss.str().c_str() );
+		logFileName = new std::string( ss.str().c_str() );
 		std::cout << "LogFilename: " << *logFileName << std::endl;
 	}
 
@@ -526,7 +527,7 @@ public:
 };
 
 //struct SimpleJson {
-//	morphstore::string json;
+//	std::string json;
 //	SimpleJson() {
 //	}
 //
@@ -555,7 +556,7 @@ public:
 //	}
 //
 //	template< typename T >
-//	void addKeyValue(const morphstore::string& ident, const T& value) {
+//	void addKeyValue(const std::string& ident, const T& value) {
 //		if (!firstValue) {
 //			json += ",";
 //		}
@@ -572,15 +573,15 @@ public:
 
 class monitoring_json_logger : public monitoring_logger {
 private:
-	morphstore::string* logFileName;
+	std::string* logFileName;
 
 	monitoring_json_logger() {
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-		morphstore::stringstream ss;
+		std::stringstream ss;
 		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X_monitoringLog");
-		logFileName = new morphstore::string(ss.str().c_str());
+		logFileName = new std::string(ss.str().c_str());
 		std::cout << "JSonLogFilename: " << *logFileName << std::endl;
 	}
 
@@ -602,7 +603,7 @@ public:
 	void write(MSV_CXX_ATTRIBUTE_PPUNUSED double val) override {};
 
 	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED morphstore::vector< SuperMon* > monitors) {
-		/*morphstore::stringstream json = "[";
+		/*std::stringstream json = "[";
 		
 		for (size_t idx = 0; idx < monitors.size(); ++idx ) {
 			SuperMon* mon = monitors[idx];
@@ -638,8 +639,8 @@ public:
 	~Monitor() {
 	}
 
-	morphstore::string getAllheads(char delim) const override {
-		morphstore::stringstream ss;
+	std::string getAllheads(char delim) const override {
+		std::stringstream ss;
 		for (size_t i = 0; i < keyHeads.size(); ++i) {
 			ss << keyHeads[i] << delim;
 		}
@@ -653,26 +654,26 @@ public:
 		return ss.str();
 	}
 
-	morphstore::string getTupleAsString(char delim) const override {
+	std::string getTupleAsString(char delim) const override {
 		// fold-expressions only in c++1z / c++17
 		return callDoPrint(delim, key, std::index_sequence_for<T...>());
 		//return print::printTuple(delim, key);
 	}
 
-	void addHeadKeys(const morphstore::vector< morphstore::string >& hKeys) override {
-		for (const morphstore::string& s : hKeys) {
+	void addHeadKeys(const morphstore::vector< std::string >& hKeys) override {
+		for (const std::string& s : hKeys) {
 			keyHeads.push_back(s);
 		}
 	}
 
 	// fold-expressions only in c++1z / c++17
 	template<std::size_t... Is>
-	morphstore::string callDoPrint(char delim, const std::tuple<T...>& tuple, std::index_sequence<Is...>) const {
+	std::string callDoPrint(char delim, const std::tuple<T...>& tuple, std::index_sequence<Is...>) const {
 		return doPrint(delim, std::get<Is>(tuple)...);
 	}
 
 	std::tuple< T... > key;
-	morphstore::vector< morphstore::string > keyHeads;
+	morphstore::vector< std::string > keyHeads;
 };
 
 class Monitoring {
@@ -707,26 +708,26 @@ public:
 		return nullptr;
 	}
 
-	void addKeyHeads(morphstore::vector< morphstore::string >& headVec, morphstore::string& head) {
+	void addKeyHeads(morphstore::vector< std::string >& headVec, std::string& head) {
 		headVec.push_back(head);
 	}
 
 	template< typename... HeadVals >
-	void addKeyHeads(morphstore::vector< morphstore::string >& headVec, morphstore::string& head, HeadVals&... heads) {
+	void addKeyHeads(morphstore::vector< std::string >& headVec, std::string& head, HeadVals&... heads) {
 		addKeyHeads(headVec, head);
 		addKeyHeads(headVec, heads...);
 	}
 
 	/*template< typename... headVals >
-	void create(SuperMon* mon, const morphstore::string& head, headVals... heads) {
-		morphstore::vector< morphstore::string > headKeys;
+	void create(SuperMon* mon, const std::string& head, headVals... heads) {
+		morphstore::vector< std::string > headKeys;
 		addKeyHeads(headKeys, head, heads...);
 		for (size_t i = 0; i < headkeys.size(); ++i) {
 			std::cout << "######### HEAD KEY " << headkeys[i] << std:.endl;
 		}
 	}*/
 
-	void create(SuperMon* mon, const morphstore::vector< morphstore::string >& headKeys) {
+	void create(SuperMon* mon, const morphstore::vector< std::string >& headKeys) {
 		mon->addHeadKeys(headKeys);
 	}
 
@@ -745,7 +746,7 @@ public:
 	}
 
 	template<typename... Ts>
-	void startIntervalFor(morphstore::string ident, Ts... args) {
+	void startIntervalFor(std::string ident, Ts... args) {
 		auto mon = findMonitor(args...);
 		if (mon) {
 			mon->startInterval(ident);
@@ -756,7 +757,7 @@ public:
 	}
 
 	template<typename... Ts>
-	void endIntervalFor(morphstore::string ident, Ts... args) {
+	void endIntervalFor(std::string ident, Ts... args) {
 		auto mon = findMonitor(args...);
 		if (mon) {
 			mon->stopInterval(ident);
@@ -767,7 +768,7 @@ public:
 	}
 
 	template<typename... Ts>
-	void addBoolFor(morphstore::string ident, bool val, Ts... args) {
+	void addBoolFor(std::string ident, bool val, Ts... args) {
 		SuperMon* mon = findMonitor(args...);
 		if (mon) {
 			mon->addBoolProperty(ident, val);
@@ -778,7 +779,7 @@ public:
 	}
 
 	template<typename... Ts>
-	void addIntFor(morphstore::string ident, int64_t val, Ts... args) {
+	void addIntFor(std::string ident, int64_t val, Ts... args) {
 		SuperMon* mon = findMonitor(args...);
 		if (mon) {
 			mon->addIntegerProperty(ident, val);
@@ -789,7 +790,7 @@ public:
 	}
 
 	template<typename... Ts>
-	void addDoubleFor(morphstore::string ident, double val, Ts... args) {
+	void addDoubleFor(std::string ident, double val, Ts... args) {
 		SuperMon* mon = findMonitor(args...);
 		if (mon) {
 			mon->addDoubleProperty(ident, val);
@@ -800,7 +801,7 @@ public:
 	}
 
 	//template<typename... Ts>
-	//void incrementIntFor(morphstore::string ident, int64_t val, Ts... args) {
+	//void incrementIntFor(std::string ident, int64_t val, Ts... args) {
 	//	SuperMon* mon = findMonitor(args...);
 	//	if (mon) {
 	//		mon->incrementIntegerProperty(ident, val);
@@ -811,7 +812,7 @@ public:
 	//}
 
 	//template<typename... Ts>
-	//void incrementDoubleFor(morphstore::string ident, double val, Ts... args) {
+	//void incrementDoubleFor(std::string ident, double val, Ts... args) {
 	//	SuperMon* mon = findMonitor(args...);
 	//	if (mon) {
 	//		mon->incrementDoubleProperty(ident, val);
@@ -842,7 +843,7 @@ public:
 
 	#define MONITORING_CREATE_MONITOR( ... ) 					Monitoring::get_instance().create( __VA_ARGS__ );
 	#define MONITORING_MAKE_MONITOR( ... ) 						Monitoring::get_instance().createMonitor( __VA_ARGS__ )
-	#define MONITORING_KEY_IDENTS( ... ) 						morphstore::vector< morphstore::string > { __VA_ARGS__ }
+	#define MONITORING_KEY_IDENTS( ... ) 						morphstore::vector< std::string > { __VA_ARGS__ }
 	#define MONITORING_START_INTERVAL_FOR( ident, ... ) 		Monitoring::get_instance().startIntervalFor( ident, __VA_ARGS__ )
 	#define MONITORING_END_INTERVAL_FOR( ident, ... ) 			Monitoring::get_instance().endIntervalFor( ident, __VA_ARGS__ )
 	#define MONITORING_ADD_BOOL_FOR( ident, val, ... ) 			Monitoring::get_instance().addBoolFor( ident, val, __VA_ARGS__ )
@@ -853,7 +854,7 @@ public:
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
 	#define MONITORING_PRINT_MONITORS(logger)					Monitoring::get_instance().printAll( logger )
 	#define MONITORING_CLEAR_ALL()								Monitoring::get_instance().clearAll()
-	#define MONITORING_INIT_CRITICAL_TIMING()					morphstore::vector< std::pair< morphstore::string, uint64_t > > criticalTimings
+	#define MONITORING_INIT_CRITICAL_TIMING()					morphstore::vector< std::pair< std::string, uint64_t > > criticalTimings
 	#define MONITORING_START_CRITICAL_TIMING( timer )			auto startTp_##timer =std::chrono::high_resolution_clock::now()
 	#define MONITORING_END_CRITICAL_TIMING( timer )				\
 																auto endTp_##timer =std::chrono::high_resolution_clock::now(); \

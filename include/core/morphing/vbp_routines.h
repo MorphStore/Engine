@@ -82,6 +82,14 @@
 #undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
 #undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
 
+// @todo Remove this workaround. We should find a cleaner way to do this.
+/**
+ * If the following macro is defined, only the routines for the bitwidths
+ * actually needed for SSB at scale factor 1 are compiled, which reduces the
+ * compile time significantly.
+ */
+#define VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+
 namespace morphstore {
     
     // ************************************************************************
@@ -272,6 +280,7 @@ namespace morphstore {
             case 24: pack<t_vector_extension, 24, t_step>(in8, inCount64, out8); break;
             case 25: pack<t_vector_extension, 25, t_step>(in8, inCount64, out8); break;
             case 26: pack<t_vector_extension, 26, t_step>(in8, inCount64, out8); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 27: pack<t_vector_extension, 27, t_step>(in8, inCount64, out8); break;
             case 28: pack<t_vector_extension, 28, t_step>(in8, inCount64, out8); break;
             case 29: pack<t_vector_extension, 29, t_step>(in8, inCount64, out8); break;
@@ -310,6 +319,7 @@ namespace morphstore {
             case 62: pack<t_vector_extension, 62, t_step>(in8, inCount64, out8); break;
             case 63: pack<t_vector_extension, 63, t_step>(in8, inCount64, out8); break;
             case 64: pack<t_vector_extension, 64, t_step>(in8, inCount64, out8); break;
+#endif
             // Packing does not require the case for VBP_BW_NOBLOCK.
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
@@ -514,6 +524,7 @@ namespace morphstore {
             case 24: unpack<t_vector_extension, 24, t_step>(in8, out8, outCount64); break;
             case 25: unpack<t_vector_extension, 25, t_step>(in8, out8, outCount64); break;
             case 26: unpack<t_vector_extension, 26, t_step>(in8, out8, outCount64); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 27: unpack<t_vector_extension, 27, t_step>(in8, out8, outCount64); break;
             case 28: unpack<t_vector_extension, 28, t_step>(in8, out8, outCount64); break;
             case 29: unpack<t_vector_extension, 29, t_step>(in8, out8, outCount64); break;
@@ -552,6 +563,7 @@ namespace morphstore {
             case 62: unpack<t_vector_extension, 62, t_step>(in8, out8, outCount64); break;
             case 63: unpack<t_vector_extension, 63, t_step>(in8, out8, outCount64); break;
             case 64: unpack<t_vector_extension, 64, t_step>(in8, out8, outCount64); break;
+#endif
             case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
@@ -789,6 +801,7 @@ namespace morphstore {
             case 24: unpack_and_process<t_ve, 24, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 25: unpack_and_process<t_ve, 25, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 26: unpack_and_process<t_ve, 26, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 27: unpack_and_process<t_ve, 27, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 28: unpack_and_process<t_ve, 28, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 29: unpack_and_process<t_ve, 29, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
@@ -827,6 +840,7 @@ namespace morphstore {
             case 62: unpack_and_process<t_ve, 62, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 63: unpack_and_process<t_ve, 63, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
             case 64: unpack_and_process<t_ve, 64, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+#endif
             case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(

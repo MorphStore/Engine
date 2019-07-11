@@ -5,6 +5,8 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
 
+#include <core/operators/interfaces/agg_sum.h>
+
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
