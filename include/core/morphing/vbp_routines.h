@@ -39,7 +39,10 @@
 #include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
+#ifdef SSE
 #include <immintrin.h>
+#endif
+
 #include <limits>
 
 /**

@@ -45,9 +45,15 @@
 #include <core/storage/column.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/scalar/extension_scalar.h>
+#ifdef AVXTWO
 #include <vector/simd/avx2/extension_avx2.h>
+#endif
+#ifdef AVX512
 #include <vector/simd/avx512/extension_avx512.h>
+#endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
+#endif
 
 #include <cstdint>
 
@@ -119,7 +125,9 @@ namespace morphstore {
         };
 
     MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
+#ifdef SSE            
     MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+#endif
 #ifdef AVXTWO
     MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
 #endif
@@ -154,7 +162,9 @@ namespace morphstore {
     };
 
     MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
+#ifdef SSE            
     MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+#endif
 #ifdef AVXTWO
     MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
 #endif
@@ -200,7 +210,9 @@ namespace morphstore {
         };
 
     MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
+#ifdef SSE            
     MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+#endif            
 #ifdef AVXTWO
     MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
 #endif
@@ -239,7 +251,9 @@ namespace morphstore {
     };
 
     MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
+#ifdef SSE                        
     MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+#endif            
 #ifdef AVXTWO
     MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
 #endif

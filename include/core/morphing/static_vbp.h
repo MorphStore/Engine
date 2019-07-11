@@ -44,12 +44,17 @@
 // @todo The following includes should not be necessary.
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
+#ifdef SSE
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
+#include <immintrin.h>
+#endif
+#ifdef AVXTWO
 #include <vector/simd/avx2/primitives/compare_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
+#endif
 
-#include <immintrin.h>
+
 #include <limits>
 #include <stdexcept>
 #include <string>

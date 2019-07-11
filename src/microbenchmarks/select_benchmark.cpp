@@ -54,11 +54,13 @@
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
 #include <functional>
 #include <iostream>
@@ -258,8 +260,12 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_wit_compr_out(
     MAKE_VARIANT_FUNC     (select_handwritten_wit_compr_out, bw), \
     MAKE_VARIANT_STRUCT   (scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>), STATIC_VBP_NAME, bw), \
     MAKE_VARIANTS_WIT     (scalar<v64<uint64_t>>, bw), \
+    #ifdef SSE
     MAKE_VARIANTS_WIT     (sse<v128<uint64_t>>, bw), \
+    #endif
+    #ifdef AVX2
     MAKE_VARIANTS_WIT     (avx2<v256<uint64_t>>, bw)
+    #endif
 #else
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>, uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw)//, \

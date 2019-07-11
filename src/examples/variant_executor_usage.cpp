@@ -52,11 +52,13 @@
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
 #include <iostream>
 #include <random>
@@ -98,7 +100,9 @@ int main(void) {
     // Define the variants.
     const std::vector<varex_t::variant_t> variants = {
         MAKE_VARIANT(scalar<v64<uint64_t>>),
+#ifdef SSE                    
         MAKE_VARIANT(sse<v128<uint64_t>>),
+#endif        
 #ifdef AVXTWO
         MAKE_VARIANT(avx2<v256<uint64_t>>),
 #endif
