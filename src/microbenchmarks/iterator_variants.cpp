@@ -53,11 +53,13 @@
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
 #include <iostream>
 #include <limits>
