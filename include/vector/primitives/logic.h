@@ -8,7 +8,7 @@
 #include <vector/vector_extension_structs.h>
 #include <core/utils/preprocessor.h>
 
-namespace vector {
+namespace vectorlib {
 
    template<class VectorExtension, int Granularity>
    struct logic;

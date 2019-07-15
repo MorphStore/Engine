@@ -87,7 +87,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     using varex_t = variant_executor_helper<1, 2>::type
         ::for_variant_params<std::string>

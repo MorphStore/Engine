@@ -84,7 +84,7 @@ class my_project_wit_t {
     // compresses it, and stores the newly compressed data to the end of the
     // given column.
     static uint8_t * prepare_in_data_column(const column<t_in_data_f> * inDataCol) {
-        using namespace vector;
+        using namespace vectorlib;
         
         if(std::is_same<t_in_data_f, uncompr_f>::value)
             // Nothing to do if the format is uncompressed.
@@ -176,7 +176,7 @@ public:
             const column<t_in_data_f> * const inDataCol,
             const column<t_in_pos_f> * const inPosCol
     ) {
-        using namespace vector;
+        using namespace vectorlib;
         
         const base_t * inData = inDataCol->get_data();
         uint8_t * inDataOrigRestUnaligned = prepare_in_data_column(inDataCol);

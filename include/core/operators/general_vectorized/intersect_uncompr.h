@@ -16,7 +16,7 @@
 
 namespace morphstore {
    
-using namespace vector;
+using namespace vectorlib;
    template<class VectorExtension>
    struct intersect_sorted_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -41,8 +41,8 @@ using namespace vector;
       ) {
          vector_mask_t resultMaskEqual    = 0;
          
-            resultMaskEqual      = vector::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
-            p_State.m_MaskLess   = vector::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
+            resultMaskEqual      = vectorlib::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
+            p_State.m_MaskLess   = vectorlib::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
             
       
          return resultMaskEqual;
@@ -69,11 +69,11 @@ using namespace vector;
          
          const base_t * const endInPosR = p_Data2Ptr+p_CountData2;
          const base_t * const endInPosL = p_Data1Ptr+p_CountData1;
-         vector_t data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
+         vector_t data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
          
-         vector_t data2Vector =vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_Data2Ptr);
+         vector_t data2Vector =vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_Data2Ptr);
          
-         vector_mask_t full_hit = vector::equal<VectorExtension>::apply(data1Vector, data1Vector);
+         vector_mask_t full_hit = vectorlib::equal<VectorExtension>::apply(data1Vector, data1Vector);
          
          while(p_Data2Ptr < endInPosR && p_Data1Ptr < endInPosL){
             
@@ -92,20 +92,20 @@ using namespace vector;
             
             if((p_State.m_MaskLess) == 0) { //@todo: Original resultMaskEqual | p_State.m_MaskGreater. resultMaskEqual is not necessary, is it?
                p_Data1Ptr++;
-               data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
+               data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
                
             }else{
                 if((p_State.m_MaskLess) == full_hit) { 
                     p_Data2Ptr += vector_element_count::value;
-                    data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(
+                    data2Vector = vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
                     );
                     
                 }else{
                     p_Data1Ptr++;
-                    data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
-                    p_Data2Ptr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
-                    data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(
+                    data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
+                    p_Data2Ptr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
+                    data2Vector = vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
                     );
                 }

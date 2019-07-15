@@ -66,7 +66,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 
 // ****************************************************************************
@@ -81,19 +81,21 @@ using namespace vector;
     STR_EVAL_MACROS(format), \
 }
 
+#ifdef AVXTWO
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64 , 8 , 1>)), \
-    #ifdef SSE
     MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 2>)), \
     MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)), \
-    #endif
-    #ifdef AVXTWO
     MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 4>)), \
     MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>))
-    #endif
-    
+#else
+#define MAKE_VARIANTS(bw) \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64 , 8 , 1>)), \
+#endif    
     
     
 

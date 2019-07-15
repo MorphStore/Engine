@@ -12,7 +12,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
    template<>
    struct equal<scalar<v64<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

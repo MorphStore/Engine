@@ -39,7 +39,7 @@
 #include <cstdint>
 
 namespace morphstore {
-   using namespace vector;
+   using namespace vectorlib;
 
    template<
       class VectorExtension

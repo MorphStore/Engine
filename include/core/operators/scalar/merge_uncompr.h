@@ -38,7 +38,7 @@ namespace morphstore {
     
 template<>
 struct merge_sorted_t<
-    vector::scalar<vector::v64<uint64_t>>,
+    vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

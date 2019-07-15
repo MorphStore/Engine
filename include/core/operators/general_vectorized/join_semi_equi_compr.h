@@ -26,7 +26,7 @@
 #include <tuple>
 
 namespace morphstore {
-   using namespace vector;
+   using namespace vectorlib;
 
 
    //We assume, that the input column has unique keys!

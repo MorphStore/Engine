@@ -50,7 +50,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<vector::scalar<vector::v64<uint64_t>>>(
+group<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
@@ -141,11 +141,11 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<vector::scalar<vector::v64<uint64_t>>>(
+group<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
 ) {
-    return group<vector::scalar<vector::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(
+    return group<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(
             nullptr,
             inDataCol,
             outExtCountEstimate

@@ -32,7 +32,7 @@
 #include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 /**
  * Unary functor for the "+5"-operation with an interface in the style of the

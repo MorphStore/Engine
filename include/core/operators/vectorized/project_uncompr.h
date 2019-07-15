@@ -29,7 +29,7 @@ namespace morphstore {
     
 template<>
 struct project_t<
-        vector::sse<vector::v128<uint64_t>>,
+        vectorlib::sse<vectorlib::v128<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f
@@ -76,7 +76,7 @@ struct project_t<
 
 template<>
 struct project_t<
-        vector::avx2<vector::v256<uint64_t>>,
+        vectorlib::avx2<vectorlib::v256<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

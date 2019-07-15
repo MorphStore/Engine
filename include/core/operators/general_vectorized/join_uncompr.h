@@ -26,7 +26,7 @@
 #include <tuple>
 
 namespace morphstore {
-    using namespace vector;
+    using namespace vectorlib;
 
    template<
       class VectorExtension,
@@ -39,7 +39,7 @@ namespace morphstore {
          size_t const p_Count,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          for(size_t i = 0; i < p_Count; ++i) {
             hs.template insert<VectorExtension>(
@@ -65,7 +65,7 @@ namespace morphstore {
          base_t const p_InPositionIn,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          size_t resultCount = 0;
 
@@ -106,7 +106,7 @@ namespace morphstore {
          column< uncompr_f > const * const p_InDataRCol,
          size_t const outCountEstimate MSV_CXX_ATTRIBUTE_PPUNUSED = 0
       ) {
-         using namespace vector;
+         using namespace vectorlib;
 
          const size_t inBuildDataCount = p_InDataLCol->get_count_values();
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();
@@ -154,7 +154,7 @@ namespace morphstore {
          base_t const p_InPositionIn,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          vector_t positionVector = set_sequence<VectorExtension, vector_base_t_granularity::value>(p_InPositionIn,1);
          vector_t const incrementVector = set1<VectorExtension, vector_base_t_granularity::value>( vector_element_count::value);
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -184,7 +184,7 @@ namespace morphstore {
          base_t const p_InPositionIn,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          size_t resultCount = 0;
 
@@ -234,7 +234,7 @@ namespace morphstore {
          column< uncompr_f > const * const p_InDataRCol,
          size_t const outCountEstimate = 0
       ) {
-         using namespace vector;
+         using namespace vectorlib;
 
          const size_t inBuildDataCount = p_InDataLCol->get_count_values();
          const size_t inProbeDataCount = p_InDataRCol->get_count_values();

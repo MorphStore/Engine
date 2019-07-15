@@ -223,7 +223,7 @@ const std::tuple<
    const column<uncompr_f> *,
    const column<uncompr_f> *
 >
-   group<vector::avx2<vector::v256<uint64_t>>>(
+   group<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
    column<uncompr_f> const * const  inDataCol,
    size_t            const          outExtCountEstimate
 ) {
@@ -347,7 +347,7 @@ const std::tuple<
    const column<uncompr_f> *,
    const column<uncompr_f> *
 >
-group<vector::avx2<vector::v256<uint64_t>>>(
+group<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
    const column<uncompr_f> * const inGrCol,
    const column<uncompr_f> * const inDataCol,
    const size_t outExtCountEstimate

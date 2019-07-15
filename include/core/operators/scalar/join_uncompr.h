@@ -42,7 +42,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
+nested_loop_join<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -54,7 +54,7 @@ nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                vector::scalar<vector::v64<uint64_t>>,
+                vectorlib::scalar<vectorlib::v64<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(
@@ -99,7 +99,7 @@ nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
 
 template<>
 const column<uncompr_f> *
-left_semi_nto1_nested_loop_join<vector::scalar<vector::v64<uint64_t>>>(
+left_semi_nto1_nested_loop_join<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate

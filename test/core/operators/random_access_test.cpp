@@ -44,7 +44,7 @@
 #include <cstring>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 
 // ****************************************************************************

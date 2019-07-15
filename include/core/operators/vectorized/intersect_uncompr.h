@@ -29,7 +29,7 @@ namespace morphstore {
 
 template<>
 const column<uncompr_f> *
-intersect_sorted<vector::avx2<vector::v256<uint64_t>>>(
+intersect_sorted<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
         const column<uncompr_f> * const p_Data1,
         const column<uncompr_f> * const p_Data2,
         const size_t outPosCountEstimate

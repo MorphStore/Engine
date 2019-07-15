@@ -29,7 +29,7 @@
 
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 // A macro expanding to an initializer list for a variant.
 #define MAKE_VARIANT_CLASSICAL(ve1) \

@@ -70,7 +70,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 
 template<unsigned t_bw>
@@ -100,7 +100,7 @@ const column<static_vbp_f<t_bw, 1> > * select_handwritten_buffer_compr_out(
             outBuffer64[outBufferPos++] = i;
             if(outBufferPos == 64) {
                 const uint8_t * outBuffer8 = reinterpret_cast<const uint8_t *>(outBuffer64);
-                pack<vector::scalar<vector::v64<uint64_t>>, t_bw, 1>(outBuffer8, 64, outPos);
+                pack<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_bw, 1>(outBuffer8, 64, outPos);
                 outBufferPos = 0;
                 countMatches += 64;
             }

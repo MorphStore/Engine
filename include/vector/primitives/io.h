@@ -10,7 +10,7 @@
 
 #include <vector/vector_extension_structs.h>
 
-namespace vector {
+namespace vectorlib {
 
    enum class iov {
       ALIGNED,

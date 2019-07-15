@@ -77,7 +77,7 @@ namespace morphstore {
         static
         const column<t_f> *
         apply(const column<t_f> * inCol) {
-            return morph<vector::scalar<vector::v64<uint64_t>>, t_f, t_f>(
+            return morph<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_f, t_f>(
                     inCol
             );
         };
@@ -124,15 +124,15 @@ namespace morphstore {
             } \
         };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE            
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
 #endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_COMPR
@@ -161,15 +161,15 @@ namespace morphstore {
         } \
     };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE            
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
 #endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR
@@ -209,15 +209,15 @@ namespace morphstore {
             } \
         };
 
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE            
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
 #endif            
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR
@@ -250,15 +250,15 @@ namespace morphstore {
         } \
     };
 
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE                        
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
 #endif            
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR
