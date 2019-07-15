@@ -29,7 +29,7 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-merge_sorted<vector::avx2<vector::v256<uint64_t>>>(
+merge_sorted<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
         const column<uncompr_f> * const inPosLCol,
         const column<uncompr_f> * const inPosRCol
    

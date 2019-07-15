@@ -9,8 +9,11 @@
 #define MORPHSTORE_VECTOR_PRIMITIVES_IO_H
 
 #include <vector/vector_extension_structs.h>
+/**
+ * @todo: typename VectorExtension::vector_t should be a const reference!!!
+ */
 
-namespace vector {
+namespace vectorlib {
 
    enum class iov {
       ALIGNED,
@@ -43,7 +46,11 @@ namespace vector {
     */
    template<class VectorExtension, iov IOVariant, int IOGranularity>
    void
-   compressstore(typename VectorExtension::base_t * a,  typename VectorExtension::vector_t b, int c) {
+   compressstore(
+      typename VectorExtension::base_t * a,
+      typename VectorExtension::vector_t b,
+      typename VectorExtension::mask_t c
+   ) {
        io<VectorExtension, IOVariant, IOGranularity>::compressstore( a, b, c );
        return;
    }

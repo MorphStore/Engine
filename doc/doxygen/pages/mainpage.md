@@ -22,6 +22,7 @@ This section is designed to hand a plan to staff members and students, who never
 
 <div class="box-grid">
 <div class="BoxPink" style="grid-column: 1">
+<div class=symbol><br /><br />❶</div>
 <b>Getting started</b>
 <ul>
 <li>\ref Download and compile</li>
@@ -30,10 +31,12 @@ This section is designed to hand a plan to staff members and students, who never
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 2">
+<div class=symbol><br /><br />➚</div>
 <b>Vector Lib</b>
 <ul>
 <li>Using the \ref veclib - A short walk through</li>
 <li>\ref VectorPrimitives</li>
+<li>\ref primitiveTable - A table</li>
 <li>VectorLib w/o MorphStore</li>
 </ul>
 </div>
@@ -41,6 +44,7 @@ This section is designed to hand a plan to staff members and students, who never
 <b></b>
 </div>
 <div class="BoxPink" style="grid-column: 2">
+<div class=symbol><br />✎</div>
 <b>Writing Queries</b>
 <ul>
 <li>Hello World!</li>

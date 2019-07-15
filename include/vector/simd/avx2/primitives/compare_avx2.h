@@ -22,7 +22,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
    template<>
    struct equal<avx2<v256<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

@@ -44,12 +44,17 @@
 // @todo The following includes should not be necessary.
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/io_scalar.h>
+#ifdef SSE
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
+#include <immintrin.h>
+#endif
+#ifdef AVXTWO
 #include <vector/simd/avx2/primitives/compare_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
+#endif
 
-#include <immintrin.h>
+
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -339,7 +344,7 @@ namespace morphstore {
         static const unsigned m_ShiftDivBaseBits = effective_bitwidth(std::numeric_limits<base_t>::digits - 1);
         
         // @todo It would be nice if these were const, but this is currently
-        // not possible, because vector::set1 cannot be used as a constant
+        // not possible, because vectorlib::set1 cannot be used as a constant
         // expression.
         static vector_t m_BaseBitsVec;
         static vector_t m_Mask4ModStep;
@@ -355,7 +360,7 @@ namespace morphstore {
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         vector_t get(const vector_t & p_Positions) {
-            using namespace vector;
+            using namespace vectorlib;
             
             const vector_t elemIdxInVec = bitwise_and<t_ve>(
                     p_Positions, m_Mask4ModStep
@@ -372,7 +377,7 @@ namespace morphstore {
                     elemIdxInVec
             );
             
-            vector_t res = vector::gather<
+            vector_t res = vectorlib::gather<
                     t_ve, iov::UNALIGNED, vector_base_t_granularity::value
             >(m_Data, baseIdxs);
             
@@ -387,7 +392,7 @@ namespace morphstore {
             const vector_t shiftUpper = sub<t_ve>::apply(
                     m_BaseBitsVec, bitPosInElem
             );
-            const vector_t gatherUpper = vector::gather<
+            const vector_t gatherUpper = vectorlib::gather<
                     t_ve,
                     iov::UNALIGNED,
                     vector_base_t_granularity::value
@@ -406,42 +411,42 @@ namespace morphstore {
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_BaseBitsVec = vector::set1<
+    >::m_BaseBitsVec = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(std::numeric_limits<typename t_ve::base_t>::digits);
 
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_Mask4ModStep = vector::set1<
+    >::m_Mask4ModStep = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(t_step - 1);
 
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_MaskModBaseBits = vector::set1<
+    >::m_MaskModBaseBits = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(std::numeric_limits<typename t_ve::base_t>::digits - 1);
 
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_BwVec = vector::set1<
+    >::m_BwVec = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(t_bw);
 
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_StepVec = vector::set1<
+    >::m_StepVec = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(t_step);
     
     template<class t_ve, unsigned t_bw, unsigned t_step>
     typename t_ve::vector_t random_read_access<
             t_ve, static_vbp_f<t_bw, t_step>
-    >::m_MaskDecompr = vector::set1<
+    >::m_MaskDecompr = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
     >(bitwidth_max<typename t_ve::base_t>(t_bw));
     
@@ -498,9 +503,9 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
-            vector::compressstore<
+            vectorlib::compressstore<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
             m_Buffer += p_MaskPopCount;
@@ -514,7 +519,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
         

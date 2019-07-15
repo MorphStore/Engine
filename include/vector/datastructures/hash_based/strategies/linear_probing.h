@@ -16,7 +16,7 @@
 #include <utility>
 
 
-namespace vector {
+namespace vectorlib {
 
    /**
     * @brief Linear Probe Strategy for hash based data structures.
@@ -24,7 +24,7 @@ namespace vector {
     * @tparam VectorExtension Vector extension which is used for probing.
     * @tparam BiggestSupportedVectorExtension Biggest vector extension the linear search should be able to work with.
     * @tparam HashFunction Struct which provides an static apply function to hash a vector register (VectorExtension::vector_t).
-    * @tparam SPH Size policy which is needed for vector::index_resizer
+    * @tparam SPH Size policy which is needed for vectorlib::index_resizer
     * (either size_policy_hash::ARBITRARY or size_policy_hash::EXPONENTIAL).
     */
    template<

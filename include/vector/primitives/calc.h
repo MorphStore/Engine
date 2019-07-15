@@ -16,7 +16,7 @@
 
 #include <vector/vector_extension_structs.h>
 
-namespace vector{
+namespace vectorlib{
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    struct add {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

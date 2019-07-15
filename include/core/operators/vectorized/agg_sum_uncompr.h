@@ -27,7 +27,7 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-agg_sum<vector::sse<vector::v128<uint64_t>>>(
+agg_sum<vectorlib::sse<vectorlib::v128<uint64_t>>>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 
@@ -68,7 +68,7 @@ agg_sum<vector::sse<vector::v128<uint64_t>>>(
 
 template<>
 const column<uncompr_f> *
-agg_sum<vector::avx2<vector::v256<uint64_t>>>(
+agg_sum<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 

@@ -89,7 +89,7 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_with_project(
 // Generic w.r.t. the step width. Hopefully the compiler unrolls the loops.
 template<unsigned t_bw, unsigned t_step>
 struct unpack_with_project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         t_bw,
         t_step
 > {
@@ -184,7 +184,7 @@ struct project_t<
 #if 1
 template<>
 struct project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<32, sizeof(__m128i) / sizeof(uint64_t)>
@@ -252,7 +252,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<16, sizeof(__m128i) / sizeof(uint64_t)>
@@ -320,7 +320,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
@@ -388,7 +388,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<4, sizeof(__m128i) / sizeof(uint64_t)>
@@ -428,7 +428,7 @@ struct project_t<
     
 template<>
 struct project_t<
-        vector::scalar<vector::v64<uint64_t>>,
+        vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         static_vbp_f<2, sizeof(__m128i) / sizeof(uint64_t)>

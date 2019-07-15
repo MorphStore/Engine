@@ -36,7 +36,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
         ::for_variant_params<std::string,std::string>
@@ -53,7 +53,9 @@ int main( void ) {
     //The following are the variants for the general_vectorized version
     const std::vector<varex_t::variant_t> variants = {
         MAKE_VARIANT(equal,scalar<v64<uint64_t>>),
+        #ifdef SSE
         MAKE_VARIANT(equal,sse<v128<uint64_t>>),
+        #endif
         #ifdef AVXTWO
         MAKE_VARIANT(equal,avx2<v256<uint64_t>>),
         #endif

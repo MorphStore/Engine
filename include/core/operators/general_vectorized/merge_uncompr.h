@@ -31,7 +31,7 @@
 
 namespace morphstore {
    
-using namespace vector;
+using namespace vectorlib;
    template<class VectorExtension>
    struct merge_sorted_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -56,8 +56,8 @@ using namespace vector;
       ) {
          vector_mask_t resultMaskEqual    = 0;
          
-            resultMaskEqual         = vector::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
-            p_State.m_MaskGreater   = vector::greater<VectorExtension>::apply(p_Data1Vector, p_Data2Vector);// vec2<vec1?
+            resultMaskEqual         = vectorlib::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
+            p_State.m_MaskGreater   = vectorlib::greater<VectorExtension>::apply(p_Data1Vector, p_Data2Vector);// vec2<vec1?
             
       
          return resultMaskEqual;
@@ -97,9 +97,9 @@ using namespace vector;
          
          
         
-         vector_t data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
+         vector_t data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
          
-         vector_t data2Vector =vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_Data2Ptr);
+         vector_t data2Vector =vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_Data2Ptr);
          
         
          while(p_Data2Ptr < (endInPosR-vector_element_count::value) && p_Data1Ptr < endInPosL){
@@ -115,18 +115,18 @@ using namespace vector;
             
             if((p_State.m_MaskGreater) == 0) { 
                 if (resultMaskEqual == 0){
-                   *p_OutPtr = vector::extract_value<VectorExtension,vector_base_t_granularity::value>(data1Vector,0);
+                   *p_OutPtr = vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(data1Vector,0);
                     p_OutPtr++;
                 }
                 p_Data1Ptr ++;
-                data1Vector = vector::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
+                data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
             }else{
-                vector::compressstore<VectorExtension,vector::iov::UNALIGNED,vector_base_t_granularity::value>(p_OutPtr,data2Vector,p_State.m_MaskGreater);
+                vectorlib::compressstore<VectorExtension,vectorlib::iov::UNALIGNED,vector_base_t_granularity::value>(p_OutPtr,data2Vector,p_State.m_MaskGreater);
                 //p_Data2Ptr += __builtin_popcountl(p_State.m_MaskGreater); 
                 //p_OutPtr += __builtin_popcountl(p_State.m_MaskGreater);
-                p_Data2Ptr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskGreater); 
-                p_OutPtr += vector::count_matches<VectorExtension>::apply(p_State.m_MaskGreater);
-                data2Vector = vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
+                p_Data2Ptr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskGreater); 
+                p_OutPtr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskGreater);
+                data2Vector = vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
                               
             }
          }
@@ -153,8 +153,8 @@ using namespace vector;
          
          
         while (p_Data1Ptr < (endInPosL-vector_element_count::value) ){
-            data1Vector=vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_Data1Ptr);
-            vector::store<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr,data1Vector);
+            data1Vector=vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_Data1Ptr);
+            vectorlib::store<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr,data1Vector);
             p_OutPtr+=vector_element_count::value;
             p_Data1Ptr+=vector_element_count::value;
                    
@@ -162,8 +162,8 @@ using namespace vector;
             
         while (p_Data2Ptr < (endInPosR-vector_element_count::value) ){
             
-            data2Vector=vector::load<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
-            vector::store<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr,data2Vector);
+            data2Vector=vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
+            vectorlib::store<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr,data2Vector);
 
             p_Data2Ptr+=vector_element_count::value;
             p_OutPtr+=vector_element_count::value;

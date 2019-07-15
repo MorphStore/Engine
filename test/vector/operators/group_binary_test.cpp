@@ -63,7 +63,7 @@
 int main( void ) {
 
    using namespace morphstore;
-   using namespace vector;
+   using namespace vectorlib;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
    const column <uncompr_f> *testDataColumnSorted1 = generate_with_distr(
       TEST_DATA_COUNT,

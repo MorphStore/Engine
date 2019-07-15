@@ -21,7 +21,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
     template<typename T>
     struct manipulate<sse<v128<T>>, 64> {
         

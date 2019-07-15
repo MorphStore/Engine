@@ -12,14 +12,14 @@
 
 namespace morphstore {
 
-   using namespace vector;
+   using namespace vectorlib;
    
    /*template<class VectorExtension>
    const column<uncompr_f> *
       agg_sum(
       column< uncompr_f > const * const p_DataColumn
    ) {
-      using namespace vector;
+      using namespace vectorlib;
 
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
@@ -55,9 +55,9 @@ namespace morphstore {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
          vector_t resultVec;
-         state_t(void): resultVec( vector::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) ) { }
+         state_t(void): resultVec( vectorlib::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) ) { }
          //state_t(vector_t const & p_Data): resultVec( p_Data ) { }
-         state_t(base_t p_Data): resultVec(vector::set1<scalar<v64<uint64_t>>,64>(p_Data)){}
+         state_t(base_t p_Data): resultVec(vectorlib::set1<scalar<v64<uint64_t>>,64>(p_Data)){}
          //TODO replace by set
       };
       
@@ -65,7 +65,7 @@ namespace morphstore {
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
-         p_State.resultVec = vector::add<VectorExtension, vector_base_t_granularity::value>::apply(
+         p_State.resultVec = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(
             p_State.resultVec, p_DataVector
          );
       }
@@ -73,7 +73,7 @@ namespace morphstore {
          typename agg_sum_processing_unit<VectorExtension>::state_t & p_State
       ) {
           
-         return vector::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
+         return vectorlib::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
 
@@ -88,7 +88,7 @@ namespace morphstore {
          typename agg_sum_processing_unit<VectorExtension>::state_t &p_State
       ) {
          for(size_t i = 0; i < p_Count; ++i) {
-            vector_t dataVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
+            vector_t dataVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
             agg_sum_processing_unit<VectorExtension>::apply(
                dataVector,
                p_State

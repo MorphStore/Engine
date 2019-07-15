@@ -34,8 +34,7 @@
 
 #include <functional>
 
-namespace vector{
-   //SIMDI ADDITION
+namespace vectorlib{
    template<>
    struct add<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

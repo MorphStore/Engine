@@ -26,7 +26,7 @@
 #include <tuple>
 
 namespace morphstore {
-   using namespace vector;
+   using namespace vectorlib;
    template<
       class VectorExtension,
       class DataStructure
@@ -42,7 +42,7 @@ namespace morphstore {
          base_t & p_GroupIdIn,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          base_t groupId = 0;
          size_t result = 0;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -81,7 +81,7 @@ namespace morphstore {
          base_t & p_GroupIdIn,
          DataStructure & hs
       ) {
-         using namespace vector;
+         using namespace vectorlib;
          base_t groupId = 0;
          size_t result = 0;
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
@@ -129,7 +129,7 @@ namespace morphstore {
          column<uncompr_f> const * const  p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
-         using namespace vector;
+         using namespace vectorlib;
 
          const size_t inDataCount = p_InDataCol->get_count_values();
          const size_t inDataSize = p_InDataCol->get_size_used_byte();
@@ -187,7 +187,7 @@ namespace morphstore {
          column<uncompr_f> const * const p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
-         using namespace vector;
+         using namespace vectorlib;
 
          const size_t inDataCount = p_InDataCol->get_count_values();
          const size_t inDataSize = p_InDataCol->get_size_used_byte();

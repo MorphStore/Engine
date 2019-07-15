@@ -38,7 +38,7 @@
 #include <random>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 // ****************************************************************************
 // * Example query

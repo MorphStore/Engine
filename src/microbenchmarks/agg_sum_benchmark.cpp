@@ -74,7 +74,7 @@
 int main(void) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
     // @todo This should not be necessary.
     //fail_if_self_managed_memory();
     

@@ -47,7 +47,7 @@
 #include <vector/simd/avx2/primitives/extract_avx2.h>
 #endif
 
-
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
@@ -56,6 +56,7 @@
 #include <vector/simd/sse/primitives/logic_sse.h>
 #include <vector/simd/sse/primitives/manipulate_sse.h>
 #include <vector/simd/sse/primitives/extract_sse.h>
+#endif
 
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
@@ -86,7 +87,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     using varex_t = variant_executor_helper<1, 2>::type
         ::for_variant_params<std::string>

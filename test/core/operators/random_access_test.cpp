@@ -44,7 +44,7 @@
 #include <cstring>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 
 // ****************************************************************************
@@ -118,6 +118,7 @@ const column<uncompr_f> * simple_project(
     STR_EVAL_MACROS(in_data_f), \
 }
 
+#ifdef AVXTWO
 #define MAKE_VARIANTS(bw) \
     { \
         new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<uncompr_f, uncompr_f>( \
@@ -127,11 +128,26 @@ const column<uncompr_f> * simple_project(
         "copy", \
     }, \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \    
     MAKE_VARIANT(sse   <v128<uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(avx2  <v256<uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
     MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 2>)), \
+    MAKE_VARIANT(avx2  <v256<uint64_t>>, uncompr_f), \
     MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 4>))
+#else
+    #define MAKE_VARIANTS(bw) \
+    { \
+        new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<uncompr_f, uncompr_f>( \
+            &copy \
+        ), \
+        "copy", \
+        "copy", \
+    }, \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>))  
+#endif
+ 
+    
+    
 
 
 // ****************************************************************************

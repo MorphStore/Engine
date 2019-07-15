@@ -126,7 +126,22 @@ column<OutFormatRCol> const *
    column<InFormatLCol> const *const p_InDataLCol,
    column<InFormatRCol> const *const p_InDataRCol,
    size_t const outCountEstimate = 0
-);
+) {
+   return natural_equi_join_t<
+      VectorExtension,
+      vectorlib::hash_map<
+         VectorExtension,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
+         60
+      >,
+      OutFormatLCol,
+      OutFormatRCol,
+      InFormatLCol,
+      InFormatRCol
+   >::apply(p_InDataLCol,p_InDataRCol,outCountEstimate);
+}
 
 template<
    class VectorExtension,
@@ -139,7 +154,21 @@ semi_join(
    column<InFormatLCol> const *const p_InDataLCol,
    column<InFormatRCol> const *const p_InDataRCol,
    size_t const outCountEstimate = 0
-);
+) {
+   return semi_equi_join_t<
+      VectorExtension,
+      vectorlib::hash_set<
+         VectorExtension,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
+         60
+      >,
+      OutFormatCol,
+      InFormatLCol,
+      InFormatRCol
+   >::apply(p_InDataLCol,p_InDataRCol, outCountEstimate);
+}
 
 
 

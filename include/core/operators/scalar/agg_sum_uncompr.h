@@ -42,7 +42,7 @@ namespace morphstore {
 
 template<>
 const column<uncompr_f> *
-agg_sum<vector::scalar<vector::v64<uint64_t>>>(
+agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol
 ) {
     const size_t inDataCount = inDataCol->get_count_values();
@@ -63,7 +63,7 @@ agg_sum<vector::scalar<vector::v64<uint64_t>>>(
 
 template<>
 const column<uncompr_f> *
-agg_sum<vector::scalar<vector::v64<uint64_t>>>(
+agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         size_t inExtCount

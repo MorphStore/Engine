@@ -16,7 +16,7 @@
 
 #include <vector/vector_extension_structs.h>
 
-namespace vector{
+namespace vectorlib{
     
    
    template<class VectorExtension, int IOGranularity>

@@ -16,7 +16,7 @@
 #include <functional>
 
 
-namespace vector {
+namespace vectorlib {
 
 
    template<typename T, int IOGranularity>
