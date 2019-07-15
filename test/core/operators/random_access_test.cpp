@@ -143,7 +143,7 @@ const column<uncompr_f> * simple_project(
         "copy", \
     }, \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \  
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>))  
 #endif
  
     
