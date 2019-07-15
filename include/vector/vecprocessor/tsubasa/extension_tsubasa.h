@@ -22,7 +22,7 @@ namespace vector {
    struct aurora< v16k< T > > {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       static_assert(sizeof(T) == 8, )
-      using vector_helper_t = v128<T>;
+      using vector_helper_t = v16k<T>;
 
       using vector_t =
       typename std::conditional<
