@@ -22,8 +22,6 @@
 
 #include <functional>
 
-namespace vector {
-
    /** @todo: set should be look like that:
     * template< typename... Ts >
     * struct static_and : std::true_type { };
@@ -42,7 +40,8 @@ namespace vector {
     *    return _mm_set_epi32( std::forward< Args >( args ) ... );
     * }
     */
-    
+namespace vectorlib {
+
    template<typename T>
    struct create<sse<v128<T>>,64> {
        

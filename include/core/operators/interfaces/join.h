@@ -175,11 +175,11 @@ join(
 ) {
    return natural_equi_join_t<
       VectorExtension,
-      vector::hash_map<
+      vectorlib::hash_map<
          VectorExtension,
-         vector::multiply_mod_hash,
-         vector::size_policy_hash::EXPONENTIAL,
-         vector::scalar_key_vectorized_linear_search,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
          60
       >,
       OutFormatLCol,
@@ -204,11 +204,11 @@ semi_join(
 ) {
    return semi_equi_join_t<
       VectorExtension,
-      vector::hash_set<
+      vectorlib::hash_set<
          VectorExtension,
-         vector::multiply_mod_hash,
-         vector::size_policy_hash::EXPONENTIAL,
-         vector::scalar_key_vectorized_linear_search,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
          60
       >,
       OutFormatCol,

@@ -34,7 +34,7 @@
 
 int main( void ) {
    using namespace morphstore;
-   using namespace vector;
+   using namespace vectorlib;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,5,1);

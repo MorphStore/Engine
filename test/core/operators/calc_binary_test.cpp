@@ -34,7 +34,7 @@
 #include <functional>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 int main(void) {
     const bool allGood = test_op_2in_1out(

@@ -21,7 +21,7 @@
 
 #include <functional>
 
-namespace vector {
+namespace vectorlib {
   
    template<typename T, int IOGranularity>
    struct io<avx512<v512<T>>,iov::ALIGNED, IOGranularity> {

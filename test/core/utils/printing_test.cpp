@@ -36,7 +36,7 @@
 #include <unordered_map>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 /**
  * A small example usage of print_columns.

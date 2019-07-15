@@ -66,7 +66,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 #define MAKE_VARIANT(ve, in_pos_f) \
 { \

@@ -39,18 +39,25 @@
 // @todo The following includes should not be necessary.
 #include <vector/scalar/primitives/io_scalar.h>
 #include <vector/scalar/primitives/logic_scalar.h>
+#ifdef AVXTWO 
 #include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/logic_avx2.h>
-//#include <vector/simd/avx512/primitives/create_avx512.h>
-//#include <vector/simd/avx512/primitives/io_avx512.h>
-//#include <vector/simd/avx512/primitives/logic_avx512.h>
+#endif
+#ifdef AVX512
+#include <vector/simd/avx512/primitives/create_avx512.h>
+#include <vector/simd/avx512/primitives/io_avx512.h>
+#include <vector/simd/avx512/primitives/logic_avx512.h>
+#endif
+#ifdef SSE
+#include <immintrin.h>
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
-#include <immintrin.h>
+
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -139,7 +146,7 @@ namespace morphstore {
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
             
-            using namespace vector;
+            using namespace vectorlib;
             
             vector_t pseudoMaxVec = set1<
                     t_ve, vector_base_t_granularity::value
@@ -156,7 +163,7 @@ namespace morphstore {
                         )
                 );
 
-            // @todo Use vector::hor-primitive when it exists.
+            // @todo Use vectorlib::hor-primitive when it exists.
             MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value)
             base_t tmp[vector_element_count::value];
             store<t_ve, iov::ALIGNED, vector_size_bit::value>(
@@ -201,7 +208,7 @@ namespace morphstore {
         static
         const column<out_f> *
         apply(const column<in_f> * inCol) {
-            using namespace vector;
+            using namespace vectorlib;
             
             const size_t countLog = inCol->get_count_values();
             const size_t outCountLogCompr = round_down_to_multiple(
@@ -530,9 +537,9 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
-            vector::compressstore<
+            vectorlib::compressstore<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
             m_Buffer += p_MaskPopCount;
@@ -546,7 +553,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
 

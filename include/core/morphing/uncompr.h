@@ -73,9 +73,9 @@ namespace morphstore {
 
             for(size_t i = 0; i < countInBase; i += vector_element_count::value)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
-                        vector::load<
+                        vectorlib::load<
                                 t_ve,
-                                vector::iov::ALIGNED,
+                                vectorlib::iov::ALIGNED,
                                 vector_base_t_granularity::value
                         >(inBase + i),
                         p_State
@@ -103,9 +103,9 @@ namespace morphstore {
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         vector_t get(const vector_t & p_Positions) {
-            return vector::gather<
+            return vectorlib::gather<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_Data, p_Positions);
         }
@@ -134,9 +134,9 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
-            vector::compressstore<
+            vectorlib::compressstore<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_OutBase, p_Data, p_Mask);
             m_OutBase += p_MaskPopCount;
@@ -148,7 +148,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
 

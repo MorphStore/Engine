@@ -34,7 +34,7 @@ namespace morphstore {
 template<template<typename> class t_unary_op>
 struct calc_unary_t<
         t_unary_op,
-        vector::avx2<vector::v256<uint64_t>>,
+        vectorlib::avx2<vectorlib::v256<uint64_t>>,
         uncompr_f,
         uncompr_f
 > {
@@ -74,7 +74,7 @@ struct calc_unary_t<
     
 template<template<typename> class t_binary_op>
 struct calc_binary_t<
-        t_binary_op, vector::avx2<vector::v256<uint64_t>>,
+        t_binary_op, vectorlib::avx2<vectorlib::v256<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f

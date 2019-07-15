@@ -39,7 +39,10 @@
 #include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
+#ifdef SSE
 #include <immintrin.h>
+#endif
+
 #include <limits>
 
 /**
@@ -171,13 +174,13 @@ namespace morphstore {
                 outBase = p_OutBase;
                 // @todo Maybe we don't need this.
                 bitpos = 0;
-                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
             }
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static void pack_block(state_t & s) {
-            using namespace vector;
+            using namespace vectorlib;
             if(t_CycleLen > 1) {
                 pack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
                 pack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
@@ -388,7 +391,7 @@ namespace morphstore {
         // @todo It would be nice to initialize this in-class. However, the
         // compiler complains because set1 is not constexpr, even when it is
         // defined so.
-        static const vector_t mask; // = vector::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
         
         struct state_t {
             const base_t * inBase;
@@ -400,16 +403,16 @@ namespace morphstore {
             state_t(const base_t * p_InBase, base_t * p_OutBase) {
                 inBase = p_InBase;
                 outBase = p_OutBase;
-                nextOut = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                nextOut = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
                 // @todo Maybe we don't need this.
                 bitpos = 0;
-                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
             }
         };
         
         template<unsigned t_CycleLen, unsigned t_PosInCycle>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_block(state_t & s) {
-            using namespace vector;
+            using namespace vectorlib;
             
             if(t_CycleLen > 1) {
                 unpack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
@@ -470,7 +473,7 @@ namespace morphstore {
             t_vector_extension,
             t_bw,
             t_vector_extension::vector_helper_t::element_count::value
-    >::mask = vector::set1<
+    >::mask = vectorlib::set1<
             t_vector_extension,
             t_vector_extension::vector_helper_t::granularity::value
     >(
@@ -657,7 +660,7 @@ namespace morphstore {
         // @todo It would be nice to initialize this in-class. However, the
         // compiler complains because set1 is not constexpr, even when it is
         // defined so.
-        static const vector_t mask; // = vector::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
         
         struct state_t {
             const base_t * inBase;
@@ -667,10 +670,10 @@ namespace morphstore {
             
             state_t(const base_t * p_InBase) {
                 inBase = p_InBase;
-                nextOut = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                nextOut = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
                 // @todo Maybe we don't need this.
                 bitpos = 0;
-                tmp = vector::set1<t_ve, vector_base_t_granularity::value>(0);
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
             }
         };
         
@@ -679,7 +682,7 @@ namespace morphstore {
                 state_t & s,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
         ) {
-            using namespace vector;
+            using namespace vectorlib;
             
             if(t_CycleLen > 1) {
                 unpack_and_process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
@@ -741,7 +744,7 @@ namespace morphstore {
             t_vector_extension::vector_helper_t::element_count::value,
             t_op_vector,
             t_extra_args ...
-    >::mask = vector::set1<
+    >::mask = vectorlib::set1<
             t_vector_extension,
             t_vector_extension::vector_helper_t::granularity::value
     >(

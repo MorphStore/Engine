@@ -22,7 +22,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
     template<typename T>
     struct manipulate<scalar<v64<T>>, 64> {
         

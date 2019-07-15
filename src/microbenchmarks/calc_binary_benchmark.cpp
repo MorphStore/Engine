@@ -20,12 +20,13 @@
 #include <vector/scalar/primitives/create_scalar.h>
 #include <vector/scalar/primitives/logic_scalar.h>
 
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
-
+#endif
 
 #ifdef AVXTWO
 #include <vector/simd/avx2/extension_avx2.h>
@@ -66,7 +67,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     //using varex_t = variant_executor_helper<1, 2, const size_t>::type
     using varex_t = variant_executor_helper<1, 2>::type
@@ -101,7 +102,9 @@ int main( void ) {
     
     const std::vector<varex_t::variant_t> variants_minus = {
         MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
+        #ifdef SSE
         MAKE_VARIANT(sub,sse<v128<uint64_t>>),
+        #endif
         #ifdef AVXTWO
         MAKE_VARIANT(sub,avx2<v256<uint64_t>>),
         #endif
@@ -112,7 +115,9 @@ int main( void ) {
         
     const std::vector<varex_t::variant_t> variants_plus = {
         MAKE_VARIANT(add,scalar<v64<uint64_t>>),
+        #ifdef SSE
         MAKE_VARIANT(add,sse<v128<uint64_t>>),
+        #endif
         #ifdef AVXTWO
         MAKE_VARIANT(add,avx2<v256<uint64_t>>),
         #endif

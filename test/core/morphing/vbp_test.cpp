@@ -51,11 +51,13 @@
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
 #include <iostream>
 #include <limits>
@@ -64,7 +66,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 
 // ****************************************************************************
@@ -79,14 +81,23 @@ using namespace vector;
     STR_EVAL_MACROS(format), \
 }
 
+#ifdef AVXTWO
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
-    MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 2>)), \
-    MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 4>)), \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64 , 8 , 1>)), \
+    MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 2>)), \
     MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)), \
+    MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 4>)), \
     MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>))
+#else
+#define MAKE_VARIANTS(bw) \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64 , 8 , 1>)), \
+#endif    
+    
+    
 
 
 // ****************************************************************************

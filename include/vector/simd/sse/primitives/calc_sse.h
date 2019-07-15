@@ -21,7 +21,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
 
    template<>
    struct add<sse<v128<uint64_t>>/*, 64*/> {

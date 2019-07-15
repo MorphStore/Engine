@@ -12,7 +12,8 @@
 /**
  * @todo: typename VectorExtension::vector_t should be a const reference!!!
  */
-namespace vector {
+
+namespace vectorlib {
 
    enum class iov {
       ALIGNED,

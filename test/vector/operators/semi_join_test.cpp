@@ -49,7 +49,7 @@
 
 int main( void ) {
 
-   using namespace vector;
+   using namespace vectorlib;
    using namespace morphstore;
 
    size_t const dataCount = 131;
