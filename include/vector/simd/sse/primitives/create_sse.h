@@ -23,7 +23,25 @@
 #include <functional>
 
 namespace vector {
-    
+
+   /** @todo: set should be look like that:
+    * template< typename... Ts >
+    * struct static_and : std::true_type { };
+    * template< typename T, typename... Ts >
+    * struct static_and< T, Ts... > :
+    *    std::conditional< T::value, static_and< Ts... >, std::false_type >::type{};
+    *
+    * template< typename T, typename... Ts >
+    * using static_all_T = static_and< std::is_same< Ts, T > ... >;
+    *
+    *
+    * template< typename... Args >
+    * __m128i f(Args... args ) {
+    *    static_assert( static_all_T< int, Args... >::value, "");
+    *    static_assert( sizeof...(Args) * sizeof( int ) == sizeof( __m128i ), "Too few or too many arguments provided." );
+    *    return _mm_set_epi32( std::forward< Args >( args ) ... );
+    * }
+    */
     
    template<typename T>
    struct create<sse<v128<T>>,64> {
