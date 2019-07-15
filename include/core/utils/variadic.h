@@ -29,6 +29,7 @@
 #include <tuple>
 #include <functional>
 #include <core/utils/preprocessor.h>
+#include <core/utils/helper_types.h>
 
     
 #define STATIC_ASSERT_PARAMPACK_SAMESIZE(pack1, pack2) \
@@ -95,6 +96,26 @@ namespace morphstore {
    constexpr
    typename std::enable_if< I == std::tuple_size<Tuple>::value, void >::type
    static_for_each(const Tuple& MSV_CXX_ATTRIBUTE_PPUNUSED p_Tuple, Func&& MSV_CXX_ATTRIBUTE_PPUNUSED p_Func){}
-    
+
+
+   template< int Alignment, typename T, T... Ns >
+   constexpr auto create_sequence_array( T const start, T const stepwidth, std::integer_sequence< T, Ns... > ) -> aligned_array< Alignment, T, sizeof...(Ns) > {
+      return {( Ns * stepwidth + start )...};
+   }
+
+   template< int Alignment, typename T, T N >
+   constexpr auto static_sequence_array( T const start = 0, T const stepwidth = 1 ) noexcept {
+      return create_sequence_array<Alignment, T >( start, stepwidth, std::make_integer_sequence< T, N >{} );
+   }
+
+   template< typename... Ts >
+   struct static_and : std::tru_type { };
+   template< typename T, typename... Ts >
+   struct static_and< T, Ts... > :
+      std::conditional< T::value, static_and< Ts... >, std::false_type >::type{ };
+   template< typename T, typename... Ts >
+   using static_all_T = static_and< std::is_same< Ts, T >... >;
+
+
 }
 #endif //MORPHSTORE_CORE_UTILS_VARIADIC_H
