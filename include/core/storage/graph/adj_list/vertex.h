@@ -21,8 +21,8 @@
  * @todo
 */
 
-#ifndef MORPHSTORE_VERTEX_H
-#define MORPHSTORE_VERTEX_H
+#ifndef MORPHSTORE_VERTEX_ADJACENCY_LIST_H
+#define MORPHSTORE_VERTEX_ADJACENCY_LIST_H
 
 #include <vector>
 #include <iostream>
@@ -144,4 +144,4 @@ namespace morphstore{
     };
 }
 
-#endif //MORPHSTORE_VERTEX_H
+#endif //MORPHSTORE_VERTEX_ADJACENCY_LIST_H

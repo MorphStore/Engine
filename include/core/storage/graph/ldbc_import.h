@@ -214,7 +214,7 @@ namespace morphstore{
 
 
         // this function reads the relation-files and generates edges in graph
-        void generate_edges(morphstore::Graph& graph){
+        void generate_edges(morphstore::Graph &graph){
 
             if(!relationsPaths.empty()) {
                 //std::cout << "(2/2) Generating LDBC-Edges ...";

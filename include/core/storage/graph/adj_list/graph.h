@@ -21,19 +21,21 @@
  * @todo
  */
 
-#ifndef MORPHSTORE_GRAPH_H
-#define MORPHSTORE_GRAPH_H
+#ifndef MORPHSTORE_GRAPH_ADJACENCY_LIST_H
+#define MORPHSTORE_GRAPH_ADJACENCY_LIST_H
 
 #include <core/storage/graph/adj_list/vertex.h>
+#include <core/storage/graph/graph_abstract.h>
 
 #include <unordered_map>
 #include <vector>
 #include <iostream>
+#include <string>
 
 
 namespace morphstore{
 
-    class Graph{
+    class AdjacencyList: public morphstore::Graph{
 
     private:
         // main data structure: mapping global id -> vertex
@@ -41,6 +43,10 @@ namespace morphstore{
         std::unordered_map<uint64_t, Vertex> vertices;
 
     public:
+
+        std::string getStorageFormat(){
+            return "AdjacencyList";
+        }
 
         // calculate the graph size in bytes
         size_t get_size_of_graph(){
@@ -151,4 +157,4 @@ namespace morphstore{
 
 }
 
-#endif //MORPHSTORE_GRAPH_H
+#endif //MORPHSTORE_GRAPH_ADJACENCY_LIST_H
