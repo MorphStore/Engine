@@ -20,7 +20,8 @@ namespace vectorlib {
          typename aurora< v16k< T > >::vector_t const & p_Vec1,
          typename aurora< v16k< T > >::vector_t const & p_Vec2
       ) {
-         trace( "[VECTOR] - Add 64 bit integer values from two registers (tsubasa)" );
+         _ve_lvl(256);
+         trace( "[VECTOR] - Add 64 bit integer values from two registers. (aurora tsubasa)" );
          return _ve_vaddul_vvv( p_Vec1, p_Vec2 );
       }
    };

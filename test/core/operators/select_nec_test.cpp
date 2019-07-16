@@ -18,12 +18,13 @@
 
 #include <core/operators/general_vectorized/select_uncompr.h>
 
-#define TEST_DATA_COUNT 256000
+#define TEST_DATA_COUNT 512
 
 int main( void ) {
    using namespace morphstore;
    using namespace vectorlib;
    std::cout << "Generating..." << std::flush;
+
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,9,1);
 
@@ -36,6 +37,15 @@ int main( void ) {
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8);
 
+//   print_columns(
+//      print_buffer_base::decimal,
+//      testDataColumnSorted,
+//      result,
+//      result1,
+//      "data",
+//      "result X64-Scalar",
+//      "result Tsubasa"
+//   );
 
    return allGood;
 }
