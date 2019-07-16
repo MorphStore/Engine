@@ -35,6 +35,8 @@
 
 namespace morphstore{
 
+    static const std::string storageFormat = "AdjacencyList";
+
     class AdjacencyList: public morphstore::Graph{
 
     private:
@@ -45,7 +47,7 @@ namespace morphstore{
     public:
 
         std::string getStorageFormat(){
-            return "AdjacencyList";
+            return storageFormat;
         }
 
         // calculate the graph size in bytes

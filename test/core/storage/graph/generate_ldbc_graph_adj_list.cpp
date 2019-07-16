@@ -33,12 +33,13 @@ int main( void ){
 
     morphstore::LDBC_Import ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::AdjacencyList socialGraph;
-    morphstore::Graph *g;
-    g = &socialGraph;
+    // create abstract pointer to adjc_list (ldbc importer just has to handle with one input class and not adjcancyList, CSR, ....)
+    morphstore::Graph *graph;
+    graph = &socialGraph;
 
 
     // generate vertices & edges from LDBC files and insert into socialGraph
-    ldbcImport.import(*g);
+    ldbcImport.import(*graph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
