@@ -153,7 +153,8 @@ struct print_buffer_info {
     print_buffer_info( print_buffer_info const & ) = default;
     print_buffer_info( print_buffer_info && ) = default;
     print_buffer_info & operator=( print_buffer_info const & ) = delete;
-    print_buffer_info & operator=( print_buffer_info && ) = default;
+    // @todo: a const reference shall not be moved. thus the mv assignment should be deleted (implicitly)
+    print_buffer_info & operator=( print_buffer_info && ) = delete/*default*/;
 };
 
 /**
