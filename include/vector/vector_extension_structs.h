@@ -22,6 +22,7 @@
 #    include <vector/simd/sse/extension_sse.h>
 #  endif
 
+#include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
 #include <vector/scalar/extension_scalar.h>
 
 namespace vectorlib{

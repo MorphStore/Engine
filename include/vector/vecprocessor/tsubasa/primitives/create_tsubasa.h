@@ -13,7 +13,7 @@
 
 #include <functional>
 
-namespace vector {
+namespace vectorlib {
 
    template< typename T >
    struct create< aurora< v16k< T > >, 64 > {
@@ -21,42 +21,27 @@ namespace vector {
       template<
          typename U = T,
          typename std::enable_if<
-            ( std::is_integral< U >::value ) &&
-            ( sizeof( U ) == 8 ),
+            std::is_integral< U >::value,
             int
          >::type = 0
       >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename aurora< v16k< T > >::vector_t
       set1( T a ) {
-         _ve_vbrd_vs_i64( a );
+         return _ve_vbrd_vs_i64( a );
       }
 
+      //@todo: should be U instead of int
       template<
          typename U = T,
          typename std::enable_if<
-            ( std::is_integral< U >::value ) &&
-            ( sizeof( U ) == 4 ),
+            std::is_integral< U >::value,
             int
          >::type = 0
       >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename aurora< v16k< T > >::vector_t
-      set1( T a ) {
-         _ve_vbrdl_vs_i32( a );
-      }
-
-      template<
-         typename U = T,
-         typename std::enable_if<
-            ( typename std::enable_if< std::is_integral< U >::value ) &&
-            ( sizeof( U ) == 8 ),
-            int
-         >::type = 0
-      >
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename aurora< v16k< T > >::vector_t
-      set_sequence( U const p_Start, U const p_StepWidth) {
+      set_sequence( int p_Start, int p_StepWidth) {
          trace( "[VECTOR] - set_sequence tsubasa register." );
          return _ve_vld_vss(
             sizeof( T ),
@@ -65,7 +50,6 @@ namespace vector {
             ).data()
          );
       }
-
    };
 }
 

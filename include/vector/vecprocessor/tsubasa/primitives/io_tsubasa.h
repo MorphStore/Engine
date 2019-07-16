@@ -20,7 +20,7 @@ namespace vectorlib {
    template< typename T, int IOGranularity >
    struct io< aurora< v16k< T > >, iov::ALIGNED, IOGranularity > {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename aurora< v16k< U > >::vector_t
+      static typename aurora< v16k< T > >::vector_t
       load( T const * const p_DataPtr ) {
          trace( "[VECTOR] - \"Stream\" Load aligned integer values into 16k Bit Vector register. It's a normal load." );
          return _ve_vld_vss( sizeof( T ), p_DataPtr );

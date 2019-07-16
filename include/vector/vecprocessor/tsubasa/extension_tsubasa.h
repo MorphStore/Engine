@@ -10,7 +10,7 @@
 
 #include <cstdint>
 #include <type_traits>
-#include "immintrin.h"
+#include "veintrin.h"
 
 #include "vector/vector_extension_structs.h"
 
@@ -23,6 +23,7 @@ namespace vectorlib {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       static_assert(sizeof(T) == 8, "Only base type with a size of 8 Byte are supported right now." );
       using vector_helper_t = v16k<T>;
+      using base_t = typename vector_helper_t::base_t;
 
       using vector_t = __vr;
 

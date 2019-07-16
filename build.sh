@@ -53,14 +53,18 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
-        echo ""
+	echo ""
+    echo "architecture:"
+    echo "  -arch=[x86|nec]"
+    echo "       Set an architecture (default: x86)."
+    echo ""
 	echo "features:"
 	echo "	-avx512"
-	echo "	     Builds with avx512 and avx2 support"
+	echo "	     Builds with avx512 and avx2 support (only available on x86)"
 	echo "	-avxtwo"
-	echo "	     Builds with avx2 support"
-  echo "	-sse4"
-	echo "	     Builds with sse4.2 support"
+	echo "	     Builds with avx2 support (only available on x86)"
+    echo "	-sse4"
+	echo "	     Builds with sse4.2 support (only available on x86)"
 }
 
 buildType=""
@@ -86,6 +90,7 @@ testVectors="-DCTEST_VECTOR=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
+architecture="x86"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -200,7 +205,7 @@ case $key in
         avxtwo="-DCAVXTWO=True"
 	shift # past argument
 	;;
-  -sse4)
+    -sse4)
         sse4="-DCSSE=True"
 	shift # past argument
 	;;
@@ -209,6 +214,12 @@ case $key in
 	testVectors="-DCTEST_VECTOR=True"
 	shift # past argument
 	;;
+	-arch*)
+	    if [[ $key =~ "=" ]]; then
+	       architecture=${key#*=}
+	    fi
+    shift # past argument
+	 ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -249,7 +260,25 @@ else
 fi
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 -G "Unix Makefiles" ../
+
+if [ "$architecture" = "x86" ]; then
+    architectureFlag="-DCArchNative"
+    cmake -E chdir build/ \
+    cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
+    $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag -G "Unix Makefiles" ../
+elif [ "$architecture" = "nec" ]; then
+    avx512="-DCAVX512=False"
+    avxtwo="-DCAVXTWO=False"
+    sse4="-DCSSE=False"
+    cmake -E chdir build/ env \
+    CXXFLAGS="--target=ve-linux -fno-slp-vectorize -mllvm -llvm-loopvec=false -Xclang -load -Xclang libRV.so -mllvm -rv" \
+    cmake -D CMAKE_C_COMPILER=/opt/nec/ve/LLVM/llvm-ve-rv-1.1.2/bin/clang \
+    -D CMAKE_CXX_COMPILER=/opt/nec/ve/LLVM/llvm-ve-rv-1.1.2/bin/clang++ \
+    $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
+    $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 -G "Unix Makefiles" ../
+fi
+
+
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
