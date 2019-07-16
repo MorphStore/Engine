@@ -53,8 +53,10 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
-        echo ""
-	echo "features:"
+  echo "	-tQ|--testQueries"
+	echo "	     Runs CTest for example queries "
+	echo ""
+  echo "features:"
 	echo "	-avx512"
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
@@ -83,6 +85,7 @@ testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
+testQueries="-DCTEST_QUERIES=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
@@ -191,13 +194,18 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
+  -tQ|--testQueries)
+	runCtest=true
+	testQueries="-DCTEST_QUERIES=True"
+	shift # past argument
+	;;
 	-avx512)
 	avx512="-DCAVX512=True"
         avxtwo="-DCAVXTWO=True"
 	shift # past argument
 	;;
 	-avxtwo)
-        avxtwo="-DCAVXTWO=True"
+  avxtwo="-DCAVXTWO=True"
 	shift # past argument
 	;;
   -sse4)
@@ -242,7 +250,7 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo -DCSSE=True"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $testQueries $avx512 $avxtwo"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
