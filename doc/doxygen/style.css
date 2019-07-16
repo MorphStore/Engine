@@ -159,3 +159,10 @@
   height: 100%;
   text-align: center;
 }
+
+.howtoread{
+  border-style: dashed;
+  border-color: #00d2d3;
+  border-width: 2px 2px 2px 2px;
+  padding: 5px;
+}

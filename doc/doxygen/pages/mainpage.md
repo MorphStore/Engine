@@ -25,9 +25,9 @@ This section is designed to hand a plan to staff members and students, who never
 <div class=symbol><br /><br />❶</div>
 <b>Getting started</b>
 <ul>
-<li>\ref Download and compile</li>
-<li>\ref Test cases</li>
-<li>\ref Conceptual Overview</li>
+<li>\ref quickStart</li>
+<li>\ref testCases</li>
+<li>\ref overview</li>
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 2">
@@ -41,7 +41,12 @@ This section is designed to hand a plan to staff members and students, who never
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 1">
-<b></b>
+<div class=symbol><br />B</div>
+<b>Benchmarking</b>
+<ul>
+<li>\ref variantExecutor</li>
+<li>\ref Monitoring</li>
+</ul>
 </div>
 <div class="BoxPink" style="grid-column: 2">
 <div class=symbol><br />✎</div>
@@ -54,12 +59,14 @@ This section is designed to hand a plan to staff members and students, who never
 
 </div>
 
-Each section/tutorial is roughly divided into 3 parts:
+<div class=howtoread>
+<b>How to read our Tutorials</b><br /><br />
+Sections/tutorials describe one or more of the following aspects:
 - **Usage:** How can the described feature be used by the end-user (i.e. the one writing a query)
 - **Developer Interface** How can a developer add more functionality to the described feature
 - **Conceptual remarks:** Deep dive into the internal workflow/implementation/functionality of this feature. Might only be interesting for other Morph-Store core developers.
-
-According to these 3 parts, code examples are colored differently:
+<br /><br />
+According to these 3 aspects, code examples are colored differently:
 <div class="userCode">
 ~~~{.cpp}
 //This is Code a user can write to do somehting useful, e.g. make a query, generate some data,...
@@ -75,5 +82,4 @@ According to these 3 parts, code examples are colored differently:
 //This already belongs to the code base of the MorphStore.
 ~~~
 </div>
-
-Tutorials can be found in the appropriate section: \ref tutorials
+<div>
