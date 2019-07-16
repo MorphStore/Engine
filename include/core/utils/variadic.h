@@ -109,7 +109,7 @@ namespace morphstore {
    }
 
    template< typename... Ts >
-   struct static_and : std::tru_type { };
+   struct static_and : std::true_type { };
    template< typename T, typename... Ts >
    struct static_and< T, Ts... > :
       std::conditional< T::value, static_and< Ts... >, std::false_type >::type{ };
