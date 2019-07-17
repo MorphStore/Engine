@@ -90,28 +90,7 @@ namespace vectorlib {
          typename aurora< v16k< U > >::vector_t const & p_Vec2
       ) {
          _ve_lvl(256);
-         uint64_t * tmp = ( uint64_t * ) malloc( 256 * sizeof( uint64_t ) );
-         uint64_t * tmp1 = ( uint64_t * ) malloc( 256 * sizeof( uint64_t ) );
-         _ve_vst_vss( p_Vec1, sizeof( T ), tmp );
-         _ve_vst_vss( p_Vec2, sizeof( T ), tmp1 );
-         for( size_t j = 0; j < 256; j+=32 ) {
-            for( size_t i = 0; i < 32; ++i ) {
-               std::cout << (unsigned long)  tmp[ i + j ] << " | ";
-            }
-            std::cout << "\n";
-            for( size_t i = 0; i < 32; ++i ) {
-               std::cout << (unsigned long) tmp1[ i + j ] << " | ";
-            }
-            std::cout << "\n\n";
-         }
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ?. (aurora tsubasa)" );
-
-         std::cout << "COUNT_MATCHES directly Return: " << (unsigned long) count_matches<aurora<v16k<T>>>::apply( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
-         std::cout << "PCVM_SM       directly Return: " << (unsigned long) _ve_pcvm_sm( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
-         /*typename aurora< v16k< T > >::mask_t*/ __vm256 tmp_mask = _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) );
-         std::cout << "PCVM_SM       with tmp Return: " << (unsigned long) _ve_pcvm_sm( tmp_mask ) << "\n";
-         std::cout << "COUNT_MATCHES with tmp Return: " << (unsigned long) count_matches<aurora<v16k<T>>>::apply( tmp_mask ) << "\n";
-         std::cout << "PCVM_SM       directly Return: " << (unsigned long) _ve_pcvm_sm( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
          return _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) );
       }
    };
@@ -143,7 +122,6 @@ namespace vectorlib {
       apply(
          typename aurora< v16k< T > >::mask_t p_Mask
       ) {
-         std::cout << "IN COUNT MATCHES: Returning " << (unsigned long) _ve_pcvm_sm( p_Mask ) << "\n";
          trace( "[VECTOR] - Count matches in a comparison mask. (aurora tsubasa)" );
          return _ve_pcvm_sm( p_Mask );
       }

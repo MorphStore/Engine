@@ -280,10 +280,6 @@ fi
 
 mkdir -p build
 
-#set -v
-#set -x
-#trap read debug
-
 if [ "$architecture" = "x86" ]; then
     architectureFlag="-DCARCHITECTURE=X86"
     compilerFlag="-DCCOMPILER=GCC"
@@ -297,17 +293,9 @@ elif [ "$architecture" = "nec" ]; then
     sse4="-DCSSE=False"
     architectureFlag="-DCARCHITECTURE=TSUBASA"
     if [ "$compiler" = "clang" ]; then
-        DEST=/opt/nec/nosupport/llvm-ve
         compilerFlag="-DCCOMPILER=CLANG"
         cmake -E chdir build/ \
-        cmake \
-        -DCMAKE_C_COMPILER=$DEST/bin/clang \
-        -DCMAKE_CXX_COMPILER=$DEST/bin/clang++ \
-        -DCMAKE_AR=$DEST/bin/llvm-ar \
-        -DCMAKE_RANLIB=$DEST/bin/llvm-ranlib \
-        -DCMAKE_C_COMPILER_TARGET="ve-linux" \
-        -DCMAKE_CXX_COMPILER_TARGET="ve-linux" \
-        -DLLVM_CONFIG_PATH=$DEST/bin/llvm-config \
+        cmake -DCMAKE_TOOLCHAIN_FILE=../CMake_LLVM_tsubasa_toolchain.cmake \
         $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
         $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag $compilerFlag -G \
         "Unix Makefiles" ../
@@ -337,14 +325,3 @@ if [ "$runCtest" = true ] ; then
 else
     echo "No tests to be run"
 fi
-
-
-##        -DCMAKE_CXX_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>" \
-##        -DCMAKE_TOOLCHAIN_FILE=../CMake_LLVM_tsubasa_toolchain.cmake \
-
-#
-#        -D CMAKE_CXX_COMPILER=/opt/nec/nosupport/llvm-ve/bin/clang++ \
-#        -D CMAKE_C_COMPILER=/opt/nec/nosupport/llvm-ve/bin/clang \
-
-#-D CMAKE_LINKER=/opt/nec/nosupport/llvm-ve/bin/clang++ \
-#-D CMAKE_CXX_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>" \

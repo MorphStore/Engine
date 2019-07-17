@@ -46,10 +46,10 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 #	add_executable( group_binary_vector_test_app group_binary_vectorized_test.cpp)
 #ENDIF(CAVXTWO  OR CAVX512)
 
-#	target_compile_options( select_nec_app PRIVATE
-#			# space to add custom flags for THIS SPECIFIC TARGET
-#			)
-#	target_link_libraries( select_nec_app PRIVATE  )
+	target_compile_options( select_nec_app PRIVATE
+			# space to add custom flags for THIS SPECIFIC TARGET
+			)
+	target_link_libraries( select_nec_app PRIVATE  )
 	
 #	target_compile_options( agg_sum_group_based_test_app PRIVATE
 #		# space to add custom flags for THIS SPECIFIC TARGET

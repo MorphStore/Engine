@@ -18,7 +18,7 @@
 
 #include <core/operators/general_vectorized/select_uncompr.h>
 
-#define TEST_DATA_COUNT 512
+#define TEST_DATA_COUNT 5120000
 
 int main( void ) {
    using namespace morphstore;
@@ -36,16 +36,6 @@ int main( void ) {
 
    const bool allGood =
       memcmp(result->get_data(),result1->get_data(),result1->get_count_values()*8);
-
-//   print_columns(
-//      print_buffer_base::decimal,
-//      testDataColumnSorted,
-//      result,
-//      result1,
-//      "data",
-//      "result X64-Scalar",
-//      "result Tsubasa"
-//   );
 
    return allGood;
 }

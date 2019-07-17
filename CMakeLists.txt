@@ -30,35 +30,11 @@ if ( ${CARCHITECTURE} MATCHES "X86" )
 	include( CMake_GCC_x86.cmake )
 elseif ( ${CARCHITECTURE} MATCHES "TSUBASA" )
 	if ( ${CCOMPILER} MATCHES "CLANG" )
-#		list(APPEND CMAKE_PREFIX_PATH "/opt/nec/nosupport/llvm-ve/")
-#		find_package(LLVM REQUIRED CONFIG)
-#
-#		message(STATUS "#######Found LLVM ${LLVM_PACKAGE_VERSION}")
-#		message(STATUS "#######Using LLVMConfig.cmake in: ${LLVM_DIR}")
-#		include_directories(${LLVM_INCLUDE_DIRS})
-#		add_definitions(${LLVM_DEFINITIONS})
-#
-#		find_package(Clang REQUIRED CONFIG)
-
-		#		set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "")
-#		set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
 		include( CMake_LLVM_tsubasa.cmake )
 	elseif ( ${CCOMPILER} MATCHES "NCC" )
 		include( CMake_NCC_tsubasa.cmake )
 	endif ( ${CCOMPILER} MATCHES "CLANG" )
 endif ( ${CARCHITECTURE} MATCHES "X86" )
-############################################################
-
-message( STATUS "###       LINKER_EXEC: ${CMAKE_CXX_LINK_EXECUTABLE}")
-message( STATUS "###            LINKER: ${CMAKE_LINKER}")
-message( STATUS "###             FLAGS: ${CMAKE_LINKER_FLAGS}")
-message( STATUS "###      CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
-message( STATUS "###                AR: ${CMAKE_AR}")
-message( STATUS "###            RANLIB: ${CMAKE_RANLIB}")
-message( STATUS "###     LINK_IMPLICIT: ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES}")
-message( STATUS "### LINK_IMPLICIT_DIR: ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES}")
-message("LLVM_INCLUDE_DIRS=${LLVM_INCLUDE_DIRS}")
-message("LLVM_DEFINITIONS=${LLVM_DEFINITIONS}")
 
 # general compiler settings, meant for all subdirectories and tests
 add_general_compiler_flags()
