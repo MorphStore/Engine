@@ -45,19 +45,24 @@ inline void* mm_realloc(void* p_Ptr, size_t p_AllocSize) {
         assert(info->size == p_AllocSize + sizeof(morphstore::ObjectInfo));
         return &(info[1]);
     }
+
 }
 
 inline void mm_free(void* p_FreePtr) {
     morphstore::ObjectInfo* info = reinterpret_cast<morphstore::ObjectInfo*>( reinterpret_cast<uint64_t>(p_FreePtr) - sizeof(morphstore::ObjectInfo));
 
-    if (info->size > morphstore::ALLOCATION_SIZE) {
-        morphstore::mmap_memory_manager::getInstance().deallocateLarge(p_FreePtr);
-    }
-    else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
-        morphstore::mmap_memory_manager::getInstance().deallocate(info);
-    }
+    if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::paged_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
+        if (info->size > morphstore::ALLOCATION_SIZE) {
+            morphstore::mmap_memory_manager::getInstance().deallocateLarge(p_FreePtr);
+        }
+        else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
+            morphstore::mmap_memory_manager::getInstance().deallocate(info);
+        }
+        else {
+            morphstore::paged_memory_manager::getGlobalInstance().deallocate(info);
+        }
     else {
-        morphstore::paged_memory_manager::getGlobalInstance().deallocate(info);
+        //morphstore::stdlib_free_ptr( p_FreePtr );
     }
 }
 

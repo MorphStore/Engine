@@ -76,18 +76,56 @@ private:
     PageHeader header;
 };
 
+class paged_memory_manager_state_helper {
+   private:
+      bool m_Alive;
+
+      paged_memory_manager_state_helper( ) :
+         m_Alive{ false } { }
+
+      void set_alive( bool p_Alive ) {
+         m_Alive = p_Alive;
+      }
+      friend class paged_memory_manager;
+
+   public:
+      static paged_memory_manager_state_helper & get_instance(void) {
+         static thread_local paged_memory_manager_state_helper instance;
+         return instance;
+      }
+
+      bool is_alive(void) const {
+         return m_Alive;
+      }
+};
+
 // No reuse slot page allocator
 class paged_memory_manager : public abstract_memory_manager
 {
 public:
-    static paged_memory_manager* global_manager;
     static paged_memory_manager& getGlobalInstance()
     {
-        static paged_memory_manager instance;
+        static thread_local paged_memory_manager instance;
         return instance;
     }
 
-    paged_memory_manager() : current_page(nullptr), current_chunk(nullptr) {}
+    paged_memory_manager(paged_memory_manager const &) = delete;
+
+    void operator=(paged_memory_manager const &) = delete;
+
+    explicit paged_memory_manager() :
+         abstract_memory_manager{}, m_mmap_manager(mmap_memory_manager::getInstance()), current_page(nullptr), current_chunk(nullptr) {
+             debug("setting paged mm active");
+             paged_memory_manager_state_helper::get_instance().set_alive( true );
+             debug("setting paged mm active - out");
+         }
+
+    virtual ~paged_memory_manager( void )
+    {  
+         debug("setting paged mm inactive");
+         paged_memory_manager_state_helper::get_instance().set_alive( false );
+         debug("setting paged mm inactive - out");
+    }
 
     void init()
     {
@@ -209,6 +247,7 @@ public:
     }
 
 private:
+    mmap_memory_manager& m_mmap_manager;
     Page* current_page;
     void* current_chunk; 
     std::mutex sema;

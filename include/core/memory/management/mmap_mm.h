@@ -6,6 +6,10 @@
 #  error "Abstract memory manager ( management/abstract_mm.h ) has to be included before mmap memory manager."
 #endif
 
+#ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
+#  error "Memory Hooks ( global/mm_hooks.h ) has to be included before general memory manager."
+#endif
+
 #include <mutex>
 #include <sys/mman.h>
 #include <string.h>
@@ -438,12 +442,19 @@ const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
 class mmap_memory_manager: public abstract_memory_manager {
 public:
     static mmap_memory_manager* m_Instance;
+
+    mmap_memory_manager &operator=(mmap_memory_manager const &) = delete;
+    virtual ~mmap_memory_manager( void )
+    {
+             debug("setting mmap mm inactive");
+             debug("setting mmap mm inactive - out");
+    }
+
     static inline mmap_memory_manager& getInstance()
     {
-        static mmap_memory_manager instance;
+        static thread_local mmap_memory_manager instance;
         return instance;
     }
-    ~mmap_memory_manager() {}
 
     /**
      * @brief use for continuous memory allocation
@@ -702,11 +713,23 @@ public:
     }
 
 private:
-    mmap_memory_manager() : m_current_chunk(nullptr), m_next_free_chunk(nullptr) {}
+    explicit mmap_memory_manager() : 
+        abstract_memory_manager{},
+        m_current_chunk(nullptr), m_next_free_chunk(nullptr),
+        m_initialized{(
+                          (stdlib_malloc_ptr == nullptr) ||
+                          (stdlib_malloc_ptr == nullptr) ||
+                          (stdlib_malloc_ptr == nullptr)
+                       ) ? init_mem_hooks() : true
+        } {
+             debug("setting mmap mm active");
+             debug("setting mmap mm active - out");
+        }
 
     // used for direct allocation calls
     void* m_current_chunk;
     void* m_next_free_chunk;
+    bool m_initialized;
     std::mutex m_Mutex;
 
 };

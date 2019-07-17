@@ -43,6 +43,7 @@ extern "C" {
  * @return Pointer to allocated memory.
  */
 void *malloc(size_t p_AllocSize) __THROW {
+    trace("Request for allocsize ", p_AllocSize);
 #ifdef USE_MMAP_MM
     if (p_AllocSize == 0)
         return nullptr;
@@ -50,6 +51,7 @@ void *malloc(size_t p_AllocSize) __THROW {
     void* ptr = mm_malloc(p_AllocSize);
     if (ptr == nullptr)
         throw std::runtime_error("Out of memory");
+    trace("Return ptr ", ptr);
     return ptr;
 #else
     return morphstore::query_memory_manager::get_instance().allocate(p_AllocSize);
@@ -79,7 +81,7 @@ void free(void *p_FreePtr) __THROW {
     if (p_FreePtr == nullptr)
         return;
 #ifdef USE_MMAP_MM
-   mm_free(p_FreePtr);
+    mm_free(p_FreePtr);
 #else
    if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
       morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);

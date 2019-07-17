@@ -59,12 +59,12 @@ class query_memory_manager_state_helper {
       }
       friend class query_memory_manager;
    public:
-      static query_memory_manager_state_helper & get_instance(void) {
+      /*static query_memory_manager_state_helper & get_instance(void) {
          trace( "[Query Memory Manager State Helper] - IN.  ( void )." );
          static thread_local query_memory_manager_state_helper instance;
          trace( "[Query Memory Manager State Helper] - OUT. ( Instance: ", &instance, " )." );
          return instance;
-      }
+      }*/
       bool is_alive(void) const {
          trace( "[Query Memory Manager State Helper] - IN.  ( void )." );
          trace( "[Query Memory Manager State Helper] - OUT. ( ", m_Alive, " )." );
@@ -73,40 +73,40 @@ class query_memory_manager_state_helper {
 };
 
 
-class query_memory_manager : public abstract_memory_manager {
+class [[deprecated]] query_memory_manager : public abstract_memory_manager {
    public:
-      static query_memory_manager & get_instance( size_t p_InitSpaceSize = 128_MB ) {
+      /*static query_memory_manager & get_instance( size_t p_InitSpaceSize = 128_MB ) {
          trace( "[Query Memory Manager] - IN.  ( void )." );
          static thread_local query_memory_manager instance( p_InitSpaceSize );
          trace( "[Query Memory Manager] - OUT. ( Instance: ", &instance, " )." );
          return instance;
-      }
+      }*/
 
       query_memory_manager( query_memory_manager const & ) = delete;
       void operator=( query_memory_manager const & ) = delete;
       virtual ~query_memory_manager( void ) {
          trace( "[Query Memory Manager] - IN.  ( this: ", this, " ).");
-         m_GeneralMemoryManager.destroy( this );
-         query_memory_manager_state_helper::get_instance().set_alive( false );
+         //m_GeneralMemoryManager.destroy( this );
+         //query_memory_manager_state_helper::get_instance().set_alive( false );
          trace( "[Query Memory Manager] - OUT.");
       }
    private:
       explicit query_memory_manager( size_t p_InitSpaceSize ) :
          abstract_memory_manager{},
-         m_GeneralMemoryManager{ general_memory_manager::get_instance( ) },
+         //m_GeneralMemoryManager{ general_memory_manager::get_instance( ) },
          m_CurrentPtr{ nullptr },
          m_SpaceLeft{ 0 } {
          trace( "[Query Memory Manager] - IN.  ( Initial Size = ", ( p_InitSpaceSize / 1024 / 1024 ), " MB )." );
-         void * tmp = m_GeneralMemoryManager.allocate( this, p_InitSpaceSize );
+         void * tmp = nullptr; //m_GeneralMemoryManager.allocate( this, p_InitSpaceSize );
          if( tmp != nullptr ) {
             debug( "[Query Memory Manager] - Aquired ", p_InitSpaceSize, " Bytes ( @ position: ", tmp, " ).");
             m_CurrentPtr = tmp;
             m_SpaceLeft = p_InitSpaceSize;
             debug( "[Query Memory Manager] - Head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
-            query_memory_manager_state_helper::get_instance().set_alive( true );
+            //query_memory_manager_state_helper::get_instance().set_alive( true );
          } else {
             wtf( "[Query Memory Manager] - query_memory_managerCould not aquire ", p_InitSpaceSize, " Bytes query scoped memory." );
-            m_GeneralMemoryManager.handle_error( );
+            //m_GeneralMemoryManager.handle_error( );
          }
          trace( "[Query Memory Manager] - OUT. ( this: ", this, " )." );
       }
@@ -114,7 +114,6 @@ class query_memory_manager : public abstract_memory_manager {
    public:
 
       void * allocate( size_t p_AllocSize ) override {
-         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
 
          //increasing the allocated size by one size_t, so the actual size can be stored at the very first item.
@@ -127,7 +126,7 @@ class query_memory_manager : public abstract_memory_manager {
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
             size_t nextExpandSize = expander.next_size( allocSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
-            m_CurrentPtr = m_GeneralMemoryManager.allocate( this, nextExpandSize );
+            m_CurrentPtr = nullptr; //m_GeneralMemoryManager.allocate( this, nextExpandSize );
             m_SpaceLeft = nextExpandSize;
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          }
@@ -147,7 +146,7 @@ class query_memory_manager : public abstract_memory_manager {
             trace( "[Query Memory Manager] - OUT. ( pointer: ", result_ptr, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
             return result_ptr;
          } else {
-            m_GeneralMemoryManager.handle_error( );
+            //m_GeneralMemoryManager.handle_error( );
             wtf( "[Query Memory Manager] - Could not aquire ", allocSize, " Bytes query scoped memory." );
             return nullptr;
          }
@@ -159,21 +158,18 @@ class query_memory_manager : public abstract_memory_manager {
       }
 
       void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED abstract_memory_manager * const p_Caller, MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
-         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( Caller = ", p_Caller, ". Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( abstract_memory_manager * const, void * const ) ",
                "should not be invoked on the Query Memory Manager." );
       }
 
       void deallocate( MSV_CXX_ATTRIBUTE_PPUNUSED void * const p_Ptr ) override {
-         throw std::runtime_error("This should not be called anymore");
          trace( "[Query Memory Manager] - IN.  ( Pointer = ", p_Ptr, " )." );
          info( "[Query Memory Manager] - Deallocate ( void * const ) should not be invoked on the Query Memory Manager." );
       }
 
 
       void * reallocate(void * p_Ptr, size_t p_AllocSize) override {
-         throw std::runtime_error("This should not be called anymore");
          if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_Ptr == nullptr))
             return allocate(p_AllocSize);
          if(MSV_CXX_ATTRIBUTE_UNLIKELY(p_AllocSize == 0))
@@ -198,7 +194,7 @@ class query_memory_manager : public abstract_memory_manager {
 
 
    private:
-      general_memory_manager & m_GeneralMemoryManager;
+      //general_memory_manager & m_GeneralMemoryManager;
       void * m_CurrentPtr;
       size_t m_SpaceLeft;
       mm_expand_strategy_chunk_based< MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE > expander;
