@@ -11,7 +11,20 @@
 
 namespace morphstore {
 
-    using namespace vectorlib;
+/*   void print( __vr const & src ) {
+      uint64_t * tmp = vecmalloc< type >( );
+      store( src, tmp );
+      for( size_t i = 0; i < veccount; ++i ) {
+         std::cout   << "["
+                     << std::setw( INDENT ) << i
+                     << "]: "
+                     << std::setw( INDENT ) << tmp[ i ]
+                     << "\n";
+      }
+      afree( tmp );
+   }*/
+
+   using namespace vectorlib;
    template<class VectorExtension,  template< class, int > class Operator>
    struct select_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -19,13 +32,18 @@ namespace morphstore {
       static
       vector_mask_t 
       apply(
-         vector_t const p_DataVector,
-         vector_t const p_PredicateVector
+         vector_t const & p_DataVector,
+         vector_t const & p_PredicateVector
       ) {
-         return Operator<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(
+         vector_mask_t tmp =
+         /*return */Operator<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(
             p_DataVector,
             p_PredicateVector
          );
+         if( std::is_same< aurora< v16k< unsigned long > >, VectorExtension >::value ) {
+            std::cout << "After Return: " << (unsigned long) vectorlib::count_matches<VectorExtension>::apply(tmp) << "\n";
+         }
+         return tmp;
       }
    };
 
@@ -50,8 +68,12 @@ namespace morphstore {
                   dataVector,
                   predicateVector
                );
+            if( std::is_same< aurora< v16k< unsigned long > >, VectorExtension >::value ) {
+               std::cout << (unsigned) vectorlib::count_matches<VectorExtension>::apply( resultMask ) << "\n";
+            }
             vectorlib::compressstore<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
             positionVector = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
+
 
             //p_OutPtr += __builtin_popcount( resultMask );
             p_OutPtr += vectorlib::count_matches<VectorExtension>::apply( resultMask );

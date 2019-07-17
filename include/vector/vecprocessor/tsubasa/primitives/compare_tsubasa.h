@@ -105,8 +105,13 @@ namespace vectorlib {
             std::cout << "\n\n";
          }
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ?. (aurora tsubasa)" );
-         std::cout << "Before Return: " << (unsigned long) count_matches<aurora<v16k<T>>>::apply( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
-         std::cout << "Before Return: " << (unsigned long) _ve_pcvm_sm( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
+
+         std::cout << "COUNT_MATCHES directly Return: " << (unsigned long) count_matches<aurora<v16k<T>>>::apply( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
+         std::cout << "PCVM_SM       directly Return: " << (unsigned long) _ve_pcvm_sm( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
+         /*typename aurora< v16k< T > >::mask_t*/ __vm256 tmp_mask = _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) );
+         std::cout << "PCVM_SM       with tmp Return: " << (unsigned long) _ve_pcvm_sm( tmp_mask ) << "\n";
+         std::cout << "COUNT_MATCHES with tmp Return: " << (unsigned long) count_matches<aurora<v16k<T>>>::apply( tmp_mask ) << "\n";
+         std::cout << "PCVM_SM       directly Return: " << (unsigned long) _ve_pcvm_sm( _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) ) ) << "\n";
          return _ve_vfmkl_mcv(VECC_G, _ve_vcmpsl_vvv( p_Vec1, p_Vec2 ) );
       }
    };
@@ -133,17 +138,16 @@ namespace vectorlib {
 
    template< typename T >
    struct count_matches< aurora< v16k< T > > > {
-   MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   static uint64_t
-   apply(
-      typename aurora< v16k< T > >::mask_t const p_Mask
-   ) {
-      _ve_lvl(256);
-      std::cout << "IN COUNT MATCHES: Returning " << (unsigned long) _ve_pcvm_sm( p_Mask ) << "\n";
-      trace( "[VECTOR] - Count matches in a comparison mask. (aurora tsubasa)" );
-      return _ve_pcvm_sm( p_Mask );
-   }
-};
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename aurora< v16k< T > >::mask_size_t
+      apply(
+         typename aurora< v16k< T > >::mask_t p_Mask
+      ) {
+         std::cout << "IN COUNT MATCHES: Returning " << (unsigned long) _ve_pcvm_sm( p_Mask ) << "\n";
+         trace( "[VECTOR] - Count matches in a comparison mask. (aurora tsubasa)" );
+         return _ve_pcvm_sm( p_Mask );
+      }
+   };
 }
 
 #endif //MORPHSTORE_VECTOR_VECPROCESSOR_TSUBASA_PRIMITIVES_COMPARE_TSUBASA_H

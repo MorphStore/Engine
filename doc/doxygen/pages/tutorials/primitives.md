@@ -117,7 +117,7 @@ my_operator.h
 template<class VectorExtension>
       
       void my_operator(...) {
-        using namespace vector;
+        using namespace vectorlib;
 
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         //Implement your code using vector primitives here
@@ -133,7 +133,7 @@ main.cpp
 
 int main(){  
 
-  using namespace vector;
+  using namespace vectorlib;
    
   my_operator<avx2<v256<uint64_t>>>( ... );
   return 0;
@@ -159,7 +159,7 @@ template<class VectorExtension>
       
       int my_operator(int number) {
       
-        using namespace vector;
+        using namespace vectorlib;
 
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         
@@ -181,7 +181,7 @@ main.cpp
 
 int main(){  
   
-  using namespace vector;
+  using namespace vectorlib;
    
   int result = my_operator<avx2<v256<uint64_t>>>( 1 );
   
@@ -252,7 +252,7 @@ main.cpp
 
 int main(){  
   
-  using namespace vector;
+  using namespace vectorlib;
   int result = 0;
   
   #ifdef AVXTWO 

@@ -29,6 +29,7 @@ namespace vectorlib {
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
       using mask_t = __vm256; //__vm512
+      using mask_size_t = uint64_t;
    };
 
 }

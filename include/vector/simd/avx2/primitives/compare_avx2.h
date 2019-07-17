@@ -118,7 +118,7 @@ namespace vectorlib{
    template<>
    struct count_matches<avx2<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static uint8_t
+      static typename avx2<v256<uint64_t>>::mask_size_t
       apply(
          typename avx2<v256<uint64_t>>::mask_t const & p_mask
       ) {

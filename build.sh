@@ -53,14 +53,16 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
-  echo "	-tQ|--testQueries"
+    echo "	-tQ|--testQueries"
 	echo "	     Runs CTest for example queries "
-	echo ""
-  echo "features:"
 	echo ""
     echo "architecture:"
     echo "  -arch=[x86|nec]"
     echo "       Set an architecture (default: x86)."
+    echo ""
+    echo "compiler:"
+    echo "  -cxx=[gcc|clang|ncc]"
+    echo "       Set a compiler (default: gcc. clang and ncc are only avaible with arch=nec right now)."
     echo ""
 	echo "features:"
 	echo "	-avx512"
@@ -96,6 +98,7 @@ avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
 architecture="x86"
+compiler="gcc"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -228,8 +231,14 @@ case $key in
 	    if [[ $key =~ "=" ]]; then
 	       architecture=${key#*=}
 	    fi
-    shift # past argument
-	 ;;
+        shift # past argument
+	;;
+    -cxx*)
+        if [[ $key =~ "=" ]]; then
+           compiler=${key#*=}
+        fi
+        shift # past argument
+    ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -271,21 +280,53 @@ fi
 
 mkdir -p build
 
+#set -v
+#set -x
+#trap read debug
+
 if [ "$architecture" = "x86" ]; then
-    architectureFlag="-DCArchNative"
+    architectureFlag="-DCARCHITECTURE=X86"
+    compilerFlag="-DCCOMPILER=GCC"
     cmake -E chdir build/ \
     cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
-    $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag -G "Unix Makefiles" ../
+    $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag $compilerFlag -G \
+    "Unix Makefiles" ../
 elif [ "$architecture" = "nec" ]; then
     avx512="-DCAVX512=False"
     avxtwo="-DCAVXTWO=False"
     sse4="-DCSSE=False"
-    cmake -E chdir build/ env \
-    CXXFLAGS="--target=ve-linux -fno-slp-vectorize -mllvm -llvm-loopvec=false -Xclang -load -Xclang libRV.so -mllvm -rv" \
-    cmake -D CMAKE_C_COMPILER=/opt/nec/ve/LLVM/llvm-ve-rv-1.1.2/bin/clang \
-    -D CMAKE_CXX_COMPILER=/opt/nec/ve/LLVM/llvm-ve-rv-1.1.2/bin/clang++ \
-    $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
-    $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 -G "Unix Makefiles" ../
+    architectureFlag="-DCARCHITECTURE=TSUBASA"
+    if [ "$compiler" = "clang" ]; then
+        DEST=/opt/nec/nosupport/llvm-ve
+        compilerFlag="-DCCOMPILER=CLANG"
+        cmake -E chdir build/ \
+        cmake \
+        -DCMAKE_C_COMPILER=$DEST/bin/clang \
+        -DCMAKE_CXX_COMPILER=$DEST/bin/clang++ \
+        -DCMAKE_AR=$DEST/bin/llvm-ar \
+        -DCMAKE_RANLIB=$DEST/bin/llvm-ranlib \
+        -DCMAKE_C_COMPILER_TARGET="ve-linux" \
+        -DCMAKE_CXX_COMPILER_TARGET="ve-linux" \
+        -DLLVM_CONFIG_PATH=$DEST/bin/llvm-config \
+        $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
+        $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag $compilerFlag -G \
+        "Unix Makefiles" ../
+    elif [ "$compiler" = "ncc" ]; then
+        compilerFlag="-DCCOMPILER=NCC"
+        cmake -E chdir build/ \
+        cmake -DCMAKE_TOOLCHAIN_FILE=../CMake_NCC_tsubasa_toolchain.cmake -DCMAKE_C_COMPILER_ID_RUN=TRUE \
+        -DCMAKE_CXX_COMPILER_ID_RUN=TRUE $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks \
+        $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $architectureFlag $compilerFlag -G \
+        "Unix Makefiles" ../
+    else
+        printf "Compiler not set correctly.\n"
+        printHelp
+        exit 1
+    fi
+else
+    printf "Architecture not set correctly.\n"
+    printHelp
+    exit 1
 fi
 
 
@@ -296,3 +337,14 @@ if [ "$runCtest" = true ] ; then
 else
     echo "No tests to be run"
 fi
+
+
+##        -DCMAKE_CXX_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>" \
+##        -DCMAKE_TOOLCHAIN_FILE=../CMake_LLVM_tsubasa_toolchain.cmake \
+
+#
+#        -D CMAKE_CXX_COMPILER=/opt/nec/nosupport/llvm-ve/bin/clang++ \
+#        -D CMAKE_C_COMPILER=/opt/nec/nosupport/llvm-ve/bin/clang \
+
+#-D CMAKE_LINKER=/opt/nec/nosupport/llvm-ve/bin/clang++ \
+#-D CMAKE_CXX_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>" \

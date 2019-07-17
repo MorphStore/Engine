@@ -48,7 +48,7 @@ Usage
 
 <div class=userCode>
 ~~~{.cpp}
-1    using namespace vector;
+1    using namespace vectorlib;
 2    uint32_t * const data = (uint32_t*)_mm_malloc( 128, 16 );
 3    typename sse< v128< uint32_t > >::vector_t a =
 4        load< sse< v128< uint32_t > >, iov::ALIGNED, 128 >::apply( data );

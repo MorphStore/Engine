@@ -77,9 +77,9 @@ namespace vectorlib{
    struct count_matches {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      uint8_t
+      typename VectorExtension::mask_size_t
       apply(
-         typename VectorExtension::mask_t const & p_mask
+         typename VectorExtension::mask_t p_mask
       ) = delete;
    };
 

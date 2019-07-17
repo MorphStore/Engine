@@ -37,6 +37,7 @@ namespace vectorlib {
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
       using mask_t = uint16_t;
+      using mask_size_t = uint8_t;
    };
 
 }
