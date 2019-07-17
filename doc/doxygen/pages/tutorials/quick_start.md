@@ -53,7 +53,7 @@ To enable the support of vector extensions, build.sh provides several flags:
 - avx512
 
 For some architectures, gcc enbales sse or even avx by default. But for others, the available extensions have to be passed explicitly. 
-This cared for by the build script if one of the above mentioned flags is set. Every flag passes the according extension and all older 
+If one of the above mentioned flags is set, the build script takes care of this. Every flag passes the according extension and all older 
 extensions, e.g. -avxtwo passes the flags for axv2 and sse4 support.
 
 Using these flags, vectorized operators and queries can be build. Some operators, which are called with sse and avx2 can be found in 

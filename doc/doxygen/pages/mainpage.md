@@ -1,7 +1,7 @@
 @mainpage MorphStore - Fluffy Morphicorn
 
 
-<div style="width: 620px; height: 60px; padding-left: 35px;" class="fragment">
+<div style="width: 620px; height: 60px; padding-left: 35px; padding-right: 5px" class="fragment">
     <div style="width: 520px; font-size: 16px; text-indent: -30px">
         "MorphStore. THE Morphing Main Memory Engine" 
     </div>
@@ -21,23 +21,23 @@ This section is designed to hand a plan to staff members and students, who never
 <b>Dear SIGMOD 2019 visitors, we are working on the documentation. Please have a little patience.</b>
 
 <div class="box-grid">
+
 <div class="BoxPink" style="grid-column: 1">
-<div class=symbol><br /><br />❶</div>
+<div class=symbol><br />❶</div>
 <b>Getting started</b>
 <ul>
 <li>\ref quickStart</li>
-<li>\ref testCases</li>
-<li>\ref overview</li>
+<li><span id="stublink">\ref testCases</span></li>
+<li><span id="stublink">\ref overview</span></li>
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 2">
-<div class=symbol><br /><br />➚</div>
-<b>Vector Lib</b>
+<div class=symbol><br />✎</div>
+<b>Writing Queries</b>
 <ul>
-<li>Using the \ref veclib - A short walk through</li>
-<li>\ref VectorPrimitives</li>
-<li>\ref primitiveTable - A table</li>
-<li>VectorLib w/o MorphStore</li>
+<li>\ref helloWorld</li>
+<li>Available Operators and Compressions</li>
+<li><span id="stublink">\ref persistency</span></li>
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 1">
@@ -49,18 +49,31 @@ This section is designed to hand a plan to staff members and students, who never
 </ul>
 </div>
 <div class="BoxPink" style="grid-column: 2">
-<div class=symbol><br />✎</div>
-<b>Writing Queries</b>
+<div class=symbol><br /><br />➚</div>
+<b>Vector Lib</b>
 <ul>
-<li>Hello World!</li>
-<li>Available Operators and Compressions</li>
+<li>Using the \ref veclib - A short walk through</li>
+<li>\ref VectorPrimitives</li>
+<li>\ref primitiveTable - A table</li>
+<li>VectorLib w/o MorphStore</li>
 </ul>
+</div>
+<div class="BoxPink" style="grid-column: 1">
+<div class=symbol><br />⚒</div> 
+<b>Deep Dive</b>
+<ul>
+<li>\ref memory</li>
+</ul>
+</div>
+<div class="BoxBlue" style="grid-column: 2">
+<div class=symbol><br /></div>
+<b></b>
 </div>
 
 </div>
 
 <div class=howtoread>
-<b>How to read our Tutorials</b><br /><br />
+<b>How to read the Tutorials</b><br /><br />
 Sections/tutorials describe one or more of the following aspects:
 - **Usage:** How can the described feature be used by the end-user (i.e. the one writing a query)
 - **Developer Interface** How can a developer add more functionality to the described feature
