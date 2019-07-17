@@ -33,7 +33,6 @@ namespace morphstore{
     public:
         virtual ~Graph() { };
         virtual std::string getStorageFormat() = 0;
-        virtual size_t get_size_of_graph() = 0;
         
         // AdjacecenyList functions for ldbc-importer:
         virtual void add_vertex() = 0;
