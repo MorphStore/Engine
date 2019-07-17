@@ -242,6 +242,7 @@ target_compile_options( hello_world_query PRIVATE
                       #should only be necessary if you have some kind of freaky exotic system
                        )
 target_link_libraries( hello_world_query PRIVATE "-ldl" )
+add_test( hello_world_query_test hello_world_query )
 endif(CTEST_ALL OR CTEST_QUERIES)
 ~~~
 </div>
@@ -259,8 +260,8 @@ If everything works, the following lines should show after a few seconds:
 1/3 Test #1: example_query_test ...............   Passed    2.64 sec
     Start 2: select_sum_query_test
 2/3 Test #2: select_sum_query_test ............   Passed    8.47 sec
-    Start 3: hello_world_query
-3/3 Test #3: hello_world_query ................   Passed    8.46 sec
+    Start 3: hello_world_query_test
+3/3 Test #3: hello_world_query_test ................   Passed    8.46 sec
 
 100% tests passed, 0 tests failed out of 3
 
