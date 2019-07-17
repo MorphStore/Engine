@@ -25,7 +25,6 @@
 #include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/graph_abstract.h>
 #include <chrono>  // for high_resolution_clock
-#include <memory>
 
 int main( void ){
 
@@ -34,6 +33,7 @@ int main( void ){
 
     morphstore::LDBC_Import ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::AdjacencyList socialGraph;
+
     // create abstract pointer to adjc_list (ldbc importer just has to handle with one input class and not adjcancyList, CSR, ....)
     morphstore::Graph *graph;
     graph = &socialGraph;

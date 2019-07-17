@@ -37,11 +37,12 @@ namespace morphstore{
     // this struct represents a relation to a target vertex;
     struct Edge{
         Vertex* target;
-        std::string relation;
+        unsigned short int relation;
+        // make this optianl??:
         std::pair<std::string, std::string> property;
 
 		size_t size_in_bytes() const {
-			return sizeof(Vertex*) + sizeof(char)*relation.length() + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
+			return sizeof(Vertex*) + sizeof(unsigned short int) + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
 		};
     };
 
@@ -117,7 +118,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices withouht properties
-        void add_edge(Vertex *target, const std::string& relation){
+        void add_edge(Vertex *target, unsigned short int relation){
             Edge e;
             e.target = target;
             e.relation = relation;
@@ -125,7 +126,7 @@ namespace morphstore{
         }
 
         // add edge with properties to vertex
-        void add_edge_with_property(Vertex *target, const std::string& relation, const std::pair<std::string, std::string>& property){
+        void add_edge_with_property(Vertex *target, unsigned short int relation, const std::pair<std::string, std::string>& property){
             Edge e;
             e.target = target;
             e.relation = relation;

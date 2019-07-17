@@ -18,7 +18,7 @@
 /**
  * @file ldbc_import.h
  * @brief this class reads the ldbc files and generates the graph
- * @todo process Multi-value attributes
+ * @todo
 */
 
 #ifndef MORPHSTORE_LDBC_IMPORT_H
@@ -52,6 +52,7 @@ namespace morphstore{
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
         std::map<unsigned short int, std::string> entitiesLookup;
+        std::map<unsigned short int, std::string> relationsLookup;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
@@ -211,10 +212,22 @@ namespace morphstore{
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
-        bool isEntity(const std::string& entity){
-            // iterate through entities vector to look up for paramater
+        bool is_entity(const std::string &entity){
+            // iterate through entities-map to look up for paramater
             for(auto const& entry : entitiesLookup){
                 if(entry.second == entity){
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // function which returns true, if the relation already exist
+        bool exist_relation_name(const std::string& relation){
+            // iterate through relations-map to look up for paramater
+            for(auto const& entry : relationsLookup){
+                if(entry.second == relation){
                     return true;
                 }
             }
@@ -230,8 +243,14 @@ namespace morphstore{
                 //std::cout << "(2/2) Generating LDBC-Edges ...";
                 //std::cout.flush();
 
+                //this variable is used for the relationLookup-keys, starting by 0
+                unsigned short int relationNumber = 0;
+                bool isRelation = false; // flag which is used to differentiate for relatoin-lookup-entrys (to avoid e.g. email as relation)
+
                 // iterate through vector of vertex-addresses
                 for (const auto &address : relationsPaths) {
+
+                    isRelation = false;
 
                     // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
                     std::string relation = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
@@ -269,7 +288,7 @@ namespace morphstore{
                     std::string delimiter = "|";
 
                     // check from file name whether it's a relation file or multi value attribute file
-                    if(!isEntity(toEntity)){
+                    if(!is_entity(toEntity)){
                         // Multi-value-attributes: just take the last recently one
                         std::string propertyKey;
                         std::unordered_map<uint64_t, std::string> multiValueAttr;
@@ -308,6 +327,8 @@ namespace morphstore{
                     }
                         // handling of relation-files ...
                     else{
+
+                        isRelation = true;
 
                         bool hasProperties = false;
                         std::string propertyKey;
@@ -353,13 +374,13 @@ namespace morphstore{
                                         toID = globalIdLookupMap.at({toEntity, row});
 
                                         // Generate edge in graph
-                                        graph.add_edge(fromID, toID, relationName);
+                                        graph.add_edge(fromID, toID, relationNumber);
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
-                                        graph.add_edge_with_property(fromID, toID, relationName, {propertyKey, value});
+                                        graph.add_edge_with_property(fromID, toID, relationNumber, {propertyKey, value});
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -368,9 +389,22 @@ namespace morphstore{
                     }
                     delete[] buffer; // free memory
                     relationFile.close();
+
+                    //check if the relation name is a relation (no multi value file)
+                    if(isRelation){
+                        // check if the name already exists
+                        if(!exist_relation_name(relationName)){
+                            // insert relation-number with string into map
+                            relationsLookup.insert(std::make_pair( relationNumber, relationName));
+                            ++relationNumber;
+                        }
+                    }
+
                 }
-                globalIdLookupMap.clear(); // we dont need the lookup anymore -> delete memory
-                //std::cout << " --> done" << std::endl;
+                // graph gets full relation-list here:
+                graph.set_relation_dictionary(relationsLookup);
+
+                globalIdLookupMap.clear(); // we dont need the lookup anymore -> clear
             }
         }
 

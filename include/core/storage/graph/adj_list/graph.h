@@ -44,8 +44,10 @@ namespace morphstore{
         // main data structure: mapping global id -> vertex
         // unordered_map hast fast search time -> average = O(1); worst case = O(n):
         std::unordered_map<uint64_t, Vertex> vertices;
-        // lookup dictionary for entities of vertices, e.g. 0 -> Comment, ...
+
+        // lookup dictionaries for entities of vertices / relation names of edges
         std::map<unsigned short int, std::string> entityDictionary;
+        std::map<unsigned short int, std::string> relationDictionary;
 
     public:
 
@@ -70,7 +72,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices
-        void add_edge(const uint64_t sourceID, const uint64_t targetID, const std::string& rel){
+        void add_edge(const uint64_t sourceID, const uint64_t targetID, unsigned short int rel){
             if(exist_id(sourceID) && exist_id(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
@@ -81,7 +83,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices WITH property
-        void add_edge_with_property(uint64_t sourceID, uint64_t targetID, const std::string& rel, const std::pair<std::string, std::string>& property){
+        void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int rel, const std::pair<std::string, std::string>& property){
             if(exist_id(sourceID) && exist_id(targetID)){
                 Vertex* sourceV = &vertices.at(sourceID);
                 Vertex* targetV = &vertices.at(targetID);
@@ -116,12 +118,11 @@ namespace morphstore{
             }
         }
 
-        std::string get_entity_of_vertex_by_id(const uint64_t id){
-            if(exist_id(id)){
-                unsigned short int entity = vertices.at(id).getEntity();
-                return entityDictionary.at(entity);
+        std::string get_entity_by_number(unsigned short int e){
+            if(entityDictionary.find( e ) != entityDictionary.end()){
+                return entityDictionary.at(e);
             }else{
-                return "No Matching of Vertex-ID in the database!";
+                return "No Matching of entity-number in the database!";
             }
         }
 
@@ -129,6 +130,17 @@ namespace morphstore{
             this->entityDictionary = entityList;
         }
 
+        std::string get_relation_by_number(unsigned short int re){
+            if(relationDictionary.find( re ) != relationDictionary.end()){
+                return relationDictionary.at(re);
+            }else{
+                return "No Matching of relation-number in the database!";
+            }
+        }
+
+        void set_relation_dictionary(const std::map<unsigned short int, std::string>& relationList){
+            this->relationDictionary = relationList;
+        }
 
         // function to check if the ID is present or not
         bool exist_id(const uint64_t id){
@@ -155,9 +167,17 @@ namespace morphstore{
             std::cout << "--------------------------------------------" << std::endl;
         }
 
+        // for debbuging
         void printEntities(){
             for(auto const& entity : entityDictionary){
                 std::cout << entity.first << " -> " << entity.second << "\n";
+            }
+        }
+
+        // for debbuging
+        void printRelations(){
+            for(auto const& rel : relationDictionary){
+                std::cout << rel.first << " -> " << rel.second << "\n";
             }
         }
 
@@ -166,13 +186,13 @@ namespace morphstore{
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
-            std::cout << "Entity: \t"<< get_entity_of_vertex_by_id(v->getId()) << std::endl;
+            std::cout << "Entity: \t"<< get_entity_by_number(v->getEntity()) << std::endl;
             std::cout << "#Edges: \t" << v->get_adjList().size() << std::endl;
             std::cout << "Adj_List: ";
 
             const std::vector<Edge>& adjList = v->get_adjList();
             for(const auto& e : adjList){
-                std::cout << "(" << e.target->getId() << "," << e.relation << ") ";
+                std::cout << "(" << e.target->getId() << "," << get_relation_by_number(e.relation) << ") ";
             }
             std::cout << "\n";
             std::cout << "Properties: "; v->print_properties();
