@@ -115,6 +115,7 @@ namespace morphstore {
 		}
 
 		virtual ~monitoring_info() {
+        debug("Destroying monitoring info");
 		}
 
 		std::string getName() const {
@@ -419,6 +420,7 @@ protected:
 
 public:
 	virtual ~monitoring_logger() {
+        debug("Destroying monitoring logger");
 
 	}
 	virtual void write( const char* text ) = 0;
@@ -429,7 +431,8 @@ public:
 
 class monitoring_shell_logger : public monitoring_logger {
 private:
-	monitoring_shell_logger() {
+	monitoring_shell_logger(void) {
+        debug("Constructing monitoring shell logger");
 	}
 
 public:
@@ -448,17 +451,24 @@ public:
 	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED std::vector< SuperMon* > monitors) {}
 
 	static monitoring_shell_logger & get_instance(void) {
-		static monitoring_shell_logger instance;
-		return instance;
+		static monitoring_shell_logger* instance;
+        if (instance == nullptr)
+            instance = new monitoring_shell_logger();
+        debug("Returning logger on ", instance);
+		return *instance;
 	}
 };
 
 class monitoring_csv_logger : public monitoring_logger {
 private:
-	monitoring_csv_logger() {
+	monitoring_csv_logger( void ) {
+        debug("Constructing monitoring csv logger");
 	}
 
 public:
+    monitoring_csv_logger( monitoring_csv_logger const & ) = delete;
+    void operator=( monitoring_csv_logger const & ) = delete;
+
 	void write(const char* text) override {
 		printf("%s", text);
 	}
@@ -484,6 +494,7 @@ public:
 
 	static monitoring_csv_logger  & get_instance(void) {
 		static monitoring_csv_logger  instance;
+        debug("Returning logger on ", &instance);
 		return instance;
 	}
 };
@@ -492,7 +503,8 @@ class monitoring_file_logger : public monitoring_logger {
 private:
 	std::string* logFileName;
 
-	monitoring_file_logger() {
+	monitoring_file_logger( void ) {
+        debug("Constructing monitoring file logger");
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
@@ -518,6 +530,7 @@ public:
 
 	static monitoring_file_logger & get_instance(void) {
 		static monitoring_file_logger instance;
+        debug("Returning logger on ", &instance);
 		return instance;
 	}
 };
@@ -571,7 +584,7 @@ class monitoring_json_logger : public monitoring_logger {
 private:
 	std::string* logFileName;
 
-	monitoring_json_logger() {
+	monitoring_json_logger(void ) {
 		auto now = std::chrono::system_clock::now();
 		auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
@@ -584,6 +597,7 @@ private:
 public:
 	static monitoring_json_logger & get_instance(void) {
 		static monitoring_json_logger instance;
+        debug("Returning logger on ", &instance);
 		return instance;
 	}
 
@@ -616,10 +630,10 @@ public:
 	}
 };
 
-auto monitorShellLog = morphstore::monitoring_shell_logger::get_instance();
-auto monitorFileLog = morphstore::monitoring_file_logger::get_instance();
-auto monitorJSonLog = morphstore::monitoring_json_logger::get_instance();
-auto monitorCsvLog = morphstore::monitoring_csv_logger::get_instance();
+morphstore::monitoring_shell_logger* monitorShellLog = &morphstore::monitoring_shell_logger::get_instance();
+morphstore::monitoring_file_logger* monitorFileLog = &morphstore::monitoring_file_logger::get_instance();
+morphstore::monitoring_json_logger* monitorJSonLog = &morphstore::monitoring_json_logger::get_instance();
+morphstore::monitoring_csv_logger* monitorCsvLog = &morphstore::monitoring_csv_logger::get_instance();
 
 
 template <typename... T>
@@ -633,6 +647,7 @@ public:
 	{ }
 
 	~Monitor() {
+        debug("Destroying monitor");
 	}
 
 	std::string getAllheads(char delim) const override {
@@ -675,9 +690,17 @@ public:
 class Monitoring {
 public:
 	static Monitoring & get_instance() {
-		static thread_local Monitoring instance;
-		return instance;
+        static thread_local Monitoring* instance;
+        if (instance == nullptr)
+            instance = new Monitoring();
+        debug("Returning logger on ", &instance);
+		return *instance;
 	}
+
+    Monitoring(void)
+    {
+        debug("Constructing monitoring");
+    }
 
 	template <typename... Args>
 	Monitor<Args...>* make_mon(Args... args)
@@ -848,7 +871,7 @@ public:
 	/*#define MONITORING_INCREMENT_INT_BY( ident, val, ... )		Monitoring::get_instance().incrementIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ident, val, ... )	Monitoring::get_instance().incrementDoubleFor( ident, val, __VA_ARGS__ )*/
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
-	#define MONITORING_PRINT_MONITORS(logger)					Monitoring::get_instance().printAll( logger )
+	#define MONITORING_PRINT_MONITORS(logger)					Monitoring::get_instance().printAll( *logger )
 	#define MONITORING_CLEAR_ALL()								Monitoring::get_instance().clearAll()
 	#define MONITORING_INIT_CRITICAL_TIMING()					std::vector< std::pair< std::string, uint64_t > > criticalTimings
 	#define MONITORING_START_CRITICAL_TIMING( timer )			auto startTp_##timer =std::chrono::high_resolution_clock::now()
