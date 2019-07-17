@@ -25,6 +25,7 @@
 #include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/graph_abstract.h>
 #include <chrono>  // for high_resolution_clock
+#include <memory>
 
 int main( void ){
 
@@ -37,13 +38,16 @@ int main( void ){
     morphstore::Graph *graph;
     graph = &socialGraph;
 
-
     // generate vertices & edges from LDBC files and insert into socialGraph
     ldbcImport.import(*graph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
     std::chrono::duration<double> elapsed = finish - start;
+
+    // delete graph-pointer to adj_list socialGraph
+    graph = NULL;
+    delete graph;
 
     socialGraph.statistics();
     std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";

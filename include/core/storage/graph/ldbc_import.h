@@ -29,6 +29,7 @@
 #include <string>
 #include <fstream>
 #include <unordered_map>
+#include <map>
 #include <algorithm>
 
 // hash function used to hash a pair of any kind using XOR (for verticesMap)
@@ -50,7 +51,7 @@ namespace morphstore{
         std::string directory;
         std::vector<std::string> verticesPaths;
         std::vector<std::string> relationsPaths;
-        std::vector<std::string> entities;
+        std::map<unsigned short int, std::string> entitiesLookup;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
@@ -109,6 +110,9 @@ namespace morphstore{
             if(!verticesPaths.empty()) {
                 //std::cout << "(1/2) Generating LDBC-Vertices ...";
                 //std::cout.flush();
+
+                //this variable is used for the entityLookup-keys, starting by 0
+                unsigned short int entityNumber = 0;
 
                 // iterate through vector of vertex-addresses
                 for (const auto &address : verticesPaths) {
@@ -182,8 +186,8 @@ namespace morphstore{
                                 //-----------------------------------------------------
                                 // create vertex and insert into graph with properties
                                 uint64_t systemID = graph.add_vertex_with_properties(properties);
-                                // add entity to vertex
-                                graph.add_entity_to_vertex(systemID, entity);
+                                // add entity number to vertex
+                                graph.add_entity_to_vertex(systemID, entityNumber);
                                 // map entity and ldbc id to system generated id
                                 globalIdLookupMap.insert({{entity, ldbcID}, systemID});
                                 //-----------------------------------------------------
@@ -196,19 +200,25 @@ namespace morphstore{
 
                     delete[] buffer; // free memory
                     vertexFile.close();
-                    // insert entity into vector
-                    entities.push_back(entity);
+
+                    // insert entity-number with string into map
+                    entitiesLookup.insert(std::make_pair( entityNumber, entity));
+                    ++entityNumber;
                 }
-                //std::cout << " --> done" << std::endl;
+                // graph gets full entity-list here:
+                graph.set_entity_dictionary(entitiesLookup);
             }
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
         bool isEntity(const std::string& entity){
             // iterate through entities vector to look up for paramater
-            if (std::find(entities.begin(), entities.end(), entity) != entities.end()){
-                return true;
+            for(auto const& entry : entitiesLookup){
+                if(entry.second == entity){
+                    return true;
+                }
             }
+
             return false;
         }
 

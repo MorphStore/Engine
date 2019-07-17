@@ -25,12 +25,13 @@
 #define MORPHSTORE_GRAPH_ABSTRACT_H
 
 #include <string>
+#include <map>
 
 namespace morphstore{
 
     class Graph{
     public:
-        //virtual ~Graph();
+        virtual ~Graph() { };
         virtual std::string getStorageFormat() = 0;
         virtual size_t get_size_of_graph() = 0;
         
@@ -39,8 +40,9 @@ namespace morphstore{
         virtual void add_edge(const uint64_t sourceID, const uint64_t targetID, const std::string& rel) = 0;
         virtual void add_edge_with_property(uint64_t sourceID, uint64_t targetID, const std::string& rel, const std::pair<std::string, std::string>& property) = 0;
         virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0;
-        virtual void add_entity_to_vertex(const uint64_t id, const std::string& entity) = 0;
+        virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) = 0;
+        virtual void set_entity_dictionary(const std::map<unsigned short int, std::string>& entityList) = 0;
 
     };
 }

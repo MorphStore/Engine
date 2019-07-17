@@ -53,8 +53,8 @@ namespace morphstore{
         std::vector<Edge> adjList;
         // properties
         std::unordered_map<std::string, std::string> properties;
-        // a vertex can have multiple entites
-        std::unordered_set<std::string> entities;
+        // entity-number for look-up
+        unsigned short int entity;
 
     public:
 
@@ -67,6 +67,15 @@ namespace morphstore{
 
         uint64_t getId() const{
             return id;
+        }
+
+        // add entity to vertex
+        void setEntity(unsigned short int e){
+            this->entity = e;
+        }
+
+        unsigned short int getEntity(){
+            return this->entity;
         }
 
         // calculate size of a vertex for memory usage in bytes
@@ -83,10 +92,7 @@ namespace morphstore{
                 size += sizeof(char)*(property->first.length() + property->second.length());
             }
 			// entities:
-			size += sizeof( std::unordered_set<std::string> );
-            for(std::unordered_set<std::string>::iterator iter = entities.begin(); iter != entities.end(); ++iter){
-                size += sizeof(char)*(*iter).length();
-            }
+			size += sizeof(unsigned short int);
 
             return size;
         }
@@ -125,11 +131,6 @@ namespace morphstore{
             e.relation = relation;
             e.property = property;
             this->adjList.push_back(e);
-        }
-
-        // add entity to vertex
-        void add_entity(const std::string& e){
-            this->entities.insert(e);
         }
 
         uint64_t get_number_of_edges(){

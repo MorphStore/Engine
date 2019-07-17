@@ -28,6 +28,7 @@
 #include <core/storage/graph/graph_abstract.h>
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -43,6 +44,8 @@ namespace morphstore{
         // main data structure: mapping global id -> vertex
         // unordered_map hast fast search time -> average = O(1); worst case = O(n):
         std::unordered_map<uint64_t, Vertex> vertices;
+        // lookup dictionary for entities of vertices, e.g. 0 -> Comment, ...
+        std::map<unsigned short int, std::string> entityDictionary;
 
     public:
 
@@ -105,13 +108,27 @@ namespace morphstore{
             }
         }
 
-        void add_entity_to_vertex(const uint64_t id, const std::string& entity){
+        void add_entity_to_vertex(const uint64_t id, unsigned short int entity){
             if(exist_id(id)){
-                vertices.at(id).add_entity(entity);
+                vertices.at(id).setEntity(entity);
             }else{
                 std::cout << "Vertex with ID " << id << " does not exist in the database!";
             }
         }
+
+        std::string get_entity_of_vertex_by_id(const uint64_t id){
+            if(exist_id(id)){
+                unsigned short int entity = vertices.at(id).getEntity();
+                return entityDictionary.at(entity);
+            }else{
+                return "No Matching of Vertex-ID in the database!";
+            }
+        }
+
+        void set_entity_dictionary(const std::map<unsigned short int, std::string>& entityList){
+            this->entityDictionary = entityList;
+        }
+
 
         // function to check if the ID is present or not
         bool exist_id(const uint64_t id){
@@ -138,13 +155,20 @@ namespace morphstore{
             std::cout << "--------------------------------------------" << std::endl;
         }
 
+        void printEntities(){
+            for(auto const& entity : entityDictionary){
+                std::cout << entity.first << " -> " << entity.second << "\n";
+            }
+        }
+
         // for debugging
         void print_vertex_by_id(uint64_t id){
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
             Vertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
+            std::cout << "Entity: \t"<< get_entity_of_vertex_by_id(v->getId()) << std::endl;
             std::cout << "#Edges: \t" << v->get_adjList().size() << std::endl;
-            std::cout << "Adj.List: ";
+            std::cout << "Adj_List: ";
 
             const std::vector<Edge>& adjList = v->get_adjList();
             for(const auto& e : adjList){
