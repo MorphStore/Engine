@@ -230,7 +230,7 @@ Compile and Run
 ===============
 
 The easiest way to test the finished query is to modify the file CMakeLists.txt in src/examples. At the end of the file add
-the following code and replace <my_file>.cpp with thename of your file. Note that this only works if your source file is 
+the following code and replace <my_file>.cpp with the name of your file. Note that this only works if your source file is 
 also in src/examples.
 
 <div class=userCode>
@@ -261,7 +261,7 @@ If everything works, the following lines should show after a few seconds:
     Start 2: select_sum_query_test
 2/3 Test #2: select_sum_query_test ............   Passed    8.47 sec
     Start 3: hello_world_query_test
-3/3 Test #3: hello_world_query_test ................   Passed    8.46 sec
+3/3 Test #3: hello_world_query_test ...........   Passed    8.46 sec
 
 100% tests passed, 0 tests failed out of 3
 
