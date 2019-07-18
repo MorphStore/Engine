@@ -133,7 +133,8 @@ main.cpp
 int main(){  
 
   using namespace vectorlib;
-   
+  using namespace morphstore;
+ 
   my_operator<avx2<v256<uint64_t>>>( ... );
   return 0;
 
@@ -182,6 +183,7 @@ main.cpp
 int main(){  
   
   using namespace vectorlib;
+  using namespace morphstore;
    
   int result = my_operator<avx2<v256<uint64_t>>>( 1 );
   
@@ -247,6 +249,8 @@ main.cpp
 int main(){  
   
   using namespace vectorlib;
+  using namespace morphstore;
+
   int result = 0;
   
   #ifdef AVXTWO 
