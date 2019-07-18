@@ -109,14 +109,14 @@ namespace vectorlib {
        */
 //      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      std::tuple<vector_t, vector_mask_t, uint8_t>
+      std::tuple<vector_t, vector_mask_t, vector_mask_size_t>
       lookup(
          vector_t const & p_InKeyVector,
          state_single_key_single_value_t & p_SearchState
       ) {
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t resultMaskFound = 0;
-         uint8_t resultCount = 0;
+         vector_mask_t resultMaskFound = init0<VectorExtension, vector_base_t_granularity::value>();
+         vector_mask_size_t resultCount = 0;
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
             index_aligner<VectorExtension>::apply(
@@ -149,7 +149,10 @@ namespace vectorlib {
                if(searchOffset != 0) {
                   p_SearchState.m_ValueArray[pos] =
                      p_SearchState.m_ValueContainerStartPtr[index + __builtin_ctz(searchOffset)];
-                  resultMaskFound |= currentMask;
+                  resultMaskFound = bitwise_or< VectorExtension, vector_size_bit::value >(
+                     resultMaskFound,
+                     currentMask
+                  );
                   ++resultCount;
                   done = true;
                } else {
@@ -186,14 +189,14 @@ namespace vectorlib {
        */
 //      MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      std::pair< vector_mask_t, uint8_t >
+      std::pair< vector_mask_t, vector_mask_size_t >
       lookup(
          vector_t const & p_InKeyVector,
          state_single_key_t & p_SearchState
       ) {
-         uint8_t resultCount = 0;
+         vector_mask_size_t resultCount = 0;
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t resultMaskFound = 0;
+         vector_mask_t resultMaskFound = init0<VectorExtension, vector_base_t_granularity::value>();
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
             index_aligner<VectorExtension>::apply(
@@ -225,7 +228,10 @@ namespace vectorlib {
                   currentSearchPtr);
                searchOffset = equal<VectorExtension>::apply(loadedBucketsVec, keyVec);
                if(searchOffset != 0) {
-                  resultMaskFound |= currentMask;
+                  resultMaskFound = bitwise_or< VectorExtension, vector_size_bit::value >(
+                     resultMaskFound,
+                     currentMask
+                  );
                   ++resultCount;
                   done = true;
                } else {
@@ -257,7 +263,7 @@ namespace vectorlib {
          state_single_key_t & p_SearchState
       ) {
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t resultMaskFound = 0;
+         vector_mask_t resultMaskFound = init0<VectorExtension, vector_base_t_granularity::value>();
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
             index_aligner<VectorExtension>::apply(
@@ -318,7 +324,7 @@ namespace vectorlib {
          state_single_key_single_value_t & p_SearchState
       ) {
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t resultMaskFound = 0;
+         vector_mask_t resultMaskFound = init0<VectorExtension, vector_base_t_granularity::value>();
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
             index_aligner<VectorExtension>::apply(
@@ -384,7 +390,7 @@ namespace vectorlib {
          vector_t,      // groupID vector register
          vector_t,      // groupExt vector register
          vector_mask_t, // active groupExt elements
-         uint8_t        // Number of active groupExt elements
+         vector_mask_size_t        // Number of active groupExt elements
       >
       insert_and_lookup(
          vector_t const & p_InKeyVector,
@@ -393,9 +399,9 @@ namespace vectorlib {
          state_single_key_single_value_t & p_SearchState
       ) {
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t activeGroupExtMask = 0;
+         vector_mask_t activeGroupExtMask = init0<VectorExtension, vector_base_t_granularity::value>();
          vector_mask_t currentMaskForGroupExtMask = 1;
-         uint8_t activeGroupExtCount = 0;
+         vector_mask_size_t activeGroupExtCount = 0;
 
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
@@ -439,7 +445,10 @@ namespace vectorlib {
                      p_SearchState.m_ValueContainerStartPtr[targetIdx] = p_InStartValue;
                      p_SearchState.m_ValueArray[ pos ] = p_InStartValue++;
                      p_SearchState.m_IndexArray[ pos ] = p_InStartPosFromKey;
-                     activeGroupExtMask |= currentMaskForGroupExtMask;
+                     activeGroupExtMask = bitwise_or< VectorExtension, vector_size_bit::value >(
+                        activeGroupExtMask,
+                        currentMaskForGroupExtMask
+                     );
                      ++activeGroupExtCount;
                      done = true;
                   } else {
@@ -471,7 +480,7 @@ namespace vectorlib {
          vector_t,      // groupID vector register
          vector_t,      // groupExt vector register
          vector_mask_t, // active groupExt elements
-         uint8_t        // Number of active groupExt elements
+         vector_mask_size_t        // Number of active groupExt elements
       >
       insert_and_lookup(
          vector_t const & p_InKeysFirstVector,
@@ -481,9 +490,9 @@ namespace vectorlib {
          state_double_key_single_value_t & p_SearchState
       ) {
          vector_t const zeroVec = set1<VectorExtension, vector_base_t_granularity::value>(0);
-         vector_mask_t activeGroupExtMask = 0;
+         vector_mask_t activeGroupExtMask = init0<VectorExtension, vector_base_t_granularity::value>();
          vector_mask_t currentMaskForGroupExtMask = 1;
-         uint8_t activeGroupExtCount = 0;
+         vector_mask_size_t activeGroupExtCount = 0;
 
          store<VectorExtension, iov::ALIGNED, vector_size_bit::value>(
             p_SearchState.m_IndexArray,
@@ -548,7 +557,10 @@ namespace vectorlib {
                      p_SearchState.m_ValueContainerStartPtr[targetIdx] = p_InStartValue;
                      p_SearchState.m_ValueArray[pos] = p_InStartValue++;
                      p_SearchState.m_IndexArray[pos] = p_InStartPosFromKey;
-                     activeGroupExtMask |= currentMaskForGroupExtMask;
+                     activeGroupExtMask = bitwise_or< VectorExtension, vector_size_bit::value >(
+                        activeGroupExtMask,
+                        currentMaskForGroupExtMask
+                     );
                      ++activeGroupExtCount;
                      done = true;
                   } else {

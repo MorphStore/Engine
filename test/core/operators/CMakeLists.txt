@@ -1,5 +1,6 @@
 if ( CTEST_ALL OR CTEST_OPERATORS )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/select_nec_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/group_unary_nec_app )
 #	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/agg_sum_group_based_test_app )
 #	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/agg_sum_whole_column_test_app )
 #	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/calc_binary_test_app )
@@ -24,6 +25,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 #ENDIF(CAVXTWO  OR CAVX512)
 
 	add_executable( select_nec_app select_nec_test.cpp )
+	add_executable( group_unary_nec_app group_unary_nec_test.cpp )
 #	add_executable( agg_sum_group_based_test_app agg_sum_group_based_test.cpp )
 #	add_executable( agg_sum_whole_column_test_app agg_sum_whole_column_test.cpp )
 #	add_executable( calc_binary_test_app calc_binary_test.cpp )
@@ -50,6 +52,10 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 			# space to add custom flags for THIS SPECIFIC TARGET
 			)
 	target_link_libraries( select_nec_app PRIVATE  )
+	target_compile_options( group_unary_nec_app PRIVATE
+			# space to add custom flags for THIS SPECIFIC TARGET
+			)
+	target_link_libraries( group_unary_nec_app PRIVATE  )
 	
 #	target_compile_options( agg_sum_group_based_test_app PRIVATE
 #		# space to add custom flags for THIS SPECIFIC TARGET
@@ -152,6 +158,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 #ENDIF(CAVXTWO  OR CAVX512)
 
 	add_test( select_nec_app_test select_nec_app )
+	add_test( group_unary_nec_app_test group_unary_nec_app )
 #	add_test( agg_sum_group_based_test agg_sum_group_based_test_app )
 #	add_test( agg_sum_whole_column_test agg_sum_whole_column_test_app )
 #	add_test( calc_binary_test calc_binary_test_app )

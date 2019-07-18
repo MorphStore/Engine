@@ -26,10 +26,16 @@ namespace vectorlib{
     /*! Create a new vector by broadcasting value a to all elements of a vector.
     * This is a wrapper for _mm*_set1_*
     */
-   template<class VectorExtension,  int IOGranularity>
+   template<class VectorExtension, int IOGranularity>
    typename VectorExtension::vector_t
    set1(typename VectorExtension::base_t a){
       return create<VectorExtension, IOGranularity>::set1( a); 
+   }
+
+   template<class VectorExtension, int IOGranularity>
+   typename VectorExtension::mask_t
+   init0(void){
+      return create<VectorExtension, IOGranularity>::init0();
    }
    
     /*! Creates a vector filled with sequential numbers starting at a with step width b.

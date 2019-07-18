@@ -51,6 +51,12 @@ namespace vectorlib {
          trace( "[VECTOR] - set1 sse register." );
          return _mm256_set1_epi64x(a0);
       }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256< T > >::mask_t
+      init0( void ) {
+         return (typename avx2<v256<T>>::mask_t) 0;
+      }
    
    };
    

@@ -41,7 +41,7 @@ namespace vectorlib {
             typename VectorExtension::vector_t,      // groupID vector register
             typename VectorExtension::vector_t,      // groupExt vector register
             typename VectorExtension::mask_t, // active groupExt elements
-            uint8_t        // Number of active groupExt elements
+            typename VectorExtension::mask_size_t        // Number of active groupExt elements
          >
          insert_and_lookup(
             typename VectorExtension::vector_t const & p_KeysFirstToLookup,

@@ -126,6 +126,17 @@ namespace vectorlib {
          return _ve_pcvm_sm( p_Mask );
       }
    };
+
+   template< typename T >
+   struct count_trailing_zeroes< aurora< v16k< T > > > {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename aurora< v16k< T > >::mask_size_t
+      apply(
+         typename aurora< v16k< T > >::mask_t p_Mask
+      ) {
+         return _ve_tovm_sm( _ve_negm_mm( p_Mask ) );
+      }
+   };
 }
 
 #endif //MORPHSTORE_VECTOR_VECPROCESSOR_TSUBASA_PRIMITIVES_COMPARE_TSUBASA_H

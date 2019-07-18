@@ -72,7 +72,7 @@ namespace morphstore {
          vector_t positionVector = set_sequence<VectorExtension, vector_base_t_granularity::value>(p_InPositionIn,1);
          vector_t const incrementVector = set1<VectorExtension, vector_base_t_granularity::value>( vector_element_count::value );
          vector_mask_t lookupResultMask;
-         uint8_t hitResultCount;
+         vector_mask_size_t hitResultCount;
          for( size_t i = 0; i < p_Count; ++i ) {
             std::tie( lookupResultMask, hitResultCount ) =
                hs.template lookup<VectorExtension>(
@@ -192,7 +192,7 @@ namespace morphstore {
          vector_t const incrementVector = set1<VectorExtension, vector_base_t_granularity::value>( vector_element_count::value );
          vector_t lookupResultValuesVector;
          vector_mask_t lookupResultMask;
-         uint8_t hitResultCount;
+         vector_mask_size_t hitResultCount;
 
          for( size_t i = 0; i < p_Count; ++i ) {
             std::tie( lookupResultValuesVector, lookupResultMask, hitResultCount ) =

@@ -69,7 +69,7 @@ namespace morphstore {
       static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          vector_t       groupIdVector, groupExtVector;
          vector_mask_t  activeGroupExtMask;
-         uint8_t        activeGroupExtCount;
+         vector_mask_size_t        activeGroupExtCount;
          std::tie(
             groupIdVector,
             groupExtVector,

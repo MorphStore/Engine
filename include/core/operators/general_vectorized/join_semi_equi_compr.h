@@ -84,7 +84,7 @@ namespace morphstore {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void apply( vector_t const & p_DataVector, state_t & p_State ) {
          vector_mask_t lookupResultMask;
-         uint8_t hitResultCount;
+         vector_mask_size_t hitResultCount;
          std::tie( lookupResultMask, hitResultCount ) =
             p_State.m_Ds.template lookup<VectorExtension>(
                p_DataVector,

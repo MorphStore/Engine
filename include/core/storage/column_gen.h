@@ -29,6 +29,7 @@
 #include <core/utils/basic_types.h>
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
@@ -179,6 +180,43 @@ const column<uncompr_f> * generate_with_distr(
         std::sort(res, res + countValues);
     
     return resCol;
+}
+
+template< template< typename > class t_distr >
+const column< uncompr_f > * generate_repetitive_batches_with_distr (
+   size_t p_CountValues,
+   size_t p_CountBatchValues,
+   t_distr< uint64_t > p_Distr,
+   bool p_Sorted,
+   size_t p_Seed = 0
+) {
+   assert( p_CountValues % p_CountBatchValues == 0 );
+   const size_t allocationSize = p_CountValues * sizeof( uint64_t );
+   const size_t batchSize = p_CountBatchValues * sizeof( uint64_t );
+   const size_t batchCount = p_CountValues / p_CountBatchValues;
+   auto resCol = new column<uncompr_f>(allocationSize);
+   uint64_t * const res = resCol->get_data();
+   if( p_Seed == 0 ) {
+      p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+   }
+   std::default_random_engine generator(
+      p_Seed
+   );
+   for( size_t i = 0; i < p_CountBatchValues; ++i ) {
+      res[ i ] = p_Distr( generator );
+   }
+   if( p_Sorted ) {
+      std::sort( res, res + p_CountBatchValues );
+   }
+   for( size_t j = 1; j < batchCount; ++j ) {
+      std::memcpy(
+         &res[ j * p_CountBatchValues ],
+         res,
+         batchSize
+      );
+   }
+   resCol->set_meta_data( p_CountValues, allocationSize );
+   return resCol;
 }
 
 /**

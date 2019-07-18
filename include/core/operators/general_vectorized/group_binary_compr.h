@@ -73,7 +73,7 @@ namespace morphstore {
          vector_t       groupIdInVector = load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_State.m_GroupIdInPosition );
          vector_t       groupIdVector, groupExtVector;
          vector_mask_t  activeGroupExtMask;
-         uint8_t        activeGroupExtCount;
+         vector_mask_size_t        activeGroupExtCount;
          std::tie(
             groupIdVector,
             groupExtVector,

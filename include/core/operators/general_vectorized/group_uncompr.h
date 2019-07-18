@@ -48,7 +48,7 @@ namespace morphstore {
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          vector_t groupIdVector, groupExtVector;
          vector_mask_t activeGroupExtMask;
-         uint8_t activeGroupExtCount;
+         vector_mask_size_t activeGroupExtCount;
          for(size_t i = 0; i < p_Count; ++i) {
             std::tie( groupIdVector, groupExtVector, activeGroupExtMask, activeGroupExtCount ) =
                hs.template insert_and_lookup<VectorExtension>(
@@ -87,7 +87,7 @@ namespace morphstore {
          auto state = hs.template get_lookup_insert_strategy_state< VectorExtension >();
          vector_t groupIdVector, groupExtVector;
          vector_mask_t activeGroupExtMask;
-         uint8_t activeGroupExtCount;
+         vector_mask_size_t activeGroupExtCount;
          for(size_t i = 0; i < p_Count; ++i) {
             std::tie( groupIdVector, groupExtVector, activeGroupExtMask, activeGroupExtCount ) =
                hs.template insert_and_lookup<VectorExtension>(

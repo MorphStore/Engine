@@ -83,6 +83,16 @@ namespace vectorlib{
       ) = delete;
    };
 
+   template<class VectorExtension>
+   struct count_trailing_zeroes {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::mask_size_t
+      apply(
+         typename VectorExtension::mask_t p_mask
+      ) = delete;
+   };
+
    
 //   template<class VectorExtension, int IOGranularity>
 //   struct compare;

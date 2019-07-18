@@ -60,7 +60,7 @@ namespace vectorlib {
          typename VectorExtension::vector_t,      // groupID vector register
          typename VectorExtension::vector_t,      // groupExt vector register
          typename VectorExtension::mask_t, // active groupExt elements
-         uint8_t        // Number of active groupExt elements
+         typename VectorExtension::mask_size_t        // Number of active groupExt elements
       >
       insert_and_lookup(
          typename VectorExtension::vector_t const & p_InKeyVector,
@@ -80,7 +80,7 @@ namespace vectorlib {
 
       template< class VectorExtension >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      std::tuple< typename VectorExtension::vector_t, typename VectorExtension::mask_t, uint8_t >
+      std::tuple< typename VectorExtension::vector_t, typename VectorExtension::mask_t, typename VectorExtension::mask_size_t >
       lookup(
          typename VectorExtension::vector_t const & p_KeysToLookup,
          typename

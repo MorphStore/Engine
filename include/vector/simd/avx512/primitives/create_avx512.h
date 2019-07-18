@@ -51,6 +51,12 @@ namespace vectorlib {
          trace( "[VECTOR] - set1 sse register." );
          return _mm512_set1_epi64(a0);
       }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512< T > >::mask_t
+      init0( void ) {
+         return (typename av512<v512<T>>::mask_t) 0;
+      }
    
    };
    

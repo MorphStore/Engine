@@ -55,7 +55,7 @@ namespace vectorlib {
 
          template< class VectorExtension >
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
-         std::pair< typename VectorExtension::mask_t, uint8_t >
+         std::pair< typename VectorExtension::mask_t, typename VectorExtension::mask_size_t >
          lookup(
             typename VectorExtension::vector_t const & p_KeysToLookup,
             typename

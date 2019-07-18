@@ -33,6 +33,13 @@ namespace vectorlib {
          return _ve_vbrd_vs_i64( a );
       }
 
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename aurora<v16k< T > >::mask_t
+      init0( void ) {
+         _ve_lvl(256);
+         return _ve_vfmkaf_m();
+      }
+
       //@todo: should be U instead of int
       template<
          typename U = T,
