@@ -108,8 +108,10 @@ my_operator.h
 ~~~{.cpp}
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+namespace morphstore {
 
-template<class VectorExtension>
+    using namespace vectorlib;
+    template<class VectorExtension>
       
       void my_operator(...) {
         using namespace vectorlib;
@@ -117,6 +119,7 @@ template<class VectorExtension>
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         //Implement your code using vector primitives here
       }
+}
 ~~~
 </div>    
  
@@ -149,19 +152,22 @@ my_operator.h
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
+namespace morphstore {
 
-template<class VectorExtension>
+    using namespace vectorlib;
+    template<class VectorExtension>
       
       int my_operator(int number) {
       
-        using namespace vectorlib;
-
-        IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-        
-        vector_t vec = set1<VectorExtension, vector_base_type_size_bit::value>(number);
-        return hadd<VectorExtension, vector_base_type_size_bit::value>::apply(vec);
-        
+          using namespace vectorlib;
+  
+          IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+          
+          vector_t vec = set1<VectorExtension, vector_base_type_size_bit::value>(number);
+          return hadd<VectorExtension, vector_base_type_size_bit::value>::apply(vec);
+          
       }
+}
 ~~~
 </div>    
  
