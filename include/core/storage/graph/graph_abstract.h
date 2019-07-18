@@ -33,16 +33,24 @@ namespace morphstore{
     public:
         virtual ~Graph() { };
         virtual std::string getStorageFormat() = 0;
-        
-        // AdjacecenyList functions for ldbc-importer:
+
+        // init:
+        virtual void init() = 0;
+
+        // Vertex-functions for ldbc-importer:
         virtual void add_vertex() = 0;
-        virtual void add_edge(const uint64_t sourceID, const uint64_t targetID, unsigned short int relation) = 0;
-        virtual void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int relation, const std::pair<std::string, std::string>& property) = 0;
-        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0;
-        virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
+        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0; //
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) = 0;
-        virtual void set_entity_dictionary(const std::map<unsigned short int, std::string>& entityList) = 0;
-        virtual void set_relation_dictionary(const std::map<unsigned short int, std::string>& relationList) = 0;
+        virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0; //
+
+        // edge functions:
+        virtual void add_edge(const uint64_t sourceID, const uint64_t targetID, unsigned short int relation) = 0 ;
+        virtual void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int relation, const std::pair<std::string, std::string>& property) = 0;
+
+        // dictionary functions:
+        virtual void set_entity_dictionary(const std::map<unsigned short int, std::string>& entityList) = 0; //
+        virtual void set_relation_dictionary(const std::map<unsigned short int, std::string>& relationList) = 0; //
+
     };
 }
 

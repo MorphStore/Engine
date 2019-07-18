@@ -36,20 +36,24 @@
 
 namespace morphstore{
 
-    static const std::string storageFormat = "AdjacencyList";
-
     class AdjacencyList: public morphstore::Graph{
 
     private:
         // main data structure: mapping global id -> vertex
         // unordered_map hast fast search time -> average = O(1); worst case = O(n):
-        std::unordered_map<uint64_t, Vertex> vertices;
+        std::unordered_map<uint64_t, ADJLISTVertex> vertices;
 
         // lookup dictionaries for entities of vertices / relation names of edges
         std::map<unsigned short int, std::string> entityDictionary;
         std::map<unsigned short int, std::string> relationDictionary;
 
+        const std::string storageFormat = "AdjacencyList";
+
     public:
+
+        void init(){
+            std::cout << "Nothing to do!!" << std::endl;
+        }
 
         std::string getStorageFormat(){
             return storageFormat;
@@ -58,8 +62,8 @@ namespace morphstore{
         // calculate the graph size in bytes
         size_t get_size_of_graph(){
             size_t size = 0;
-			size += sizeof(std::unordered_map<uint64_t, Vertex>);
-            for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
+			size += sizeof(std::unordered_map<uint64_t, ADJLISTVertex>);
+            for(std::unordered_map<uint64_t, ADJLISTVertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 size += it->second.get_size_of_vertex();
             }
             return size;
@@ -67,15 +71,15 @@ namespace morphstore{
 
         // adds a vertex (without properties)
         void add_vertex(){
-            Vertex v;
+            ADJLISTVertex v;
             vertices.insert(std::make_pair(v.getId(), v));
         }
 
         // function that creates a new relation/edge between two (existing) vertices
         void add_edge(const uint64_t sourceID, const uint64_t targetID, unsigned short int rel){
             if(exist_id(sourceID) && exist_id(targetID)){
-                Vertex* sourceV = &vertices.at(sourceID);
-                Vertex* targetV = &vertices.at(targetID);
+                ADJLISTVertex* sourceV = &vertices.at(sourceID);
+                ADJLISTVertex* targetV = &vertices.at(targetID);
                 sourceV->add_edge(targetV, rel);
             }else{
                 std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
@@ -85,8 +89,8 @@ namespace morphstore{
         // function that creates a new relation/edge between two (existing) vertices WITH property
         void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int rel, const std::pair<std::string, std::string>& property){
             if(exist_id(sourceID) && exist_id(targetID)){
-                Vertex* sourceV = &vertices.at(sourceID);
-                Vertex* targetV = &vertices.at(targetID);
+                ADJLISTVertex* sourceV = &vertices.at(sourceID);
+                ADJLISTVertex* targetV = &vertices.at(targetID);
                 sourceV->add_edge_with_property(targetV, rel, property);
             }else{
                 std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
@@ -95,7 +99,7 @@ namespace morphstore{
 
         // function to add a new (ldbc) vertex to the graph and returns system-ID
         uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ){
-            Vertex v;
+            ADJLISTVertex v;
             v.add_properties(props);
             vertices.insert(std::make_pair(v.getId(), v));
             return v.getId();
@@ -106,7 +110,7 @@ namespace morphstore{
             if(exist_id(id)){
                 vertices.at(id).add_property(property);
             }else{
-                std::cout << "Source-/Target-Vertex-ID does not exist in the database!";
+                std::cout << "Source-/Target-Vertex-ID does not exist in the database!" << std::endl;
             }
         }
 
@@ -153,7 +157,7 @@ namespace morphstore{
         // this function returns the total number of edges in the graph
         uint64_t get_total_number_of_edges(){
             uint64_t totalNumberEdges = 0;
-            for(std::unordered_map<uint64_t, Vertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
+            for(std::unordered_map<uint64_t, ADJLISTVertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
                 totalNumberEdges += it->second.get_number_of_edges();
             }
             return totalNumberEdges;
@@ -184,7 +188,7 @@ namespace morphstore{
         // for debugging
         void print_vertex_by_id(uint64_t id){
             std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
-            Vertex* v = &vertices.at(id);
+            ADJLISTVertex* v = &vertices.at(id);
             std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
             std::cout << "Entity: \t"<< get_entity_by_number(v->getEntity()) << std::endl;
             std::cout << "#Edges: \t" << v->get_adjList().size() << std::endl;

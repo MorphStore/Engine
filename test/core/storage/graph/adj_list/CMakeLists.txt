@@ -1,5 +1,5 @@
 if ( CTEST_ALL OR CTEST_STORAGE )
-    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/storage/graph/ldbc_graph_adj_list_test_app )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/storage/graph/adj_list/ldbc_graph_adj_list_test_app )
 
     add_executable( ldbc_graph_adj_list_test_app generate_ldbc_graph_adj_list.cpp)
     target_compile_options( ldbc_graph_adj_list_test_app PRIVATE

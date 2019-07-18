@@ -24,6 +24,9 @@
 #ifndef MORPHSTORE_LDBC_IMPORT_H
 #define MORPHSTORE_LDBC_IMPORT_H
 
+#include <core/storage/graph/csr/graph.h>
+#include <core/storage/graph/adj_list/graph.h>
+
 #include <experimental/filesystem>
 #include <vector>
 #include <string>
@@ -55,7 +58,6 @@ namespace morphstore{
         std::map<unsigned short int, std::string> relationsLookup;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
-
 
     public:
 
@@ -209,6 +211,12 @@ namespace morphstore{
                 // graph gets full entity-list here:
                 graph.set_entity_dictionary(entitiesLookup);
             }
+
+            // BE CAREFUL WITH THIS:  if the graph structure is CSR, we do futher stuff (malloc node array,....)
+            if(graph.getStorageFormat() == "CSR"){
+                graph.init();
+            }
+
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
@@ -235,9 +243,10 @@ namespace morphstore{
             return false;
         }
 
-
         // this function reads the relation-files and generates edges in graph
         void generate_edges(morphstore::Graph &graph){
+
+
 
             if(!relationsPaths.empty()) {
                 //std::cout << "(2/2) Generating LDBC-Edges ...";
@@ -421,6 +430,125 @@ namespace morphstore{
 
         }
 
+        // function that returns number of vertices
+        uint64_t get_total_number_vertices(){
+
+            uint64_t result = 0;
+
+            if(!verticesPaths.empty()) {
+
+                // iterate through vector of vertex-addresses
+                for (const auto &address : verticesPaths) {
+
+                    char* buffer;
+
+                    uint64_t fileSize = 0;
+
+                    std::ifstream vertexFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+
+                    if (!vertexFile) {
+                        std::cerr << "Error, opening file. ";
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // calculate file size
+                    if (vertexFile.is_open()) {
+                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        vertexFile.clear();
+                        vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    }
+
+                    // allocate memory
+                    buffer = (char*) malloc( fileSize * sizeof( char ) );
+                    vertexFile.read(buffer, fileSize); // read data as one big block
+                    bool firstLine = true;
+
+                    // read buffer and do the magic ...
+                    for(size_t i = 0; i < fileSize; ++i){
+                        if(buffer[i] == '\n'){
+                            // skip first line...
+                            if(firstLine){
+                                firstLine = false;
+                            }else{
+                                ++result;
+                            }
+                        }
+                    }
+
+                    delete[] buffer; // free memory
+                    vertexFile.close();
+                }
+            }
+            return result;
+        }
+
+        // function which returns the total number of edges (IMPORTANT: vertex generation has to be done first, because entity lookup creation)
+        uint64_t get_total_number_edges(){
+
+            uint64_t result = 0 ;
+
+            if(!relationsPaths.empty()) {
+
+                // iterate through vector of relation-addresses
+                for (const auto &address : relationsPaths) {
+
+                    // TODO OPTIMIZE HERE: remove string operations
+                    // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
+                    std::string relation = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+                    std::string fromEntity = relation.substr(0, relation.find('_'));
+                    relation.erase(0, relation.find('_') + 1);
+
+                    std::string relationName = relation.substr(0, relation.find('_'));
+                    relation.erase(0, relation.find('_') + 1);
+
+                    std::string toEntity = relation;
+
+                    char* buffer;
+
+                    uint64_t fileSize = 0;
+
+                    std::ifstream relationFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+
+                    if (!relationFile) {
+                        std::cerr << "Error, opening file. ";
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // calculate file size
+                    if (relationFile.is_open()) {
+                        fileSize = static_cast<uint64_t>(relationFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        relationFile.clear();
+                        relationFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    }
+
+                    // allocate memory
+                    buffer = (char*) malloc( fileSize * sizeof( char ) );
+                    relationFile.read(buffer, fileSize); // read data as one big block
+                    bool firstLine = true;
+
+                    // check from file name whether it's a relation file or multi value attribute file
+                    if(is_entity(toEntity)){
+
+                        for(size_t i = 0; i < fileSize; ++i){
+                            if(buffer[i] == '\n'){
+                                // skip first line (attributes infos....)
+                                if(firstLine){
+                                    firstLine = false;
+                                }else{
+                                    ++result;
+                                }
+                            }
+                        }
+
+                    }
+
+                    delete[] buffer; // free memory
+                    relationFile.close();
+
+                }
+            }
+            return result;
+        }
     };
 }
 

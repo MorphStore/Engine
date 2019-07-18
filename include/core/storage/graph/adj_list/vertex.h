@@ -27,26 +27,25 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
-#include <unordered_set>
 
 
 namespace morphstore{
 
-    class Vertex;
+    class ADJLISTVertex;
 
     // this struct represents a relation to a target vertex;
     struct Edge{
-        Vertex* target;
+        ADJLISTVertex* target;
         unsigned short int relation;
         // make this optianl??:
         std::pair<std::string, std::string> property;
 
 		size_t size_in_bytes() const {
-			return sizeof(Vertex*) + sizeof(unsigned short int) + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
+			return sizeof(ADJLISTVertex*) + sizeof(unsigned short int) + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
 		};
     };
 
-    class Vertex{
+    class ADJLISTVertex{
 
     private:
         // Vertex contains a (global) id; entity; vector adjList for the adjacency List
@@ -60,7 +59,7 @@ namespace morphstore{
     public:
 
         // constrcutor without the adjList (Vertex can contain no edges int the graph)
-        Vertex(){
+        ADJLISTVertex(){
             // unique ID generation
             static uint64_t startID = 0;
             id = startID++;
@@ -118,7 +117,7 @@ namespace morphstore{
         }
 
         // function that creates a new relation/edge between two (existing) vertices withouht properties
-        void add_edge(Vertex *target, unsigned short int relation){
+        void add_edge(ADJLISTVertex *target, unsigned short int relation){
             Edge e;
             e.target = target;
             e.relation = relation;
@@ -126,7 +125,7 @@ namespace morphstore{
         }
 
         // add edge with properties to vertex
-        void add_edge_with_property(Vertex *target, unsigned short int relation, const std::pair<std::string, std::string>& property){
+        void add_edge_with_property(ADJLISTVertex *target, unsigned short int relation, const std::pair<std::string, std::string>& property){
             Edge e;
             e.target = target;
             e.relation = relation;
