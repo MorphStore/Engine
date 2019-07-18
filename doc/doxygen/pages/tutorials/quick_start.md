@@ -65,4 +65,4 @@ the folder test/vector/operators. They can be built and run with
 
 Again, this builds in debug mode. For release mode (-O2) use -rel, and for high performance mode (-O3 and link time optimization) use -hi.
 
-next: \ref testCases 
+<div style="text-align:center;"> <b>next:</b> \ref testCases</div> 

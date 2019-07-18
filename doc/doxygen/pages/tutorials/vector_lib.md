@@ -42,25 +42,29 @@ Thus AVX-512 has special subsets which may or may not appear together onto a pro
 
 Usage
 -----
-<div class="ToDo">Use MemoryManager instead of malloc</div>
-<div class="ToDo">Explain what happens here</div>
-<div class="ToDo">Rename according to current code base</div>
+A vector primitive provides a certain functionality, e.g. loading data into a register, where a template parameters define the exact behaviour, e.g. the register size, data type, or alignment of the data.
+The following example shows the usage of a load primitive with the SSE vector extension. In lines 3-4, integer type data is loaded into a vector register. Lines 5-6 show how double precision type data is loaded.
+For information on how to use these primitives to create a genealized operator, which works with all available vector extensions, we refer to the subpage \ref VectorPrimitives.
 
 <div class=userCode>
 ~~~{.cpp}
-1    using namespace vector;
+1    using namespace vectorlib;
 2    uint32_t * const data = (uint32_t*)_mm_malloc( 128, 16 );
 3    typename sse< v128< uint32_t > >::vector_t a =
-4        load< sse< v128< uint32_t > >, iov::ALIGNED, 128 >::apply( data );
+4        load< sse< v128< uint32_t > >, iov::ALIGNED, 128 >( data );
 5    typename sse< v128< double > >::vector_t b =
-6        load< sse< v128< double > >, iov::UNALIGNED, 128 >::apply( reinterpret_cast< double * >( data ) );
+6        load< sse< v128< double > >, iov::UNALIGNED, 128 >( reinterpret_cast< double * >( data ) );
 7    _mm_free( data );
 ~~~
 </div>
 
 Compilation
--------------
-<div class="ToDo">Explain compile flags</div>
+-------------  
+Whenever vector extensions are used, the compiler needs to be told to build with them. If you are using the build.sh script, which is provided in the repository, 
+you can do this by calling the script with the flag <i>-sse4, avxtwo,</i> or <i>-avx512</i> respectively. Then all flags for the chosen extension and all older extensions 
+are automatically activated. 
+If you create your own build script, you have to take care for the flags yourself. For gcc/g++, the options include but are not limited to <i>-msse4.2, -mavx2,</i> and <i>-mavx512f</i>.   
+
 
 How to implement additional functionality for the VectorLib 
 ------------------
@@ -82,40 +86,40 @@ a partial specialization can be used. **Watch out:** partial specialization is *
 One of the main drawbacks with structs is that c++-standard prohibits static functors ( `static operator()` ). To avoid the need of instantiating the particular
 struct aside passing a `this` pointer and so on an additional member method has to be used. Maybe this can be shortened for ease of use.
 
-If a primitive shall be fully specialized, an ordinary global function can be used. In the following example a quite simple load primitives is shown. `iov::ALIGNED` is the Input/Ouput variant which can be found using SIMDI regarding the cache alignment. `IOGranularity` is just a number, denotating the size of loaded elements. 
+If a primitive shall be fully specialized, an ordinary global function can be used. In the following example a quite simple load primitive is shown. `iov::ALIGNED` is the Input/Ouput variant which can be found using SIMDI regarding the cache alignment. `IOGranularity` is just a number, denotating the size of loaded elements. 
 <div class=morphStoreDeveloperCode>
 ~~~{.cpp}
- 1    template<typename T, int IOGranularity>
- 2    struct load<sse<v128<T>>,iov::ALIGNED, IOGranularity> {
- 3        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
- 4        MSV_CXX_ATTRIBUTE_INLINE
- 5        static typename sse< v128< U > >::vector_t
- 6        apply( U const * const p_DataPtr ) {
- 7            trace( "[VECTOR] - Loading aligned integer values into 128 Bit vector register." );
- 8            return _mm_load_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
- 9        }
-10
-11        template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
-12        MSV_CXX_ATTRIBUTE_INLINE
-13        static typename sse< v128< U > >::vector_t
-14        apply( U const * const p_DataPtr ) {
-15            trace( "[VECTOR] - Loading aligned float values into 128 Bit vector register." );
-16            return _mm_load_ps(reinterpret_cast< U const * >(p_DataPtr));
-17        }
-18
-19        template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
-20        MSV_CXX_ATTRIBUTE_INLINE
-21        static typename sse< v128< U > >::vector_t
-22        apply( U const * const p_DataPtr ) {
-23            trace( "[VECTOR] - Loading aligned double values into 128 Bit vector register." );
-24            return _mm_load_pd(reinterpret_cast< U const * >(p_DataPtr));
-25        }
-26    };
+1    template<typename T, int IOGranularity>
+2    struct io<sse<v128<T>>,iov::ALIGNED, IOGranularity> {
+3       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+4       MSV_CXX_ATTRIBUTE_FORCE_INLINE
+5       static typename sse< v128< U > >::vector_t
+6       load( U const * const p_DataPtr ) {
+7          trace( "[VECTOR] - Loading aligned integer values into 128 Bit vector register." );
+8          return _mm_load_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
+9       }
+10      
+11      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+12      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+13      static typename sse< v128< U > >::vector_t
+14      load( U const * const p_DataPtr ) {
+15         trace( "[VECTOR] - Loading aligned float values into 128 Bit vector register." );
+16         return _mm_load_ps(reinterpret_cast< U const * >(p_DataPtr));
+17      }
+18      
+19      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
+20      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+21     static typename sse< v128< U > >::vector_t
+22      load( U const * const p_DataPtr ) {
+23         trace( "[VECTOR] - Loading aligned double values into 128 Bit vector register." );
+24         return _mm_load_pd(reinterpret_cast< U const * >(p_DataPtr));
+25      }
+26  };
 ~~~
 </div>
 
-This is an example for implementing a partial specialized load primitive. Line 3-9 cover all integral basetypes, Line 11-25 all floating point basetypes.
-
+This is an example for implementing a partial specialized load primitive. Lines 2-9 cover all integral basetypes, Line 11-25 all floating point basetypes.
+For more information on the available primitives and how to use them, please read the \ref VectorPrimitives subpage.
 
 Conceptual remarks 
 ------------------
@@ -215,3 +219,6 @@ TODO
         - Gather
         - Scatter
     - ...
+
+
+<div style="text-align:center;"> <b>next:</b> \ref VectorPrimitives</div>

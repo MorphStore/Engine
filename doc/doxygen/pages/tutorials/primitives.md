@@ -1,11 +1,5 @@
 \page VectorPrimitives Vector Primitives
-[TOC]
-\subpage PageSubTopicA
 
-\subpage PageSubTopicB
-
-Vector Primitives
-=================
 Vector primtives are functionalities, which are frequently used in most operators, e.g. load and store operations. 
 However, different vector extensions support these operations either in a different way or not at all, which would 
 require a different operator implementation for every extension. For this reason, vector primitives are introduced. They 
@@ -18,7 +12,7 @@ Includes
 For using the primitives, the according header for each extension and for each primitive group has to be included. The 
 extension header can be found in 
 {Morphstore/Engine/inlcude/}vector/simd/{vector extension}/extension_{vector extension}.h, e.g. the SSE extension is 
-included into the user code via 
+included into the code via 
 
 <div class=userCode>
 ~~~{.cpp}
@@ -29,7 +23,7 @@ The general interface is included into the operator code via
 
 <div class=morphStoreDeveloperCode>
 ~~~{.cpp}
-#include <vector/general_vector.h>
+#include <vector/general_vector_extension.h>
 ~~~
 </div>
 
@@ -112,12 +106,13 @@ functionality is in the namespace <i>vector</i>.
 <div class=morphStoreDeveloperCode>
 my_operator.h
 ~~~{.cpp}
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 template<class VectorExtension>
       
       void my_operator(...) {
-        using namespace vector;
+        using namespace vectorlib;
 
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         //Implement your code using vector primitives here
@@ -128,12 +123,13 @@ template<class VectorExtension>
 <div class=userCode>     
 main.cpp
 ~~~{.cpp} 
-#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 #include "my_operator.h"
 
 int main(){  
 
-  using namespace vector;
+  using namespace vectorlib;
    
   my_operator<avx2<v256<uint64_t>>>( ... );
   return 0;
@@ -150,21 +146,20 @@ and finally returns and displays the sum of all elements of the created vector.
 <div class=morphStoreDeveloperCode>
 my_operator.h
 ~~~{.cpp}
-#include <vector/general_vector.h>
-#include <vector/primitives/calc.h>
-#include <vector/primitives/create.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 
 template<class VectorExtension>
       
       int my_operator(int number) {
       
-        using namespace vector;
+        using namespace vectorlib;
 
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         
         vector_t vec = set1<VectorExtension, vector_base_type_size_bit::value>(number);
-        return hadd<VectorExtension, vector_base_type_size_bit::value>(vec);
+        return hadd<VectorExtension, vector_base_type_size_bit::value>::apply(vec);
         
       }
 ~~~
@@ -174,14 +169,13 @@ template<class VectorExtension>
 main.cpp    
 ~~~{.cpp} 
 #include <iostream>
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 #include "my_operator.h"
 
 int main(){  
   
-  using namespace vector;
+  using namespace vectorlib;
    
   int result = my_operator<avx2<v256<uint64_t>>>( 1 );
   
@@ -226,6 +220,7 @@ possible but not all of them are available on every system. The following code s
 ~~~
 </div>
 
+Of course, you can also use <i>#ifdef SSE</i>, but here we assume that any decent non-exotic system is equipped with SSE. 
 In our running example, we can create an SSE and an AVX2 variant and put the AVX2 variant into a 
 <i>#ifdef</i>-block. This creates the output
 
@@ -239,20 +234,13 @@ main.cpp
 ~~~{.cpp} 
 #include <iostream>
 
-#ifdef AVXTWO
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
-#endif
-
-#include <vector/simd/sse/extension_sse.h>
-#include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 #include "my_operator.h"
 
 int main(){  
   
-  using namespace vector;
+  using namespace vectorlib;
   int result = 0;
   
   #ifdef AVXTWO 
@@ -282,10 +270,30 @@ If our running example is built without any of these flags, it produces the outp
 Result sum (sse): 2
 </pre>  
 
-\page PageSubTopicA I/O Primitives 
 
-I/O Primitives
-==============
+More Information
+================
+
+For more information on the individual primitive groups, refer to one of the following pages:
+
+[TOC]
+\subpage PageSubTopicA
+
+\subpage PageSubTopicB
+
+\subpage PageSubTopicC
+
+\subpage PageSubTopicD
+
+\subpage PageSubTopicE
+
+\subpage PageSubTopicF
+
+\subpage PageSubTopicG
+
+<div style="text-align:center;"> <b>prev:</b> \ref veclib   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicA </div>
+
+\page PageSubTopicA I/O Primitives 
 
 The load and store primitives implement 4 functions:
 
@@ -325,22 +333,153 @@ The following example shows an aligned load:
 <div class=morphStoreDeveloperCode>
 my_operator.h
 ~~~{.cpp}
-#include <vector/general_vector.h>
-#include <vector/primitives/io.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 template<class VectorExtension>
       
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       void my_operator(uint64_t * dataPtr) {
       ...
-        load<VectorExtension,iov::ALIGNED, vector_size_bit::value>( dataPtr )
+        vector_t dataVector = load<VectorExtension,iov::ALIGNED, vector_size_bit::value>( dataPtr )
       ...
       }
 ~~~
 </div>
 
-<div class="ToDo">Write a little more</div>
-\page PageSubTopicB Compare Primitives 
+<div style="text-align:center;"> <b>prev:</b> \ref VectorPrimitives   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicB </div>
 
-Compare Primitives
-==============
+\page PageSubTopicB Comparison Primitives 
+
+Comparison primitives compare the content of two vector registers on a base type granularity, e.g. consider two 256-bit registers filled with 64-bit 
+unsigned integers. A comparison for equality would do the following:
+
+<pre>
+vector register A:    4 | 8 | 17 | 12
+vector register B:    3 | 8 |  0 | 12
+-------------------------------------
+A==B?                 0   1    0    1
+</pre>
+
+Thus, the result of all comparisons are a bitmask indicating whether the comparison of the corresponding elements of two vectors is true or not. A call 
+of a comparison for equality looks like this:
+
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function() {
+      ...
+        vector_mask_t result = equal<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply (
+            vectorA,
+            vectorB
+         );
+      ...
+      }
+~~~
+</div> 
+
+Apart from <i>equal</i>, there are more comparison primitives, namely <i>less, lessequal, greater, greaterequal, </i>and <i>count_matches</i>.
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicA   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicC </div>
+
+
+\page PageSubTopicC Calculation Primitives 
+
+Like the comparison primitives, the binary calculation primitives take two vectors and compute the result on a base type granularity. But for calculations, 
+the result is a another vector, not a mask. For instance, an addition does the following:
+
+
+<pre>
+vector register A:    4 | 8 | 17 | 12
+vector register B:    3 | 8 |  0 | 12
+-------------------------------------
+A+B                   7 |16 | 17 | 24
+</pre>
+
+The according source code looks like the following:
+
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function() {
+      ...
+        vector_t result = add<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply (
+            vectorA,
+            vectorB
+         );
+      ...
+      }
+~~~
+</div> 
+
+Other primitives for binary calculations are subtract <i>(sub)</i>, multiply <i>(mul)</i>, modulo <i>(mod)</i>, and divide <i>(div)</i>.
+The shift primitives <i>shift_left_individual</i> and <i>shift_right_individual</i> shift the elements of the first given vector by the
+corresponding amount given in the second vector.
+
+Unary calculations take only one vector, and depending on the operation, additional parameters. The following example shows the usage 
+if the <i>inv</i> primitive, which change sthe sign of the elements of a vector register:  
+
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function() {
+      ...
+        //changes the sign of all values in VectorA
+        vector_t result= inv<VectorExtension>::apply(VectorA);
+      ...
+      }
+~~~
+</div>
+
+Another calculation primitive, which takes only one vector as an argument is horizontal add <i>(hadd)</i>.
+There are also shift primitives. <i>Shift_left</i> and <i>shift_right</i> take an integer indicating how far the elements in the vector are shifted.
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicB   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicD </div>
+
+ 
+\page PageSubTopicD Create Primitives 
+
+
 <div class="ToDo">Write this</div>
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicC   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicE </div>
+
+
+\page PageSubTopicE Extract Primitives 
+
+
+<div class="ToDo">Write this</div>
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicD   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicF </div>
+
+\page PageSubTopicF Logic Primitives 
+
+
+<div class="ToDo">Write this</div>
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicE   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicG </div>
+
+\page PageSubTopicG Extract Primitives 
+
+
+<div class="ToDo">Write this</div>
+
+<div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicF   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref primitiveTable </div>
