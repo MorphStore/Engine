@@ -153,9 +153,31 @@
 }
 
 .symbol{
-  font-size: 8em;
+  font-size: 6em;
   float: left;
   padding: 20px;
+  margin: 10px;
   height: 100%;
   text-align: center;
+  width: 150px;
+}
+
+.howtoread{
+  border-style: dashed;
+  border-color: #0abde3;
+  border-width: 2px 2px 2px 2px;
+  padding: 5px;
+  margin: 5px;
+}
+
+/*
+I know this is really really ugly because it requires using an id multiple times.
+Unfortunately I didn't find any other way to change the color of links in markdown.
+*/
+#stublink a{
+  color: #ff6b6b;
+}
+
+#stublink a::link {
+ color: #ff6b6b;
 }
