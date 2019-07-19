@@ -467,29 +467,111 @@ There are also shift primitives. <i>Shift_left</i> and <i>shift_right</i> take a
  
 \page PageSubTopicD Create Primitives 
 
+There are 3 create primitives:
 
-<div class="ToDo">Write this</div>
+- set1: Sets all elements of a vector register to a given value
+- set_sequence: Fills a vector register with a sequence of integer values, useful for creating and incrementing index lists
+- set: Sets the elements of a vector register to the given values. The __use of this primitive is highly discouraged__ because the number of given values 
+depends on the vector size and the size of the base type, which breaks with the concept of universally applicable primitives.
 
+The <i>set1</i> and <i>set_sequence</i> primitives can be used as shown in the following code snippet:
+
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function() {
+      ...
+      //A vector filled with 5, 5, 5, 5,...
+      vector_t vec_five = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(5);
+      //A vector filled with 0, 2, 4, 6, ...
+      vector_t vec_sequence = vectorlib::set_sequence<VectorExtension, vector_base_t_granularity::value>(0,2);
+      ...
+      }
+~~~
+</div>
+      
 <div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicC   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicE </div>
 
 
 \page PageSubTopicE Extract Primitives 
 
+There is only one extract primitive: <i>extract_value</i>, which extracts a single value from a register. The type of the extracted value is <i>base_t</i>,
+which internally casts to the chosen base type of the processing style.
 
-<div class="ToDo">Write this</div>
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function(vector_t dataVector) {
+      ...
+      //extracts the first value (value with index 0) from a register
+      base_t value0 = extract_value<VectorExtension,vector_base_t_granularity::value>(dataVector, 0);
+      ...
+      }
+~~~
+</div>     
 
 <div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicD   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicF </div>
 
 \page PageSubTopicF Logic Primitives 
 
+Logic primitives perform bitwise comparisons between two vectors and return another vector with the result of the comparison. 
+Currently, there are primitives for bitwise AND and bitwise OR. They can be used like in the following example:
 
-<div class="ToDo">Write this</div>
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function(vector_t dataVector) {
+      ...
+      vector_t result_and = bitwise_and<VectorExtension, vector_size_bit::value>(vectorA, vectorB);
+      vector_t result_or  = bitwise_or <VectorExtension, vector_size_bit::value>(vectorA, vectorB);
+      ...
+      }
+~~~
+</div>     
+               
 
 <div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicE   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref PageSubTopicG </div>
 
-\page PageSubTopicG Extract Primitives 
+\page PageSubTopicG Manipulate Primitives 
 
+Manipulate primitives manipulate the content of a vector register on a vector size level.
+Currently, there is only one primitive in this group: <i>rotate</i>, which is used to rotate the elements in a vector by one element in each call.
+For instance, assume there is a register filled with the values { 3, 2, 1, 0}. After calling rotate, the content of the register is { 2, 1, 0, 3}.
 
-<div class="ToDo">Write this</div>
+<div class=morphStoreDeveloperCode>
+my_operator.h
+~~~{.cpp}
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
+template<class VectorExtension>
+
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      void some_function() {
+      ...
+      vector_t result = rotate<VectorExtension, vector_size_bit::value>(vectorA);
+      ...
+      }
+~~~
+</div>     
+
 
 <div style="text-align:center;"> <b>prev:</b> \ref PageSubTopicF   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Next: </b>\ref primitiveTable </div>

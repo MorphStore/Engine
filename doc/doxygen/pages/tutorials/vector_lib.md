@@ -1,7 +1,5 @@
 \page veclib VectorLib
 
-VectorLib
-=========
 SIMD (Single Instruction Multiple Data) or Vectorization denotes a data processing scheme, where multiple data elements are processed in parallel by the same operation. 
 
 The SIMD paradigma comes in two different flavours. On the one hand there are "real" vector processors using specialized cpu's alongside pipelines. This type of maschines has their origin in the CRAY-1. 
