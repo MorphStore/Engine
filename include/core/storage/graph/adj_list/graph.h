@@ -25,7 +25,6 @@
 #define MORPHSTORE_GRAPH_ADJACENCY_LIST_H
 
 #include <core/storage/graph/adj_list/vertex.h>
-#include <core/storage/graph/graph_abstract.h>
 
 #include <unordered_map>
 #include <map>
@@ -36,7 +35,7 @@
 
 namespace morphstore{
 
-    class AdjacencyList: public morphstore::Graph{
+    class AdjacencyList{
 
     private:
         // main data structure: mapping global id -> vertex
@@ -196,7 +195,7 @@ namespace morphstore{
 
             const std::vector<Edge>& adjList = v->get_adjList();
             for(const auto& e : adjList){
-                std::cout << "(" << e.target->getId() << "," << get_relation_by_number(e.relation) << ") ";
+                std::cout << "(" << e.target->getId() << "," << e.relation << "." << get_relation_by_number(e.relation) << ")  ";
             }
             std::cout << "\n";
             std::cout << "Properties: "; v->print_properties();

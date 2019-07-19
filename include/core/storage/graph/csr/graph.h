@@ -25,15 +25,15 @@
 #define MORPHSTORE_GRAPH_CSR_H
 
 #include <core/storage/graph/csr/vertex.h>
-#include <core/storage/graph/graph_abstract.h>
 
 #include <unordered_map>
 #include <map>
+#include <vector>
 #include <string>
 
 namespace morphstore{
 
-    class CSR: public morphstore::Graph{
+    class CSR{
 
     private:
         // main data structure: hash table (hash id to vertex)
@@ -43,16 +43,18 @@ namespace morphstore{
         // graph-structure: 3 Arrays (row_array, col_array, val_array)
         // row array('node array'): contains the offset in the col_array; vertex-system-id is index in the row_array
         // col_array('edge array'): every cell represents an edge containing the vertex targets ID
-        // value_array: edge properties
+        // value_array: relation number
         uint64_t* node_array;
         uint64_t* edge_array;
-        std::string* val_array;
+        unsigned short int* val_array;
 
         // lookup dictionaries for entities of vertices / relation names of edges
         std::map<unsigned short int, std::string> entityDictionary;
         std::map<unsigned short int, std::string> relationDictionary;
 
         const std::string storageFormat = "CSR";
+
+        uint64_t numberEdges;
 
 
     public:
@@ -61,13 +63,28 @@ namespace morphstore{
             return storageFormat;
         }
 
-        // this functions allocates the memory for the graph structure arrays
-        void init(){
-            // (1) get number of vertices from main data structure
-            uint64_t numberVertices = vertices.size();
-            // (2) allocate node array memory
-            node_array = new uint64_t[numberVertices];
+        uint64_t getNumberEdges(){
+            return numberEdges;
         }
+
+        void setNumberEdges(uint64_t edges){
+            this->numberEdges = edges;
+        }
+
+        // this functions allocates the memory for the graph structure arrays
+        void allocate_graph_structure(uint64_t numberVertices,uint64_t numberEdges){
+
+            // allocate node array:
+            node_array = new uint64_t[numberVertices];
+
+            // allocate edge array:
+            edge_array = new uint64_t[numberEdges];
+            setNumberEdges(numberEdges);
+
+            // allocate val array:
+            val_array = new unsigned short int[numberEdges];
+        }
+
 
         void add_vertex(){
             CSRVertex v;
@@ -82,9 +99,14 @@ namespace morphstore{
             }
         }
 
-        void add_edge(const uint64_t sourceID, const uint64_t targetID, unsigned short int relation){
-            // TODO
-            std::cout << sourceID << targetID << relation << std::endl;
+        // this function adds the data in the CSR structure from LDBC-Importer
+        void add_edge_ldbc(uint64_t vertexID, uint64_t startOffset, const std::vector<std::pair<uint64_t , unsigned short int >>& neighbors){
+            node_array[vertexID] = startOffset; // offset in edge_array
+            for(auto const& pair : neighbors){
+                edge_array[startOffset] = pair.first; // target id
+                val_array[startOffset]  = pair.second; // relation number for lookup
+                ++startOffset;
+            }
         }
 
         void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int relation, const std::pair<std::string, std::string>& property){
@@ -139,13 +161,57 @@ namespace morphstore{
             this->relationDictionary = relationList;
         }
 
+        uint64_t getNumberVertices(){
+            return vertices.size();
+        }
+
+        // calculate the graph size in bytes
+        size_t get_size_of_graph(){
+            size_t size = 0;
+            // pointer to arrays:
+            size += sizeof(uint64_t*) * 2 + sizeof(unsigned short int*);
+            // vertices:
+            size += sizeof(uint64_t) * getNumberVertices();
+            // edges:
+            size += sizeof(uint64_t) * getNumberEdges();
+            // val array:
+            size += sizeof(unsigned short int) * getNumberEdges();
+
+            // vertex map wth actual data:
+            for(std::unordered_map<uint64_t, CSRVertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
+                size += it->second.get_size_of_vertex();
+            }
+
+            return size;
+        }
+
+
+        // for debugging
+        void print_vertex_by_id(uint64_t id){
+            std::cout << "-------------- Vertex ID: " << id <<" --------------" << std::endl;
+            CSRVertex* v = &vertices.at(id);
+            uint64_t startOffset = node_array[id];
+            uint64_t endOffset = node_array[id+1];
+            std::cout << "Offset: " << startOffset << std::endl;
+            std::cout << "Vertex-ID: \t"<< v->getId() << std::endl;
+            std::cout << "Entity: \t"<< get_entity_by_number(v->getEntity()) << std::endl;
+            std::cout << "#Edges: " << (endOffset-startOffset) << std::endl;
+            std::cout << "Relations: ";
+            for (uint64_t i = startOffset; i < endOffset; ++i) {
+                std::cout << "(" << edge_array[i] << "," << val_array[i] << "." << get_relation_by_number(val_array[i]) << ")  ";
+            }
+            std::cout << "\n";
+            std::cout << "Properties: "; v->print_properties();
+            std::cout << "\n";
+            std::cout << "-----------------------------------------------" << std::endl;
+        }
 
 
         // for debbuging
         void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
-            std::cout << "Number of vertices: " << vertices.size() << std::endl;
-            std::cout << "Number of relations/edges: " << std::endl;
+            std::cout << "Number of vertices: " << getNumberVertices() << std::endl;
+            std::cout << "Number of relations/edges: " << getNumberEdges() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 

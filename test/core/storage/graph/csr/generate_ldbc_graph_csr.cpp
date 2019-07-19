@@ -17,32 +17,41 @@
 
 /**
  * @file generate_ldbc_graph.cpp
- * @brief Test for generating social network graph from LDBC files
+ * @brief Test for generating social network graph in CSR format from LDBC files
  * @todo
  */
 
+#include <core/storage/graph/csr/ldbc_import.h>
 #include <core/storage/graph/csr/graph.h>
-#include <core/storage/graph/ldbc_import.h>
-#include <core/storage/graph/graph_abstract.h>
 #include <chrono>  // for high_resolution_clock
 
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
+    auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
-    morphstore::LDBC_Import ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
+    morphstore::LDBCImportCSR ldbcImportCsr("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::CSR socialGraph;
 
-    // create abstract pointer to adjc_list (ldbc importer just has to handle with one input class and not adjcancyList, CSR, ....)
-    morphstore::Graph *graph;
-    graph = &socialGraph;
+    ldbcImportCsr.import(socialGraph);
 
-    ldbcImport.generate_vertices(*graph);
+    // measuring time...
+    auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    std::chrono::duration<double> elapsed = finish - start;
 
     socialGraph.statistics();
+    std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";
 
-    std::cout << "Number of edges: " << ldbcImport.get_total_number_vertices() << std::endl;
-    std::cout << "Number of edges: " << ldbcImport.get_total_number_edges() << std::endl;
+    /*
+    // test vertices:
+    socialGraph.print_vertex_by_id(100454);
+    socialGraph.print_vertex_by_id(100450);
+    socialGraph.print_vertex_by_id(100168);
+    socialGraph.print_vertex_by_id(2000100);
+    */
+
+    // calculate size of social graph
+    std::cout << "Size of socialGraph: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
     return 0;
 }

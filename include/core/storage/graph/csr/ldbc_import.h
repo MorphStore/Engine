@@ -17,15 +17,14 @@
 
 /**
  * @file ldbc_import.h
- * @brief this class reads the ldbc files and generates the graph
- * @todo
+ * @brief this class reads the ldbc files and generates the graph in CSR format
+ * @todo EDGE PROPERTIES ARE MISSING!!!
 */
 
-#ifndef MORPHSTORE_LDBC_IMPORT_H
-#define MORPHSTORE_LDBC_IMPORT_H
+#ifndef MORPHSTORE_LDBC_IMPORT_CSR_H
+#define MORPHSTORE_LDBC_IMPORT_CSR_H
 
 #include <core/storage/graph/csr/graph.h>
-#include <core/storage/graph/adj_list/graph.h>
 
 #include <experimental/filesystem>
 #include <vector>
@@ -48,7 +47,7 @@ struct hash_pair {
 
 namespace morphstore{
 
-    class LDBC_Import{
+    class LDBCImportCSR{
 
     private:
         std::string directory;
@@ -58,10 +57,13 @@ namespace morphstore{
         std::map<unsigned short int, std::string> relationsLookup;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
+        // main data structure
+        // map for lookup every system-id, the neigbors in the graph (for further processing, e.g. filling the edge_array in the right order)
+        std::unordered_map< uint64_t, std::vector<std::pair<uint64_t , unsigned short int >>> vertexNeighborsLookup;
 
     public:
 
-        LDBC_Import(const std::string& dir){
+        LDBCImportCSR(const std::string& dir){
             directory = dir;
             insert_file_names(directory);
         }
@@ -71,13 +73,15 @@ namespace morphstore{
         }
 
         // generate_vertices() + generate_edges()
-        void import(morphstore::Graph &graph){
+        void import(morphstore::CSR &graph){
             std::cout << "Importing LDBC-files into graph ... ";
             std::cout.flush();
 
             // (1) generate vertices
             generate_vertices(graph);
-            // (2) generate edges
+            // (2) allocate memory
+            allocate_graph_memory(graph);
+            // (3) generate edges
             generate_edges(graph);
 
             std::cout << "--> done" << std::endl;
@@ -108,7 +112,7 @@ namespace morphstore{
         }
 
         // this function reads the vertices-files and creates vertices in a graph
-        void generate_vertices(morphstore::Graph &graph){
+        void generate_vertices(morphstore::CSR &graph){
 
             if(!verticesPaths.empty()) {
                 //std::cout << "(1/2) Generating LDBC-Vertices ...";
@@ -212,11 +216,6 @@ namespace morphstore{
                 graph.set_entity_dictionary(entitiesLookup);
             }
 
-            // BE CAREFUL WITH THIS:  if the graph structure is CSR, we do futher stuff (malloc node array,....)
-            if(graph.getStorageFormat() == "CSR"){
-                graph.init();
-            }
-
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
@@ -244,7 +243,7 @@ namespace morphstore{
         }
 
         // this function reads the relation-files and generates edges in graph
-        void generate_edges(morphstore::Graph &graph){
+        void generate_edges(morphstore::CSR &graph){
 
 
 
@@ -383,13 +382,18 @@ namespace morphstore{
                                         toID = globalIdLookupMap.at({toEntity, row});
 
                                         // Generate edge in graph
-                                        graph.add_edge(fromID, toID, relationNumber);
+                                        //graph.add_edge(fromID, toID, relationNumber);
+
+                                        // insert relation into vertexNeighborsLookup
+                                        vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
-                                        graph.add_edge_with_property(fromID, toID, relationNumber, {propertyKey, value});
+                                        // add to graph
+                                        //graph.add_edge_with_property(fromID, toID, relationNumber, {propertyKey, value});
+                                        vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -414,6 +418,35 @@ namespace morphstore{
                 graph.set_relation_dictionary(relationsLookup);
 
                 globalIdLookupMap.clear(); // we dont need the lookup anymore -> clear
+
+                // do actual edge generation here:
+                write_vertexNeighborsLookup_into_graph(graph);
+            }
+        }
+
+        void write_vertexNeighborsLookup_into_graph(morphstore::CSR &graph){
+            // Write CSR arrays with data (offsets, number of relation,....):
+            uint64_t lastVertexID = graph.getNumberVertices() - 1;
+            uint64_t startOffset = 0;
+
+            for(uint64_t vertexID = 0; vertexID < lastVertexID; ++vertexID){
+                // get the list of target vertices
+                std::vector<std::pair<uint64_t , unsigned short int >> neighbors;
+                neighbors = vertexNeighborsLookup[vertexID];
+                //store the number for the offset in edge array
+                uint64_t endOffset = neighbors.size() + startOffset -1 ;
+                // VERTICES WITHOUT ANY EDGES -< TODO ? how to handle?
+                graph.add_edge_ldbc(vertexID, startOffset, neighbors);
+
+                startOffset = endOffset + 1 ;
+            }
+        }
+
+        void print_vertexNeighborsLookup_by_id(uint64_t id){
+            std::cout << "Vertex-ID: " << id << std::endl;
+            std::cout << "#Neighbors: " << vertexNeighborsLookup[id].size() << std::endl;
+            for(auto const& entry : vertexNeighborsLookup[id]){
+                std::cout << "( " << entry.first << ", " << entry.second << " )    ";
             }
         }
 
@@ -549,7 +582,15 @@ namespace morphstore{
             }
             return result;
         }
+
+        // this function allocates the memory used for the graph structure in CSR (arrays)
+        void allocate_graph_memory(morphstore::CSR &graph){
+            // get number of vertices and number of edges
+            uint64_t numberVertices = graph.getNumberVertices();
+            uint64_t numberEdges = get_total_number_edges();
+            graph.allocate_graph_structure(numberVertices, numberEdges);
+        }
     };
 }
 
-#endif //MORPHSTORE_LDBC_IMPORT_H
+#endif //MORPHSTORE_LDBC_IMPORT_CSR_H
