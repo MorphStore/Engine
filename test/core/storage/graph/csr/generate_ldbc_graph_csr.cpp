@@ -21,7 +21,7 @@
  * @todo
  */
 
-#include <core/storage/graph/csr/ldbc_import.h>
+#include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/csr/graph.h>
 #include <chrono>  // for high_resolution_clock
 
@@ -30,10 +30,10 @@ int main( void ){
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
-    morphstore::LDBCImportCSR ldbcImportCsr("/opt/ldbc_snb_datagen-0.2.8/social_network/");
+    morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::CSR socialGraph;
 
-    ldbcImportCsr.import(socialGraph);
+    ldbcImport.import_csr(socialGraph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time

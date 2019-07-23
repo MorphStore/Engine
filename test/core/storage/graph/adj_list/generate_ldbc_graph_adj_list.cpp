@@ -21,7 +21,7 @@
  * @todo
  */
 
-#include <core/storage/graph/adj_list/ldbc_import.h>
+#include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/adj_list/graph.h>
 #include <chrono>  // for high_resolution_clock
 
@@ -30,11 +30,11 @@ int main( void ){
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
-    morphstore::LDBCImportAdjList ldbcImportAdjList("/opt/ldbc_snb_datagen-0.2.8/social_network/");
+    morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::AdjacencyList socialGraph;
 
     // generate vertices & edges from LDBC files and insert into socialGraph
-    ldbcImportAdjList.import(socialGraph);
+    ldbcImport.import_adj_list(socialGraph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
