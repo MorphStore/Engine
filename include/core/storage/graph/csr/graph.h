@@ -44,9 +44,9 @@ namespace morphstore{
         // row array('node array'): contains the offset in the col_array; vertex-system-id is index in the row_array
         // col_array('edge array'): every cell represents an edge containing the vertex targets ID
         // value_array: relation number
-        uint64_t* node_array;
-        uint64_t* edge_array;
-        unsigned short int* val_array;
+        uint64_t* node_array = nullptr;
+        uint64_t* edge_array = nullptr;
+        unsigned short int* val_array = nullptr;
 
         // lookup dictionaries for entities of vertices / relation names of edges
         std::map<unsigned short int, std::string> entityDictionary;
