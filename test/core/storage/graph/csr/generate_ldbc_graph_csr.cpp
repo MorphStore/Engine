@@ -50,6 +50,8 @@ int main( void ){
     socialGraph.print_vertex_by_id(2000100);
     */
 
+    socialGraph.print_vertex_by_id(100168);
+
     // calculate size of social graph
     std::cout << "Size of socialGraph: " << socialGraph.get_size_of_graph() << " Bytes\n";
 

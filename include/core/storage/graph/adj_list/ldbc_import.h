@@ -79,6 +79,9 @@ namespace morphstore{
             // (2) generate edges
             generate_edges(graph);
 
+            // (3) clear intermediates
+            clear_intermediates();
+
             std::cout << "--> done" << std::endl;
         }
 
@@ -406,8 +409,6 @@ namespace morphstore{
                 }
                 // graph gets full relation-list here:
                 graph.set_relation_dictionary(relationsLookup);
-
-                globalIdLookupMap.clear(); // we dont need the lookup anymore -> clear
             }
         }
 
@@ -422,6 +423,14 @@ namespace morphstore{
                 std::cout << "\t" << rel << std::endl;
             }
 
+        }
+
+        void clear_intermediates(){
+            globalIdLookupMap.clear();
+            relationsLookup.clear();
+            entitiesLookup.clear();
+            relationsPaths.clear();
+            verticesPaths.clear();
         }
 
     };

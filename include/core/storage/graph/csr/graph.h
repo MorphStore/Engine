@@ -72,7 +72,7 @@ namespace morphstore{
         }
 
         // this functions allocates the memory for the graph structure arrays
-        void allocate_graph_structure(uint64_t numberVertices,uint64_t numberEdges){
+        void allocate_graph_structure_memory(uint64_t numberVertices,uint64_t numberEdges){
 
             // allocate node array:
             node_array = new uint64_t[numberVertices];

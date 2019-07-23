@@ -80,9 +80,12 @@ namespace morphstore{
             // (1) generate vertices
             generate_vertices(graph);
             // (2) allocate memory
-            allocate_graph_memory(graph);
+            allocate_graph_structure_memory(graph);
             // (3) generate edges
             generate_edges(graph);
+
+            // (4) remove intermediates
+            clear_intermediates();
 
             std::cout << "--> done" << std::endl;
         }
@@ -417,14 +420,16 @@ namespace morphstore{
                 // graph gets full relation-list here:
                 graph.set_relation_dictionary(relationsLookup);
 
-                globalIdLookupMap.clear(); // we dont need the lookup anymore -> clear
-
                 // do actual edge generation here:
                 write_vertexNeighborsLookup_into_graph(graph);
             }
         }
 
+        // this function writes the actual data from the intermediate vertexNeighborsLookup int to the arrays in the csr format
         void write_vertexNeighborsLookup_into_graph(morphstore::CSR &graph){
+            // firstly, sorting the intermediates with their target IDs ASC
+            sort_VertexNeighborsLookup();
+
             // Write CSR arrays with data (offsets, number of relation,....):
             uint64_t lastVertexID = graph.getNumberVertices() - 1;
             uint64_t startOffset = 0;
@@ -439,14 +444,6 @@ namespace morphstore{
                 graph.add_edge_ldbc(vertexID, startOffset, neighbors);
 
                 startOffset = endOffset + 1 ;
-            }
-        }
-
-        void print_vertexNeighborsLookup_by_id(uint64_t id){
-            std::cout << "Vertex-ID: " << id << std::endl;
-            std::cout << "#Neighbors: " << vertexNeighborsLookup[id].size() << std::endl;
-            for(auto const& entry : vertexNeighborsLookup[id]){
-                std::cout << "( " << entry.first << ", " << entry.second << " )    ";
             }
         }
 
@@ -584,11 +581,29 @@ namespace morphstore{
         }
 
         // this function allocates the memory used for the graph structure in CSR (arrays)
-        void allocate_graph_memory(morphstore::CSR &graph){
+        void allocate_graph_structure_memory(morphstore::CSR &graph){
             // get number of vertices and number of edges
             uint64_t numberVertices = graph.getNumberVertices();
             uint64_t numberEdges = get_total_number_edges();
-            graph.allocate_graph_structure(numberVertices, numberEdges);
+            graph.allocate_graph_structure_memory(numberVertices, numberEdges);
+        }
+
+        // this function clears all intermediates
+        void clear_intermediates(){
+            globalIdLookupMap.clear();
+            vertexNeighborsLookup.clear();
+            relationsLookup.clear();
+            entitiesLookup.clear();
+            relationsPaths.clear();
+            verticesPaths.clear();
+        }
+
+        // function for sorting the vertexNeighborsLookup ASC
+        void sort_VertexNeighborsLookup(){
+            // sorting the first element of the pair (target-id)
+            for(auto &it: vertexNeighborsLookup){
+                std::sort(it.second.begin(), it.second.end());
+            }
         }
     };
 }
