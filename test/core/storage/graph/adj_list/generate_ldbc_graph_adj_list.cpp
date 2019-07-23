@@ -34,7 +34,7 @@ int main( void ){
     morphstore::AdjacencyList socialGraph;
 
     // generate vertices & edges from LDBC files and insert into socialGraph
-    ldbcImport.import_adj_list(socialGraph);
+    ldbcImport.import(socialGraph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
@@ -52,7 +52,7 @@ int main( void ){
     */
     
     // calculate size of social graph
-    std::cout << "Size of socialGraph: " << socialGraph.get_size_of_graph() << " Bytes\n";
+    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
     return 0;
 }

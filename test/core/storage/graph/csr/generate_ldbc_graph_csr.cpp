@@ -33,7 +33,7 @@ int main( void ){
     morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
     morphstore::CSR socialGraph;
 
-    ldbcImport.import_csr(socialGraph);
+    ldbcImport.import(socialGraph);
 
     // measuring time...
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
@@ -51,7 +51,7 @@ int main( void ){
     */
 
     // calculate size of social graph
-    std::cout << "Size of socialGraph: " << socialGraph.get_size_of_graph() << " Bytes\n";
+    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
     return 0;
 }

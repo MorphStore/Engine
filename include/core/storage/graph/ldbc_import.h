@@ -98,6 +98,114 @@ namespace morphstore{
             }
         }
 
+        // this function reads the vertices-files and creates vertices in a graph
+        template <class T>
+        void generate_vertices(T &graph){
+
+            if(!verticesPaths.empty()) {
+                //std::cout << "(1/2) Generating LDBC-Vertices ...";
+                //std::cout.flush();
+
+                //this variable is used for the entityLookup-keys, starting by 0
+                unsigned short int entityNumber = 0;
+
+                // iterate through vector of vertex-addresses
+                for (const auto &address : verticesPaths) {
+
+                    // data structure for attributes of entity, e.g. taglass -> id, name, url
+                    std::vector<std::string> attributes;
+
+                    // get the entity from address ([...path...] / [entity-name].csv)
+                    std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+
+                    char* buffer;
+
+                    uint64_t fileSize = 0;
+
+                    std::ifstream vertexFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+
+                    if (!vertexFile) {
+                        std::cerr << "Error, opening file. ";
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // calculate file size
+                    if (vertexFile.is_open()) {
+                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                        vertexFile.clear();
+                        vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    }
+
+                    // allocate memory
+                    buffer = (char*) malloc( fileSize * sizeof( char ) );
+                    vertexFile.read(buffer, fileSize); // read data as one big block
+                    size_t start = 0;
+                    std::string delimiter = "|";
+
+                    // read buffer and do the magic ...
+                    for(size_t i = 0; i < fileSize; ++i){
+                        if(buffer[i] == '\n'){
+                            // get a row into string form buffer with start- and end-point
+                            std::string row(&buffer[start], &buffer[i]);
+
+                            // remove unnecessary '\n' at the beginning of a string
+                            if(row.find('\n') != std::string::npos){
+                                row.erase(0,1);
+                            }
+
+                            size_t last = 0;
+                            size_t next = 0;
+
+                            // first line of *.csv contains the attributes -> write to attributes vector
+                            if(start == 0){
+                                // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
+                                while ((next = row.find(delimiter, last)) != std::string::npos){
+                                    attributes.push_back(row.substr(last, next-last));
+                                    last = next + 1;
+                                }
+                                // last attribute
+                                attributes.push_back(row.substr(last));
+                            }else{
+                                // actual data:
+                                std::unordered_map<std::string, std::string> properties;
+                                size_t attrIndex = 0;
+                                std::string ldbcID = row.substr(0, row.find(delimiter));
+                                while ((next = row.find(delimiter, last)) != std::string::npos){
+                                    properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next-last)));
+                                    last = next + 1;
+                                    ++attrIndex;
+                                }
+                                // last attribute
+                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
+
+                                //-----------------------------------------------------
+                                // create vertex and insert into graph with properties
+                                uint64_t systemID = graph.add_vertex_with_properties(properties);
+                                // add entity number to vertex
+                                graph.add_entity_to_vertex(systemID, entityNumber);
+                                // map entity and ldbc id to system generated id
+                                globalIdLookupMap.insert({{entity, ldbcID}, systemID});
+                                //-----------------------------------------------------
+                                properties.clear(); // free memory
+                            }
+
+                            start = i; // set new starting point for buffer (otherwise it's concatenated)
+                        }
+                    }
+
+                    delete[] buffer; // free memory
+                    vertexFile.close();
+
+                    // insert entity-number with string into map
+                    entitiesLookup.insert(std::make_pair( entityNumber, entity));
+                    ++entityNumber;
+                }
+                // graph gets full entity-list here:
+                graph.set_entity_dictionary(entitiesLookup);
+            }
+
+        }
+
         // function which returns true, if parameter is a entity in ldbc-files
         bool is_entity(const std::string &entity){
             // iterate through entities-map to look up for paramater
@@ -218,12 +326,12 @@ namespace morphstore{
 
         // Import into Adj-List-Format:
         // generate_vertices() + generate_edges()
-        void import_adj_list(morphstore::AdjacencyList &graph){
+        void import(morphstore::AdjacencyList &graph){
             std::cout << "Importing LDBC-files into graph ... ";
             std::cout.flush();
 
             // (1) generate vertices
-            generate_vertices_adj_list(graph);
+            generate_vertices(graph);
             // (2) generate edges
             generate_edges_adj_list(graph);
 
@@ -231,113 +339,6 @@ namespace morphstore{
             clear_intermediates();
 
             std::cout << "--> done" << std::endl;
-        }
-
-        // this function reads the vertices-files and creates vertices in a graph
-        void generate_vertices_adj_list(morphstore::AdjacencyList &graph){
-
-            if(!verticesPaths.empty()) {
-                //std::cout << "(1/2) Generating LDBC-Vertices ...";
-                //std::cout.flush();
-
-                //this variable is used for the entityLookup-keys, starting by 0
-                unsigned short int entityNumber = 0;
-
-                // iterate through vector of vertex-addresses
-                for (const auto &address : verticesPaths) {
-
-                    // data structure for attributes of entity, e.g. taglass -> id, name, url
-                    std::vector<std::string> attributes;
-
-                    // get the entity from address ([...path...] / [entity-name].csv)
-                    std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
-
-                    char* buffer;
-
-                    uint64_t fileSize = 0;
-
-                    std::ifstream vertexFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
-
-                    if (!vertexFile) {
-                        std::cerr << "Error, opening file. ";
-                        exit(EXIT_FAILURE);
-                    }
-
-                    // calculate file size
-                    if (vertexFile.is_open()) {
-                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                        vertexFile.clear();
-                        vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-                    }
-
-                    // allocate memory
-                    buffer = (char*) malloc( fileSize * sizeof( char ) );
-                    vertexFile.read(buffer, fileSize); // read data as one big block
-                    size_t start = 0;
-                    std::string delimiter = "|";
-
-                    // read buffer and do the magic ...
-                    for(size_t i = 0; i < fileSize; ++i){
-                        if(buffer[i] == '\n'){
-                            // get a row into string form buffer with start- and end-point
-                            std::string row(&buffer[start], &buffer[i]);
-
-                            // remove unnecessary '\n' at the beginning of a string
-                            if(row.find('\n') != std::string::npos){
-                                row.erase(0,1);
-                            }
-
-                            size_t last = 0;
-                            size_t next = 0;
-
-                            // first line of *.csv contains the attributes -> write to attributes vector
-                            if(start == 0){
-                                // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
-                                while ((next = row.find(delimiter, last)) != std::string::npos){
-                                    attributes.push_back(row.substr(last, next-last));
-                                    last = next + 1;
-                                }
-                                // last attribute
-                                attributes.push_back(row.substr(last));
-                            }else{
-                                // actual data:
-                                std::unordered_map<std::string, std::string> properties;
-                                size_t attrIndex = 0;
-                                std::string ldbcID = row.substr(0, row.find(delimiter));
-                                while ((next = row.find(delimiter, last)) != std::string::npos){
-                                    properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next-last)));
-                                    last = next + 1;
-                                    ++attrIndex;
-                                }
-                                // last attribute
-                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
-
-                                //-----------------------------------------------------
-                                // create vertex and insert into graph with properties
-                                uint64_t systemID = graph.add_vertex_with_properties(properties);
-                                // add entity number to vertex
-                                graph.add_entity_to_vertex(systemID, entityNumber);
-                                // map entity and ldbc id to system generated id
-                                globalIdLookupMap.insert({{entity, ldbcID}, systemID});
-                                //-----------------------------------------------------
-                                properties.clear(); // free memory
-                            }
-
-                            start = i; // set new starting point for buffer (otherwise it's concatenated)
-                        }
-                    }
-
-                    delete[] buffer; // free memory
-                    vertexFile.close();
-
-                    // insert entity-number with string into map
-                    entitiesLookup.insert(std::make_pair( entityNumber, entity));
-                    ++entityNumber;
-                }
-                // graph gets full entity-list here:
-                graph.set_entity_dictionary(entitiesLookup);
-            }
-
         }
 
         // this function reads the relation-files and generates edges in graph
@@ -518,12 +519,12 @@ namespace morphstore{
 
         // Import into CSR-Format:
         // generate_vertices() + generate_edges()
-        void import_csr(morphstore::CSR &graph){
+        void import(morphstore::CSR &graph){
             std::cout << "Importing LDBC-files into graph ... ";
             std::cout.flush();
 
             // (1) generate vertices
-            generate_vertices_csr(graph);
+            generate_vertices(graph);
             // (2) allocate memory
             allocate_graph_structure_memory_csr(graph);
             // (3) generate edges
@@ -533,113 +534,6 @@ namespace morphstore{
             clear_intermediates();
 
             std::cout << "--> done" << std::endl;
-        }
-
-        // this function reads the vertices-files and creates vertices in a graph
-        void generate_vertices_csr(morphstore::CSR &graph){
-
-            if(!verticesPaths.empty()) {
-                //std::cout << "(1/2) Generating LDBC-Vertices ...";
-                //std::cout.flush();
-
-                //this variable is used for the entityLookup-keys, starting by 0
-                unsigned short int entityNumber = 0;
-
-                // iterate through vector of vertex-addresses
-                for (const auto &address : verticesPaths) {
-
-                    // data structure for attributes of entity, e.g. taglass -> id, name, url
-                    std::vector<std::string> attributes;
-
-                    // get the entity from address ([...path...] / [entity-name].csv)
-                    std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
-
-                    char* buffer;
-
-                    uint64_t fileSize = 0;
-
-                    std::ifstream vertexFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
-
-                    if (!vertexFile) {
-                        std::cerr << "Error, opening file. ";
-                        exit(EXIT_FAILURE);
-                    }
-
-                    // calculate file size
-                    if (vertexFile.is_open()) {
-                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                        vertexFile.clear();
-                        vertexFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-                    }
-
-                    // allocate memory
-                    buffer = (char*) malloc( fileSize * sizeof( char ) );
-                    vertexFile.read(buffer, fileSize); // read data as one big block
-                    size_t start = 0;
-                    std::string delimiter = "|";
-
-                    // read buffer and do the magic ...
-                    for(size_t i = 0; i < fileSize; ++i){
-                        if(buffer[i] == '\n'){
-                            // get a row into string form buffer with start- and end-point
-                            std::string row(&buffer[start], &buffer[i]);
-
-                            // remove unnecessary '\n' at the beginning of a string
-                            if(row.find('\n') != std::string::npos){
-                                row.erase(0,1);
-                            }
-
-                            size_t last = 0;
-                            size_t next = 0;
-
-                            // first line of *.csv contains the attributes -> write to attributes vector
-                            if(start == 0){
-                                // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
-                                while ((next = row.find(delimiter, last)) != std::string::npos){
-                                    attributes.push_back(row.substr(last, next-last));
-                                    last = next + 1;
-                                }
-                                // last attribute
-                                attributes.push_back(row.substr(last));
-                            }else{
-                                // actual data:
-                                std::unordered_map<std::string, std::string> properties;
-                                size_t attrIndex = 0;
-                                std::string ldbcID = row.substr(0, row.find(delimiter));
-                                while ((next = row.find(delimiter, last)) != std::string::npos){
-                                    properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next-last)));
-                                    last = next + 1;
-                                    ++attrIndex;
-                                }
-                                // last attribute
-                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
-
-                                //-----------------------------------------------------
-                                // create vertex and insert into graph with properties
-                                uint64_t systemID = graph.add_vertex_with_properties(properties);
-                                // add entity number to vertex
-                                graph.add_entity_to_vertex(systemID, entityNumber);
-                                // map entity and ldbc id to system generated id
-                                globalIdLookupMap.insert({{entity, ldbcID}, systemID});
-                                //-----------------------------------------------------
-                                properties.clear(); // free memory
-                            }
-
-                            start = i; // set new starting point for buffer (otherwise it's concatenated)
-                        }
-                    }
-
-                    delete[] buffer; // free memory
-                    vertexFile.close();
-
-                    // insert entity-number with string into map
-                    entitiesLookup.insert(std::make_pair( entityNumber, entity));
-                    ++entityNumber;
-                }
-                // graph gets full entity-list here:
-                graph.set_entity_dictionary(entitiesLookup);
-            }
-
         }
 
         // this function reads the relation-files and generates edges in graph
@@ -818,7 +712,7 @@ namespace morphstore{
                 graph.set_relation_dictionary(relationsLookup);
 
                 // do actual edge generation here:
-                write_vertexNeighborsLookup_into_graph_csr(graph);
+                write_intermediates_into_graph_csr(graph);
             }
         }
 
@@ -839,7 +733,7 @@ namespace morphstore{
         }
 
         // this function writes the actual data from the intermediate vertexNeighborsLookup int to the arrays in the csr format
-        void write_vertexNeighborsLookup_into_graph_csr(morphstore::CSR &graph){
+        void write_intermediates_into_graph_csr(morphstore::CSR &graph){
             // firstly, sorting the intermediates with their target IDs ASC
             sort_VertexNeighborsLookup_csr();
 
@@ -859,8 +753,6 @@ namespace morphstore{
                 startOffset = endOffset + 1 ;
             }
         }
-
-
     };
 }
 

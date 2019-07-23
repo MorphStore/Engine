@@ -46,16 +46,14 @@ namespace morphstore{
         std::map<unsigned short int, std::string> entityDictionary;
         std::map<unsigned short int, std::string> relationDictionary;
 
-        const std::string storageFormat = "AdjacencyList";
-
     public:
 
         void init(){
             std::cout << "Nothing to do!!" << std::endl;
         }
 
-        std::string getStorageFormat(){
-            return storageFormat;
+        std::string getStorageFormat() const{
+            return "AdjacencyList";
         }
 
         // calculate the graph size in bytes

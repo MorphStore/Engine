@@ -52,15 +52,13 @@ namespace morphstore{
         std::map<unsigned short int, std::string> entityDictionary;
         std::map<unsigned short int, std::string> relationDictionary;
 
-        const std::string storageFormat = "CSR";
-
         uint64_t numberEdges;
 
 
     public:
 
-        std::string getStorageFormat(){
-            return storageFormat;
+        std::string getStorageFormat() const{
+            return "CSR";
         }
 
         uint64_t getNumberEdges(){
