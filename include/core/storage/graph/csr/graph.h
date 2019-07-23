@@ -54,7 +54,6 @@ namespace morphstore{
 
         uint64_t numberEdges;
 
-
     public:
 
         std::string getStorageFormat() const{
@@ -70,7 +69,7 @@ namespace morphstore{
         }
 
         // this functions allocates the memory for the graph structure arrays
-        void allocate_graph_structure_memory(uint64_t numberVertices,uint64_t numberEdges){
+        void allocate_graph_structure_memory(uint64_t numberVertices, uint64_t numberEdges){
 
             // allocate node array:
             node_array = new uint64_t[numberVertices];
@@ -108,7 +107,7 @@ namespace morphstore{
         }
 
         void add_edge_with_property(uint64_t sourceID, uint64_t targetID, unsigned short int relation, const std::pair<std::string, std::string>& property){
-            // TODO
+            // TODO IMPLEMENT
             std::cout << sourceID << targetID << relation << property.first << std::endl;
 
         }

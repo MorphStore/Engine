@@ -47,11 +47,7 @@ namespace morphstore{
         std::map<unsigned short int, std::string> relationDictionary;
 
     public:
-
-        void init(){
-            std::cout << "Nothing to do!!" << std::endl;
-        }
-
+        
         std::string getStorageFormat() const{
             return "AdjacencyList";
         }

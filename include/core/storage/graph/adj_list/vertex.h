@@ -37,7 +37,7 @@ namespace morphstore{
     struct Edge{
         ADJLISTVertex* target;
         unsigned short int relation;
-        // make this optianl??:
+        // make this optional??:
         std::pair<std::string, std::string> property;
 
 		size_t size_in_bytes() const {
