@@ -56,16 +56,10 @@ namespace morphstore{
 
     public:
 
-        std::string getStorageFormat() const{
-            return "CSR";
-        }
-
-        uint64_t getNumberEdges(){
-            return numberEdges;
-        }
-
-        void setNumberEdges(uint64_t edges){
-            this->numberEdges = edges;
+        ~CSR(){
+            delete [] node_array;
+            delete [] edge_array;
+            delete [] val_array;
         }
 
         // this functions allocates the memory for the graph structure arrays
@@ -80,6 +74,18 @@ namespace morphstore{
 
             // allocate val array:
             val_array = new unsigned short int[numberEdges];
+        }
+
+        std::string getStorageFormat() const{
+            return "CSR";
+        }
+
+        uint64_t getNumberEdges(){
+            return numberEdges;
+        }
+
+        void setNumberEdges(uint64_t edges){
+            this->numberEdges = edges;
         }
 
 
