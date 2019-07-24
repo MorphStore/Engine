@@ -60,7 +60,7 @@ namespace morphstore{
         std::unordered_map< std::pair<std::string, std::string > , uint64_t , hash_pair> globalIdLookupMap;
 
         // for CSR data structure
-        // map for lookup every system-id, the neigbors in the graph (for further processing, e.g. filling the edge_array in the right order)
+        // map for lookup every system-id, the neighbors in the graph (for further processing, e.g. filling the edge_array in the right order)
         std::unordered_map< uint64_t, std::vector<std::pair<uint64_t , unsigned short int >>> vertexNeighborsLookup;
 
     public:
