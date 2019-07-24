@@ -27,6 +27,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <experimental/optional>
 
 
 namespace morphstore{
@@ -37,11 +38,16 @@ namespace morphstore{
     struct Edge{
         ADJLISTVertex* target;
         unsigned short int relation;
-        // make this optional??:
-        std::pair<std::string, std::string> property;
+        // make this optional:
+        std::experimental::optional<std::pair<std::string, std::string>> property;
 
 		size_t size_in_bytes() const {
-			return sizeof(ADJLISTVertex*) + sizeof(unsigned short int) + sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property.first.length() + property.second.length());
+		    size_t result = 0;
+			result = sizeof(ADJLISTVertex*) + sizeof(unsigned short int);
+			if(property){
+			    result = sizeof(std::pair< std::string, std::string >) + sizeof(char)*(property->first.length() + property->second.length());
+			}
+			return result;
 		};
     };
 
@@ -57,7 +63,7 @@ namespace morphstore{
         unsigned short int entity;
 
     public:
-
+        
         // constrcutor without the adjList (Vertex can contain no edges int the graph)
         ADJLISTVertex(){
             // unique ID generation

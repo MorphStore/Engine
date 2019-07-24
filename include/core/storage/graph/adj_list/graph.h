@@ -196,6 +196,22 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
         }
+
+        // test if the std::experimental::optional in the vertex class works:
+        void print_edges_with_property(){
+            for(auto& it : vertices){
+                // check if the vertex has neighbors
+                if(!it.second.get_adjList().empty()){
+                    // check if there is an edge with property
+                    for(auto const& edge : it.second.get_adjList()){
+                        // std::optional property true? -> exist!
+                        if(edge.property){
+                            std::cout << "Edge has Property: ( " << it.second.getId() << " -[ " << get_relation_by_number(edge.relation) << " ]->" << edge.target->getId() << ", " << edge.property->first << ": " << edge.property->second << ")" << std::endl;
+                        }
+                    }
+                }
+            }
+        }
     };
 
 }

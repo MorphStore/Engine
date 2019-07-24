@@ -217,8 +217,6 @@ namespace morphstore{
             std::cout << "Number of relations/edges: " << getNumberEdges() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
-
-
     };
 
 }
