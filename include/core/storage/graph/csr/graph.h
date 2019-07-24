@@ -66,14 +66,14 @@ namespace morphstore{
         void allocate_graph_structure_memory(uint64_t numberVertices, uint64_t numberEdges){
 
             // allocate node array:
-            node_array = new uint64_t[numberVertices];
+            node_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
 
             // allocate edge array:
-            edge_array = new uint64_t[numberEdges];
+            edge_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
             setNumberEdges(numberEdges);
 
             // allocate val array:
-            val_array = new unsigned short int[numberEdges];
+            val_array = (unsigned short int *) malloc(numberEdges * sizeof(unsigned short int));
         }
 
         std::string getStorageFormat() const{
