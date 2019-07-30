@@ -12,7 +12,7 @@
 namespace morphstore {
 
 mmap_memory_manager* mmap_memory_manager::m_Instance = nullptr;
-paged_memory_manager* paged_memory_manager::global_manager = nullptr;
+//paged_memory_manager* paged_memory_manager::global_manager = nullptr;
 
 }
 
