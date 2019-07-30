@@ -86,7 +86,7 @@ namespace vectorlib {
                malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
             },
             m_ValuesUnaligned{
-               malloc( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) )
+               malloc( get_size_with_alignment_padding( m_SizeHelper.m_Count * sizeof( typename BiggestSupportedVectorExtension::base_t ) ) )
             },
             m_KeysFirst{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_KeysFirstUnaligned ) },
             m_KeysSecond{ ( typename BiggestSupportedVectorExtension::base_t * ) create_aligned_ptr( m_KeysSecondUnaligned ) },
