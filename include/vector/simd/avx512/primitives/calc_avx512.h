@@ -37,6 +37,34 @@ namespace vectorlib{
          return _mm512_add_epi64( p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct add<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm256_add_epi64( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct add<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm_add_epi64( p_vec1, p_vec2);
+      }
+   };
+   
    template<>
    struct sub<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -76,6 +104,38 @@ namespace vectorlib{
          return _mm512_mul_epu32( p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct mul<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
+         info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         return _mm256_mul_epu32( p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct mul<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
+         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         return _mm_mul_epu32( p_vec1, p_vec2);
+      }
+   };
+   
+   
    template<>
    struct div<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
