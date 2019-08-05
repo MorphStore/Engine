@@ -43,6 +43,16 @@
 #  include <vector/simd/sse/primitives/manipulate_sse.h>
 #endif
 
+#ifdef NEON
+#  include <vector/simd/neon/primitives/calc_neon.h>
+#  include <vector/simd/neon/primitives/compare_neon.h>
+#  include <vector/simd/neon/primitives/create_neon.h>
+#  include <vector/simd/neon/primitives/extract_neon.h>
+#  include <vector/simd/neon/primitives/io_neon.h>
+#  include <vector/simd/neon/primitives/logic_neon.h>
+#  include <vector/simd/neon/primitives/manipulate_neon.h>
+#endif
+
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/create_scalar.h>

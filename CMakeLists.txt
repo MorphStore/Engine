@@ -66,6 +66,21 @@ IF(CAVX512)
 	message(STATUS "AVX512 and AVX2 support switched on")
 ENDIF(CAVX512)
 
+IF(CNEON)
+        morph_flag(-DNEON)
+	morph_flag(-mfpu=neon)
+	morph_flag(-flax-vector-conversions)
+        message(STATUS "NEON support switched on")
+ENDIF(CNEON)
+
+IF(CRAPL)
+    morph_flag(-DRAPL)
+ENDIF(CRAPL)
+
+IF(CODROID)
+    morph_flag(-DODROID)
+ENDIF(CODROID)
+
 morph_flag(-march=native)
 
 # remove build type to allow for custom flag handling
