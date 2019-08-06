@@ -18,7 +18,7 @@
 /**
  * @file ldbc_import.h
  * @brief this class reads the ldbc files and generates the graph in CSR or AdjList
- * @todo EDGE PROPERTIES ARE MISSING in fillVertexLookup(); OPTIMIZATIONS
+ * @todo EDGE-properties still missing!!! -> OPTIMIZATIONS
 */
 
 #ifndef MORPHSTORE_LDBC_IMPORT_H
@@ -59,7 +59,6 @@ namespace morphstore{
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map<std::pair<std::string, std::string>, uint64_t, hash_pair> globalIdLookupMap;
 
-        // for CSR data structure
         // map for lookup every system-id, the neighbors in the graph (for further processing, e.g. filling the edge_array in the right order)
         std::unordered_map<uint64_t, std::vector<std::pair<uint64_t, unsigned short int >>> vertexNeighborsLookup;
 
@@ -538,7 +537,7 @@ namespace morphstore{
                                         // WITHOUT properties: just from the first delimiter on
                                         toID = globalIdLookupMap.at({toEntity, row});
 
-                                        // insert relation into vertexNeighborsLookup
+                                        // insert relation into vertexNeighborsLookup with has EdgeProperty = false
                                         vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
 
                                     }else{
@@ -546,9 +545,9 @@ namespace morphstore{
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
-                                        // add to
                                         // TODO: DONT FORGET TO HANDLE PROPERTIES
                                         //graph.add_edge_with_property(fromID, toID, relationNumber, {propertyKey, value});
+                                        // insert relation into vertexNeighborsLookup with has EdgeProperty = TRUE
                                         vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
                                     }
                                 }
