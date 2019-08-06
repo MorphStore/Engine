@@ -1,7 +1,7 @@
 if ( CTEST_ALL OR CTEST_STORAGE )
     FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/storage/graph/csr/ldbc_graph_csr_test_app )
 
-    add_executable( ldbc_graph_csr_test_app generate_ldbc_graph_csr.cpp)
+    add_executable( ldbc_graph_csr_test_app ldbc_graph_csr.cpp)
     target_compile_options( ldbc_graph_csr_test_app PRIVATE
             -Werror
             -Wall

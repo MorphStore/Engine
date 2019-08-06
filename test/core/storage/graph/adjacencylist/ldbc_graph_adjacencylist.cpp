@@ -16,42 +16,50 @@
  **********************************************************************************************/
 
 /**
- * @file generate_ldbc_graph.cpp
- * @brief Test for generating social network graph in CSR format from LDBC files
+ * @file ldbc_graph_adjacency.cpp
+ * @brief Test for generating social network graph in ADJ_LIST format
  * @todo
  */
 
 #include <core/storage/graph/ldbc_import.h>
-#include <core/storage/graph/csr/graph.h>
+#include <core/storage/graph/formats/adjacencylist.h>
 #include <chrono>  // for high_resolution_clock
 
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
+    std::cout << "*********************************************************" << std::endl;
+    std::cout << "* MorphStore-Storage-Test: AdjacencyList-storage-format *" << std::endl;
+    std::cout << "*********************************************************" << std::endl;
+    std::cout << "\n";
+
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
-    morphstore::CSR socialGraph;
 
-    ldbcImport.import(socialGraph);
+    // Graph init:
+    std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
 
-    // measuring time...
+    // generate vertices & edges from LDBC files and insert into graph
+    ldbcImport.import(g1);
+
+    // measuring time:
     auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
     std::chrono::duration<double> elapsed = finish - start;
 
-    socialGraph.statistics();
+    g1->statistics();
     std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";
 
     /*
     // test vertices:
-    socialGraph.print_vertex_by_id(100454);
-    socialGraph.print_vertex_by_id(100450);
-    socialGraph.print_vertex_by_id(100168);
-    socialGraph.print_vertex_by_id(2000100);
-    */
+    g1->print_vertex_by_id(100454);
+    g1->print_vertex_by_id(100450);
+    g1->print_vertex_by_id(100168);
+    g1->print_vertex_by_id(2000100);
+     */
 
     // calculate size of social graph
-    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
+    //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
     return 0;
 }

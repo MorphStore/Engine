@@ -16,43 +16,49 @@
  **********************************************************************************************/
 
 /**
- * @file generate_ldbc_graph.cpp
- * @brief Test for generating social network graph as Adj-List from LDBC files
+ * @file cvertex.h
+ * @brief Derived vertex calss for CSR storage format
  * @todo
- */
+*/
 
-#include <core/storage/graph/ldbc_import.h>
-#include <core/storage/graph/adj_list/graph.h>
-#include <chrono>  // for high_resolution_clock
+#ifndef MORPHSTORE_CVERTEX_H
+#define MORPHSTORE_CVERTEX_H
 
-int main( void ){
+namespace morphstore{
 
-    // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
-    auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    class CVertex: public Vertex{
 
-    morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
-    morphstore::AdjacencyList socialGraph;
+    public:
+        // constructor with unique id generation
+        CVertex(){
+            // unique ID generation
+            static uint64_t startID = 0;
+            id = startID++;
+        }
 
-    // generate vertices & edges from LDBC files and insert into socialGraph
-    ldbcImport.import(socialGraph);
+        // this function has no usage here: the adding of edges happens in the graph file -> csr.h
+        // it's just here because its a pure function in Vertex.h
+        void add_edge(uint64_t from, uint64_t to,unsigned short int rel) override {
+            std::cout << " virtual add_edge - no usage: " << from << ", " << to << ", " << rel << std::endl;
+        }
 
-    // measuring time...
-    auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-    std::chrono::duration<double> elapsed = finish - start;
+        /* old-calculation of size of a vertex in bytes
+        size_t get_size_of_vertex() {
+            size_t size = 0;
+            size += sizeof(uint64_t); // id
+            // properties:
+            size += sizeof(std::unordered_map<std::string, std::string>);
+            for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
+                size += sizeof(char)*(property->first.length() + property->second.length());
+            }
+            // entities:
+            size += sizeof(unsigned short int);
 
-    socialGraph.statistics();
-    std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";
+            return size;
+        }
+        */
 
-    /*
-    // test vertices:
-    socialGraph.print_vertex_by_id(100454);
-    socialGraph.print_vertex_by_id(100450);
-    socialGraph.print_vertex_by_id(100168);
-    socialGraph.print_vertex_by_id(2000100);
-    */
-    
-    // calculate size of social graph
-    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
-
-    return 0;
+    };
 }
+
+#endif //MORPHSTORE_CVERTEX_H

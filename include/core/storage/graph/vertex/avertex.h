@@ -16,54 +16,55 @@
  **********************************************************************************************/
 
 /**
- * @file vertex.h
- * @brief CSR vertex header file
- * @todo
+ * @file avertex.h
+ * @brief Derived vertex calss for ADJ_LIST storage format
+ * @todo change adjlist (vector of Edges) to vector of Edge* ?????
 */
 
-#ifndef MORPHSTORE_VERTEX_CSR_H
-#define MORPHSTORE_VERTEX_CSR_H
+#ifndef MORPHSTORE_AVERTEX_H
+#define MORPHSTORE_AVERTEX_H
 
-#include <iostream>
-#include <unordered_map>
+#include "../edge/edge.h"
 
 namespace morphstore{
 
-    class CSRVertex{
+    class AVertex: public Vertex{
 
-    private:
-        // system-ID
-        uint64_t id;
-        // data 'properties'
-        std::unordered_map<std::string, std::string> properties;
-        // entity-number for look-up
-        unsigned short int entity;
+    protected:
+        std::vector<Edge> adjList;
 
     public:
-
-        CSRVertex(){
+        // constructor with unique id generation
+        AVertex(){
             // unique ID generation
             static uint64_t startID = 0;
             id = startID++;
         }
 
-        // add entity to vertex
-        void setEntity(unsigned short int e){
-            this->entity = e;
+        // returns a reference (read-only) of the adjacency list
+        const std::vector<Edge>& get_adjList() const{
+            return adjList;
         }
 
-        unsigned short int getEntity(){
-            return this->entity;
+        // add edge to vertexs' adjacencylist
+        void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
+            Edge e(from, to, rel);
+            this->adjList.push_back(e);
         }
 
-        uint64_t getId() const{
-            return id;
+        // function which returns the number of edges
+        uint64_t get_number_edges() override {
+            return adjList.size();
         }
 
-        // calculate size of a vertex for memory usage in bytes
+        /* old-calculation of vertex size
         size_t get_size_of_vertex() {
             size_t size = 0;
             size += sizeof(uint64_t); // id
+            // Adj.List:
+            for(const auto& e : adjList){
+                size += e.size_in_bytes();
+            }
             // properties:
             size += sizeof(std::unordered_map<std::string, std::string>);
             for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
@@ -74,27 +75,9 @@ namespace morphstore{
 
             return size;
         }
+         */
 
-        // this function adds a whole property map to a vertex
-        void add_properties(const std::unordered_map<std::string, std::string> &properties){
-            if(!properties.empty()){
-                this->properties = properties;
-            }else{
-                std::cout << "The properties-list is empty!" << std::endl;
-            }
-        }
-
-        // this adds one key-value pair to the vertex's property map
-        void add_property(const std::pair<std::string, std::string>& property){
-            this->properties[property.first] = std::move(property.second);
-        }
-
-        void print_properties(){
-            for(const auto& entry : properties){
-                std::cout << "{" << entry.first << ": " << entry.second << "}";
-            }
-        }
     };
 }
 
-#endif //MORPHSTORE_VERTEX_CSR_H
+#endif //MORPHSTORE_AVERTEX_H
