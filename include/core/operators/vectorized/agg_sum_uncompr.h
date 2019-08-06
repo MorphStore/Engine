@@ -18,14 +18,16 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/sse/extension_sse.h>
+
 #include <immintrin.h>
 
 namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::vec128>(
+agg_sum<vectorlib::sse<vectorlib::v128<uint64_t>>>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 
@@ -66,7 +68,7 @@ agg_sum<processing_style_t::vec128>(
 
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::vec256>(
+agg_sum<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
    column< uncompr_f > const * const p_DataColumn
 ) {
 

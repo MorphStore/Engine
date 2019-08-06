@@ -31,7 +31,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -42,7 +42,7 @@ namespace morphstore {
 
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::scalar>(
+agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol
 ) {
     const size_t inDataCount = inDataCol->get_count_values();
@@ -52,6 +52,7 @@ agg_sum<processing_style_t::scalar>(
     auto outDataCol = new column<uncompr_f>(sizeof(uint64_t));
     uint64_t * const outData = outDataCol->get_data();
 
+    *outData = 0;
     for(unsigned i = 0; i < inDataCount; i++)
         *outData += inData[i];
     
@@ -62,7 +63,7 @@ agg_sum<processing_style_t::scalar>(
 
 template<>
 const column<uncompr_f> *
-agg_sum<processing_style_t::scalar>(
+agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         size_t inExtCount
@@ -83,6 +84,8 @@ agg_sum<processing_style_t::scalar>(
     auto outDataCol = new column<uncompr_f>(outDataSize);
     uint64_t * const outData = outDataCol->get_data();
     
+    for(unsigned i = 0; i < inExtCount; i++)
+        outData[i] = 0;
     for(unsigned i = 0; i < inDataCount; i++)
         outData[inGr[i]] += inData[i];
     

@@ -29,14 +29,15 @@
 #include <core/operators/scalar/intersect_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vectorlib;
 
 int main(void) {
     const bool allGood = test_op_2in_1out_1val(
             "Intersect",
-            &intersect_sorted<processing_style_t::scalar, uncompr_f>,
+            &intersect_sorted<scalar<v64<uint64_t>>, uncompr_f>,
             make_column({1, 4, 5, 8, 9, 12}),
             make_column({1, 6, 8, 12, 15}),
             "inPosLCol",

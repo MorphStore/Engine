@@ -30,14 +30,15 @@
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vectorlib;
 
 int main( void ) {
     const bool allGood = test_op_1in_1out(
             "Whole-column aggregation(sum)",
-            &agg_sum<processing_style_t::scalar>,
+            &agg_sum<scalar<v64<uint64_t>>>,
             make_column({100, 150, 50, 500, 200, 100}),
             "inDataCol",
             make_column({1100}),

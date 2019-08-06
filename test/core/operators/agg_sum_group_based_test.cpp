@@ -29,14 +29,15 @@
 #include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vectorlib;
 
 int main( void ) {
     const bool allGood = test_op_2in_1out_1val(
             "Group-Based aggregation(sum)",
-            &agg_sum<processing_style_t::scalar, uncompr_f>,
+            &agg_sum<scalar<v64<uint64_t>>, uncompr_f>,
             make_column({0, 0, 1, 0, 2, 1}),
             make_column({100, 150, 50, 500, 200, 100}),
             "inGrCol",

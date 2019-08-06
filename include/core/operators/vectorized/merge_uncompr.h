@@ -19,7 +19,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
+
 #include <immintrin.h>
 #include <cstdint>
 #include <math.h> 
@@ -28,10 +29,10 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-merge_sorted<processing_style_t::vec256>(
+merge_sorted<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
         const column<uncompr_f> * const inPosLCol,
-        const column<uncompr_f> * const inPosRCol,
-        const size_t outPosCountEstimate
+        const column<uncompr_f> * const inPosRCol
+   
 ) {
     
     const uint64_t * inPosL;
@@ -56,14 +57,10 @@ merge_sorted<processing_style_t::vec256>(
     // If no estimate is provided: Pessimistic allocation size (for
     // uncompressed data), reached only if the two input columns are disjoint.
     auto outPosCol = new column<uncompr_f>(
-            bool(outPosCountEstimate)
-            // use given estimate
-            ? (outPosCountEstimate * sizeof(uint64_t))
-            // use pessimistic estimate
-            : (
+           
                     inPosLCol->get_size_used_byte() +
                     inPosRCol->get_size_used_byte()
-            )
+          
     );
     
     uint64_t * outPos = outPosCol->get_data();
@@ -89,7 +86,7 @@ merge_sorted<processing_style_t::vec256>(
         //if no values on left side are greater than on right side 
         if (mask_gt==0){
             if (mask_eq==0){ //avoid duplicates
-                *outPos=_mm256_extract_epi64(left,0);//save current value from left side if is not greater than the right side value
+                *outPos=_mm256_extract_epi64(left,0);//save current value from left side if it is not greater than the right side value
                 outPos++;
             }
             idx_left++;
@@ -146,6 +143,21 @@ merge_sorted<processing_style_t::vec256>(
     }
     
     if (idx_right>REnd) outPos-=(idx_right-REnd);//correct last output address if our last position is not divisible by 4
+    
+    
+    
+    //Copy rest, which didn't fit in a vetor register
+        while (idx_left < LEnd){
+            *outPos = idx_left;
+             idx_left++;
+             outPos++;
+        }
+         
+        while (idx_right < REnd){
+             *outPos = idx_right;
+             idx_right++;
+             outPos++;
+        }
     
     const size_t outPosCount = ((uint64_t *)outPos - (uint64_t *)initOutPos);
     outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));

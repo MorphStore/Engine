@@ -28,31 +28,43 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
-    
+
+
+
+
+template<
+   class VectorExtension,
+   class InFormatCol
+>
+struct agg_sum_t;
+
 /**
  * Whole-column aggregation(sum)-operator. Aggregates all data elements in the
  * given column.
- * 
+ *
  * Example:
  * - inDataCol:  [100, 150, 50, 500, 200, 100]
  * - outDataCol: [1100]
- * 
+ *
  * @param inDataCol A column containing the data elements to be aggregated.
  * @return An uncompressed column containing the aggregate value as a single
  * data element. We always use the uncompressed format here, since compressing
  * a single value would not make much sense.
  */
 template<
-        processing_style_t t_ps,
-        class t_in_data_f
+   class VectorExtension,
+   class InFormatCol
 >
-const column<uncompr_f> *
+column<uncompr_f> const *
 agg_sum(
-        const column<t_in_data_f> * const inDataCol
-);
+   const column<InFormatCol> * const inDataCol
+) {
+   return agg_sum_t< VectorExtension, InFormatCol >::apply( inDataCol );
+}
+
+
 
 
 
@@ -81,7 +93,7 @@ agg_sum(
  * equals i.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_gr_f,
         class t_in_data_f

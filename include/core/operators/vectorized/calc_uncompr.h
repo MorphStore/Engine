@@ -19,7 +19,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/simd/avx2/extension_avx2.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -32,9 +32,9 @@
 namespace morphstore {
     
 template<template<typename> class t_unary_op>
-struct calc_unary<
+struct calc_unary_t<
         t_unary_op,
-        processing_style_t::vec256,
+        vectorlib::avx2<vectorlib::v256<uint64_t>>,
         uncompr_f,
         uncompr_f
 > {
@@ -73,8 +73,8 @@ struct calc_unary<
 };
     
 template<template<typename> class t_binary_op>
-struct calc_binary<
-        t_binary_op, processing_style_t::vec256,
+struct calc_binary_t<
+        t_binary_op, vectorlib::avx2<vectorlib::v256<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f
@@ -99,38 +99,38 @@ struct calc_binary<
         // Exact allocation size (for uncompressed data).
         auto outDataCol = new column<uncompr_f>(inDataSize);
         __m256i * outData = (__m256i*)outDataCol->get_data();
-        const uint64_t * outDataInit = (uint64_t *) outData;
+        //const uint64_t * outDataInit = (uint64_t *) outData;
         
         t_binary_op<uint64_t> op;
         
         //Some helper registers, we will need for casting magic in the division 
         __m256d divhelper=_mm256_set1_pd(0x0010000000000000);
         __m256d intermediate;
-        
+        unsigned i=0;
         if (typeid(op)==typeid(std::plus<uint64_t>)){
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
                 _mm256_store_si256(outData,_mm256_add_epi64(_mm256_load_si256(inDataL+i),_mm256_load_si256(inDataR+i)));
                 outData++;
             }
         }
         
         if (typeid(op)==typeid(std::minus<uint64_t>)){
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
               _mm256_store_si256(outData,_mm256_sub_epi64(_mm256_load_si256(inDataL+i),_mm256_load_si256(inDataR+i)));
               outData++;
             }
         }
 
         if (typeid(op)==typeid(std::multiplies<uint64_t>)){
-            for(unsigned i = 0; i < inDataCount/4; i++){
-              _mm256_store_si256(outData,_mm256_mul_epi32(_mm256_load_si256(inDataL+i),_mm256_load_si256(inDataR+i)));
+            for( i = 0; i < inDataCount/4; i++){
+              _mm256_store_si256(outData,_mm256_mul_epu32(_mm256_load_si256(inDataL+i),_mm256_load_si256(inDataR+i)));
               outData++;
             }
         }        
         
 
          if (typeid(op)==typeid(std::divides<uint64_t>)){
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
                 
                 //Load as double and divide -> 64-bit integer division is not supported in sse or avx(2) 
                 intermediate=_mm256_div_pd(_mm256_load_pd((const double*)(inDataL+i)),_mm256_load_pd((const double *)(inDataR+i)));
@@ -153,7 +153,7 @@ struct calc_binary<
             __m256d right;
             __m256i righti;
             
-            for(unsigned i = 0; i < inDataCount/4; i++){
+            for( i = 0; i < inDataCount/4; i++){
                
                 // approach: divide -> floor -> multiply again -> difference between result and original
                 
@@ -189,8 +189,10 @@ struct calc_binary<
         
         //Process the last elements (which do not fill up a whole register) sequentially 
         uint64_t * oData=(uint64_t *)outData;
-        for(unsigned i = (outDataInit+inDataSize-(uint64_t*)outData); i < inDataCount; i++)
-            oData[i] = op(((uint64_t*)inDataL)[i],((uint64_t*)inDataR)[i]);
+        for(unsigned j = i*4; j < inDataCount; j++){
+            oData[0] = (uint64_t) op(((uint64_t*)inDataL)[j],((uint64_t*)inDataR)[j]);
+            oData++;
+        }
         
               
         outDataCol->set_meta_data(inDataCount, inDataSize);

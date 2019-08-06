@@ -1,7 +1,10 @@
-@page Memory Management
+@page memory Memory Management
 
 @subpage Global affect methods / functions:
  
+<b>This article is a stub. 
+\@ Developer Team: Please help to improve it.</b>
+
 Replaced functions:
 malloc( size_t ):
 free( void * ):

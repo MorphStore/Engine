@@ -14,94 +14,118 @@
 #ifndef CALC_H
 #define CALC_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
-namespace vector{
-    
-   
-   template<class VectorExtension, int IOGranularity>
-   struct calc;
+namespace vectorlib{
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct add {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct sub {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct hadd {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::base_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct mul {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct div {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct mod {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct inv {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_left {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         int const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_left_individual {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_data,
+         typename VectorExtension::vector_t const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_right {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         int const & p_distance
+      ) = delete;
+   };
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct shift_right_individual {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_data,
+         typename VectorExtension::vector_t const & p_distance
+      ) = delete;
+   };
 
-   /*!
-    * Add Vectors a and b component wise. Granularity gives the size of a component in bit, 
-    * e.g. to add 64-bit integers, granularity is 64. To add float values, Granularity is 32.
-    */
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   add(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::add( a, b );
-   }
-   
-    /*!
-    * Subtract Vector b from a component wise. Granularity gives the size of a component in bit, 
-    * e.g. to subtract 64-bit integers, Granularity is 64. To subtract float values, Granularity is 32.
-    */
-   
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   sub(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::sub( a, b );
-   }
-   
-    /*!
-    * Builds the sum of all elements in vector a. This is really ugly if done 
-    * vectorized using sse or avx2 (sequentially might be faster in these cases).
-    */
-   
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::base_t
-   hadd(typename VectorExtension::vector_t a) {
-       return calc<VectorExtension,  Granularity>::hadd( a );
-   }
-   
-   
-   /*! 
-    * Multiplies vector a and b element wise. 
-    * NOTE: There is no 64-bit multiply for SSE or AVX(2/512). So only the lower 32 bit 
-    * of any element will be used for multiplication.
-    * Benefit: Overflows are stored, too, since the result is still 64 bit
-    * 
-    */
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   mul(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::mul( a, b );
-   }
-   
-   /*!
-    * Divide a by b element wise.
-    * NOTE: There is no intrinsic to divide integers. This implementation uses a double division.
-    * Hence, 12 bit of every 64-bit value are lost for the sign and mantissa => Division only works 
-    * if no element in either vector uses more than 52 bit.
-    * 
-    */
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   div(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::div( a, b );
-   }
-   
-   /*!
-    * a mod b element-wise.
-    * NOTE: We need a division here but there is no intrinsic to divide integers. This implementation uses a double division.
-    * Hence, 12 bit of every 64-bit value are lost for the sign and mantissa => Division only works 
-    * if no element in either vector uses more than 52 bit.
-    * 
-    */
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   mod(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
-       return calc<VectorExtension,  Granularity>::mod( a, b );
-   }
-   
-    /*!
-    * Invert the sign of all numbers in vector a
-    */
-   template<class VectorExtension, int Granularity>
-   typename VectorExtension::vector_t
-   inv(typename VectorExtension::vector_t a ) {
-       return calc<VectorExtension,  Granularity>::inv( a );
-   }
    
       
 }

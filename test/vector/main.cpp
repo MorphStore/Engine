@@ -9,7 +9,7 @@
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
@@ -44,7 +44,7 @@
 int main( void ) {
     
 
-   using namespace vector;
+   using namespace vectorlib;
    using namespace morphstore;
    
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(100,1,5);
@@ -67,7 +67,7 @@ int main( void ) {
    
    sse< v128< uint64_t > >::vector_t testvec128;
    testvec128=load<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data);
-   vector::store < sse < v128 < uint64_t > > , iov::ALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128);
+   vectorlib::store < sse < v128 < uint64_t > > , iov::ALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128);
    std::cout << "sse aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< sse < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,2);
@@ -192,7 +192,7 @@ int main( void ) {
    
    avx2< v256< uint64_t > >::vector_t testvec256;
    testvec256=load<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data);
-   vector::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
+   vectorlib::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
    std::cout << "avx2 aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< avx2 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,2);
@@ -323,10 +323,10 @@ int main( void ) {
    
    
    testvec512=load<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data);
-   vector::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
+   vectorlib::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
    std::cout << "avx512 aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   vector::compressstore< avx512 < v512 < uint64_t > > , iov::UNALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512,128);
+   vectorlib::compressstore< avx512 < v512 < uint64_t > > , iov::UNALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512,128);
    std::cout << "avx512 compress store, 512 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< avx512 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,4);

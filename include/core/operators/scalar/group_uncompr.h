@@ -30,9 +30,11 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
+#ifndef MSV_NO_SELFMANAGED_MEMORY
 #include <core/memory/management/allocators/global_scope_allocator.h>
+#endif
 
 #include <cstdint>
 #include <map>
@@ -48,7 +50,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<processing_style_t::scalar>(
+group<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inGrCol,
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
@@ -92,12 +94,14 @@ group<processing_style_t::scalar>(
     if(inGrCol == nullptr) {
         // Unary group-operator.
         std::unordered_map<
-           uint64_t,
-           uint64_t,
-           std::hash<uint64_t>,
-           std::equal_to<uint64_t>,
-           global_scope_stdlib_allocator<std::pair<uint64_t, uint64_t >>
-           > groupIds;
+            uint64_t,
+            uint64_t
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+            , std::hash<uint64_t>
+            , std::equal_to<uint64_t>
+            , global_scope_stdlib_allocator<std::pair<uint64_t, uint64_t >>
+#endif
+            > groupIds;
         for(unsigned i = 0; i < inDataCount; i++) {
             uint64_t & groupId = groupIds[inData[i]];
             if(!groupId) { // The data item(key) was not found.
@@ -137,11 +141,11 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-group<processing_style_t::scalar>(
+group<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
         const column<uncompr_f> * const inDataCol,
         const size_t outExtCountEstimate
 ) {
-    return group<processing_style_t::scalar, uncompr_f, uncompr_f, uncompr_f>(
+    return group<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>(
             nullptr,
             inDataCol,
             outExtCountEstimate

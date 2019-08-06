@@ -18,13 +18,9 @@
 /**
  * @file vbp_routines.h
  * @brief Routines for using the vertical bit-packed layout.
- * @todo Efficient implementations (for now, it must merely work).
  * @todo Somehow include the name of the layout into the way to access these
  *       routines (namespace, struct, name prefix, ...), because we will have
  *       other layouts in the future.
- * @todo It would be great if we could derive the vector datatype (e.g.
- *       __m128i) from the processing style. Then we would not require uint8_t*
- *       parameters and it would also be easier for the callers.
  * @todo Documentation.
  */
 
@@ -34,13 +30,84 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <core/utils/processing_style.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/primitives/calc.h>
+#include <vector/primitives/create.h>
+#include <vector/primitives/io.h>
+#include <vector/primitives/logic.h>
+// @todo The following includes from the vector-lib should not be necessary, I think.
+#include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
+#ifdef SSE
 #include <immintrin.h>
+#endif
+
 #include <limits>
 
+/**
+ * If this macro is defined, then the functions delegating to the right
+ * (un)packing routine for a given bit width, i.e., `pack_switch`,
+ * `unpack_switch`, and `unpack_and_process_switch` have a default case that throws an exception if
+ * the specified bit width is invalid. For performance reasons, this check
+ * should be left out, but during debugging, it can be quite helpful.
+ */
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#include <stdexcept>
+#endif
+
+/**
+ * This pseudo-bit width can be used to indicate to unpack_switch and
+ * unpack_and_process_switch that no action shall be performed. We need this
+ * for the non-existent last blocks of the possible incomplete last page of
+ * dynamic_vbp_f.
+ */
+#define VBP_BW_NOBLOCK 0xff
+
+/**
+ * If this macro is defined, then the routines generated via template recursion
+ * and forced inlining process only the minimum number of input/output vectors
+ * required to guarantee that only full vectors are stored/loaded. If it is not
+ * defined, then 64 (= number of digits of an uncompressed data element)
+ * vectors will be processed in any case.
+ */
+#define VBP_USE_MIN_CYCLE_LEN
+
+/**
+ * The following macros control whether the respective kind of routine is
+ * declared to be always inlined.
+ */
+#undef VBP_FORCE_INLINE_PACK
+#undef VBP_FORCE_INLINE_PACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK
+#undef VBP_FORCE_INLINE_UNPACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
+
+// @todo Remove this workaround. We should find a cleaner way to do this.
+/**
+ * If the following macro is defined, only the routines for the bitwidths
+ * actually needed for SSB at scale factor 1 are compiled, which reduces the
+ * compile time significantly.
+ */
+#define VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+
 namespace morphstore {
+    
+    // ************************************************************************
+    // Special utilities
+    // ************************************************************************
+    
+    constexpr unsigned minimum_cycle_len(unsigned p_Bw) {
+        unsigned cycleLen = std::numeric_limits<uint64_t>::digits;
+        while(!(p_Bw & 1)) {
+            p_Bw >>= 1;
+            cycleLen >>= 1;
+        }
+        return cycleLen;
+    }
+    
     
     // ************************************************************************
     // Packing routines
@@ -52,12 +119,15 @@ namespace morphstore {
     
     // Struct for partial template specialization.
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
     struct pack_t {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+#ifdef VBP_FORCE_INLINE_PACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 size_t countIn64,
                 uint8_t * & out8
@@ -66,16 +136,19 @@ namespace morphstore {
     
     // Convenience function.
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack(
+#ifdef VBP_FORCE_INLINE_PACK
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void pack(
             const uint8_t * & in8,
             size_t countIn64,
             uint8_t * & out8
     ) {
-        pack_t<t_ps, t_bw, t_step>::apply(in8, countIn64, out8);
+        pack_t<t_vector_extension, t_bw, t_step>::apply(in8, countIn64, out8);
     }
     
     
@@ -83,168 +156,98 @@ namespace morphstore {
     // Template specializations.
     // ------------------------------------------------------------------------
     
-    template<unsigned t_bw>
-    struct pack_t<
-            processing_style_t::vec128,
-            t_bw,
-            sizeof(__m128i) / sizeof(uint64_t)
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
-                const uint8_t * & in8,
-                size_t countIn64,
-                uint8_t * & out8
-        ) {
-            const __m128i * in128 = reinterpret_cast<const __m128i *>(in8);
-            const size_t countIn128 = convert_size<uint64_t, __m128i>(countIn64);
-            __m128i * out128 = reinterpret_cast<__m128i *>(out8);
-
-            __m128i tmpA = _mm_setzero_si128();
-            unsigned bitpos = 0;
-            const __m128i * const endIn128 = in128 + countIn128;
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            while(in128 < endIn128) {
-                while(bitpos + t_bw <= countBits) { // as long as the next vector still fits
-                    tmpA = _mm_or_si128(
-                            tmpA,
-                            _mm_slli_epi64(
-                                    _mm_load_si128(in128++),
-                                    bitpos
-                            )
-                    );
-                    bitpos += t_bw;
+    template<class t_vector_extension, unsigned t_bw>
+    class pack_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        
+        struct state_t {
+            const base_t * inBase;
+            base_t * outBase;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase, base_t * p_OutBase) {
+                inBase = p_InBase;
+                outBase = p_OutBase;
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void pack_block(state_t & s) {
+            using namespace vectorlib;
+            if(t_CycleLen > 1) {
+                pack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                pack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                const vector_t tmp2 = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                s.inBase += vector_element_count::value;
+                s.tmp = bitwise_or<t_ve>(s.tmp, shift_left<t_ve>::apply(tmp2, s.bitpos));
+                s.bitpos += t_bw;
+                if(((t_PosInCycle + 1) * t_bw) % countBits == 0) {
+                    store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.tmp);
+                    s.outBase += vector_element_count::value;
+                    s.tmp = set1<t_ve, vector_base_t_granularity::value>(0);
+                    s.bitpos = 0;
                 }
-                if(bitpos == countBits) {
-                    _mm_store_si128(out128++, tmpA);
-                    tmpA = _mm_setzero_si128();
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    const __m128i tmpB = _mm_load_si128(in128++);
-                    tmpA = _mm_or_si128(tmpA, _mm_slli_epi64(tmpB, bitpos));
-                    _mm_store_si128(out128++, tmpA);
-                    tmpA = _mm_srli_epi64(tmpB, countBits - bitpos);
-                    bitpos = bitpos + t_bw - countBits;
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.tmp);
+                    s.outBase += vector_element_count::value;
+                    s.tmp = shift_right<t_ve>::apply(tmp2, t_bw - s.bitpos + countBits);
+                    s.bitpos -= countBits;
                 }
             }
-
-            in8 = reinterpret_cast<const uint8_t *>(in128);
-            out8 = reinterpret_cast<uint8_t *>(out128);
-        };
-    };
-    
-#if 0
-    // Tailored to a step width of 2 (as for the 128-bit variant).
-    template<unsigned t_bw>
-    struct pack_t<
-            processing_style_t::scalar,
-            t_bw,
-            sizeof(__m128i) / sizeof(uint64_t)
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
-                const uint8_t * & in8,
-                size_t countIn64,
-                uint8_t * & out8
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
-            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
-
-            uint64_t tmpA0 = 0;
-            uint64_t tmpA1 = 0;
-            unsigned bitpos = 0;
-            const uint64_t * const endIn64 = in64 + countIn64;
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            while(in64 < endIn64) {
-                while(bitpos + t_bw <= countBits) { // as long as the next vector still fits
-                    tmpA0 |= ((*in64++) << bitpos);
-                    tmpA1 |= ((*in64++) << bitpos);
-                    bitpos += t_bw;
-                }
-                if(bitpos == countBits) {
-                    *out64++ = tmpA0;
-                    *out64++ = tmpA1;
-                    tmpA0 = 0;
-                    tmpA1 = 0;
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    const uint64_t tmpB0 = *in64++;
-                    const uint64_t tmpB1 = *in64++;
-                    tmpA0 |= (tmpB0 << bitpos);
-                    tmpA1 |= (tmpB1 << bitpos);
-                    *out64++ = tmpA0;
-                    *out64++ = tmpA1;
-                    tmpA0 = (tmpB0 >> (countBits - bitpos));
-                    tmpA1 = (tmpB1 >> (countBits - bitpos));
-                    bitpos = bitpos + t_bw - countBits;
-                }
-            }
-
-            in8 = reinterpret_cast<const uint8_t *>(in64);
-            out8 = reinterpret_cast<uint8_t *>(out64);
-        };
-    };
-#else
-    // Generic w.r.t. the step width. Hopefully the compiler unrolls the loops.
-    template<unsigned t_bw, unsigned t_step>
-    struct pack_t<
-            processing_style_t::scalar,
-            t_bw,
-            t_step
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
-                const uint8_t * & in8,
-                size_t countIn64,
-                uint8_t * & out8
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
-            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
-
-            uint64_t tmpA[t_step];
-            for(unsigned i = 0; i < t_step; i++)
-                tmpA[i] = 0;
-            unsigned bitpos = 0;
-            const uint64_t * const endIn64 = in64 + countIn64;
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            while(in64 < endIn64) {
-                while(bitpos + t_bw <= countBits) { // as long as the next vector still fits
-                    for(unsigned i = 0; i < t_step; i++)
-                        tmpA[i] |= ((*in64++) << bitpos);
-                    bitpos += t_bw;
-                }
-                if(bitpos == countBits) {
-                    for(unsigned i = 0; i < t_step; i++) {
-                        *out64++ = tmpA[i];
-                        tmpA[i] = 0;
-                    }
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    for(unsigned i = 0; i < t_step; i++) {
-                        const uint64_t tmpB = *in64++;
-                        tmpA[i] |= (tmpB << bitpos);
-                        *out64++ = tmpA[i];
-                        tmpA[i] = (tmpB >> (countBits - bitpos));
-                    }
-                    bitpos = bitpos + t_bw - countBits;
-                }
-            }
-
-            in8 = reinterpret_cast<const uint8_t *>(in64);
-            out8 = reinterpret_cast<uint8_t *>(out64);
-        };
-    };
+        }
+        
+    public:
+#ifdef VBP_FORCE_INLINE_PACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
 #endif
-
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn64,
+                uint8_t * & out8
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            base_t * outBase = reinterpret_cast<base_t *>(out8);
+            state_t s(inBase, outBase);
+            const size_t countInBase = convert_size<uint64_t, base_t>(countIn64);
+            
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const size_t cycleLenVec = minimum_cycle_len(t_bw);
+            const size_t cycleLenBase = cycleLenVec * vector_element_count::value;
+            const size_t cycleCount = countInBase / cycleLenBase;
+            for(size_t i = 0; i < cycleCount; i++)
+                pack_block<cycleLenVec, 0>(s);
+#else
+            const size_t blockSize = vector_size_bit::value;
+            for(size_t i = 0; i < countInBase; i += blockSize)
+                pack_block<countBits, 0>(s);
+#endif
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
+            out8 = reinterpret_cast<uint8_t *>(s.outBase);
+        }
+    };
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
     // ------------------------------------------------------------------------
     
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void pack_switch(
+#ifdef VBP_FORCE_INLINE_PACK_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void pack_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             size_t inCount64,
@@ -253,71 +256,80 @@ namespace morphstore {
         switch(bitwidth) {
             // Generated with Python:
             // for bw in range(1, 64+1):
-            //   print("case {: >2}: pack<t_ps, {: >2}, t_step>(in8, inCount64, out8); break;".format(bw, bw))
-            case  1: pack<t_ps,  1, t_step>(in8, inCount64, out8); break;
-            case  2: pack<t_ps,  2, t_step>(in8, inCount64, out8); break;
-            case  3: pack<t_ps,  3, t_step>(in8, inCount64, out8); break;
-            case  4: pack<t_ps,  4, t_step>(in8, inCount64, out8); break;
-            case  5: pack<t_ps,  5, t_step>(in8, inCount64, out8); break;
-            case  6: pack<t_ps,  6, t_step>(in8, inCount64, out8); break;
-            case  7: pack<t_ps,  7, t_step>(in8, inCount64, out8); break;
-            case  8: pack<t_ps,  8, t_step>(in8, inCount64, out8); break;
-            case  9: pack<t_ps,  9, t_step>(in8, inCount64, out8); break;
-            case 10: pack<t_ps, 10, t_step>(in8, inCount64, out8); break;
-            case 11: pack<t_ps, 11, t_step>(in8, inCount64, out8); break;
-            case 12: pack<t_ps, 12, t_step>(in8, inCount64, out8); break;
-            case 13: pack<t_ps, 13, t_step>(in8, inCount64, out8); break;
-            case 14: pack<t_ps, 14, t_step>(in8, inCount64, out8); break;
-            case 15: pack<t_ps, 15, t_step>(in8, inCount64, out8); break;
-            case 16: pack<t_ps, 16, t_step>(in8, inCount64, out8); break;
-            case 17: pack<t_ps, 17, t_step>(in8, inCount64, out8); break;
-            case 18: pack<t_ps, 18, t_step>(in8, inCount64, out8); break;
-            case 19: pack<t_ps, 19, t_step>(in8, inCount64, out8); break;
-            case 20: pack<t_ps, 20, t_step>(in8, inCount64, out8); break;
-            case 21: pack<t_ps, 21, t_step>(in8, inCount64, out8); break;
-            case 22: pack<t_ps, 22, t_step>(in8, inCount64, out8); break;
-            case 23: pack<t_ps, 23, t_step>(in8, inCount64, out8); break;
-            case 24: pack<t_ps, 24, t_step>(in8, inCount64, out8); break;
-            case 25: pack<t_ps, 25, t_step>(in8, inCount64, out8); break;
-            case 26: pack<t_ps, 26, t_step>(in8, inCount64, out8); break;
-            case 27: pack<t_ps, 27, t_step>(in8, inCount64, out8); break;
-            case 28: pack<t_ps, 28, t_step>(in8, inCount64, out8); break;
-            case 29: pack<t_ps, 29, t_step>(in8, inCount64, out8); break;
-            case 30: pack<t_ps, 30, t_step>(in8, inCount64, out8); break;
-            case 31: pack<t_ps, 31, t_step>(in8, inCount64, out8); break;
-            case 32: pack<t_ps, 32, t_step>(in8, inCount64, out8); break;
-            case 33: pack<t_ps, 33, t_step>(in8, inCount64, out8); break;
-            case 34: pack<t_ps, 34, t_step>(in8, inCount64, out8); break;
-            case 35: pack<t_ps, 35, t_step>(in8, inCount64, out8); break;
-            case 36: pack<t_ps, 36, t_step>(in8, inCount64, out8); break;
-            case 37: pack<t_ps, 37, t_step>(in8, inCount64, out8); break;
-            case 38: pack<t_ps, 38, t_step>(in8, inCount64, out8); break;
-            case 39: pack<t_ps, 39, t_step>(in8, inCount64, out8); break;
-            case 40: pack<t_ps, 40, t_step>(in8, inCount64, out8); break;
-            case 41: pack<t_ps, 41, t_step>(in8, inCount64, out8); break;
-            case 42: pack<t_ps, 42, t_step>(in8, inCount64, out8); break;
-            case 43: pack<t_ps, 43, t_step>(in8, inCount64, out8); break;
-            case 44: pack<t_ps, 44, t_step>(in8, inCount64, out8); break;
-            case 45: pack<t_ps, 45, t_step>(in8, inCount64, out8); break;
-            case 46: pack<t_ps, 46, t_step>(in8, inCount64, out8); break;
-            case 47: pack<t_ps, 47, t_step>(in8, inCount64, out8); break;
-            case 48: pack<t_ps, 48, t_step>(in8, inCount64, out8); break;
-            case 49: pack<t_ps, 49, t_step>(in8, inCount64, out8); break;
-            case 50: pack<t_ps, 50, t_step>(in8, inCount64, out8); break;
-            case 51: pack<t_ps, 51, t_step>(in8, inCount64, out8); break;
-            case 52: pack<t_ps, 52, t_step>(in8, inCount64, out8); break;
-            case 53: pack<t_ps, 53, t_step>(in8, inCount64, out8); break;
-            case 54: pack<t_ps, 54, t_step>(in8, inCount64, out8); break;
-            case 55: pack<t_ps, 55, t_step>(in8, inCount64, out8); break;
-            case 56: pack<t_ps, 56, t_step>(in8, inCount64, out8); break;
-            case 57: pack<t_ps, 57, t_step>(in8, inCount64, out8); break;
-            case 58: pack<t_ps, 58, t_step>(in8, inCount64, out8); break;
-            case 59: pack<t_ps, 59, t_step>(in8, inCount64, out8); break;
-            case 60: pack<t_ps, 60, t_step>(in8, inCount64, out8); break;
-            case 61: pack<t_ps, 61, t_step>(in8, inCount64, out8); break;
-            case 62: pack<t_ps, 62, t_step>(in8, inCount64, out8); break;
-            case 63: pack<t_ps, 63, t_step>(in8, inCount64, out8); break;
-            case 64: pack<t_ps, 64, t_step>(in8, inCount64, out8); break;
+            //   print("case {: >2}: pack<t_vector_extension, {: >2}, t_step>(in8, inCount64, out8); break;".format(bw, bw))
+            case  1: pack<t_vector_extension,  1, t_step>(in8, inCount64, out8); break;
+            case  2: pack<t_vector_extension,  2, t_step>(in8, inCount64, out8); break;
+            case  3: pack<t_vector_extension,  3, t_step>(in8, inCount64, out8); break;
+            case  4: pack<t_vector_extension,  4, t_step>(in8, inCount64, out8); break;
+            case  5: pack<t_vector_extension,  5, t_step>(in8, inCount64, out8); break;
+            case  6: pack<t_vector_extension,  6, t_step>(in8, inCount64, out8); break;
+            case  7: pack<t_vector_extension,  7, t_step>(in8, inCount64, out8); break;
+            case  8: pack<t_vector_extension,  8, t_step>(in8, inCount64, out8); break;
+            case  9: pack<t_vector_extension,  9, t_step>(in8, inCount64, out8); break;
+            case 10: pack<t_vector_extension, 10, t_step>(in8, inCount64, out8); break;
+            case 11: pack<t_vector_extension, 11, t_step>(in8, inCount64, out8); break;
+            case 12: pack<t_vector_extension, 12, t_step>(in8, inCount64, out8); break;
+            case 13: pack<t_vector_extension, 13, t_step>(in8, inCount64, out8); break;
+            case 14: pack<t_vector_extension, 14, t_step>(in8, inCount64, out8); break;
+            case 15: pack<t_vector_extension, 15, t_step>(in8, inCount64, out8); break;
+            case 16: pack<t_vector_extension, 16, t_step>(in8, inCount64, out8); break;
+            case 17: pack<t_vector_extension, 17, t_step>(in8, inCount64, out8); break;
+            case 18: pack<t_vector_extension, 18, t_step>(in8, inCount64, out8); break;
+            case 19: pack<t_vector_extension, 19, t_step>(in8, inCount64, out8); break;
+            case 20: pack<t_vector_extension, 20, t_step>(in8, inCount64, out8); break;
+            case 21: pack<t_vector_extension, 21, t_step>(in8, inCount64, out8); break;
+            case 22: pack<t_vector_extension, 22, t_step>(in8, inCount64, out8); break;
+            case 23: pack<t_vector_extension, 23, t_step>(in8, inCount64, out8); break;
+            case 24: pack<t_vector_extension, 24, t_step>(in8, inCount64, out8); break;
+            case 25: pack<t_vector_extension, 25, t_step>(in8, inCount64, out8); break;
+            case 26: pack<t_vector_extension, 26, t_step>(in8, inCount64, out8); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+            case 27: pack<t_vector_extension, 27, t_step>(in8, inCount64, out8); break;
+            case 28: pack<t_vector_extension, 28, t_step>(in8, inCount64, out8); break;
+            case 29: pack<t_vector_extension, 29, t_step>(in8, inCount64, out8); break;
+            case 30: pack<t_vector_extension, 30, t_step>(in8, inCount64, out8); break;
+            case 31: pack<t_vector_extension, 31, t_step>(in8, inCount64, out8); break;
+            case 32: pack<t_vector_extension, 32, t_step>(in8, inCount64, out8); break;
+            case 33: pack<t_vector_extension, 33, t_step>(in8, inCount64, out8); break;
+            case 34: pack<t_vector_extension, 34, t_step>(in8, inCount64, out8); break;
+            case 35: pack<t_vector_extension, 35, t_step>(in8, inCount64, out8); break;
+            case 36: pack<t_vector_extension, 36, t_step>(in8, inCount64, out8); break;
+            case 37: pack<t_vector_extension, 37, t_step>(in8, inCount64, out8); break;
+            case 38: pack<t_vector_extension, 38, t_step>(in8, inCount64, out8); break;
+            case 39: pack<t_vector_extension, 39, t_step>(in8, inCount64, out8); break;
+            case 40: pack<t_vector_extension, 40, t_step>(in8, inCount64, out8); break;
+            case 41: pack<t_vector_extension, 41, t_step>(in8, inCount64, out8); break;
+            case 42: pack<t_vector_extension, 42, t_step>(in8, inCount64, out8); break;
+            case 43: pack<t_vector_extension, 43, t_step>(in8, inCount64, out8); break;
+            case 44: pack<t_vector_extension, 44, t_step>(in8, inCount64, out8); break;
+            case 45: pack<t_vector_extension, 45, t_step>(in8, inCount64, out8); break;
+            case 46: pack<t_vector_extension, 46, t_step>(in8, inCount64, out8); break;
+            case 47: pack<t_vector_extension, 47, t_step>(in8, inCount64, out8); break;
+            case 48: pack<t_vector_extension, 48, t_step>(in8, inCount64, out8); break;
+            case 49: pack<t_vector_extension, 49, t_step>(in8, inCount64, out8); break;
+            case 50: pack<t_vector_extension, 50, t_step>(in8, inCount64, out8); break;
+            case 51: pack<t_vector_extension, 51, t_step>(in8, inCount64, out8); break;
+            case 52: pack<t_vector_extension, 52, t_step>(in8, inCount64, out8); break;
+            case 53: pack<t_vector_extension, 53, t_step>(in8, inCount64, out8); break;
+            case 54: pack<t_vector_extension, 54, t_step>(in8, inCount64, out8); break;
+            case 55: pack<t_vector_extension, 55, t_step>(in8, inCount64, out8); break;
+            case 56: pack<t_vector_extension, 56, t_step>(in8, inCount64, out8); break;
+            case 57: pack<t_vector_extension, 57, t_step>(in8, inCount64, out8); break;
+            case 58: pack<t_vector_extension, 58, t_step>(in8, inCount64, out8); break;
+            case 59: pack<t_vector_extension, 59, t_step>(in8, inCount64, out8); break;
+            case 60: pack<t_vector_extension, 60, t_step>(in8, inCount64, out8); break;
+            case 61: pack<t_vector_extension, 61, t_step>(in8, inCount64, out8); break;
+            case 62: pack<t_vector_extension, 62, t_step>(in8, inCount64, out8); break;
+            case 63: pack<t_vector_extension, 63, t_step>(in8, inCount64, out8); break;
+            case 64: pack<t_vector_extension, 64, t_step>(in8, inCount64, out8); break;
+#endif
+            // Packing does not require the case for VBP_BW_NOBLOCK.
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "pack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
     
@@ -333,12 +345,15 @@ namespace morphstore {
     
     // Struct for partial template specialization.
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
     struct unpack_t {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+#ifdef VBP_FORCE_INLINE_UNPACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countOut64
@@ -347,16 +362,19 @@ namespace morphstore {
     
     // Convenience function.
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_bw,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack(
+#ifdef VBP_FORCE_INLINE_UNPACK
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack(
             const uint8_t * & in8,
             uint8_t * & out8,
             size_t countOut64
     ) {
-        unpack_t<t_ps, t_bw, t_step>::apply(in8, out8, countOut64);
+        unpack_t<t_vector_extension, t_bw, t_step>::apply(in8, out8, countOut64);
     }
     
     
@@ -364,226 +382,116 @@ namespace morphstore {
     // Template specializations.
     // ------------------------------------------------------------------------
     
-    template<unsigned t_bw>
-    struct unpack_t<
-            processing_style_t::vec128,
-            t_bw,
-            sizeof(__m128i) / sizeof(uint64_t)
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
+    template<class t_vector_extension, unsigned t_bw>
+    class unpack_t<t_vector_extension, t_bw, t_vector_extension::vector_helper_t::element_count::value> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        // @todo It would be nice to initialize this in-class. However, the
+        // compiler complains because set1 is not constexpr, even when it is
+        // defined so.
+        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        
+        struct state_t {
+            const base_t * inBase;
+            base_t * outBase;
+            vector_t nextOut;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase, base_t * p_OutBase) {
+                inBase = p_InBase;
+                outBase = p_OutBase;
+                nextOut = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_block(state_t & s) {
+            using namespace vectorlib;
+            
+            if(t_CycleLen > 1) {
+                unpack_block<t_CycleLen / 2, t_PosInCycle                 >(s);
+                unpack_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, s.tmp);
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(s.tmp, countBits - s.bitpos + t_bw), s.nextOut));
+                    s.bitpos = s.bitpos - countBits;
+                }
+                store<t_ve, iov::ALIGNED, vector_size_bit::value>(s.outBase, s.nextOut);
+                s.outBase += vector_element_count::value;
+                s.nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(s.tmp, s.bitpos));
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+#ifdef VBP_FORCE_INLINE_UNPACK
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countOut64
         ) {
-            const __m128i * in128 = reinterpret_cast<const __m128i *>(in8);
-            __m128i * out128 = reinterpret_cast<__m128i *>(out8);
-            const size_t countOut128 = convert_size<uint64_t, __m128i>(countOut64);
-
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const __m128i mask = _mm_set1_epi64x(
-                (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1
-            );
-
-#if 0
-            // This variant uses a store instruction at two points.
-            __m128i tmp;
-            unsigned bitpos = countBits;
-            const __m128i * const endOut128 = out128 + countOut128;
-            while(out128 < endOut128) {
-                if(bitpos == countBits) {
-                    tmp = _mm_load_si128(in128++);
-                    bitpos = 0;
-                }
-                else { // bitpos < countBits
-                    const __m128i tmp2 = _mm_load_si128(in128++);
-                    _mm_store_si128(
-                        out128++,
-                        _mm_and_si128(
-                            mask,
-                            _mm_or_si128(
-                                _mm_slli_epi64(tmp2, countBits - bitpos),
-                                _mm_srli_epi64(tmp, bitpos)
-                            )
-                        )
-                    );
-                    tmp = tmp2;
-                    bitpos = bitpos + t_bw - countBits;
-                }
-                while(bitpos + t_bw <= countBits) {
-                    _mm_store_si128(
-                        out128++,
-                        _mm_and_si128(
-                            mask,
-                            _mm_srli_epi64(tmp, bitpos)
-                        )
-                    );
-                    bitpos += t_bw;
-                }
-            }
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            base_t * outBase = reinterpret_cast<base_t *>(out8);
+            state_t s(inBase, outBase);
+            const size_t countOutBase = convert_size<uint64_t, base_t>(countOut64);
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const size_t cycleLenVec = minimum_cycle_len(t_bw);
+            const size_t cycleLenBase = cycleLenVec * vector_element_count::value;
+            const size_t cycleCount = countOutBase / cycleLenBase;
+            for(size_t i = 0; i < cycleCount; i++)
+                unpack_block<cycleLenVec, 0>(s);
 #else
-            // This variant uses a store instruction at only one point.
-            __m128i nextOut = _mm_setzero_si128();
-            unsigned bitpos = countBits + t_bw;
-            const __m128i * const endOut128 = out128 + countOut128;
-            while(out128 < endOut128) {
-                __m128i tmp;
-                if(bitpos == countBits + t_bw) {
-                    tmp = _mm_load_si128(in128++);
-                    nextOut = _mm_and_si128(mask, tmp);
-                    bitpos = t_bw;
-                }
-                else { // bitpos > countBits && bitpos < countBits + t_bw
-                    tmp = _mm_load_si128(in128++);
-                    nextOut = _mm_and_si128(
-                        mask,
-                        _mm_or_si128(
-                            _mm_slli_epi64(tmp, countBits - bitpos + t_bw),
-                            nextOut
-                        )
-                    );
-                    bitpos = bitpos - countBits;
-                }
-                while(bitpos <= countBits) {
-                    _mm_store_si128(out128++, nextOut);
-                    nextOut = _mm_and_si128(
-                        mask,
-                        _mm_srli_epi64(tmp, bitpos)
-                    );
-                    bitpos += t_bw;
-                }
-            }
+            const size_t blockSize = vector_size_bit::value;
+            for(size_t i = 0; i < countOutBase; i += blockSize)
+                unpack_block<countBits, 0>(s);
 #endif
-
-            in8 = reinterpret_cast<const uint8_t *>(in128);
-            out8 = reinterpret_cast<uint8_t *>(out128);
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
+            out8 = reinterpret_cast<uint8_t *>(s.outBase);
         }
     };
     
-#if 0
-    // Tailored to a step width of 2 (as for the 128-bit variant).
-    template<unsigned t_bw>
-    struct unpack_t<
-            processing_style_t::scalar,
+    template<class t_vector_extension, unsigned t_bw>
+    const typename t_vector_extension::vector_t unpack_t<
+            t_vector_extension,
             t_bw,
-            sizeof(__m128i) / sizeof(uint64_t)
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
-                const uint8_t * & in8,
-                uint8_t * & out8,
-                size_t countOut64
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
-            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
-            
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const uint64_t mask = (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1;
-
-            // This variant uses a store instruction at only one point.
-            uint64_t nextOut0 = 0;
-            uint64_t nextOut1 = 0;
-            unsigned bitpos = countBits + t_bw;
-            const uint64_t * const endOut64 = out64 + countOut64;
-            while(out64 < endOut64) {
-                uint64_t tmp0;
-                uint64_t tmp1;
-                if(bitpos == countBits + t_bw) {
-                    tmp0 = *in64++;
-                    tmp1 = *in64++;
-                    nextOut0 = mask & tmp0;
-                    nextOut1 = mask & tmp1;
-                    bitpos = t_bw;
-                }
-                else { // bitpos > countBits && bitpos < countBits + t_bw
-                    tmp0 = *in64++;
-                    tmp1 = *in64++;
-                    nextOut0 = mask & ((tmp0 << (countBits - bitpos + t_bw)) | nextOut0);
-                    nextOut1 = mask & ((tmp1 << (countBits - bitpos + t_bw)) | nextOut1);
-                    bitpos = bitpos - countBits;
-                }
-                while(bitpos <= countBits) {
-                    *out64++ = nextOut0;
-                    *out64++ = nextOut1;
-                    nextOut0 = mask & (tmp0 >> bitpos);
-                    nextOut1 = mask & (tmp1 >> bitpos);
-                    bitpos += t_bw;
-                }
-            }
-            
-            in8 = reinterpret_cast<const uint8_t *>(in64);
-            out8 = reinterpret_cast<uint8_t *>(out64);
-        }
-    };
-#else
-    // Generic w.r.t. the step width. Hopefully the compiler unrolls the loops.
-    template<unsigned t_bw, unsigned t_step>
-    struct unpack_t<
-            processing_style_t::scalar,
-            t_bw,
-            t_step
-    > {
-        static MSV_CXX_ATTRIBUTE_FORCE_INLINE void apply(
-                const uint8_t * & in8,
-                uint8_t * & out8,
-                size_t countOut64
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(in8);
-            uint64_t * out64 = reinterpret_cast<uint64_t *>(out8);
-            
-            const size_t countBits = std::numeric_limits<uint64_t>::digits;
-            const uint64_t mask = (t_bw == countBits)
-                ? std::numeric_limits<uint64_t>::max()
-                : (static_cast<uint64_t>(1) << t_bw) - 1;
-
-            // This variant uses a store instruction at only one point.
-            uint64_t nextOut[t_step];
-            for(unsigned i = 0; i < t_step; i++)
-                nextOut[i] = 0;
-            unsigned bitpos = countBits + t_bw;
-            const uint64_t * const endOut64 = out64 + countOut64;
-            while(out64 < endOut64) {
-                uint64_t tmp[t_step];
-                if(bitpos == countBits + t_bw) {
-                    for(unsigned i = 0; i < t_step; i++) {
-                        tmp[i] = *in64++;
-                        nextOut[i] = mask & tmp[i];
-                    }
-                    bitpos = t_bw;
-                }
-                else { // bitpos > countBits && bitpos < countBits + t_bw
-                    for(unsigned i = 0; i < t_step; i++) {
-                        tmp[i] = *in64++;
-                        nextOut[i] = mask & ((tmp[i] << (countBits - bitpos + t_bw)) | nextOut[i]);
-                    }
-                    bitpos = bitpos - countBits;
-                }
-                while(bitpos <= countBits) {
-                    for(unsigned i = 0; i < t_step; i++) {
-                        *out64++ = nextOut[i];
-                        nextOut[i] = mask & (tmp[i] >> bitpos);
-                    }
-                    bitpos += t_bw;
-                }
-            }
-            
-            in8 = reinterpret_cast<const uint8_t *>(in64);
-            out8 = reinterpret_cast<uint8_t *>(out64);
-        }
-    };
-#endif
+            t_vector_extension::vector_helper_t::element_count::value
+    >::mask = vectorlib::set1<
+            t_vector_extension,
+            t_vector_extension::vector_helper_t::granularity::value
+    >(
+            bitwidth_max<typename t_vector_extension::base_t>(t_bw)
+    );
     
     // ------------------------------------------------------------------------
     // Selection of the right routine at run-time.
     // ------------------------------------------------------------------------
     
     template<
-            processing_style_t t_ps,
+            class t_vector_extension,
             unsigned t_step
     >
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void unpack_switch(
+#ifdef VBP_FORCE_INLINE_UNPACK_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
             uint8_t * & out8,
@@ -592,73 +500,368 @@ namespace morphstore {
         switch(bitwidth) {
             // Generated with Python:
             // for bw in range(1, 64+1):
-            //   print("case {: >2}: unpack<t_ps, {: >2}, t_step>(in8, out8, outCount64); break;".format(bw, bw))
-            case  1: unpack<t_ps,  1, t_step>(in8, out8, outCount64); break;
-            case  2: unpack<t_ps,  2, t_step>(in8, out8, outCount64); break;
-            case  3: unpack<t_ps,  3, t_step>(in8, out8, outCount64); break;
-            case  4: unpack<t_ps,  4, t_step>(in8, out8, outCount64); break;
-            case  5: unpack<t_ps,  5, t_step>(in8, out8, outCount64); break;
-            case  6: unpack<t_ps,  6, t_step>(in8, out8, outCount64); break;
-            case  7: unpack<t_ps,  7, t_step>(in8, out8, outCount64); break;
-            case  8: unpack<t_ps,  8, t_step>(in8, out8, outCount64); break;
-            case  9: unpack<t_ps,  9, t_step>(in8, out8, outCount64); break;
-            case 10: unpack<t_ps, 10, t_step>(in8, out8, outCount64); break;
-            case 11: unpack<t_ps, 11, t_step>(in8, out8, outCount64); break;
-            case 12: unpack<t_ps, 12, t_step>(in8, out8, outCount64); break;
-            case 13: unpack<t_ps, 13, t_step>(in8, out8, outCount64); break;
-            case 14: unpack<t_ps, 14, t_step>(in8, out8, outCount64); break;
-            case 15: unpack<t_ps, 15, t_step>(in8, out8, outCount64); break;
-            case 16: unpack<t_ps, 16, t_step>(in8, out8, outCount64); break;
-            case 17: unpack<t_ps, 17, t_step>(in8, out8, outCount64); break;
-            case 18: unpack<t_ps, 18, t_step>(in8, out8, outCount64); break;
-            case 19: unpack<t_ps, 19, t_step>(in8, out8, outCount64); break;
-            case 20: unpack<t_ps, 20, t_step>(in8, out8, outCount64); break;
-            case 21: unpack<t_ps, 21, t_step>(in8, out8, outCount64); break;
-            case 22: unpack<t_ps, 22, t_step>(in8, out8, outCount64); break;
-            case 23: unpack<t_ps, 23, t_step>(in8, out8, outCount64); break;
-            case 24: unpack<t_ps, 24, t_step>(in8, out8, outCount64); break;
-            case 25: unpack<t_ps, 25, t_step>(in8, out8, outCount64); break;
-            case 26: unpack<t_ps, 26, t_step>(in8, out8, outCount64); break;
-            case 27: unpack<t_ps, 27, t_step>(in8, out8, outCount64); break;
-            case 28: unpack<t_ps, 28, t_step>(in8, out8, outCount64); break;
-            case 29: unpack<t_ps, 29, t_step>(in8, out8, outCount64); break;
-            case 30: unpack<t_ps, 30, t_step>(in8, out8, outCount64); break;
-            case 31: unpack<t_ps, 31, t_step>(in8, out8, outCount64); break;
-            case 32: unpack<t_ps, 32, t_step>(in8, out8, outCount64); break;
-            case 33: unpack<t_ps, 33, t_step>(in8, out8, outCount64); break;
-            case 34: unpack<t_ps, 34, t_step>(in8, out8, outCount64); break;
-            case 35: unpack<t_ps, 35, t_step>(in8, out8, outCount64); break;
-            case 36: unpack<t_ps, 36, t_step>(in8, out8, outCount64); break;
-            case 37: unpack<t_ps, 37, t_step>(in8, out8, outCount64); break;
-            case 38: unpack<t_ps, 38, t_step>(in8, out8, outCount64); break;
-            case 39: unpack<t_ps, 39, t_step>(in8, out8, outCount64); break;
-            case 40: unpack<t_ps, 40, t_step>(in8, out8, outCount64); break;
-            case 41: unpack<t_ps, 41, t_step>(in8, out8, outCount64); break;
-            case 42: unpack<t_ps, 42, t_step>(in8, out8, outCount64); break;
-            case 43: unpack<t_ps, 43, t_step>(in8, out8, outCount64); break;
-            case 44: unpack<t_ps, 44, t_step>(in8, out8, outCount64); break;
-            case 45: unpack<t_ps, 45, t_step>(in8, out8, outCount64); break;
-            case 46: unpack<t_ps, 46, t_step>(in8, out8, outCount64); break;
-            case 47: unpack<t_ps, 47, t_step>(in8, out8, outCount64); break;
-            case 48: unpack<t_ps, 48, t_step>(in8, out8, outCount64); break;
-            case 49: unpack<t_ps, 49, t_step>(in8, out8, outCount64); break;
-            case 50: unpack<t_ps, 50, t_step>(in8, out8, outCount64); break;
-            case 51: unpack<t_ps, 51, t_step>(in8, out8, outCount64); break;
-            case 52: unpack<t_ps, 52, t_step>(in8, out8, outCount64); break;
-            case 53: unpack<t_ps, 53, t_step>(in8, out8, outCount64); break;
-            case 54: unpack<t_ps, 54, t_step>(in8, out8, outCount64); break;
-            case 55: unpack<t_ps, 55, t_step>(in8, out8, outCount64); break;
-            case 56: unpack<t_ps, 56, t_step>(in8, out8, outCount64); break;
-            case 57: unpack<t_ps, 57, t_step>(in8, out8, outCount64); break;
-            case 58: unpack<t_ps, 58, t_step>(in8, out8, outCount64); break;
-            case 59: unpack<t_ps, 59, t_step>(in8, out8, outCount64); break;
-            case 60: unpack<t_ps, 60, t_step>(in8, out8, outCount64); break;
-            case 61: unpack<t_ps, 61, t_step>(in8, out8, outCount64); break;
-            case 62: unpack<t_ps, 62, t_step>(in8, out8, outCount64); break;
-            case 63: unpack<t_ps, 63, t_step>(in8, out8, outCount64); break;
-            case 64: unpack<t_ps, 64, t_step>(in8, out8, outCount64); break;
+            //   print("case {: >2}: unpack<t_vector_extension, {: >2}, t_step>(in8, out8, outCount64); break;".format(bw, bw))
+            case  1: unpack<t_vector_extension,  1, t_step>(in8, out8, outCount64); break;
+            case  2: unpack<t_vector_extension,  2, t_step>(in8, out8, outCount64); break;
+            case  3: unpack<t_vector_extension,  3, t_step>(in8, out8, outCount64); break;
+            case  4: unpack<t_vector_extension,  4, t_step>(in8, out8, outCount64); break;
+            case  5: unpack<t_vector_extension,  5, t_step>(in8, out8, outCount64); break;
+            case  6: unpack<t_vector_extension,  6, t_step>(in8, out8, outCount64); break;
+            case  7: unpack<t_vector_extension,  7, t_step>(in8, out8, outCount64); break;
+            case  8: unpack<t_vector_extension,  8, t_step>(in8, out8, outCount64); break;
+            case  9: unpack<t_vector_extension,  9, t_step>(in8, out8, outCount64); break;
+            case 10: unpack<t_vector_extension, 10, t_step>(in8, out8, outCount64); break;
+            case 11: unpack<t_vector_extension, 11, t_step>(in8, out8, outCount64); break;
+            case 12: unpack<t_vector_extension, 12, t_step>(in8, out8, outCount64); break;
+            case 13: unpack<t_vector_extension, 13, t_step>(in8, out8, outCount64); break;
+            case 14: unpack<t_vector_extension, 14, t_step>(in8, out8, outCount64); break;
+            case 15: unpack<t_vector_extension, 15, t_step>(in8, out8, outCount64); break;
+            case 16: unpack<t_vector_extension, 16, t_step>(in8, out8, outCount64); break;
+            case 17: unpack<t_vector_extension, 17, t_step>(in8, out8, outCount64); break;
+            case 18: unpack<t_vector_extension, 18, t_step>(in8, out8, outCount64); break;
+            case 19: unpack<t_vector_extension, 19, t_step>(in8, out8, outCount64); break;
+            case 20: unpack<t_vector_extension, 20, t_step>(in8, out8, outCount64); break;
+            case 21: unpack<t_vector_extension, 21, t_step>(in8, out8, outCount64); break;
+            case 22: unpack<t_vector_extension, 22, t_step>(in8, out8, outCount64); break;
+            case 23: unpack<t_vector_extension, 23, t_step>(in8, out8, outCount64); break;
+            case 24: unpack<t_vector_extension, 24, t_step>(in8, out8, outCount64); break;
+            case 25: unpack<t_vector_extension, 25, t_step>(in8, out8, outCount64); break;
+            case 26: unpack<t_vector_extension, 26, t_step>(in8, out8, outCount64); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+            case 27: unpack<t_vector_extension, 27, t_step>(in8, out8, outCount64); break;
+            case 28: unpack<t_vector_extension, 28, t_step>(in8, out8, outCount64); break;
+            case 29: unpack<t_vector_extension, 29, t_step>(in8, out8, outCount64); break;
+            case 30: unpack<t_vector_extension, 30, t_step>(in8, out8, outCount64); break;
+            case 31: unpack<t_vector_extension, 31, t_step>(in8, out8, outCount64); break;
+            case 32: unpack<t_vector_extension, 32, t_step>(in8, out8, outCount64); break;
+            case 33: unpack<t_vector_extension, 33, t_step>(in8, out8, outCount64); break;
+            case 34: unpack<t_vector_extension, 34, t_step>(in8, out8, outCount64); break;
+            case 35: unpack<t_vector_extension, 35, t_step>(in8, out8, outCount64); break;
+            case 36: unpack<t_vector_extension, 36, t_step>(in8, out8, outCount64); break;
+            case 37: unpack<t_vector_extension, 37, t_step>(in8, out8, outCount64); break;
+            case 38: unpack<t_vector_extension, 38, t_step>(in8, out8, outCount64); break;
+            case 39: unpack<t_vector_extension, 39, t_step>(in8, out8, outCount64); break;
+            case 40: unpack<t_vector_extension, 40, t_step>(in8, out8, outCount64); break;
+            case 41: unpack<t_vector_extension, 41, t_step>(in8, out8, outCount64); break;
+            case 42: unpack<t_vector_extension, 42, t_step>(in8, out8, outCount64); break;
+            case 43: unpack<t_vector_extension, 43, t_step>(in8, out8, outCount64); break;
+            case 44: unpack<t_vector_extension, 44, t_step>(in8, out8, outCount64); break;
+            case 45: unpack<t_vector_extension, 45, t_step>(in8, out8, outCount64); break;
+            case 46: unpack<t_vector_extension, 46, t_step>(in8, out8, outCount64); break;
+            case 47: unpack<t_vector_extension, 47, t_step>(in8, out8, outCount64); break;
+            case 48: unpack<t_vector_extension, 48, t_step>(in8, out8, outCount64); break;
+            case 49: unpack<t_vector_extension, 49, t_step>(in8, out8, outCount64); break;
+            case 50: unpack<t_vector_extension, 50, t_step>(in8, out8, outCount64); break;
+            case 51: unpack<t_vector_extension, 51, t_step>(in8, out8, outCount64); break;
+            case 52: unpack<t_vector_extension, 52, t_step>(in8, out8, outCount64); break;
+            case 53: unpack<t_vector_extension, 53, t_step>(in8, out8, outCount64); break;
+            case 54: unpack<t_vector_extension, 54, t_step>(in8, out8, outCount64); break;
+            case 55: unpack<t_vector_extension, 55, t_step>(in8, out8, outCount64); break;
+            case 56: unpack<t_vector_extension, 56, t_step>(in8, out8, outCount64); break;
+            case 57: unpack<t_vector_extension, 57, t_step>(in8, out8, outCount64); break;
+            case 58: unpack<t_vector_extension, 58, t_step>(in8, out8, outCount64); break;
+            case 59: unpack<t_vector_extension, 59, t_step>(in8, out8, outCount64); break;
+            case 60: unpack<t_vector_extension, 60, t_step>(in8, out8, outCount64); break;
+            case 61: unpack<t_vector_extension, 61, t_step>(in8, out8, outCount64); break;
+            case 62: unpack<t_vector_extension, 62, t_step>(in8, out8, outCount64); break;
+            case 63: unpack<t_vector_extension, 63, t_step>(in8, out8, outCount64); break;
+            case 64: unpack<t_vector_extension, 64, t_step>(in8, out8, outCount64); break;
+#endif
+            case VBP_BW_NOBLOCK: /* do nothing */ break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
+        }
+    }
+    
+    
+    
+    // ************************************************************************
+    // Routines for unpacking and processing
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Interfaces
+    // ------------------------------------------------------------------------
+    
+    // Struct for partial template specialization.
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            unsigned t_step,
+            template<class, class ...> class t_op_processing_unit,
+            class ... t_extra_args
+    >
+    struct unpack_and_process_t {
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_processing_unit<
+                        t_vector_extension,
+                        t_extra_args ...
+                >::state_t & opState
+        ) = delete;
+    };
+    
+    // Convenience function.
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            unsigned t_step,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_and_process(
+            const uint8_t * & in8,
+            size_t countIn8,
+            typename t_op_vector<
+                    t_vector_extension,
+                    t_extra_args ...
+            >::state_t & opState
+    ) {
+        unpack_and_process_t<
+                t_vector_extension, t_bw, t_step, t_op_vector, t_extra_args ...
+        >::apply(
+                in8, countIn8, opState
+        );
+    }
+    
+    
+    // ------------------------------------------------------------------------
+    // Template specializations.
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    class unpack_and_process_t<
+            t_vector_extension,
+            t_bw,
+            t_vector_extension::vector_helper_t::element_count::value,
+            t_op_vector,
+            t_extra_args ...
+    > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        static const size_t countBits = std::numeric_limits<base_t>::digits;
+        // @todo It would be nice to initialize this in-class. However, the
+        // compiler complains because set1 is not constexpr, even when it is
+        // defined so.
+        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        
+        struct state_t {
+            const base_t * inBase;
+            vector_t nextOut;
+            unsigned bitpos;
+            vector_t tmp;
+            
+            state_t(const base_t * p_InBase) {
+                inBase = p_InBase;
+                nextOut = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
+                // @todo Maybe we don't need this.
+                bitpos = 0;
+                tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);
+            }
+        };
+        
+        template<unsigned t_CycleLen, unsigned t_PosInCycle>
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void unpack_and_process_block(
+                state_t & s,
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
+        ) {
+            using namespace vectorlib;
+            
+            if(t_CycleLen > 1) {
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle                 >(s, opState);
+                unpack_and_process_block<t_CycleLen / 2, t_PosInCycle + t_CycleLen / 2>(s, opState);
+            }
+            else {
+                if((t_PosInCycle * t_bw) % countBits == 0) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, s.tmp);
+                    s.bitpos = t_bw;
+                }
+                else if(t_PosInCycle * t_bw / countBits < ((t_PosInCycle + 1) * t_bw - 1) / countBits) {
+                    s.tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(s.inBase);
+                    s.inBase += vector_element_count::value;
+                    s.nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(s.tmp, countBits - s.bitpos + t_bw), s.nextOut));
+                    s.bitpos = s.bitpos - countBits;
+                }
+                t_op_vector<t_ve, t_extra_args ...>::apply(s.nextOut, opState);
+                s.nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(s.tmp, s.bitpos));
+                s.bitpos += t_bw;
+            }
+        }
+        
+    public:
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            const base_t * const endInBase = inBase + convert_size<uint8_t, base_t>(countIn8);
+            state_t s(inBase);
+#ifdef VBP_USE_MIN_CYCLE_LEN
+            const unsigned cycleLen = minimum_cycle_len(t_bw);
+            while(s.inBase < endInBase)
+                unpack_and_process_block<cycleLen, 0>(s, opState);
+#else
+            while(s.inBase < endInBase)
+                unpack_and_process_block<countBits, 0>(s, opState);
+#endif
+            
+            in8 = reinterpret_cast<const uint8_t *>(s.inBase);
+        }
+    };
+    
+    template<
+            class t_vector_extension,
+            unsigned t_bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    const typename t_vector_extension::vector_t unpack_and_process_t<
+            t_vector_extension,
+            t_bw,
+            t_vector_extension::vector_helper_t::element_count::value,
+            t_op_vector,
+            t_extra_args ...
+    >::mask = vectorlib::set1<
+            t_vector_extension,
+            t_vector_extension::vector_helper_t::granularity::value
+    >(
+            bitwidth_max<typename t_vector_extension::base_t>(t_bw)
+    );
+    
+    // ------------------------------------------------------------------------
+    // Selection of the right routine at run-time.
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            unsigned t_step,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+    void unpack_and_process_switch(
+            unsigned bitwidth,
+            const uint8_t * & in8,
+            size_t countIn8,
+            typename t_op_vector<
+                    t_vector_extension, t_extra_args ...
+            >::state_t & opState
+    ) {
+        using t_ve = t_vector_extension;
+        
+        switch(bitwidth) {
+            // Generated with Python:
+            // for bw in range(1, 64+1):
+            //   print("case {: >2}: unpack_and_process<t_ve, {: >2}, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;".format(bw, bw))
+            case  1: unpack_and_process<t_ve,  1, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  2: unpack_and_process<t_ve,  2, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  3: unpack_and_process<t_ve,  3, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  4: unpack_and_process<t_ve,  4, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  5: unpack_and_process<t_ve,  5, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  6: unpack_and_process<t_ve,  6, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  7: unpack_and_process<t_ve,  7, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  8: unpack_and_process<t_ve,  8, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case  9: unpack_and_process<t_ve,  9, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 10: unpack_and_process<t_ve, 10, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 11: unpack_and_process<t_ve, 11, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 12: unpack_and_process<t_ve, 12, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 13: unpack_and_process<t_ve, 13, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 14: unpack_and_process<t_ve, 14, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 15: unpack_and_process<t_ve, 15, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 16: unpack_and_process<t_ve, 16, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 17: unpack_and_process<t_ve, 17, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 18: unpack_and_process<t_ve, 18, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 19: unpack_and_process<t_ve, 19, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 20: unpack_and_process<t_ve, 20, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 21: unpack_and_process<t_ve, 21, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 22: unpack_and_process<t_ve, 22, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 23: unpack_and_process<t_ve, 23, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 24: unpack_and_process<t_ve, 24, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 25: unpack_and_process<t_ve, 25, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 26: unpack_and_process<t_ve, 26, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+            case 27: unpack_and_process<t_ve, 27, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 28: unpack_and_process<t_ve, 28, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 29: unpack_and_process<t_ve, 29, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 30: unpack_and_process<t_ve, 30, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 31: unpack_and_process<t_ve, 31, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 32: unpack_and_process<t_ve, 32, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 33: unpack_and_process<t_ve, 33, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 34: unpack_and_process<t_ve, 34, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 35: unpack_and_process<t_ve, 35, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 36: unpack_and_process<t_ve, 36, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 37: unpack_and_process<t_ve, 37, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 38: unpack_and_process<t_ve, 38, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 39: unpack_and_process<t_ve, 39, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 40: unpack_and_process<t_ve, 40, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 41: unpack_and_process<t_ve, 41, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 42: unpack_and_process<t_ve, 42, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 43: unpack_and_process<t_ve, 43, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 44: unpack_and_process<t_ve, 44, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 45: unpack_and_process<t_ve, 45, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 46: unpack_and_process<t_ve, 46, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 47: unpack_and_process<t_ve, 47, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 48: unpack_and_process<t_ve, 48, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 49: unpack_and_process<t_ve, 49, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 50: unpack_and_process<t_ve, 50, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 51: unpack_and_process<t_ve, 51, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 52: unpack_and_process<t_ve, 52, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 53: unpack_and_process<t_ve, 53, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 54: unpack_and_process<t_ve, 54, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 55: unpack_and_process<t_ve, 55, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 56: unpack_and_process<t_ve, 56, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 57: unpack_and_process<t_ve, 57, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 58: unpack_and_process<t_ve, 58, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 59: unpack_and_process<t_ve, 59, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 60: unpack_and_process<t_ve, 60, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 61: unpack_and_process<t_ve, 61, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 62: unpack_and_process<t_ve, 62, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 63: unpack_and_process<t_ve, 63, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+            case 64: unpack_and_process<t_ve, 64, t_step, t_op_vector, t_extra_args ...>(in8, countIn8, opState); break;
+#endif
+            case VBP_BW_NOBLOCK: /* do nothing */ break;
+#ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+            default: throw std::runtime_error(
+                    "unpack_and_process_switch: unsupported bit width: " +
+                    std::to_string(bitwidth)
+            );
+#endif
         }
     }
 }
+
+#undef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
+#undef VBP_USE_MIN_CYCLE_LEN
+#undef VBP_FORCE_INLINE_PACK
+#undef VBP_FORCE_INLINE_PACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK
+#undef VBP_FORCE_INLINE_UNPACK_SWITCH
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+#undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_ROUTINES_H

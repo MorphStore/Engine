@@ -27,7 +27,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
     
@@ -37,11 +36,11 @@ namespace morphstore {
  */
 template<
         template<typename> class t_unary_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f
 >
-struct calc_unary {
+struct calc_unary_t {
     /**
      * Unary calculation-operator. Applies the unary operation t_unary_op to
      * each data element in the given column.
@@ -67,12 +66,12 @@ struct calc_unary {
  */
 template<
         template<typename> class t_binary_op,
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_data_f,
         class t_in_data_l_f,
         class t_in_data_r_f
 >
-struct calc_binary {
+struct calc_binary_t {
     /**
      * Binary calculation-operator. Applies the binary operation t_binary_op to
      * each pair of corresponding data elements in the two given data columns.
@@ -98,7 +97,42 @@ struct calc_binary {
             const column<t_in_data_r_f> * const inDataRCol
     );
 };
-    
+ 
+
+template<
+        template<typename> class t_binary_op,
+        class t_vector_extension,
+        class t_out_data_f,
+        class t_in_data_l_f,
+        class t_in_data_r_f
+>
+
+const column<t_out_data_f> *
+    calc_binary(const column<t_in_data_l_f> * const inDataLCol,
+            const column<t_in_data_r_f> * const inDataRCol){
+
+
+    return calc_binary_t<t_binary_op,t_vector_extension,t_out_data_f,t_in_data_l_f,t_in_data_r_f>::apply(
+            inDataLCol,
+            inDataRCol
+    );
+}
+
+template<
+        template<typename> class t_binary_op,
+        class t_vector_extension,
+        class t_out_data_f,
+        class t_in_data_f
+>
+
+const column<t_out_data_f> *
+    calc_unary(const column<t_in_data_f> * const inDataLCol){
+
+
+    return calc_unary_t<t_binary_op,t_vector_extension,t_out_data_f,t_in_data_f>::apply(
+            inDataLCol
+    );
+}
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_CALC_H

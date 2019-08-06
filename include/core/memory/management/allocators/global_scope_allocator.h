@@ -63,7 +63,8 @@ namespace morphstore {
          return &value;
       }
 
-      global_scope_stdlib_allocator( void ) throw( ) {
+      //
+      global_scope_stdlib_allocator( void ) /*throw( )*/ {
          if( ! (
             ( stdlib_malloc_ptr == nullptr ) ||
             ( stdlib_malloc_ptr == nullptr ) ||

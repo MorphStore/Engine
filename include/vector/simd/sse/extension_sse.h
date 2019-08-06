@@ -12,9 +12,9 @@
 #include <type_traits>
 #include "immintrin.h"
 
-#include "vector/general_vector.h"
+#include "vector/vector_extension_structs.h"
 
-namespace vector {
+namespace vectorlib {
    template<class VectorReg>
    struct sse;
 
@@ -27,7 +27,7 @@ namespace vector {
       using vector_t =
       typename std::conditional<
          (1==1) == std::is_integral<T>::value,    // if T is integer, ugly but it works
-         __m128i, 
+         __m128i,
          typename std::conditional<
             (1==1) == std::is_same<float, T>::value, // else if T is float
             __m128,                       //    vector register = __m128

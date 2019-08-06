@@ -26,7 +26,6 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/processing_style.h>
 
 namespace morphstore {
     
@@ -51,7 +50,7 @@ namespace morphstore {
  * unique.
  */
 template<
-        processing_style_t t_ps,
+        class t_vector_extension,
         class t_out_pos_f,
         class t_in_pos_l_f,
         class t_in_pos_r_f

@@ -16,22 +16,38 @@
  **********************************************************************************************/
 
 /**
- * @file processing_style.h
- * @brief An enum to denote different processing styles.
- * @todo TODOS?
+ * @file left_semi_nto1_nested_loop_join_test.cpp
+ * @brief A little test/reference of the left-semi-N:1-join-operator.
  */
 
-#ifndef MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H
-#define MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H
+// This must be included first to allow compilation.
+#include <core/memory/mm_glob.h>
 
-namespace morphstore {
+#include "operator_test_frames.h"
+#include <core/morphing/format.h>
+#include <core/operators/scalar/join_uncompr.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <vector/scalar/extension_scalar.h>
 
-enum class processing_style_t {
-    scalar,
-    vec128,
-    vec256,
-    vec512
-};
+using namespace morphstore;
+using namespace vectorlib;
 
+int main(void) {
+    const bool allGood = test_op_2in_1out_1val(
+            "Left-Semi-N:1-Join",
+            &left_semi_nto1_nested_loop_join<
+                    scalar<v64<uint64_t>>,
+                    uncompr_f
+            >,
+            make_column({11, 22, 33, 11, 44, 55}),
+            make_column({22, 22, 33, 44, 33}),
+            "inDataLCol",
+            "inDataRCol",
+            make_column({1, 2, 4}),
+            "outPosLCol",
+            0 // use pessimistic output size estimation
+    );
+            
+    return !allGood;
 }
-#endif //MORPHSTORE_CORE_UTILS_PROCESSING_STYLE_H

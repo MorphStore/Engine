@@ -29,14 +29,15 @@
 #include <core/operators/scalar/group_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vectorlib;
 
 int main(void) {
     const bool allGood = test_op_2in_2out_1val(
             "Binary group",
-            &group<processing_style_t::scalar, uncompr_f, uncompr_f>,
+            &group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>,
             make_column({0, 0, 1, 0, 2, 1}),
             make_column({77, 88, 77, 77, 88, 88}),
             "inGrCol",

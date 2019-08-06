@@ -1,4 +1,5 @@
 add_subdirectory( examples )
+add_subdirectory( microbenchmarks )
 
 # There might be automatically generated subdirectories for the Star Schema
 # Benchmark (SSB), possibly with different scale factors. The following lines

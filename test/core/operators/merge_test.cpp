@@ -29,21 +29,21 @@
 #include <core/operators/scalar/merge_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/utils/processing_style.h>
+#include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
+using namespace vectorlib;
 
 int main(void) {
-    const bool allGood = test_op_2in_1out_1val(
+    const bool allGood = test_op_2in_1out(
             "Merge",
-            &merge_sorted<processing_style_t::scalar, uncompr_f>,
+            &merge_sorted<scalar<v64<uint64_t>>, uncompr_f>,
             make_column({1, 4, 5, 8, 9, 12}),
             make_column({1, 6, 8, 12, 15}),
             "inPosLCol",
             "inPosRCol",
             make_column({1, 4, 5, 6, 8, 9, 12, 15}),
-            "outPosCol",
-            0 // use pessimistic output size estimation
+            "outPosCol"
     );
     
     return !allGood;

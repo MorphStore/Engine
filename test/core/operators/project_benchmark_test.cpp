@@ -23,260 +23,217 @@
 
 #include <core/memory/mm_glob.h>
 #include <core/morphing/format.h>
-#include <core/morphing/morph.h>
+#include <core/morphing/static_vbp.h>
+#include <core/operators/scalar/project_compr.h>
 #include <core/operators/scalar/project_uncompr.h>
 #include <core/operators/vectorized/project_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
-#include <core/utils/equality_check.h>
-#include <core/utils/monitoring.h>
-#include <core/utils/printing.h>
-#include <core/utils/processing_style.h>
+#include <core/utils/math.h>
+#include <core/utils/preprocessor.h>
+#include <core/utils/variant_executor.h>
 
-#include <iomanip>
+#include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/primitives/calc_scalar.h>
+#include <vector/scalar/primitives/create_scalar.h>
+#include <vector/scalar/primitives/io_scalar.h>
+#include <vector/scalar/primitives/logic_scalar.h>
+#ifdef AVXTWO
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/logic_avx2.h>
+#endif
+#ifdef AVX512
+#include <vector/simd/avx512/extension_avx512.h>
+#include <vector/simd/avx512/primitives/calc_avx512.h>
+#include <vector/simd/avx512/primitives/create_avx512.h>
+#include <vector/simd/avx512/primitives/io_avx512.h>
+#include <vector/simd/avx512/primitives/logic_avx512.h>
+#endif
+#include <vector/simd/sse/extension_sse.h>
+#include <vector/simd/sse/primitives/calc_sse.h>
+#include <vector/simd/sse/primitives/create_sse.h>
+#include <vector/simd/sse/primitives/io_sse.h>
+#include <vector/simd/sse/primitives/logic_sse.h>
+
 #include <iostream>
 #include <random>
-#include <type_traits>
-#include <utility>
+#include <tuple>
+#include <map>
 #include <vector>
 
 using namespace morphstore;
+using namespace vectorlib;
 
-/**
- * @brief A wrapper for calling a template specialization of the
- * project-operator.
- * 
- * Necessary, since different template specializations can differ in their
- * columns' formats, such that there is no common function pointer type for
- * calling them.
- * 
- * This function morphs the uncompressed input positions to the format
- * expected by the variant and executes the variant.
- * 
- * This function has the following template parameters:
- * - `t_ps_morph` The processing style to use for the morph operator. Note that
- *   this does not matter if `t_in_pos_f` is uncompressed.
- * - `t_ps_project` The processing style to use for the actual
- *   project-operator.
- * - `t_in_pos_f` The (un)compressed format of the project-operator's input
- *   positions column.
- * 
- * @param p_InDataCol The project-operator's uncompressed input data column.
- * @param p_InPosCol The project-operator's uncompressed input positions
- * column.
- * @param p_CounterName The name of the monitoring counter to use.
- * @return The project-operator's uncompressed output data column.
- */
-template<
-        processing_style_t t_ps_morph,
-        processing_style_t t_ps_project,
-        class t_in_pos_f
->
-const column<uncompr_f> *
-measure_project(
-        const column<uncompr_f> * const p_InDataCol,
-        const column<uncompr_f> * const p_InPosCol,
-        const std::string & p_CounterName
-) {
-    // Note that this is a no-op if t_in_pos_f is uncompr_f, i.e., if the
-    // operator variant expects its input positions in the uncompressed format.
-    auto inPosColMorphed = morph<t_ps_morph, t_in_pos_f>(p_InPosCol);
-    
-#ifndef MSV_USE_MONITORING
-    // @todo This is ugly.
-    // p_CounterName would only be used if monitoring is enabled. To prevent a
-    // compiler error due to an unused variable, we must do something with it
-    // even if monitoring is disabled.
-    std::cout
-            << "(the monitoring counter's name would have been '"
-            << p_CounterName << "') ";
-#endif
-    
-    // Execution of the operator, wrapped into runtime measurement.
-    MONITOR_START_INTERVAL(p_CounterName)
-    auto outPosCol = project<t_ps_project, uncompr_f, uncompr_f, t_in_pos_f>(
-            p_InDataCol, inPosColMorphed
-    );
-    MONITOR_END_INTERVAL(p_CounterName)
-            
-    // The morphed input positions can be freed if the morph-operator was a
-    // no-op.
-    if(!std::is_same<t_in_pos_f, uncompr_f>::value)
-        delete inPosColMorphed;
-    
-    return outPosCol;
+#define MAKE_VARIANT(ve, in_pos_f) \
+{ \
+    new ve_t::operator_wrapper \
+        ::for_output_formats<uncompr_f> \
+        ::for_input_formats<uncompr_f, in_pos_f>( \
+            &project< \
+                    ve, \
+                    uncompr_f, \
+                    uncompr_f, in_pos_f \
+            > \
+    ), \
+    STR_EVAL_MACROS(ve), \
+    STR_EVAL_MACROS(in_pos_f) \
 }
-
-/**
- * @brief A function pointer type for (the above wrapper of) the
- * project-operator.
- */
-typedef const column<uncompr_f> *
-(*project_fp_t) (
-        const column<uncompr_f> * const,
-        const column<uncompr_f> * const,
-        const std::string &
-);
-
-// @todo Not sure if macros can be documented this way.
-/**
- * @brief Expands to an initializer list for a pair consisting of a function
- * pointer to (the wrapper of) the specified project-operator variant and a
- * suitable textual representation, i.e., name, of the variant.
- * 
- * This macro's parameters are the template parameters of the function
- * `measure_project` above.
- */
-#define PTR_AND_NAME(t_ps_morph, t_ps_project, t_in_pos_f) { \
-    &measure_project< \
-            processing_style_t::t_ps_morph, \
-            processing_style_t::t_ps_project, \
-            t_in_pos_f \
-    >, \
-    #t_ps_project ", " #t_in_pos_f \
-}
-
-/**
- * @brief Tests if all considered variants of the project-operator yield
- * exactly the same output in the setting specified by the parameters.
- * 
- * The project-operator's input columns are generated. All operator variants
- * are executed on these columns. The runtimes are measured and some details
- * regarding progress, correctness checks and measurements are printed.
- * 
- * @param p_InDataCount The number of data elements in the project-operator's
- * input data column.
- * @param p_InPosCount The number of data elements in the project-operator's
- * input positions column.
- * @return `true` if all variants yielded exactly the same output, `false`
- * otherwise.
- */
-bool evaluate_variants(size_t p_InDataCount, size_t p_InPosCount) {
-    std::cout
-            << "Setting" << std::endl
-            << "\tParameters" << std::endl
-            << "\t\tinDataCount:\t " << p_InDataCount << std::endl
-            << "\t\tinPosCount:\t " << p_InPosCount << std::endl;
     
-    // ------------------------------------------------------------------------
-    // Data generation.
-    // ------------------------------------------------------------------------
-    std::cout
-            << "\tData generation" << std::endl
-            << "\t\tstarted... ";
-    std::cout.flush();
-    auto inDataCol = generate_with_distr(
-            p_InDataCount,
-            std::uniform_int_distribution<uint64_t>(123, 456),
-            false
-    );
-    auto inPosCol = generate_with_distr(
-            p_InPosCount,
-            std::uniform_int_distribution<uint64_t>(0, p_InDataCount - 1),
-            false
-    );
-    std::cout << "done" << std::endl;
-    
-    // ------------------------------------------------------------------------
-    // Variant specification.
-    // ------------------------------------------------------------------------
-    // Each variant is a pair. The first element is a pointer to the function
-    // to call, the second element is the name of the variant (to be used as
-    // the monitoring counter name).
-    std::vector<std::pair<project_fp_t, std::string> > variants = {
-        PTR_AND_NAME(scalar, scalar, uncompr_f),
-        PTR_AND_NAME(scalar, vec128, uncompr_f),
-        PTR_AND_NAME(scalar, vec256, uncompr_f)
-    };
-    // Just for the sake of a nicely formatted output.
-    size_t maxLen = 0;
-    for(auto v : variants) {
-        const size_t len = v.second.length();
-        if(len > maxLen)
-            maxLen = len;
-    }
-    
-    // ------------------------------------------------------------------------
-    // Variant execution.
-    // ------------------------------------------------------------------------
-    // This column will be used as the reference for correctness.
-    const column<uncompr_f> * outDataCol_ref = nullptr;
-    // Whether so far all variants yielded exactly the same output.
-    bool allGood = true;
-    std::cout
-            << "\tVariant execution" << std::endl;
-    for(auto v : variants) {
-        std::cout
-                << "\t\t" << std::setw(maxLen) << std::left << v.second
-                << " started... "; 
-        std::cout.flush();
-        // Calling the function of the variant.
-        auto outDataCol = (*(v.first))(inDataCol, inPosCol, v.second);
-        std::cout << "done -> ";
-        if(outDataCol_ref == nullptr) {
-            // The first variant serves as the reference (w.r.t. correctness)
-            // for all following variants. Thus, we have to keep its output
-            // till the end.
-            outDataCol_ref = outDataCol;
-            std::cout << "reference" << std::endl;
-        }
-        else {
-            // All following variants are compared to the reference.
-            equality_check ec(outDataCol_ref, outDataCol);
-            // Now the output of the current variant is not required any more.
-            delete outDataCol;
-            // Print if this variant yielded exactly the same output as the
-            // reference.
-            const bool good = ec.good();
-            std::cout << equality_check::ok_str(good) << std::endl;
-            if(!good)
-                std::cout
-                        << std::endl
-                        << "\t\t\tdetails:" << std::endl
-                        << ec << std::endl;
-            allGood = allGood && good;
-        }
-    }
-    // Now we can free the reference output.
-    delete outDataCol_ref;
-    
-    // Free the generated input data.
-    delete inDataCol;
-    delete inPosCol;
-    
-    return allGood;
-}
+// This must be a macro, because if it is a C++ variable/constant, then the
+// output will always contain the identifier/expression, but not the value.
+// The value must be a literal here, it can be calculated as
+// sizeof(__m128i) / sizeof(uint64_t) .
+#define STEP_128 2
 
 int main(void) {
 #ifdef MSV_NO_SELFMANAGED_MEMORY
-    bool curGood;
-    bool allGood = true;
+    // Setup.
+    using ve_t = variant_executor_helper<1, 2>::type
+            ::for_variant_params<std::string, std::string>
+            ::for_setting_params<size_t, size_t>;
+    ve_t ve(
+            {},
+            {"ps", "in_pos_f"},
+            {"inDataCount", "inPosCount"}
+    );
     
-    // Setting in which a few positions refer to a large data column.
-    curGood = evaluate_variants(128 * 1000 * 1000, 16 * 1024);
-    allGood = allGood && curGood;
-    // Setting in which sequentially reading the input position column should
-    // have a significant impact.
-    curGood = evaluate_variants(2, 128 * 1000 * 1000);
-    allGood = allGood && curGood;
-    // Setting in which sequentially reading the input position column should
-    // not have a significant impact.
-    curGood = evaluate_variants(1000 * 1000, 128 * 1000);
-    allGood = allGood && curGood;
+    // These variants can be executed for all input columns.
+    const std::vector<ve_t::variant_t> variants = {
+        MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f),
+        MAKE_VARIANT(sse<v128<uint64_t>>, uncompr_f),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, uncompr_f)
+    };
     
-    // Output of the runtimes.
-    // @todo These should be listed above, but the monitoring does not support
-    // this at the moment.
-    std::cout << "Runtimes [µs]" << std::endl;
-    MONITOR_PRINT_ALL(monitorShellLog, true)
+    // These variants can only be executed if their static bit width is high
+    // enough to represent the highest possible position.
+    std::map<unsigned, std::vector<ve_t::variant_t> > staticVPBVariantsByBw = {
+        // Generated with Python:
+        // for bw in range(1, 64+1):
+        //   print("{{{: >2}, {{MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<{: >2}, STEP_128>))}}}}{}".format(bw, bw, "," if bw < 64 else ""))
+        { 1, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 1, STEP_128>))}},
+//        { 2, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 2, STEP_128>))}},
+//        { 3, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 3, STEP_128>))}},
+//        { 4, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 4, STEP_128>))}},
+//        { 5, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 5, STEP_128>))}},
+//        { 6, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 6, STEP_128>))}},
+//        { 7, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 7, STEP_128>))}},
+//        { 8, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 8, STEP_128>))}},
+//        { 9, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 9, STEP_128>))}},
+//        {10, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<10, STEP_128>))}},
+//        {11, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<11, STEP_128>))}},
+//        {12, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<12, STEP_128>))}},
+//        {13, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<13, STEP_128>))}},
+//        {14, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<14, STEP_128>))}},
+//        {15, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<15, STEP_128>))}},
+//        {16, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<16, STEP_128>))}},
+//        {17, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<17, STEP_128>))}},
+//        {18, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<18, STEP_128>))}},
+//        {19, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<19, STEP_128>))}},
+//        {20, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<20, STEP_128>))}},
+//        {21, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<21, STEP_128>))}},
+//        {22, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<22, STEP_128>))}},
+//        {23, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<23, STEP_128>))}},
+//        {24, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<24, STEP_128>))}},
+//        {25, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<25, STEP_128>))}},
+//        {26, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<26, STEP_128>))}},
+//        {27, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<27, STEP_128>))}},
+//        {28, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<28, STEP_128>))}},
+//        {29, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<29, STEP_128>))}},
+//        {30, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<30, STEP_128>))}},
+//        {31, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<31, STEP_128>))}},
+//        {32, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<32, STEP_128>))}},
+//        {33, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<33, STEP_128>))}},
+//        {34, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<34, STEP_128>))}},
+//        {35, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<35, STEP_128>))}},
+//        {36, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<36, STEP_128>))}},
+//        {37, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<37, STEP_128>))}},
+//        {38, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<38, STEP_128>))}},
+//        {39, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<39, STEP_128>))}},
+//        {40, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<40, STEP_128>))}},
+//        {41, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<41, STEP_128>))}},
+//        {42, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<42, STEP_128>))}},
+//        {43, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<43, STEP_128>))}},
+//        {44, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<44, STEP_128>))}},
+//        {45, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<45, STEP_128>))}},
+//        {46, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<46, STEP_128>))}},
+//        {47, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<47, STEP_128>))}},
+//        {48, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<48, STEP_128>))}},
+//        {49, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<49, STEP_128>))}},
+//        {50, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<50, STEP_128>))}},
+//        {51, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<51, STEP_128>))}},
+//        {52, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<52, STEP_128>))}},
+//        {53, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<53, STEP_128>))}},
+//        {54, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<54, STEP_128>))}},
+//        {55, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<55, STEP_128>))}},
+//        {56, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<56, STEP_128>))}},
+//        {57, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<57, STEP_128>))}},
+//        {58, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<58, STEP_128>))}},
+//        {59, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<59, STEP_128>))}},
+//        {60, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<60, STEP_128>))}},
+//        {61, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<61, STEP_128>))}},
+//        {62, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<62, STEP_128>))}},
+//        {63, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<63, STEP_128>))}},
+//        {64, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<64, STEP_128>))}}
+    };
     
-    // Summary.
-    std::cout
-            << "Summary" << std::endl
-            << '\t' << (allGood ? "all ok" : "some NOT OK") << std::endl;
+    // Variant execution for several settings.
+    for(const std::tuple<size_t, size_t> settingParams : {
+        // Setting in which a few positions refer to a large data column.
+        std::make_tuple(16 * 1024, 128 * 1000 * 1000),
+        // Setting in which sequentially reading the input position column
+        // should have a significant impact on the runtime.
+        std::make_tuple(2, 128 * 1000 * 1000),
+        // Setting in which sequentially reading the input position column
+        // should not have a significant impact on the runtime.
+        std::make_tuple(1000 * 1000, 128 * 1000)
+    }) {
+        size_t inDataCount;
+        size_t inPosCount;
+        std::tie(inDataCount, inPosCount) = settingParams;
+
+        ve.print_datagen_started();
+        auto inDataCol = generate_with_distr(
+                inDataCount,
+                std::uniform_int_distribution<uint64_t>(100, 200),
+                false
+        );
+        auto inPosCol = generate_with_distr(
+                inPosCount,
+                std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
+                false
+        );
+        ve.print_datagen_done();
+        
+        std::vector<ve_t::variant_t> variantsToUse(variants);
+        // Add all operator variants using the static_vbp format with a high
+        // enough bit width.
+        const unsigned minBw = effective_bitwidth(inDataCount - 1);
+        for(const auto & vs : staticVPBVariantsByBw)
+            if(vs.first >= minBw)
+                for(const auto & v : vs.second)
+                    variantsToUse.push_back(v);
+        
+        ve.execute_variants(
+                // Variants to execute
+                variantsToUse,
+                // Setting parameters
+                inDataCount, inPosCount,
+                // Input columns
+                inDataCol, inPosCol
+        );
+        
+        delete inPosCol;
+        delete inDataCol;
+    }
     
-    return !allGood;
+    // Finish and print a summary.
+    ve.done();
+    
+    return !ve.good();
 #else
     // @todo Make it work with self-managed memory.
     std::cerr

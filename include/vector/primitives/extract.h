@@ -14,9 +14,9 @@
 #ifndef EXTRACT_H
 #define EXTRACT_H
 
-#include <vector/general_vector.h>
+#include <vector/vector_extension_structs.h>
 
-namespace vector{
+namespace vectorlib{
     
    
    template<class VectorExtension, int IOGranularity>
