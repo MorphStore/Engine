@@ -16,36 +16,55 @@
  **********************************************************************************************/
 
 /**
- * @file cvertex.h
- * @brief Derived vertex calss for CSR storage format
- * @todo
+ * @file avertex.h
+ * @brief Derived vertex calss for ADJ_LIST storage format
+ * @todo change adjlist (vector of Edges) to vector of Edge* ?????
 */
 
-#ifndef MORPHSTORE_CVERTEX_H
-#define MORPHSTORE_CVERTEX_H
+#ifndef MORPHSTORE_AVERTEX_H
+#define MORPHSTORE_AVERTEX_H
+
+#include "../edge/edge.h"
 
 namespace morphstore{
 
-    class CVertex: public Vertex{
+    class AdjacencyListVertex: public Vertex{
+
+    protected:
+        std::vector<Edge> adjacencylist;
 
     public:
         // constructor with unique id generation
-        CVertex(){
+        AdjacencyListVertex(){
             // unique ID generation
             static uint64_t startID = 0;
             id = startID++;
         }
 
-        // this function has no usage here: the adding of edges happens in the graph file -> csr.h
-        // it's just here because its a pure function in Vertex.h
-        void add_edge(uint64_t from, uint64_t to,unsigned short int rel) override {
-            std::cout << " virtual add_edge - no usage: " << from << ", " << to << ", " << rel << std::endl;
+        // returns a reference (read-only) of the adjacency list
+        const std::vector<Edge>& get_adjList() const{
+            return adjacencylist;
         }
 
-        /* old-calculation of size of a vertex in bytes
+        // add edge to vertexs' adjacencylist
+        void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
+            Edge e(from, to, rel);
+            this->adjacencylist.push_back(e);
+        }
+
+        // function which returns the number of edges
+        uint64_t get_number_edges() override {
+            return adjacencylist.size();
+        }
+
+        /* old-calculation of vertex size
         size_t get_size_of_vertex() {
             size_t size = 0;
             size += sizeof(uint64_t); // id
+            // Adj.List:
+            for(const auto& e : adjList){
+                size += e.size_in_bytes();
+            }
             // properties:
             size += sizeof(std::unordered_map<std::string, std::string>);
             for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
@@ -56,9 +75,9 @@ namespace morphstore{
 
             return size;
         }
-        */
+         */
 
     };
 }
 
-#endif //MORPHSTORE_CVERTEX_H
+#endif //MORPHSTORE_AVERTEX_H

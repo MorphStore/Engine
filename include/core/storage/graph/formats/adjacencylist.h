@@ -25,7 +25,7 @@
 #define MORPHSTORE_ADJACENCYLIST_H
 
 #include "../graph.h"
-#include "../vertex/avertex.h"
+#include "../vertex/adjacencylist_vertex.h"
 
 namespace morphstore{
 
@@ -47,13 +47,13 @@ namespace morphstore{
 
         // adding a single vertex
         void add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<AVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<AdjacencyListVertex>();
             vertices[v->getID()] = v;
         }
 
         // adding a vertex with its properties
         int add_vertex_with_properties(const std::unordered_map<std::string, std::string> &props) override {
-            std::shared_ptr<Vertex> v = std::make_shared<AVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<AdjacencyListVertex>();
             v->setProperties(props);
             vertices[v->getID()] = v;
             return v->getID();

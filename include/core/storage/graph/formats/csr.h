@@ -25,7 +25,7 @@
 #define MORPHSTORE_CSR_H
 
 #include "../graph.h"
-#include "../vertex/cvertex.h"
+#include "../vertex/csr_vertex.h"
 
 namespace morphstore{
 
@@ -37,7 +37,7 @@ namespace morphstore{
          * edge array: every cell contains pointer to edge object of vertex
          */
         // TODO: construct a graph-topology struct ?
-        // TODO: free memory in destrcutor
+        // TODO: free memory in destructor
         uint64_t* node_array = nullptr;
         Edge** edge_array = nullptr;
 
@@ -60,13 +60,13 @@ namespace morphstore{
 
         // adding a single vertex (without any properties, etc...)
         void add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<CVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
             vertices[v->getID()] = v;
         }
 
         // adding a vertex with its properties
         int add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) override {
-            std::shared_ptr<Vertex> v = std::make_shared<CVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
             v->setProperties(props);
             vertices[v->getID()] = v;
             return v->getID();
