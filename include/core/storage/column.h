@@ -62,20 +62,12 @@ class column {
       column< F > & operator= ( column< F > && ) = delete;
 
       virtual ~column( ) {
-//#ifdef MSV_NO_SELFMANAGED_MEMORY
          free( m_DataUnaligned );
-/*#else
-         if( m_PersistenceType == storage_persistence_type::globalScope ) {
-            general_memory_manager::get_instance( ).deallocate( m_Data );
-         }
-#endif*/
       }
       
    private:
       column_meta_data m_MetaData;
-//#ifdef MSV_NO_SELFMANAGED_MEMORY
       void * m_DataUnaligned;
-//#endif
       voidptr_t m_Data;
       // @todo Actually, the persistence type only makes sense if we use our
       // own memory manager.
@@ -86,18 +78,10 @@ class column {
          size_t p_SizeAllocatedByte
       ) :
          m_MetaData{ 0, 0, 0, p_SizeAllocatedByte },
-//#ifdef MSV_NO_SELFMANAGED_MEMORY
          m_DataUnaligned{
             malloc( get_size_with_alignment_padding( p_SizeAllocatedByte ) )
          },
          m_Data{ create_aligned_ptr( m_DataUnaligned ) },
-/*#else
-         m_Data{
-            ( p_PersistenceType == storage_persistence_type::globalScope )
-            ? general_memory_manager::get_instance( ).allocate( p_SizeAllocatedByte )
-            : malloc( p_SizeAllocatedByte )
-         },
-#endif*/
          m_PersistenceType{ p_PersistenceType }
       {
          //
@@ -142,13 +126,7 @@ class column {
       static column< F > * create_global_column(size_t p_SizeAllocByte) {
          return new
             (
-//#ifdef MSV_NO_SELFMANAGED_MEMORY
                malloc( sizeof( column< F > ) )
-/*#else
-               general_memory_manager::get_instance( ).allocate(
-                  sizeof( column< F > )
-               )
-#endif*/
             )
             column(
                storage_persistence_type::globalScope,
