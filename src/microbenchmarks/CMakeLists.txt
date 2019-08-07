@@ -68,3 +68,14 @@ target_compile_options( merge_benchmark PRIVATE
                         -fstack-protector-all)
                         #$<$<CONFIG:DEBUG>:-DDEBUG> )
 target_link_libraries( merge_benchmark PRIVATE "-ldl" )
+
+add_executable( compress_benchmark column_compress_benchmark.cpp )
+target_compile_options( compress_benchmark PRIVATE
+                        -Werror
+                        -Wall
+                        -Wextra
+                        -pedantic
+			-Wno-unused-parameter
+                        -fstack-protector-all)
+                        #$<$<CONFIG:DEBUG>:-DDEBUG> )
+target_link_libraries( compress_benchmark PRIVATE "-ldl" )
