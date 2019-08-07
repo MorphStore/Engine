@@ -16,8 +16,6 @@
 
 namespace morphstore {
 
-static const size_t PAGE_SIZE = 1 << 15;
-
 class paged_memory_manager;
 
 class PageHeader {
@@ -49,7 +47,7 @@ public:
 
     void* allocate(size_t size)
     {
-        if (size <= PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
+        if (size <= DB_PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_sumOffset += header.m_currOffset;
             header.m_currOffset += size;
@@ -135,7 +133,7 @@ public:
     void* allocate(size_t size) override
     {
         //TODO: throw exception
-        assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
+        //assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
         auto& manager = mmap_memory_manager::getInstance();
         size += sizeof(ObjectInfo); // Additional space for type and allocation information
 
@@ -144,7 +142,7 @@ public:
 
         if (current_page != nullptr) {
             object_loc = current_page->allocate(size);
-            //trace("[PAGED_MM] Allocated memory on spot ", object_loc, " from page ", current_page);
+            trace("[PAGED_MM] Allocated memory on spot ", object_loc, " from page ", current_page);
         }
 
         //current page was (probably) full    
@@ -152,20 +150,19 @@ public:
             // TODO: handle next page allocation from chunk
             if (current_chunk == nullptr) {
                 current_chunk = manager.allocateContinuous();
-                ////trace("[PAGED_MM] Allocated new chunk on ", current_chunk);
+                trace("[PAGED_MM] Allocated new chunk on ", current_chunk);
             }
         
             //ChunkHeader* header = reinterpret_cast<uint64_t>(current_chunk) - sizeof(ChunkHeader);
-            page_loc = manager.allocate(PAGE_SIZE, current_chunk);
-            ////trace("[PAGED_MM] Allocated new page on ", page_loc);
+            page_loc = manager.allocate(DB_PAGE_SIZE, current_chunk);
+            trace("[PAGED_MM] Allocated new page on ", page_loc);
 
             if (page_loc == nullptr) {
                 //TODO: handle concurrency
                 //FIXME: not necessary
                 current_chunk = manager.allocateContinuous();
-                page_loc = manager.allocate(PAGE_SIZE, current_chunk);
+                page_loc = manager.allocate(DB_PAGE_SIZE, current_chunk);
                 current_page = reinterpret_cast<Page*>(page_loc);
-                //trace("should construct");
                 new (page_loc) Page();
                 object_loc = current_page->allocate(size);
                 if (object_loc == nullptr)
@@ -177,7 +174,7 @@ public:
                 Page* page = new (page_loc) Page();
                 current_page = page;
                 object_loc = page->allocate(size);
-                ////trace("Allocated object on ", object_loc, " with size ", std::hex, size);
+                trace("Allocated object on ", object_loc, " with size ", std::hex, size);
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
 
@@ -185,7 +182,7 @@ public:
             }
         }
         else {
-            ////trace( "[PAGED_MM] Found object allocation spot in current page ", current_page);
+            trace( "[PAGED_MM] Found object allocation spot in current page ", current_page);
             return object_loc;
         }
     }
