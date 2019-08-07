@@ -594,14 +594,8 @@ namespace morphstore{
             uint64_t graphSize = graph->getNumberVertices();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
-                // Problem: there are some vertexIDs which have no entry in the lookup -> segmentation fault
-                // get the list of target vertices
-                std::vector<std::pair<uint64_t , unsigned short int >> neighbors;
-                if(vertexNeighborsLookup[vertexID].size() != 0){
-                    neighbors = vertexNeighborsLookup.at(vertexID);
-                }
-                // VERTICES WITHOUT ANY EDGES -< TODO ? how to handle?
-                graph->add_edges(vertexID, neighbors);
+                // add edge data:
+                graph->add_edges(vertexID, vertexNeighborsLookup[vertexID]);
             }
         }
 

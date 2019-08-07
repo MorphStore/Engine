@@ -109,6 +109,11 @@ namespace morphstore{
             return true;
         }
 
+        // function which returns a pointer to vertex by id
+        std::shared_ptr<Vertex> get_vertex_by_id(uint64_t id){
+            return vertices[id];
+        }
+
         // -------------------- pure virtual functions --------------------
 
         virtual storageFormat getStorageFormat() const = 0;
