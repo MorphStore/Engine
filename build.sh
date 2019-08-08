@@ -53,10 +53,18 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
-  echo "	-tQ|--testQueries"
-	echo "	     Runs CTest for example queries "
+        echo ""
+        echo "targets:"
+        echo "  -bA|--buildAll"
+        echo "       Builds all targets in the src directory"
+        echo "  -bEx|--buildExamples"
+        echo "       Builds all examples"
+        echo "  -bMbm|--buildMicroBms"
+        echo "       Builds all micro-benchmarks"
+        echo "  -bSSB|--buildSSB"
+        echo "       Builds all SSB queries (if the generated sources are available)"
 	echo ""
-  echo "features:"
+        echo "features:"
 	echo "	-avx512"
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
@@ -93,7 +101,10 @@ testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
-testQueries="-DCTEST_QUERIES=False"
+buildAll="-DBUILD_ALL=False"
+buildExamples="-DBUILD_EXAMPLES=False"
+buildMicroBms="-DBUILD_MICROBMS=False"
+buildSSB="-DBUILD_SSB=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
@@ -205,9 +216,20 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
-        -tQ|--testQueries)
-	runCtest=true
-	testQueries="-DCTEST_QUERIES=True"
+        -bA|--buildAll)
+	buildAll="-DBUILD_ALL=True"
+	shift # past argument
+	;;
+        -bEx|--buildExamples)
+	buildExamples="-DBUILD_EXAMPLES=True"
+	shift # past argument
+	;;
+        -bMbm|--buildMicroBms)
+	buildMicroBms="-DBUILD_MICROBMS=True"
+	shift # past argument
+	;;
+        -bSSB|--buildSSB)
+	buildSSB="-DBUILD_SSB=True"
 	shift # past argument
 	;;
 	-avx512)
@@ -273,14 +295,15 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $testQueries $avx512 $avxtwo $odroid $rapl $neon"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
 fi
+addBuilds="$buildAll $buildExamples $buildMicroBms $buildSSB"
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $odroid $rapl $neon-G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel
 
 if [ "$runCtest" = true ] ; then
