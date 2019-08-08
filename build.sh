@@ -63,6 +63,10 @@ function printHelp {
         echo "       Builds all micro-benchmarks"
         echo "  -bSSB|--buildSSB"
         echo "       Builds all SSB queries (if the generated sources are available)"
+        echo "  --target TARGETNAME"
+        echo "       Builds only the target TARGETNAME, which must be included in one of the target groups selected using the above \"-b\"-arguments"
+        echo "       It is possible to specify multiple target names by providing a quoted white-space-separated list for TARGETNAME"
+        echo "       Defaults to \"all\", i.e., if omited, all targets of the selected target groups will be built"
 	echo ""
         echo "features:"
 	echo "	-avx512"
@@ -111,6 +115,7 @@ sse4="-DCSSE=False"
 rapl="DCRAPL=False"
 odroid="DCODROID=False"
 neon="DCNEON=False"
+target="all"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -262,6 +267,11 @@ case $key in
         odroid="-DCODROID=True"
 	shift # past argument
 	;;
+	--target)
+	target=$2
+	shift
+	shift
+        ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -292,7 +302,7 @@ then
 	exit 1
 fi
 
-printf "Using buildMode: $buildMode and make with: $makeParallel\n"
+printf "Using buildMode: $buildMode and make with: $makeParallel $target\n"
 
 if [ "$runCtest" = true ] ; then
 	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon"
@@ -304,7 +314,7 @@ addBuilds="$buildAll $buildExamples $buildMicroBms $buildSSB"
 
 mkdir -p build
 cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon -G "Unix Makefiles" ../
-make -C build/ VERBOSE=1 $makeParallel
+make -C build/ VERBOSE=1 $makeParallel $target
 
 if [ "$runCtest" = true ] ; then
 	cd build && ctest --output-on-failure #--extra-verbose
