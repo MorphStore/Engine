@@ -39,6 +39,11 @@ struct ObjectInfo {
         size = allocSize;
     }
 
+    size_t getSize()
+    {
+        return static_cast<size_t>(size);
+    }
+
     uint64_t type : 8;
     uint64_t size : 56;
 };
@@ -192,6 +197,16 @@ public:
     static const uint8_t UNMAP  = 0b01;
     static const uint8_t START  = 0b10;
     static const uint8_t CONT   = 0b11;
+
+    static ChunkHeader* getChunkHeader(void* address)
+    {
+        return reinterpret_cast<ChunkHeader*>( (reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1)) - sizeof(ChunkHeader));
+    }
+
+    static void* getChunkPointer(ChunkHeader* header)
+    {
+        return reinterpret_cast<void*>(reinterpret_cast<uint64_t>(header) + sizeof(ChunkHeader));
+    }
 
     void initialize(StorageType type)
     {
@@ -356,7 +371,7 @@ public:
 
         uint64_t bit_offset = ALLOC_BITS * blocks_new;
         uint64_t bits_to_be_set_to_zero = (blocks_original - blocks_new) * ALLOC_BITS;
-        uint64_t word_aligned_pos_in_bitmap = reinterpret_cast<uint64_t>(address) + (bit_offset >> 6);
+        uint64_t word_aligned_pos_in_bitmap = reinterpret_cast<uint64_t>(address) + (bit_offset >> 6) - reinterpret_cast<uint64_t>(getChunkPointer(this));
         uint64_t bit_offset_in_word = bit_offset & 0x3fl;
 
         //uint64_t* word_in_bitmap = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
@@ -377,7 +392,7 @@ public:
                 *word = *word & ~(0l + (0b11 << offset));
             }
             else {
-                throw std::runtime_error("Area was not allocated");
+                warn("Area was not allocated");
             }
         }
     }
@@ -548,17 +563,6 @@ public:
 };
 static_assert(sizeof(ChunkHeader) == 8192, "Code expects ChunkHeader to be two pages long, please refit solution in case that should not hold");
 
-ChunkHeader* getChunkHeader(void* address)
-{
-    return reinterpret_cast<ChunkHeader*>( (reinterpret_cast<uint64_t>(address) & ~(ALLOCATION_SIZE - 1)) - sizeof(ChunkHeader));
-}
-
-void* getChunkPointer(ChunkHeader* header)
-{
-    return reinterpret_cast<void*>(reinterpret_cast<uint64_t>(header) + sizeof(ChunkHeader));
-}
-
-
 class mmap_memory_manager: public abstract_memory_manager {
 public:
     static mmap_memory_manager* m_Instance;
@@ -587,11 +591,11 @@ public:
         // first check if prealloced chunks are available
         if (m_next_free_chunk != nullptr) {
             void* res = m_next_free_chunk;
-            ChunkHeader* header = getChunkHeader(m_next_free_chunk);
+            ChunkHeader* header = ChunkHeader::getChunkHeader(m_next_free_chunk);
 
             m_next_free_chunk = header->getNext();
             if (m_next_free_chunk != nullptr)
-                getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
+                ChunkHeader::getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
 
             // set back to init;
             header->setNext(nullptr);
@@ -734,7 +738,7 @@ public:
 
             void* ptr = allocatePages(size, m_current_chunk);
             if (ptr == nullptr) {
-                trace("Needing new chunk, allocating...");
+                debug("Needing new chunk, allocating...");
                 m_current_chunk = allocateContinuous();
 
                 if (m_current_chunk == nullptr)
@@ -770,19 +774,20 @@ public:
             //munmap(header, sizeof(ChunkHeader) + ALLOCATION_SIZE);
             if (m_next_free_chunk == nullptr) {
                 m_next_free_chunk = reinterpret_cast<void*>(chunk_ptr);
-                getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
-                getChunkHeader(m_next_free_chunk)->setNext(nullptr);
+
+                ChunkHeader::getChunkHeader(m_next_free_chunk)->setPrev(nullptr);
+                ChunkHeader::getChunkHeader(m_next_free_chunk)->setNext(nullptr);
             }
             else {
-                ChunkHeader* header_iter = getChunkHeader(m_next_free_chunk);
+                ChunkHeader* header_iter = ChunkHeader::getChunkHeader(m_next_free_chunk);
                 while (header_iter->getNext() != nullptr) {
-                   header_iter = getChunkHeader(header_iter->getNext());
+                   header_iter = ChunkHeader::getChunkHeader(header_iter->getNext());
                 }
 
                 // append to list
                 header_iter->setNext(m_next_free_chunk);
-                getChunkHeader(m_next_free_chunk)->setPrev(getChunkPointer(header_iter));
-                getChunkHeader(m_next_free_chunk)->setNext(nullptr);
+                ChunkHeader::getChunkHeader(m_next_free_chunk)->setPrev(ChunkHeader::getChunkPointer(header_iter));
+                ChunkHeader::getChunkHeader(m_next_free_chunk)->setNext(nullptr);
             }
         }
     }
@@ -825,25 +830,29 @@ public:
 
     bool isReallocatable(void* ptr, size_t size)
     {
-        ChunkHeader* header = getChunkHeader(ptr);
+        ChunkHeader* header = ChunkHeader::getChunkHeader(ptr);
 
         return header->isReallocatable(ptr, size);
     }
 
     void * reallocate_back(void* ptr, size_t size)
     {
+        debug("[MMAP_MM] Called reallocate_back");
+
         ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
-        ChunkHeader* header = getChunkHeader(ptr);
-        if (info->size == size)
+        ChunkHeader* header = ChunkHeader::getChunkHeader(ptr);
+        if (info->getSize() == size)
             return ptr;
 
-        if (info->size < size) {
-            header->setDeallocatedEnd(ptr, info->size, size);
+        if (info->getSize() > size) {
+            debug("Size ", size, " is smaller than former size ", info->getSize());
+            header->setDeallocatedEnd(ptr, info->getSize(), size);
             info->size = size;
             return ptr;
         }
 
         void* ret = allocate(size);
+        debug("Reallocating ", size, " bytes for ", info->getSize(), " by allocating anew");
         if (ret == nullptr) {
             throw std::runtime_error("Allocation failed");
             return nullptr;
@@ -852,7 +861,7 @@ public:
         deallocate(ptr);
         info = reinterpret_cast<ObjectInfo*>(ret);
         info->size = size;
-        return ret;
+        return &info[1];
     }
 
     void handle_error() override

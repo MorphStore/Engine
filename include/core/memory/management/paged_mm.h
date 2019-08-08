@@ -47,6 +47,9 @@ public:
 
     void* allocate(size_t size)
     {
+        if (size > DB_PAGE_SIZE - sizeof(PageHeader))
+            throw std::runtime_error("Invalid request for memory larger than single page");
+
         if (size <= DB_PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_sumOffset += header.m_currOffset;
@@ -165,6 +168,7 @@ public:
                 current_page = reinterpret_cast<Page*>(page_loc);
                 new (page_loc) Page();
                 object_loc = current_page->allocate(size);
+                debug("[PAGED_MM] Actually you should not be able to reach this");
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
 
@@ -175,6 +179,7 @@ public:
                 current_page = page;
                 object_loc = page->allocate(size);
                 trace("Allocated object on ", object_loc, " with size ", std::hex, size);
+                debug("[PAGED_MM] Second allocation yielded no object, trying anew ");
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
 
