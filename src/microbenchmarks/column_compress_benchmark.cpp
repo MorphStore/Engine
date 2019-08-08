@@ -24,6 +24,7 @@
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
 
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -35,16 +36,22 @@ using namespace morphstore;
 using namespace vector;
 
 int main() {
-    const unsigned t_bw = 8;
+    const unsigned t_bw = 1;
     unsigned countValues = 
-                10 * 16 * 128 + 3 * 128;
-    auto origCol = generate_with_distr(
+                64 << 20;
+    auto origCol = /*generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(
                     0, bitwidth_max<uint64_t>(t_bw) - 1
             ),
             false
-    );
+    );*/
+    
+     generate_exact_number(
+        countValues,
+        10 << 10,
+        123,
+        12345);
 
     //select_handwritten_buffer_compr_out<8>(origCol, val)
     using in_f = uncompr_f;
@@ -62,7 +69,19 @@ int main() {
             in_f
                 >( origCol );
 
-    (void) outPosCol;
+    auto originalSize = outPosCol->get_size_used_byte();
+    std::cout << "Column compressed bytes for " << countValues << " values: " << outPosCol->get_size_compr_byte();
+    std::cout << ", bytes used: " << outPosCol->get_size_used_byte() << std::endl;
+
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+
+    start = std::chrono::system_clock::now();
+    auto new_col = realloc(const_cast<column<out_f>*>(outPosCol), outPosCol->get_size_compr_byte());    
+    (void) new_col;
+    end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "Needed " << elapsed_seconds.count() << " for reallocing " << originalSize << " bytes" << std::endl;
 
     return 0;
 }
