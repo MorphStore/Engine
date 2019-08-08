@@ -374,9 +374,6 @@ public:
         uint64_t word_aligned_pos_in_bitmap = reinterpret_cast<uint64_t>(address) + (bit_offset >> 6) - reinterpret_cast<uint64_t>(getChunkPointer(this));
         uint64_t bit_offset_in_word = bit_offset & 0x3fl;
 
-        //uint64_t* word_in_bitmap = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap);
-        //(void) word_in_bitmap;
-
         uint64_t* start_word = reinterpret_cast<uint64_t*>(getBitmapAddress() + word_aligned_pos_in_bitmap * sizeof(uint64_t));
         uint64_t start_offset = (bit_offset_in_word);
 
@@ -386,7 +383,7 @@ public:
         bit_offset_in_word += ALLOC_BITS;
 
         for (uint64_t i = bit_offset_in_word; bits_to_be_set_to_zero > 0; bits_to_be_set_to_zero -= ALLOC_BITS) {
-            uint64_t* word = reinterpret_cast<uint64_t*>(getBitmapAddress() + (word_aligned_pos_in_bitmap + (i>>6)) * sizeof(uint64_t));
+            uint64_t* word = reinterpret_cast<uint64_t*>(getBitmapAddress() + (word_aligned_pos_in_bitmap + (i>>6)));
             uint64_t offset = (i & 0x3fl) + ALLOC_BITS;
             if ( ((*word >> (64 - offset)) & 0b11) == 0b11 ) {
                 *word = *word & ~(0l + (0b11 << offset));
