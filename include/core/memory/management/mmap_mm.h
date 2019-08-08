@@ -559,12 +559,12 @@ void* getChunkPointer(ChunkHeader* header)
 }
 
 
-const size_t HEAD_STRUCT = sizeof(ChunkHeader);
-const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
-
 class mmap_memory_manager: public abstract_memory_manager {
 public:
     static mmap_memory_manager* m_Instance;
+
+    const size_t HEAD_STRUCT = sizeof(ChunkHeader);
+    const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
 
     mmap_memory_manager &operator=(mmap_memory_manager const &) = delete;
     virtual ~mmap_memory_manager( void )
