@@ -35,10 +35,15 @@
 
 namespace morphstore {
 
+// @todo Document the differences between formats and layouts.
+
 /**
- * @brief The base class of all format implementations.
+ * @brief The base class of `format` and `layout`.
+ * 
+ * The interface defined here should be implemented by all subclasses of
+ * `format` and `layout`.
  */
-struct format {
+struct representation {
     /**
      * @brief Provides a pessimistic estimation of the maximum possible size
      * (in byte) a buffer containing the given number of data elements could
@@ -60,6 +65,20 @@ struct format {
     static size_t get_size_max_byte(size_t p_CountValues) = delete;
 
     static const size_t m_BlockSize;
+};
+
+/**
+ * @brief The base class of all format implementations.
+ */
+struct format : public representation {
+    //
+};
+
+/**
+ * @brief The base class of all layout implementations.
+ */
+struct layout : public representation {
+    //
 };
 
 /**

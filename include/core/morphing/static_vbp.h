@@ -33,27 +33,13 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
-#include <core/morphing/vbp_routines.h>
+// @todo Remove this once static_vbp_f is generic w.r.t. the underlying layout.
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/io.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#ifdef SSE
-#include <vector/simd/sse/primitives/compare_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <immintrin.h>
-#endif
-#ifdef AVXTWO
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#endif
-
+#include <vector/vector_primitives.h>
 
 #include <limits>
 #include <stdexcept>
@@ -75,26 +61,17 @@ namespace morphstore {
      */
     template<unsigned t_bw, unsigned t_step>
     struct static_vbp_f : public format {
-        static_assert(
-                (1 <= t_bw) && (t_bw <= std::numeric_limits<uint64_t>::digits),
-                "static_vbp_f: template parameter t_bw must satisfy 1 <= t_bw <= 64"
-        );
-        static_assert(
-                t_step > 0,
-                "static_vbp_f: template parameter t_step must be greater than 0"
-        );
-
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            return p_CountValues * t_bw / bitsPerByte;
+            return vbp_l<t_bw, t_step>::get_size_max_byte(p_CountValues);
         }
         
-        static const size_t m_BlockSize = t_step * sizeof(uint64_t) * bitsPerByte;
+        static const size_t m_BlockSize = vbp_l<t_bw, t_step>::m_BlockSize;
     };
     
     
     // ************************************************************************
-    // Morph-operators
+    // Morph-operators (column-level)
     // ************************************************************************
     
     // ------------------------------------------------------------------------
@@ -107,7 +84,7 @@ namespace morphstore {
      * 
      * This operator is completely generic with respect to the configuration of
      * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `pack`-function and can, thus, be
+     * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
     template<
@@ -142,7 +119,9 @@ namespace morphstore {
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            pack<t_vector_extension, t_bw, t_step>(in8, outCountLogCompr, out8);
+            morph_batch<t_vector_extension, vbp_l<t_bw, t_step>, uncompr_f>(
+                    in8, out8, outCountLogCompr
+            );
             const size_t sizeComprByte = out8 - initOut8;
             
             if(outSizeRestByte) {
@@ -168,7 +147,7 @@ namespace morphstore {
      * 
      * This operator is completely generic with respect to the configuration of
      * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `unpack`-function and can, thus, be
+     * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
     template<
@@ -206,7 +185,7 @@ namespace morphstore {
             auto outCol = new column<out_f>(outSizeByte);
             uint8_t * out8 = outCol->get_data();
 
-            unpack<t_vector_extension, t_bw, t_step>(
+            morph_batch<t_vector_extension, uncompr_f, vbp_l<t_bw, t_step> >(
                     in8, out8, inCountLogCompr
             );
             
@@ -250,13 +229,12 @@ namespace morphstore {
                         t_extra_args ...
                 >::state_t & p_State
         ) {
-            unpack_and_process<
+            decompress_and_process_batch<
                     t_vector_extension,
-                    t_bw,
-                    t_step,
+                    vbp_l<t_bw, t_step>,
                     t_op_vector,
                     t_extra_args ...
-            >(
+            >::apply(
                     p_In8, p_CountIn8, p_State
             );
         }
@@ -338,117 +316,18 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        const base_t * const m_Data;
-        
-        static const unsigned m_Shift4DivStep = (t_step == 1) ? 0 : effective_bitwidth(t_step - 1);
-        static const unsigned m_ShiftDivBaseBits = effective_bitwidth(std::numeric_limits<base_t>::digits - 1);
-        
-        // @todo It would be nice if these were const, but this is currently
-        // not possible, because vectorlib::set1 cannot be used as a constant
-        // expression.
-        static vector_t m_BaseBitsVec;
-        static vector_t m_Mask4ModStep;
-        static vector_t m_MaskModBaseBits;
-        static vector_t m_BwVec;
-        static vector_t m_StepVec;
-        static vector_t m_MaskDecompr;
+        random_read_access<t_ve, vbp_l<t_bw, t_step> > m_Internal;
         
     public:
-        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
+        random_read_access(const base_t * p_Data) : m_Internal(p_Data) {
             //
         }
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         vector_t get(const vector_t & p_Positions) {
-            using namespace vectorlib;
-            
-            const vector_t elemIdxInVec = bitwise_and<t_ve>(
-                    p_Positions, m_Mask4ModStep
-            );
-            const vector_t bitPosInBuf = mul<t_ve>::apply(
-                    shift_right<t_ve>::apply(p_Positions, m_Shift4DivStep),
-                    m_BwVec
-            );
-            const vector_t vecIdxs = shift_right<t_ve>::apply(
-                    bitPosInBuf, m_ShiftDivBaseBits
-            );
-            const vector_t baseIdxs = add<t_ve>::apply(
-                    shift_left<t_ve>::apply(vecIdxs, m_Shift4DivStep),
-                    elemIdxInVec
-            );
-            
-            vector_t res = vectorlib::gather<
-                    t_ve, iov::UNALIGNED, vector_base_t_granularity::value
-            >(m_Data, baseIdxs);
-            
-            const vector_t bitPosInElem = bitwise_and<t_ve>(
-                    bitPosInBuf, m_MaskModBaseBits
-            );
-            
-            res = shift_right_individual<t_ve>::apply(res, bitPosInElem);
-            
-            const vector_t nextBaseIdxs = add<t_ve>::apply(baseIdxs, m_StepVec);
-            
-            const vector_t shiftUpper = sub<t_ve>::apply(
-                    m_BaseBitsVec, bitPosInElem
-            );
-            const vector_t gatherUpper = vectorlib::gather<
-                    t_ve,
-                    iov::UNALIGNED,
-                    vector_base_t_granularity::value
-            >(m_Data, nextBaseIdxs);
-            const vector_t resUpper = shift_left_individual<t_ve>::apply(
-                    gatherUpper, shiftUpper
-            );
-            res = bitwise_and<t_ve>(
-                    m_MaskDecompr, bitwise_or<t_ve>(resUpper, res)
-            );
-            
-            return res;
+            return m_Internal.get(p_Positions);
         }
     };
-
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_BaseBitsVec = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(std::numeric_limits<typename t_ve::base_t>::digits);
-
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_Mask4ModStep = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_step - 1);
-
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_MaskModBaseBits = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(std::numeric_limits<typename t_ve::base_t>::digits - 1);
-
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_BwVec = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_bw);
-
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_StepVec = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_step);
-    
-    template<class t_ve, unsigned t_bw, unsigned t_step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, static_vbp_f<t_bw, t_step>
-    >::m_MaskDecompr = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(bitwidth_max<typename t_ve::base_t>(t_bw));
     
     // ------------------------------------------------------------------------
     // Sequential write
@@ -480,8 +359,8 @@ namespace morphstore {
                     m_StartBuffer
             );
             // @todo This should not be inlined.
-            pack<t_ve, t_bw, t_step>(
-                    buffer8, m_CountBuffer, m_Out
+            morph_batch<t_ve, vbp_l<t_bw, t_step>, uncompr_f>(
+                    buffer8, m_Out, m_CountBuffer
             );
             size_t overflow = m_Buffer - m_EndBuffer;
             memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
@@ -535,7 +414,9 @@ namespace morphstore {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
                 );
-                pack<t_ve, t_bw, t_step>(buffer8, outCountLogCompr, m_Out);
+                morph_batch<t_ve, vbp_l<t_bw, t_step>, uncompr_f>(
+                    buffer8, m_Out, outCountLogCompr
+                );
                 outSizeComprByte = m_Out - m_InitOut;
 
                 const size_t outCountLogRest = countLog - outCountLogCompr;
