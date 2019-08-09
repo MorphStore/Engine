@@ -57,7 +57,7 @@ using namespace vectorlib;
 }
 
 template<class t_varex_t, unsigned t_Bw>
-std::vector<typename t_varex_t::variant_t> makeVariants() {
+std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
         // Uncompressed reference variant, required to check the correctness of
         // the compressed variants.
@@ -103,71 +103,71 @@ int main(void) {
         switch(bw) {
             // Generated with python:
             // for bw in range(1, 64+1):
-            //   print("            case {: >2}: variants = makeVariants<varex_t, {: >2}>(); break;".format(bw, bw))
-            case  1: variants = makeVariants<varex_t,  1>(); break;
-            case  2: variants = makeVariants<varex_t,  2>(); break;
-            case  3: variants = makeVariants<varex_t,  3>(); break;
-            case  4: variants = makeVariants<varex_t,  4>(); break;
-            case  5: variants = makeVariants<varex_t,  5>(); break;
-            case  6: variants = makeVariants<varex_t,  6>(); break;
-            case  7: variants = makeVariants<varex_t,  7>(); break;
-            case  8: variants = makeVariants<varex_t,  8>(); break;
-            case  9: variants = makeVariants<varex_t,  9>(); break;
-            case 10: variants = makeVariants<varex_t, 10>(); break;
-            case 11: variants = makeVariants<varex_t, 11>(); break;
-            case 12: variants = makeVariants<varex_t, 12>(); break;
-            case 13: variants = makeVariants<varex_t, 13>(); break;
-            case 14: variants = makeVariants<varex_t, 14>(); break;
-            case 15: variants = makeVariants<varex_t, 15>(); break;
-            case 16: variants = makeVariants<varex_t, 16>(); break;
-            case 17: variants = makeVariants<varex_t, 17>(); break;
-            case 18: variants = makeVariants<varex_t, 18>(); break;
-            case 19: variants = makeVariants<varex_t, 19>(); break;
-            case 20: variants = makeVariants<varex_t, 20>(); break;
-            case 21: variants = makeVariants<varex_t, 21>(); break;
-            case 22: variants = makeVariants<varex_t, 22>(); break;
-            case 23: variants = makeVariants<varex_t, 23>(); break;
-            case 24: variants = makeVariants<varex_t, 24>(); break;
-            case 25: variants = makeVariants<varex_t, 25>(); break;
-            case 26: variants = makeVariants<varex_t, 26>(); break;
-            case 27: variants = makeVariants<varex_t, 27>(); break;
-            case 28: variants = makeVariants<varex_t, 28>(); break;
-            case 29: variants = makeVariants<varex_t, 29>(); break;
-            case 30: variants = makeVariants<varex_t, 30>(); break;
-            case 31: variants = makeVariants<varex_t, 31>(); break;
-            case 32: variants = makeVariants<varex_t, 32>(); break;
-            case 33: variants = makeVariants<varex_t, 33>(); break;
-            case 34: variants = makeVariants<varex_t, 34>(); break;
-            case 35: variants = makeVariants<varex_t, 35>(); break;
-            case 36: variants = makeVariants<varex_t, 36>(); break;
-            case 37: variants = makeVariants<varex_t, 37>(); break;
-            case 38: variants = makeVariants<varex_t, 38>(); break;
-            case 39: variants = makeVariants<varex_t, 39>(); break;
-            case 40: variants = makeVariants<varex_t, 40>(); break;
-            case 41: variants = makeVariants<varex_t, 41>(); break;
-            case 42: variants = makeVariants<varex_t, 42>(); break;
-            case 43: variants = makeVariants<varex_t, 43>(); break;
-            case 44: variants = makeVariants<varex_t, 44>(); break;
-            case 45: variants = makeVariants<varex_t, 45>(); break;
-            case 46: variants = makeVariants<varex_t, 46>(); break;
-            case 47: variants = makeVariants<varex_t, 47>(); break;
-            case 48: variants = makeVariants<varex_t, 48>(); break;
-            case 49: variants = makeVariants<varex_t, 49>(); break;
-            case 50: variants = makeVariants<varex_t, 50>(); break;
-            case 51: variants = makeVariants<varex_t, 51>(); break;
-            case 52: variants = makeVariants<varex_t, 52>(); break;
-            case 53: variants = makeVariants<varex_t, 53>(); break;
-            case 54: variants = makeVariants<varex_t, 54>(); break;
-            case 55: variants = makeVariants<varex_t, 55>(); break;
-            case 56: variants = makeVariants<varex_t, 56>(); break;
-            case 57: variants = makeVariants<varex_t, 57>(); break;
-            case 58: variants = makeVariants<varex_t, 58>(); break;
-            case 59: variants = makeVariants<varex_t, 59>(); break;
-            case 60: variants = makeVariants<varex_t, 60>(); break;
-            case 61: variants = makeVariants<varex_t, 61>(); break;
-            case 62: variants = makeVariants<varex_t, 62>(); break;
-            case 63: variants = makeVariants<varex_t, 63>(); break;
-            case 64: variants = makeVariants<varex_t, 64>(); break;
+            //   print("            case {: >2}: variants = make_variants<varex_t, {: >2}>(); break;".format(bw, bw))
+            case  1: variants = make_variants<varex_t,  1>(); break;
+            case  2: variants = make_variants<varex_t,  2>(); break;
+            case  3: variants = make_variants<varex_t,  3>(); break;
+            case  4: variants = make_variants<varex_t,  4>(); break;
+            case  5: variants = make_variants<varex_t,  5>(); break;
+            case  6: variants = make_variants<varex_t,  6>(); break;
+            case  7: variants = make_variants<varex_t,  7>(); break;
+            case  8: variants = make_variants<varex_t,  8>(); break;
+            case  9: variants = make_variants<varex_t,  9>(); break;
+            case 10: variants = make_variants<varex_t, 10>(); break;
+            case 11: variants = make_variants<varex_t, 11>(); break;
+            case 12: variants = make_variants<varex_t, 12>(); break;
+            case 13: variants = make_variants<varex_t, 13>(); break;
+            case 14: variants = make_variants<varex_t, 14>(); break;
+            case 15: variants = make_variants<varex_t, 15>(); break;
+            case 16: variants = make_variants<varex_t, 16>(); break;
+            case 17: variants = make_variants<varex_t, 17>(); break;
+            case 18: variants = make_variants<varex_t, 18>(); break;
+            case 19: variants = make_variants<varex_t, 19>(); break;
+            case 20: variants = make_variants<varex_t, 20>(); break;
+            case 21: variants = make_variants<varex_t, 21>(); break;
+            case 22: variants = make_variants<varex_t, 22>(); break;
+            case 23: variants = make_variants<varex_t, 23>(); break;
+            case 24: variants = make_variants<varex_t, 24>(); break;
+            case 25: variants = make_variants<varex_t, 25>(); break;
+            case 26: variants = make_variants<varex_t, 26>(); break;
+            case 27: variants = make_variants<varex_t, 27>(); break;
+            case 28: variants = make_variants<varex_t, 28>(); break;
+            case 29: variants = make_variants<varex_t, 29>(); break;
+            case 30: variants = make_variants<varex_t, 30>(); break;
+            case 31: variants = make_variants<varex_t, 31>(); break;
+            case 32: variants = make_variants<varex_t, 32>(); break;
+            case 33: variants = make_variants<varex_t, 33>(); break;
+            case 34: variants = make_variants<varex_t, 34>(); break;
+            case 35: variants = make_variants<varex_t, 35>(); break;
+            case 36: variants = make_variants<varex_t, 36>(); break;
+            case 37: variants = make_variants<varex_t, 37>(); break;
+            case 38: variants = make_variants<varex_t, 38>(); break;
+            case 39: variants = make_variants<varex_t, 39>(); break;
+            case 40: variants = make_variants<varex_t, 40>(); break;
+            case 41: variants = make_variants<varex_t, 41>(); break;
+            case 42: variants = make_variants<varex_t, 42>(); break;
+            case 43: variants = make_variants<varex_t, 43>(); break;
+            case 44: variants = make_variants<varex_t, 44>(); break;
+            case 45: variants = make_variants<varex_t, 45>(); break;
+            case 46: variants = make_variants<varex_t, 46>(); break;
+            case 47: variants = make_variants<varex_t, 47>(); break;
+            case 48: variants = make_variants<varex_t, 48>(); break;
+            case 49: variants = make_variants<varex_t, 49>(); break;
+            case 50: variants = make_variants<varex_t, 50>(); break;
+            case 51: variants = make_variants<varex_t, 51>(); break;
+            case 52: variants = make_variants<varex_t, 52>(); break;
+            case 53: variants = make_variants<varex_t, 53>(); break;
+            case 54: variants = make_variants<varex_t, 54>(); break;
+            case 55: variants = make_variants<varex_t, 55>(); break;
+            case 56: variants = make_variants<varex_t, 56>(); break;
+            case 57: variants = make_variants<varex_t, 57>(); break;
+            case 58: variants = make_variants<varex_t, 58>(); break;
+            case 59: variants = make_variants<varex_t, 59>(); break;
+            case 60: variants = make_variants<varex_t, 60>(); break;
+            case 61: variants = make_variants<varex_t, 61>(); break;
+            case 62: variants = make_variants<varex_t, 62>(); break;
+            case 63: variants = make_variants<varex_t, 63>(); break;
+            case 64: variants = make_variants<varex_t, 64>(); break;
         }
 
         for(size_t countValues : {
