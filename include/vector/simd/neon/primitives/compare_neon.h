@@ -33,8 +33,8 @@ namespace vectorlib{
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (neon)" );
          neon<v128<uint64_t>>::vector_t vec_comp = vmovq_n_u64(0);
-         vsetq_lane_u64(1, vec_comp, 0);
-         vsetq_lane_u64(2, vec_comp, 1);
+         vec_comp = vsetq_lane_u64(1, vec_comp, 0);
+         vec_comp = vsetq_lane_u64(2, vec_comp, 1);
          neon<v128<uint64_t>>::vector_t vec= vandq_u64(vceqq_u64(p_vec1, p_vec2), vec_comp);
          
          return (neon<v128<uint64_t>>::mask_t)(vgetq_lane_u64(vec,0)+  vgetq_lane_u64(vec,1));
@@ -50,8 +50,8 @@ namespace vectorlib{
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (neon)" );
          neon<v128<uint64_t>>::vector_t vec_comp = vmovq_n_u64(0);
-         vsetq_lane_u64(1, vec_comp, 0);
-         vsetq_lane_u64(2, vec_comp, 1);
+         vec_comp = vsetq_lane_u64(1, vec_comp, 0);
+         vec_comp = vsetq_lane_u64(2, vec_comp, 1);
          neon<v128<uint64_t>>::vector_t vec= vandq_u64(vcltq_u64(p_vec1, p_vec2), vec_comp);
          
          return (neon<v128<uint64_t>>::mask_t)(vgetq_lane_u64(vec,0)+  vgetq_lane_u64(vec,1));
@@ -68,8 +68,8 @@ namespace vectorlib{
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (neon)" );
          
          neon<v128<uint64_t>>::vector_t vec_comp = vmovq_n_u64(0);
-         vsetq_lane_u64(1, vec_comp, 0);
-         vsetq_lane_u64(2, vec_comp, 1);
+         vec_comp = vsetq_lane_u64(1, vec_comp, 0);
+         vec_comp = vsetq_lane_u64(2, vec_comp, 1);
          neon<v128<uint64_t>>::vector_t vec= vandq_u64(vcleq_u64(p_vec1, p_vec2), vec_comp);
          
          return (neon<v128<uint64_t>>::mask_t)(vgetq_lane_u64(vec,0)+  vgetq_lane_u64(vec,1));
@@ -86,8 +86,8 @@ namespace vectorlib{
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (neon)" );
          neon<v128<uint64_t>>::vector_t vec_comp = vmovq_n_u64(0);
-         vsetq_lane_u64(1, vec_comp, 0);
-         vsetq_lane_u64(2, vec_comp, 1);
+         vec_comp = vsetq_lane_u64(1, vec_comp, 0);
+         vec_comp = vsetq_lane_u64(2, vec_comp, 1);
          neon<v128<uint64_t>>::vector_t vec= vandq_u64(vcgtq_u64(p_vec1, p_vec2), vec_comp);
          
          return (neon<v128<uint64_t>>::mask_t)(vgetq_lane_u64(vec,0)+  vgetq_lane_u64(vec,1));
@@ -103,8 +103,8 @@ namespace vectorlib{
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (neon)" );
               neon<v128<uint64_t>>::vector_t vec_comp = vmovq_n_u64(0);
-         vsetq_lane_u64(1, vec_comp, 0);
-         vsetq_lane_u64(2, vec_comp, 1);
+         vec_comp = vsetq_lane_u64(1, vec_comp, 0);
+         vec_comp = vsetq_lane_u64(2, vec_comp, 1);
          neon<v128<uint64_t>>::vector_t vec= vandq_u64(vcgeq_u64(p_vec1, p_vec2), vec_comp);
          
          return (neon<v128<uint64_t>>::mask_t)(vgetq_lane_u64(vec,0)+  vgetq_lane_u64(vec,1));
