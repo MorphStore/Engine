@@ -36,7 +36,9 @@ A complete list with all available build options can be shown by running
 For starters, the following command can be used for an initial test of the setup:
 
 ~~~{.sh}
-./build.sh -deb -tQ
+./build.sh -deb --buildExamples
+build/src/examples/select_sum_query
+build/src/examples/example_query
 ~~~
 
 This builds some example queries in debug mode and runs them. The source code of these queries can be found in the folder src/examples.
@@ -65,4 +67,4 @@ the folder test/vector/operators. They can be built and run with
 
 Again, this builds in debug mode. For release mode (-O2) use -rel, and for high performance mode (-O3 and link time optimization) use -hi.
 
-next: \ref testCases 
+<div style="text-align:center;"> <b>next:</b> \ref testCases</div> 

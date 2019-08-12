@@ -36,7 +36,7 @@ This section is designed to hand a plan to staff members and students, who never
 <b>Writing Queries</b>
 <ul>
 <li>\ref helloWorld</li>
-<li>Available Operators and Compressions</li>
+<li>\ref operators</li>
 <li><span id="stublink">\ref persistency</span></li>
 </ul>
 </div>

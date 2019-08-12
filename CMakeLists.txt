@@ -42,6 +42,21 @@ add_analysis_compiler_flags()
 add_optimization_compiler_flags()
 add_vectorization_flags()
 
+#todo: this should be in a architecture dependent cmake file
+IF(CNEON)
+        morph_flag(-DNEON)
+	morph_flag(-mfpu=neon)
+	morph_flag(-flax-vector-conversions)
+        message(STATUS "NEON support switched on")
+ENDIF(CNEON)
+
+IF(CRAPL)
+    morph_flag(-DRAPL)
+ENDIF(CRAPL)
+
+IF(CODROID)
+    morph_flag(-DODROID)
+ENDIF(CODROID)
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
 
@@ -130,7 +145,9 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 #include_directories( include )
 
-#add_subdirectory( src )
+if( BUILD_ALL OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
+    add_subdirectory( src )
+endif( BUILD_ALL OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
 
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTest has been enabled" )

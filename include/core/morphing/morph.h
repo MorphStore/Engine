@@ -23,7 +23,9 @@
  * of the data into a compressable main part and a non-compressible (too small)
  * remainder. Currently, this functionality is duplicated into the existing
  * morph-operator implementations. The current implementations should become
- * "internal" functions.
+ * "internal" functions. --> This could be addressed using the new morph_batch
+ * operator.
+ * @todo Complete the documentation.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_MORPH_H
@@ -32,6 +34,10 @@
 #include <core/storage/column.h>
 
 namespace morphstore {
+
+// ****************************************************************************
+// Column-level
+// ****************************************************************************
 
 /**
  * @brief A struct wrapping the actual morph-operator.
@@ -97,6 +103,30 @@ template<
 >
 const column<t_dst_f> * morph(const column<t_src_f> * inCol) {
     return morph_t<t_vector_extension, t_dst_f, t_src_f>::apply(inCol);
+}
+
+// ****************************************************************************
+// Batch-level
+// ****************************************************************************
+
+template<
+        class t_vector_extension, class t_dst_f, class t_src_f
+>
+struct morph_batch_t {
+    static void apply(
+            // @todo Maybe we should use base_t instead of uint8_t. This could
+            // save us some casting in several places.
+            const uint8_t * & in8, uint8_t * & out8, size_t countLog
+    ) = delete;
+};
+
+template<
+        class t_vector_extension, class t_dst_f, class t_src_f
+>
+void morph_batch(const uint8_t * & in8, uint8_t * & out8, size_t countLog) {
+    return morph_batch_t<t_vector_extension, t_dst_f, t_src_f>::apply(
+            in8, out8, countLog
+    );
 }
 
 }

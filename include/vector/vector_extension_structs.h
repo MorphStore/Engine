@@ -22,7 +22,13 @@
 #    include <vector/simd/sse/extension_sse.h>
 #  endif
 
-#include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
+#  ifdef AURORATSUBASALLVM
+#    include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
+#  endif
+#  ifdef NEON
+#    include <vector/simd/neon/extension_neon.h>
+#  endif
+
 #include <vector/scalar/extension_scalar.h>
 
 namespace vectorlib{

@@ -35,6 +35,33 @@ namespace vectorlib{
          return _mm512_cmpeq_epi64_mask(p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct equal<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v256<uint64_t>>::mask_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx512)" );
+         return _mm256_cmpeq_epi64_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v128<uint64_t>>::mask_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx512)" );
+         return _mm_cmpeq_epi64_mask(p_vec1, p_vec2);
+      }
+   };
+   
    template<>
    struct less<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -90,6 +117,34 @@ namespace vectorlib{
       static typename avx512<v512<uint64_t>>::mask_size_t
       apply(
          typename avx512<v512<uint64_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v256<uint64_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v256<uint64_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v128<uint64_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v128<uint64_t>>::mask_t const & p_mask
       ) {
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?

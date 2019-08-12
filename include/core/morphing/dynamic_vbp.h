@@ -26,37 +26,14 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
-#include <core/morphing/vbp_routines.h>
+// @todo Remove this once dynamic_vbp_f is generic w.r.t. the underlying layout.
+#include <core/morphing/vbp.h>
+#include <core/morphing/vbp_commons.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/primitives/compare.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/io.h>
-#include <vector/primitives/logic.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/logic_scalar.h>
-#ifdef AVXTWO 
-#include <vector/simd/avx2/primitives/create_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#include <vector/simd/avx2/primitives/logic_avx2.h>
-#endif
-#ifdef AVX512
-#include <vector/simd/avx512/primitives/create_avx512.h>
-#include <vector/simd/avx512/primitives/io_avx512.h>
-#include <vector/simd/avx512/primitives/logic_avx512.h>
-#endif
-#ifdef SSE
-#include <immintrin.h>
-#include <vector/simd/sse/extension_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/sse/primitives/logic_sse.h>
-#endif
-
+#include <vector/vector_primitives.h>
 
 #include <limits>
 #include <stdexcept>
@@ -101,6 +78,7 @@ namespace morphstore {
      * this is the format called SIMD-BP128 in the literature, with the 
      * difference that we use 64-bit instead of 32-bit date elements.
      */
+    // @todo Make this properly depend on the underlying layout.
     template<size_t t_BlockSize64, size_t t_PageSizeBlocks, unsigned t_Step>
     struct dynamic_vbp_f : public format {
         static_assert(
@@ -232,7 +210,7 @@ namespace morphstore {
             );
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
-
+            
             // Iterate over all complete input pages.
             while(inBase < endInComprComplPagesBase) {
                 uint8_t * const outMeta8 = out8;
@@ -255,8 +233,8 @@ namespace morphstore {
                     const uint8_t * in8 = reinterpret_cast<const uint8_t *>(
                             inBase
                     );
-                    pack_switch<t_ve, vector_element_count::value>(
-                            bw, in8, t_BlockSize64, out8
+                    pack_switch<t_ve, vbp_l, vector_element_count::value>(
+                            bw, in8, out8, t_BlockSize64
                     );
                     inBase = reinterpret_cast<const base_t *>(in8);
                 }
@@ -284,8 +262,8 @@ namespace morphstore {
                     const uint8_t * in8 = reinterpret_cast<const uint8_t *>(
                             inBase
                     );
-                    pack_switch<t_ve, vector_element_count::value>(
-                            bw, in8, t_BlockSize64, out8
+                    pack_switch<t_ve, vbp_l, vector_element_count::value>(
+                            bw, in8, out8, t_BlockSize64
                     );
                     inBase = reinterpret_cast<const base_t *>(in8);
                 }
@@ -365,7 +343,7 @@ namespace morphstore {
                         blockIdx < t_PageSizeBlocks;
                         blockIdx++
                 )
-                    unpack_switch<t_ve, vector_element_count::value>(
+                    unpack_switch<t_ve, vbp_l, vector_element_count::value>(
                             inMeta8[blockIdx], in8, out8, t_BlockSize64
                     );
             }
@@ -441,8 +419,9 @@ namespace morphstore {
                 ) {
                     const unsigned bw = inMeta8[blockIdx];
                     const size_t blockSize8 = t_BlockSize64 * bw / bitsPerByte;
-                    unpack_and_process_switch<
+                    decompress_and_process_batch_switch<
                             t_ve,
+                            vbp_l,
                             vector_element_count::value,
                             t_op_vector,
                             t_extra_args ...
@@ -504,8 +483,8 @@ namespace morphstore {
                     >(reinterpret_cast<const base_t *>(buffer8));
                 m_OutMeta[m_BlockIdxInPage + blockIdx] =
                         static_cast<uint8_t>(bw);
-                pack_switch<t_ve, t_Step>(
-                        bw, buffer8, t_BlockSize64, m_OutData
+                pack_switch<t_ve, vbp_l, t_Step>(
+                        bw, buffer8, m_OutData, t_BlockSize64
                 );
             }
             m_BlockIdxInPage += m_CountBufferBlocks;
@@ -584,8 +563,8 @@ namespace morphstore {
                     >(reinterpret_cast<const base_t *>(buffer8));
                     m_OutMeta[m_BlockIdxInPage + blockIdx] =
                             static_cast<uint8_t>(bw);
-                    pack_switch<t_ve, t_Step>(
-                            bw, buffer8, t_BlockSize64, m_OutData
+                    pack_switch<t_ve, vbp_l, t_Step>(
+                            bw, buffer8, m_OutData, t_BlockSize64
                     );
                 }
                 m_BlockIdxInPage += countFullBlocks;

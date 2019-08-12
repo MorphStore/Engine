@@ -88,6 +88,45 @@ namespace vectorlib {
       }
    
    };
+   
+   template<typename T>
+   struct create<avx512<v256<T>>,64> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v256< U > >::vector_t
+      set_sequence( int a, int b) {
+         trace( "[VECTOR] - set_sequence sse register." );
+         return _mm256_set_epi64x(a+3*b,a+2*b,a+b, a);
+      }
+          
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v256< U > >::vector_t
+      set1( int a0) {
+         trace( "[VECTOR] - set1 sse register." );
+         return _mm256_set1_epi64x(a0);
+      }
+   };
+      
+   template<typename T>
+   struct create<avx512<v128<T>>,64> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v128< U > >::vector_t
+      set_sequence( int a, int b) {
+         trace( "[VECTOR] - set_sequence sse register." );
+         return _mm_set_epi64x(a+b, a);
+      }
+          
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v128< U > >::vector_t
+      set1( int a0) {
+         trace( "[VECTOR] - set1 sse register." );
+         return _mm_set1_epi64x(a0);
+      }
+   };
+      
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CREATE_AVX512_H */
