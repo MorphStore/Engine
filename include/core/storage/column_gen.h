@@ -219,6 +219,45 @@ const column< uncompr_f > * generate_repetitive_batches_with_distr (
    return resCol;
 }
 
+
+const column< uncompr_f > * generate_specific_selective (
+   size_t p_CountValues,
+   uint64_t p_LowerRangeValue,
+   uint64_t p_UpperRangeValue,
+   size_t p_SelectivityInPercent,
+   size_t p_Seed = 0
+) {
+   assert( p_UpperRangeValue >= p_LowerRangeValue );
+   uint64_t startOuterRange = p_UpperRangeValue+1;
+   const size_t allocationSize = p_CountValues * sizeof( uint64_t );
+   const size_t targetRangeSize = ( p_CountValues / 100 ) * p_SelectivityInPercent;
+   auto resCol = new column< uncompr_f >( allocationSize );
+   uint64_t * const res = resCol->get_data( );
+   if( p_Seed == 0 ) {
+      p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+   }
+   std::default_random_engine generator(
+      p_Seed
+   );
+   auto distribution =
+      std::uniform_int_distribution<uint64_t>(
+         p_LowerRangeValue,
+         p_UpperRangeValue
+      );
+   for( size_t i = 0; i < targetRangeSize; ++i ) {
+      res[ i ] = distribution( generator );
+   }
+   for( size_t i = targetRangeSize; i < p_CountValues; ++i ) {
+      res[ i ] = startOuterRange++;
+   }
+   std::shuffle(res, res+p_CountValues, generator);
+   resCol->set_meta_data( p_CountValues, allocationSize );
+   return resCol;
+}
+
+
+
+
 /**
  * @brief Creates an uncompressed column and fills its data buffer such that
  * exactly the specified number of data elements have the specified value.

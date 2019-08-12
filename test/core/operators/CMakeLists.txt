@@ -56,6 +56,7 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 			# space to add custom flags for THIS SPECIFIC TARGET
 			)
 	target_link_libraries( group_unary_nec_app PRIVATE  )
+
 	
 #	target_compile_options( agg_sum_group_based_test_app PRIVATE
 #		# space to add custom flags for THIS SPECIFIC TARGET
