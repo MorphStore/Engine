@@ -53,6 +53,7 @@ To enable the support of vector extensions, build.sh provides several flags:
 - sse4
 - avxtwo
 - avx512
+- armneon
 
 For some architectures, gcc enbales sse or even avx by default. But for others, the available extensions have to be passed explicitly. 
 If one of the above mentioned flags is set, the build script takes care of this. Every flag passes the according extension and all older 

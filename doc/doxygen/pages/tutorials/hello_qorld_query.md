@@ -250,7 +250,7 @@ endif(CTEST_ALL OR CTEST_QUERIES)
 Now the build.sh script in the root folder can be called with the -tQ flag, eg.:
 
 ~~~{.sh}
-./build.sh -deb -tQ
+./build.sh -deb -bEx --target hello_world_query
 ~~~
 
 If everything works, the following lines should show after a few seconds:
