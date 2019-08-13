@@ -27,6 +27,7 @@
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/vbp.h>
 #include <core/operators/general_vectorized/select_compr.h>
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
@@ -52,9 +53,9 @@ using namespace vectorlib;
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define STATIC_VBP_NAME "static_vbp_f<>"
+#define STATIC_VBP_NAME "static_vbp_f<vbp_l<>>"
 #define STATIC_VBP_FORMAT(vector_extension, bw) \
-    SINGLE_ARG(static_vbp_f<bw, vector_extension::vector_helper_t::element_count::value>)
+    SINGLE_ARG(static_vbp_f<vbp_l<bw, vector_extension::vector_helper_t::element_count::value>>)
 
 #define DYNAMIC_VBP_NAME "dynamic_vbp_f<>"
 #define DYNAMIC_VBP_FORMAT(vector_extension) \

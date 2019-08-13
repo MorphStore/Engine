@@ -27,6 +27,7 @@
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -62,21 +63,21 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
         // Uncompressed reference variant, required to check the correctness of
         // the compressed variants.
         MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f),
-                
+        
         // Compressed variants.
 #ifdef AVX512
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<t_Bw, 8>)),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>)),
 #endif
 #ifdef AVXTWO
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<t_Bw, 4>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
         MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>)),
 #endif
 #ifdef SSE
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<t_Bw, 2>)),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)),
 #endif
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<t_Bw, 1>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>))
     };
 }

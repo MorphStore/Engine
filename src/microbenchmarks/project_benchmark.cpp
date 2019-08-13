@@ -59,41 +59,41 @@
 #ifndef AVXTWO
 #define MAKE_VARIANTS(bwData, bwPos) \
     MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwPos, 1>))
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>))
 #else
 #define MAKE_VARIANTS(bwData, bwPos) \
     MAKE_VARIANT_CLASSICAL(scalar<v64<uint64_t>>), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwData, 1>), uncompr_f), \
-    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwData, 1>), SINGLE_ARG(static_vbp_f<bwPos, 1>)), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                          , uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                          , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 2>)), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 2>), uncompr_f), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 2>), SINGLE_ARG(static_vbp_f<bwPos, 2>)), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<bwData, 2>), uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<bwData, 2>), uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 2>)), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<bwData, 2>), SINGLE_ARG(static_vbp_f<bwData, 2>), uncompr_f), \
-    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<bwData, 2>), SINGLE_ARG(static_vbp_f<bwData, 2>), SINGLE_ARG(static_vbp_f<bwPos, 2>)), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                          , uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                          , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 4>)), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 4>), uncompr_f), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                          , SINGLE_ARG(static_vbp_f<bwData, 4>), SINGLE_ARG(static_vbp_f<bwPos, 4>)), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<bwData, 4>), uncompr_f                          , uncompr_f), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<bwData, 4>), uncompr_f                          , SINGLE_ARG(static_vbp_f<bwPos, 4>)), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<bwData, 4>), SINGLE_ARG(static_vbp_f<bwData, 4>), uncompr_f), \
-    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<bwData, 4>), SINGLE_ARG(static_vbp_f<bwData, 4>), SINGLE_ARG(static_vbp_f<bwPos, 4>))
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), uncompr_f), \
+    MAKE_VARIANT_WIT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 1>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 1>>)), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                                 , uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                                 , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 2>>)), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), uncompr_f), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 2>>)), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 2>>)), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), uncompr_f), \
+    MAKE_VARIANT_WIT(sse<v128<uint64_t>>  , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 2>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 2>>)), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                                 , uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                                 , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 4>>)), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), uncompr_f), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 4>>)), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), uncompr_f                                 , uncompr_f), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), uncompr_f                                 , SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 4>>)), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), uncompr_f), \
+    MAKE_VARIANT_WIT(avx2<v256<uint64_t>> , SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), SINGLE_ARG(static_vbp_f<vbp_l<bwData, 4>>), SINGLE_ARG(static_vbp_f<vbp_l<bwPos, 4>>))
 #endif   
 
 int main( void ) {

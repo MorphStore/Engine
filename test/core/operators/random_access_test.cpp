@@ -25,6 +25,7 @@
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -128,11 +129,11 @@ const column<uncompr_f> * simple_project(
         "copy", \
     }, \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>)), \
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>)), \
     MAKE_VARIANT(sse   <v128<uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 2>)), \
+    MAKE_VARIANT(sse   <v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bw, 2>>)), \
     MAKE_VARIANT(avx2  <v256<uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 4>))
+    MAKE_VARIANT(avx2  <v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bw, 4>>))
 #else
     #define MAKE_VARIANTS(bw) \
     { \
@@ -143,7 +144,7 @@ const column<uncompr_f> * simple_project(
         "copy", \
     }, \
     MAKE_VARIANT(scalar<v64 <uint64_t>>, uncompr_f), \
-    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<bw, 1>))  
+    MAKE_VARIANT(scalar<v64 <uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>))
 #endif
  
     
