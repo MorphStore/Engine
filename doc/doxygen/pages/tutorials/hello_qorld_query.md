@@ -40,9 +40,9 @@ The Example Query
 The SQL equivalent of the example query is the following:
 
 ~~~{sql}
-SELECT SUM(baseCol1) 
+SELECT SUM(baseCol2) 
 FROM someUnnamedTable 
-WHERE baseCol2 = 150
+WHERE baseCol1 = 150
 ~~~
 
 Obviously, we need to create two columns for this example with a numerical type: baseCol1 and baseCol2. 
