@@ -23,7 +23,7 @@ class PageHeader {
 
 public:
     PageHeader(uint32_t curr_offset)
-        : m_currOffset(curr_offset), m_sumOffset(0), m_sema(), m_canDeallocate(false)
+        : m_currOffset(curr_offset), m_sumOffset(0), /*m_sema(),*/ m_canDeallocate(false)
     {
         trace("called constructor");
     }
@@ -35,7 +35,7 @@ public:
 
     uint32_t m_currOffset;
     uint32_t m_sumOffset;
-    std::mutex m_sema;
+    //std::mutex m_sema;
     bool m_canDeallocate;
 };
 static_assert( sizeof(PageHeader) > 0, "PageHeader must be larger than 0");
@@ -47,10 +47,10 @@ public:
 
     void* allocate(size_t size)
     {
-        if (size > DB_PAGE_SIZE - sizeof(PageHeader))
+        if (size > std_mmap_mm::DB_PAGE_SIZE - sizeof(PageHeader))
             throw std::runtime_error("Invalid request for memory larger than single page");
 
-        if (size <= DB_PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
+        if (size <= std_mmap_mm::DB_PAGE_SIZE - static_cast<size_t>(header.m_currOffset)) {
             void* loc = reinterpret_cast<void*>(reinterpret_cast<uint64_t>(this) + static_cast<uint64_t>(header.m_currOffset));
             header.m_sumOffset += header.m_currOffset;
             header.m_currOffset += size;
@@ -69,7 +69,7 @@ public:
 
         if (header.m_sumOffset == 0 && header.m_canDeallocate) {
             trace( "Triggered page deallocation on ", this, " due to address ", addr);
-            mmap_memory_manager::getInstance().deallocate(this);
+            std_mmap_mm::getInstance().deallocate(this);
         }
     }
 
@@ -115,7 +115,7 @@ public:
     void operator=(paged_memory_manager const &) = delete;
 
     explicit paged_memory_manager() :
-         abstract_memory_manager{}, m_mmap_manager(mmap_memory_manager::getInstance()), current_page(nullptr), current_chunk(nullptr) {
+         abstract_memory_manager{}, m_mmap_manager(std_mmap_mm::getInstance()), current_page(nullptr), current_chunk(nullptr) {
              debug("setting paged mm active");
              paged_memory_manager_state_helper::get_instance().set_alive( true );
              debug("setting paged mm active - out");
@@ -130,15 +130,13 @@ public:
 
     void init()
     {
-        current_chunk = mmap_memory_manager::getInstance().allocateContinuous();
+        current_chunk = m_mmap_manager.allocateContinuous();
     }
 
     void* allocate(size_t size) override
     {
-        //TODO: throw exception
-        //assert(size < PAGE_SIZE - sizeof(PageHeader) - sizeof(ObjectInfo));
-        auto& manager = mmap_memory_manager::getInstance();
-        size += sizeof(ObjectInfo); // Additional space for type and allocation information
+        auto& manager = m_mmap_manager;
+        size += sizeof(std_mmap_mm::ObjectInfo); // Additional space for type and allocation information
 
         void* object_loc = nullptr;
         void* page_loc = nullptr;
@@ -157,14 +155,14 @@ public:
             }
         
             //ChunkHeader* header = reinterpret_cast<uint64_t>(current_chunk) - sizeof(ChunkHeader);
-            page_loc = manager.allocate(DB_PAGE_SIZE, current_chunk);
+            page_loc = manager.allocate(std_mmap_mm::DB_PAGE_SIZE, current_chunk);
             trace("[PAGED_MM] Allocated new page on ", page_loc);
 
             if (page_loc == nullptr) {
                 //TODO: handle concurrency
                 //FIXME: not necessary
                 current_chunk = manager.allocateContinuous();
-                page_loc = manager.allocate(DB_PAGE_SIZE, current_chunk);
+                page_loc = manager.allocate(std_mmap_mm::DB_PAGE_SIZE, current_chunk);
                 current_page = reinterpret_cast<Page*>(page_loc);
                 new (page_loc) Page();
                 object_loc = current_page->allocate(size);
@@ -194,7 +192,7 @@ public:
 
     inline Page* getPage(void* addr)
     {
-        return reinterpret_cast<Page*>( reinterpret_cast<uint64_t>(addr) & ~(DB_PAGE_SIZE - 1) );
+        return reinterpret_cast<Page*>( reinterpret_cast<uint64_t>(addr) & ~(std_mmap_mm::DB_PAGE_SIZE - 1) );
     }
 
     void deallocate(void* addr) override
@@ -235,10 +233,10 @@ public:
             throw std::runtime_error("Reallocation failed");
             return nullptr;
         }
-        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
+        std_mmap_mm::ObjectInfo* info = reinterpret_cast<std_mmap_mm::ObjectInfo*>(ptr);
         memcpy(ret, ptr, info->size > size ? size : info->size); 
         deallocate(ptr);
-        info = reinterpret_cast<ObjectInfo*>(ret);
+        info = reinterpret_cast<std_mmap_mm::ObjectInfo*>(ret);
         info->size = size;
         return ret;
     }
@@ -249,7 +247,7 @@ public:
     }
 
 private:
-    mmap_memory_manager& m_mmap_manager;
+    std_mmap_mm& m_mmap_manager;
     Page* current_page;
     void* current_chunk; 
     std::mutex sema;
