@@ -43,18 +43,9 @@
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
+#include <core/morphing/vbp_padding.h>
 #include <core/storage/column.h>
 #include <vector/vector_extension_structs.h>
-#include <vector/scalar/extension_scalar.h>
-#ifdef AVXTWO
-#include <vector/simd/avx2/extension_avx2.h>
-#endif
-#ifdef AVX512
-#include <vector/simd/avx512/extension_avx512.h>
-#endif
-#ifdef SSE
-#include <vector/simd/sse/extension_sse.h>
-#endif
 
 #include <cstdint>
 
