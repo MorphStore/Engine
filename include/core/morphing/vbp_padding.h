@@ -223,6 +223,108 @@ namespace morphstore {
             bitwidth_max<typename t_vector_extension::base_t>(t_Bw)
     );
     
+    
+    
+    // ************************************************************************
+    // Interfaces for accessing compressed data
+    // ************************************************************************
+    
+    // ------------------------------------------------------------------------
+    // Sequential read
+    // ------------------------------------------------------------------------
+    
+    template<
+            class t_vector_extension,
+            unsigned t_Bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    class decompress_and_process_batch<
+            t_vector_extension,
+            vbp_padding_l<
+                    t_Bw,
+                    t_vector_extension::vector_helper_t::element_count::value
+            >,
+            t_op_vector,
+            t_extra_args ...
+    > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        using src_l = vbp_padding_l<
+                t_Bw,
+                t_vector_extension::vector_helper_t::element_count::value
+        >;
+        
+        // @todo It would be nice to initialize this in-class. However, the
+        // compiler complains because set1 is not constexpr, even when it is
+        // defined so.
+        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        
+        // @todo We could use unrolled routines as we did with vbp_l.
+        
+    public:
+#ifdef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+#endif
+        static void apply(
+                const uint8_t * & in8,
+                size_t countIn8,
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
+        ) {
+            using namespace vectorlib;
+            
+            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
+            const base_t * const endInBase =
+                    inBase + convert_size<uint8_t, base_t>(countIn8);
+            
+            const size_t blockSizeVec =
+                    src_l::m_BlockSize / vector_element_count::value;
+            
+            while(inBase < endInBase) {
+                const vector_t tmp = load<
+                        t_ve, iov::ALIGNED, vector_size_bit::value
+                >(inBase);
+                inBase += vector_element_count::value;
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        bitwise_and<t_ve>(mask, tmp), opState
+                );
+                for(size_t k = 1; k < blockSizeVec; k++) {
+                    t_op_vector<t_ve, t_extra_args ...>::apply(
+                            // @todo The last one does not need to be masked.
+                            bitwise_and<t_ve>(
+                                    mask,
+                                    shift_right<t_ve>::apply(tmp, k * t_Bw)
+                            ),
+                            opState
+                    );
+                }
+            }
+            
+            in8 = reinterpret_cast<const uint8_t *>(inBase);
+        }
+    };
+    
+    template<
+            class t_vector_extension,
+            unsigned t_Bw,
+            template<class, class ...> class t_op_vector,
+            class ... t_extra_args
+    >
+    const typename t_vector_extension::vector_t decompress_and_process_batch<
+            t_vector_extension,
+            vbp_padding_l<
+                    t_Bw,
+                    t_vector_extension::vector_helper_t::element_count::value
+            >,
+            t_op_vector,
+            t_extra_args ...
+    >::mask = vectorlib::set1<
+            t_vector_extension,
+            t_vector_extension::vector_helper_t::granularity::value
+    >(
+            bitwidth_max<typename t_vector_extension::base_t>(t_Bw)
+    );
+    
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_PADDING_H

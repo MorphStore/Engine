@@ -28,6 +28,7 @@
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
+#include <core/morphing/vbp_padding.h>
 #include <core/operators/general_vectorized/select_compr.h>
 #include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
@@ -53,9 +54,9 @@ using namespace vectorlib;
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define STATIC_VBP_NAME "static_vbp_f<vbp_l<>>"
-#define STATIC_VBP_FORMAT(vector_extension, bw) \
-    SINGLE_ARG(static_vbp_f<vbp_l<bw, vector_extension::vector_helper_t::element_count::value>>)
+#define STATIC_VBP_NAME(layout) STR_EVAL_MACROS(static_vbp_f<layout<>>)
+#define STATIC_VBP_FORMAT(layout, vector_extension, bw) \
+    SINGLE_ARG(static_vbp_f<layout<bw, vector_extension::vector_helper_t::element_count::value>>)
 
 #define DYNAMIC_VBP_NAME "dynamic_vbp_f<>"
 #define DYNAMIC_VBP_FORMAT(vector_extension) \
@@ -87,6 +88,26 @@ using namespace vectorlib;
     bw \
 }
 
+#define MAKE_VARIANTS_WIT_STATIC_VBP(layout, vector_extension, bw) \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            uncompr_f, "uncompr_f", \
+            STATIC_VBP_FORMAT(layout, vector_extension, bw), STATIC_VBP_NAME(layout), \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            STATIC_VBP_FORMAT(layout, vector_extension, bw), STATIC_VBP_NAME(layout), \
+            uncompr_f, "uncompr_f", \
+            bw \
+    ), \
+    MAKE_VARIANT_STRUCT_WIT( \
+            vector_extension, \
+            STATIC_VBP_FORMAT(layout, vector_extension, bw), STATIC_VBP_NAME(layout), \
+            STATIC_VBP_FORMAT(layout, vector_extension, bw), STATIC_VBP_NAME(layout), \
+            bw \
+    )
+
 #define MAKE_VARIANTS_WIT(vector_extension, bw) \
     MAKE_VARIANT_STRUCT_WIT( \
             vector_extension, \
@@ -94,24 +115,8 @@ using namespace vectorlib;
             uncompr_f, "uncompr_f", \
             bw \
     ), \
-    MAKE_VARIANT_STRUCT_WIT( \
-            vector_extension, \
-            uncompr_f, "uncompr_f", \
-            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
-            bw \
-    ), \
-    MAKE_VARIANT_STRUCT_WIT( \
-            vector_extension, \
-            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
-            uncompr_f, "uncompr_f", \
-            bw \
-    ), \
-    MAKE_VARIANT_STRUCT_WIT( \
-            vector_extension, \
-            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
-            STATIC_VBP_FORMAT(vector_extension, bw), STATIC_VBP_NAME, \
-            bw \
-    ), \
+    MAKE_VARIANTS_WIT_STATIC_VBP(vbp_l, vector_extension, bw), \
+    MAKE_VARIANTS_WIT_STATIC_VBP(vbp_padding_l, vector_extension, bw), \
     MAKE_VARIANT_STRUCT_WIT( \
             vector_extension, \
             uncompr_f, "uncompr_f", \
