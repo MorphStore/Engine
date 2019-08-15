@@ -103,16 +103,16 @@ namespace morphstore {
     
     // Compression
 
-    #define MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector_extension) \
+    #define MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector_extension, layout) \
         template<unsigned t_bw> \
         struct safe_morph_t< \
-                static_vbp_f<vbp_l< \
+                static_vbp_f<layout< \
                         t_bw, \
                         vector_extension::vector_helper_t::element_count::value \
                 > >, \
                 uncompr_f \
         > { \
-            using dst_f = static_vbp_f<vbp_l< \
+            using dst_f = static_vbp_f<layout< \
                     t_bw, \
                     vector_extension::vector_helper_t::element_count::value \
             > >; \
@@ -125,32 +125,36 @@ namespace morphstore {
             } \
         };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_padding_l)
 #ifdef SSE
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_padding_l)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_COMPR
 
     // Decompression.
 
-    #define MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector_extension) \
+    #define MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector_extension, layout) \
     template<unsigned t_bw> \
     struct safe_morph_t< \
             uncompr_f, \
-            static_vbp_f<vbp_l< \
+            static_vbp_f<layout< \
                     t_bw, \
                     vector_extension::vector_helper_t::element_count::value \
             > > \
     > { \
         using dst_f = uncompr_f; \
-        using src_f = static_vbp_f<vbp_l< \
+        using src_f = static_vbp_f<layout< \
                 t_bw, \
                 vector_extension::vector_helper_t::element_count::value \
         > >; \
@@ -162,15 +166,19 @@ namespace morphstore {
         } \
     };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_padding_l)
 #ifdef SSE
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_padding_l)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR
