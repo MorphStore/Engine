@@ -28,6 +28,7 @@
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
+#include <core/morphing/vbp_padding.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -107,17 +108,21 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
         MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 1>>)),
 #ifdef SSE
         MAKE_VARIANT(sse<v128<uint64_t>>, uncompr_f),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 2>>)),
 #endif
 #ifdef AVXTWO
         MAKE_VARIANT(avx2<v256<uint64_t>>, uncompr_f),
         MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 4>>)),
 #endif
 #ifdef AVX512
         MAKE_VARIANT(avx512<v512<uint64_t>>, uncompr_f),
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 8>>)),
 #endif
     };
 }
@@ -141,8 +146,11 @@ int main(void) {
             {"bit width", "countDataLog", "countPosLog"}
     );
     
-    size_t countDataLog = 32 * 1024;
-    size_t countPosLog = 16 * 1024;
+    // This number of data elements is the least common multiple of the block
+    // sizes of vbp_padding_l for all bit widths and vector extensions (up to
+    // AVX-512). 20160 == 64 * 9 * 7 * 5.
+    const size_t countDataLog = 8 * 20160;
+    const size_t countPosLog = 16 * 1024;
     
     varex.print_datagen_started();
     auto origPosCol = generate_with_distr(
