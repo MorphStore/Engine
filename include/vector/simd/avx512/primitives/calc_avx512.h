@@ -151,6 +151,12 @@ namespace vectorlib{
             _mm512_xor_si512(
                _mm512_castpd_si512(
                   _mm512_add_pd(
+                     // @todo This rounds the result to the nearest integer,
+                     // but we want it to be rounded down, since this would be
+                     // the expected outcome of an integer division. There is
+                     // no _mm512_floor_pd (like in SSE and AVX). I tried
+                     // _mm512_div_round_pd with all possible rounding modes,
+                     // but none of them worked...
                      _mm512_div_pd(
                         _mm512_castsi512_pd(p_vec1),
                         _mm512_castsi512_pd(p_vec2)

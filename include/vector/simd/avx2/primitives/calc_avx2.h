@@ -99,9 +99,11 @@ namespace vectorlib{
             _mm256_xor_si256(
                _mm256_castpd_si256(
                   _mm256_add_pd(
-                     _mm256_div_pd(
-                        _mm256_castsi256_pd(p_vec1),
-                        _mm256_castsi256_pd(p_vec2)
+                     _mm256_floor_pd(
+                        _mm256_div_pd(
+                           _mm256_castsi256_pd(p_vec1),
+                           _mm256_castsi256_pd(p_vec2)
+                        )
                      ),
                      divhelper
                   )

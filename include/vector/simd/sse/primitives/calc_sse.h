@@ -101,9 +101,11 @@ namespace vectorlib{
             _mm_xor_si128(
                _mm_castpd_si128(
                   _mm_add_pd(
-                     _mm_div_pd(
-                        _mm_castsi128_pd(p_vec1),
-                        _mm_castsi128_pd(p_vec2)
+                     _mm_floor_pd(
+                        _mm_div_pd(
+                           _mm_castsi128_pd(p_vec1),
+                           _mm_castsi128_pd(p_vec2)
+                        )
                      ),
                      divhelper
                   )
