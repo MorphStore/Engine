@@ -59,8 +59,8 @@ namespace morphstore{
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map<std::pair<std::string, std::string>, uint64_t, hash_pair> globalIdLookupMap;
 
-        // map for lookup every system-id, the neighbors in the graph (for further processing, e.g. filling the edge_array in the right order)
-        std::unordered_map<uint64_t, std::vector<std::pair<uint64_t, unsigned short int >>> vertexNeighborsLookup;
+        // unordered_map for lookup system-id and its in the graph (for further processing, e.g. filling the edge_array in the right order)
+        std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexRelationsLookup;
 
     public:
 
@@ -252,7 +252,7 @@ namespace morphstore{
             entitiesLookup.clear();
             relationsPaths.clear();
             verticesPaths.clear();
-            vertexNeighborsLookup.clear();
+            vertexRelationsLookup.clear();
         }
 
         // function which returns the total number of edges (IMPORTANT: vertex generation has to be done first, because of the entity lookup creation)
@@ -401,7 +401,7 @@ namespace morphstore{
         }
 
         // this function reads the relation-files and generates edges in graph
-        void fill_vertexNeighborsLookup(std::unique_ptr<Graph>& graph){
+        void fill_vertexRelationsLookup(std::unique_ptr<Graph>& graph){
 
             if(!relationsPaths.empty()) {
                 //std::cout << "(2/2) Generating LDBC-Edges ...";
@@ -537,18 +537,17 @@ namespace morphstore{
                                         // WITHOUT properties: just from the first delimiter on
                                         toID = globalIdLookupMap.at({toEntity, row});
 
-                                        // insert relation into vertexNeighborsLookup with has EdgeProperty = false
-                                        vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
+                                        // insert relation into vertexRealtionsLookup:
+                                        vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber));
 
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
-                                        // TODO: DONT FORGET TO HANDLE PROPERTIES
-                                        //graph.add_edge_with_property(fromID, toID, relationNumber, {propertyKey, value});
-                                        // insert relation into vertexNeighborsLookup with has EdgeProperty = TRUE
-                                        vertexNeighborsLookup[fromID].push_back({toID, relationNumber});
+
+                                        // insert relation into vertexRealtionsLookup with its edge-property:
+                                        vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber, {propertyKey, value}));
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -574,28 +573,24 @@ namespace morphstore{
             }
         }
 
-        // function for sorting the vertexNeighborsLookup ASC in CSR
-        void sort_VertexNeighborsLookup(){
+        // function for sorting the vertexRelationsLookup ASC (needed in CSR)
+        void sort_VertexRelationsLookup(){
             // sorting the first element of the pair (target-id)
-            for(auto &it: vertexNeighborsLookup){
-                std::sort(it.second.begin(), it.second.end());
+            for(auto &rel: vertexRelationsLookup){
+                std::sort(rel.second.begin(), rel.second.end());
             }
         }
 
-        /* TODO: write function, that additionally fills the VertexNeighborsLookup with ids, that have no neighbors
-         * After that, we can iterate through the lookup and can sequently fill the CSR or AdjacencyList
-         * */
-
-        // this function writes the actual data from the intermediate vertexNeighborsLookup
+        // this function writes the actual data from the intermediate vertexRelationsLookup
         void generate_edges(std::unique_ptr<Graph>& graph){
             // firstly, sorting the intermediates with their target IDs ASC
-            sort_VertexNeighborsLookup();
+            sort_VertexRelationsLookup();
 
             uint64_t graphSize = graph->getNumberVertices();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
                 // add edge data:
-                graph->add_edges(vertexID, vertexNeighborsLookup[vertexID]);
+                graph->add_edges(vertexID, vertexRelationsLookup[vertexID]);
             }
         }
 
@@ -615,7 +610,7 @@ namespace morphstore{
             generate_vertices(graph);
 
             // (4) read relations and write to intermediate results
-            fill_vertexNeighborsLookup(graph);
+            fill_vertexRelationsLookup(graph);
 
             // (5) read intermediates and write edges
             generate_edges(graph);

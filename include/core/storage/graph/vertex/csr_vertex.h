@@ -42,6 +42,11 @@ namespace morphstore{
             std::cout << " virtual add_edge - no usage: " << from << ", " << to << ", " << rel << std::endl;
         }
 
+        // pure function -> no functionality
+        void add_edges(std::vector<morphstore::Edge>& edges) override {
+            std::cout << " virtual add_edge - no usage: " << edges[0].getSourceId() << std::endl;
+        }
+
         /* old-calculation of size of a vertex in bytes
         size_t get_size_of_vertex() {
             size_t size = 0;

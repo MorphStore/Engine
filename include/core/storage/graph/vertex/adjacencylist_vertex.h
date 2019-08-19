@@ -46,10 +46,14 @@ namespace morphstore{
             return adjacencylist;
         }
 
-        // add edge to vertexs' adjacencylist
         void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
             Edge e(from, to, rel);
             this->adjacencylist.push_back(e);
+        }
+
+        // add edges to vertexs' adjacencylist
+        void add_edges(std::vector<morphstore::Edge>& edges) override {
+            this->adjacencylist = edges;
         }
 
         // function which returns the number of edges

@@ -81,19 +81,19 @@ namespace morphstore{
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of neighbors
-        void add_edges(uint64_t source, std::vector<std::pair<uint64_t , unsigned short int >>& listOfNeighbors) override {
-            if(source == 0){
-                node_array[source] = 0;
+        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge>& relations) override {
+            if(sourceID == 0){
+                node_array[sourceID] = 0;
             }
-            uint64_t offset = node_array[source];
-            uint64_t nextOffset = offset + listOfNeighbors.size();
+            uint64_t offset = node_array[sourceID];
+            uint64_t nextOffset = offset + relations.size();
 
-            for(auto const& pair : listOfNeighbors){
-                Edge* e = new Edge(source, pair.first, pair.second);
+            for(auto & edge : relations){
+                Edge* e = &edge;
                 edge_array[offset] = e;
                 ++offset;
             }
-            node_array[source+1] = nextOffset;
+            node_array[sourceID+1] = nextOffset;
         }
 
         // function to add a single property to vertex

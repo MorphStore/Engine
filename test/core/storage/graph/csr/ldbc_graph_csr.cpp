@@ -28,6 +28,7 @@
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
+    std::cout << "\n";
     std::cout << "***********************************************" << std::endl;
     std::cout << "* MorphStore-Storage-Test: CSR-storage-format *" << std::endl;
     std::cout << "***********************************************" << std::endl;

@@ -24,6 +24,8 @@
 #ifndef MORPHSTORE_VERTEX_H
 #define MORPHSTORE_VERTEX_H
 
+#include "../edge/edge.h"
+
 #include <unordered_map>
 #include <iostream>
 #include <vector>
@@ -77,6 +79,7 @@ namespace morphstore{
 
 
         // ----------------- (pure) virtual functions -----------------
+        virtual void add_edges(std::vector<morphstore::Edge>& edges) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
 
         virtual uint64_t get_number_edges(){

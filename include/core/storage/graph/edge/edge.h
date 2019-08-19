@@ -24,6 +24,10 @@
 #ifndef MORPHSTORE_EDGE_H
 #define MORPHSTORE_EDGE_H
 
+#include <stdint.h>
+#include <utility>
+#include <string>
+
 namespace morphstore{
 
     class Edge{
@@ -36,13 +40,18 @@ namespace morphstore{
 
     public:
 
-        Edge(){};
-
         // Constructor with parameters
         Edge(uint64_t from, uint64_t to, unsigned short int rel){
             setSourceId(from);
             setTargetId(to);
             setRelation(rel);
+        }
+
+        Edge(uint64_t from, uint64_t to, unsigned short int rel, std::pair<std::string, std::string> prop){
+            setSourceId(from);
+            setTargetId(to);
+            setRelation(rel);
+            setProperty(prop);
         }
 
         // --------------- Getter and Setter ---------------
@@ -77,6 +86,13 @@ namespace morphstore{
 
         void setProperty(const std::pair<std::string, std::string> &property) {
             Edge::property = property;
+        }
+
+        // function for sorting algorithms in the importer:
+        // compare the target ids
+        bool operator<(const Edge& e) const
+        {
+            return getTargetId() < e.getTargetId();
         }
     };
 }
