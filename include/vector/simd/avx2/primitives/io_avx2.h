@@ -170,11 +170,13 @@ namespace vectorlib {
 //                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
                     case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 2: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+//                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 4: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
                     case 5: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,216)); break;
                     case 6: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+//                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 8: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,147)); break;
                     case 9: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,156)); break;
                     case 10: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,141)); break;
