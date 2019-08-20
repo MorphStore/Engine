@@ -18,7 +18,7 @@
 /**
  * @file ldbc_import.h
  * @brief this class reads the ldbc files and generates the graph in CSR or AdjList
- * @todo EDGE-properties still missing!!! -> OPTIMIZATIONS
+ * @todo
 */
 
 #ifndef MORPHSTORE_LDBC_IMPORT_H
@@ -64,6 +64,7 @@ namespace morphstore{
 
     public:
 
+        // Constructor: needs the address of the csv files
         LDBCImport(const std::string &dir) {
             directory = dir;
             insert_file_names(directory);
@@ -98,6 +99,7 @@ namespace morphstore{
         }
 
         // this function reads the vertices-files and creates vertices in a graph
+        // + creates the entityLookup (number to string) for the graph
         void generate_vertices(std::unique_ptr<Graph>& graph) {
 
             if (!verticesPaths.empty()) {
@@ -400,7 +402,8 @@ namespace morphstore{
             return result;
         }
 
-        // this function reads the relation-files and generates edges in graph
+        // this function reads the relation-files and fills the intermediate: vertexRelationLookup
+        // + creates the relationLookup (number to string) for the graph
         void fill_vertexRelationsLookup(std::unique_ptr<Graph>& graph){
 
             if(!relationsPaths.empty()) {
@@ -574,6 +577,7 @@ namespace morphstore{
         }
 
         // function for sorting the vertexRelationsLookup ASC (needed in CSR)
+        // sorting for every vertex its vector list with target-ids ASC
         void sort_VertexRelationsLookup(){
             // sorting the first element of the pair (target-id)
             for(auto &rel: vertexRelationsLookup){
@@ -581,7 +585,7 @@ namespace morphstore{
             }
         }
 
-        // this function writes the actual data from the intermediate vertexRelationsLookup
+        // this function writes the actual data from the intermediate vertexRelationsLookup into the graph
         void generate_edges(std::unique_ptr<Graph>& graph){
             // firstly, sorting the intermediates with their target IDs ASC
             sort_VertexRelationsLookup();
@@ -594,7 +598,7 @@ namespace morphstore{
             }
         }
 
-        // main import function: see steps in comments
+        // MAIN import function: see steps in comments
         void import(std::unique_ptr<Graph>& graph) {
             std::cout << "Importing LDBC-files into graph ... ";
             std::cout.flush();

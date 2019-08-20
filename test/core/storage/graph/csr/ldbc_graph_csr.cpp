@@ -29,9 +29,9 @@ int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
     std::cout << "\n";
-    std::cout << "***********************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: CSR-storage-format *" << std::endl;
-    std::cout << "***********************************************" << std::endl;
+    std::cout << "**********************************************************" << std::endl;
+    std::cout << "* MorphStore-Storage-Test: Compressed Row Storage Format *" << std::endl;
+    std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
 
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time

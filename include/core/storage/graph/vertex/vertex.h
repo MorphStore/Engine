@@ -17,7 +17,7 @@
 
 /**
  * @file vertex.h
- * @brief abstract vertex class: CSR has cVertex; ADJ-List has aVertex
+ * @brief abstract vertex class for storage formats
  * @todo add vertex size calculation
 */
 

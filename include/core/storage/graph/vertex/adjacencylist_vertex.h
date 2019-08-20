@@ -17,8 +17,8 @@
 
 /**
  * @file avertex.h
- * @brief Derived vertex calss for ADJ_LIST storage format
- * @todo change adjlist (vector of Edges) to vector of Edge* ?????
+ * @brief Derived vertex calss for ADJ_LIST storage format: base-class: vertex
+ * @todo
 */
 
 #ifndef MORPHSTORE_AVERTEX_H
@@ -46,6 +46,7 @@ namespace morphstore{
             return adjacencylist;
         }
 
+        // function to add a single edge to vertexs adjlist
         void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
             Edge e(from, to, rel);
             this->adjacencylist.push_back(e);

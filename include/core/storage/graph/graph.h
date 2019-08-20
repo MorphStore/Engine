@@ -18,7 +18,7 @@
 /**
  * @file graph.h
  * @brief abstract graph class for any storage format --> CSR,ADJ
- * @todo graph-size calculation is missing
+ * @todo graph-size calculation!!
 */
 
 #ifndef MORPHSTORE_GRAPH_H

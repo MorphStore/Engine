@@ -17,7 +17,7 @@
 
 /**
  * @file edge.h
- * @brief Edge class which represents a relationship
+ * @brief Edge class which represents a relationship between 2 Vertices
  * @todo
 */
 
@@ -40,7 +40,7 @@ namespace morphstore{
 
     public:
 
-        // Constructor with parameters
+        // Constructors with parameters
         Edge(uint64_t from, uint64_t to, unsigned short int rel){
             setSourceId(from);
             setTargetId(to);
@@ -88,8 +88,8 @@ namespace morphstore{
             Edge::property = property;
         }
 
-        // function for sorting algorithms in the importer:
-        // compare the target ids
+        // function for sorting algorithms in the ldbc-importer:
+        // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
         bool operator<(const Edge& e) const
         {
             return getTargetId() < e.getTargetId();
