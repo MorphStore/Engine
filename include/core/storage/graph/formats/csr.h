@@ -39,7 +39,7 @@ namespace morphstore{
         // TODO: construct a graph-topology struct ?
         // TODO: free memory in destructor
         uint64_t* node_array = nullptr;
-        Edge** edge_array = nullptr;
+        Edge* edge_array = nullptr;
 
     public:
 
@@ -55,7 +55,10 @@ namespace morphstore{
             vertices.reserve(numberVertices);
 
             node_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
-            edge_array = (Edge**) malloc(numberEdges * sizeof(Edge*));
+            edge_array = (Edge*) malloc(numberEdges * sizeof(Edge));
+
+            // init node array:
+            node_array[0] = 0;
         }
 
         // adding a single vertex (without any properties, etc...)
@@ -81,19 +84,19 @@ namespace morphstore{
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of neighbors
-        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge>& relations) override {
-            if(sourceID == 0){
-                node_array[sourceID] = 0;
-            }
+        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge>& relations) override {
             uint64_t offset = node_array[sourceID];
             uint64_t nextOffset = offset + relations.size();
 
-            for(auto & edge : relations){
-                Edge* e = &edge;
-                edge_array[offset] = e;
+            for(const auto & edge : relations){
+                edge_array[offset] = edge;
                 ++offset;
             }
-            node_array[sourceID+1] = nextOffset;
+
+
+            if(sourceID < getNumberVertices()-1){
+                node_array[sourceID+1] = nextOffset;
+            }
         }
 
         // function to add a single property to vertex
@@ -122,8 +125,17 @@ namespace morphstore{
             return numberEdges;
         }
 
+        void print_neighbors_of_vertex(uint64_t id) override{
+            uint64_t offset = node_array[id];
+            uint64_t numberEdges = get_number_edges(id);
+
+            for(uint64_t i = offset; i < offset+numberEdges; ++i){
+                std::cout << "Source-ID: " << edge_array[i].getSourceId() << " - Target-ID: " << edge_array[i].getTargetId() << " - Property: { " << edge_array[i].getProperty().first << ": " << edge_array[i].getProperty().second << " }" << " || ";
+            }
+        }
+
         /* old-calculation of the graph size in bytes
-        size_t get_size_of_graph(){
+         * size_t get_size_of_graph(){
             size_t size = 0;
             // pointer to arrays:
             size += sizeof(uint64_t*) * 2 + sizeof(unsigned short int*);

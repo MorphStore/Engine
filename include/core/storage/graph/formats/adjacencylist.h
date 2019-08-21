@@ -87,7 +87,7 @@ namespace morphstore{
         }
 
         // function that adds multiple edges (list of neighbors) at once to vertex
-        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge>& relations) override {
+        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge>& relations) override {
             if (exist_id(sourceID)) {
                 if (relations.size() != 0) {
                     vertices[sourceID]->add_edges(relations);
@@ -95,6 +95,10 @@ namespace morphstore{
             } else {
                 std::cout << "Vertex with ID " << sourceID << " not found." << std::endl;
             }
+        }
+
+        void print_neighbors_of_vertex(uint64_t id) override{
+            vertices[id]->print_neighbors();
         }
 
         // get number of neighbors of vertex with id

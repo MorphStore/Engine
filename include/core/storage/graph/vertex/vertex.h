@@ -79,8 +79,9 @@ namespace morphstore{
 
 
         // ----------------- (pure) virtual functions -----------------
-        virtual void add_edges(std::vector<morphstore::Edge>& edges) = 0;
+        virtual void add_edges(const std::vector<morphstore::Edge>& edges) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
+        virtual void print_neighbors() = 0;
 
         virtual uint64_t get_number_edges(){
             return 0;

@@ -54,6 +54,30 @@ namespace morphstore{
             setProperty(prop);
         }
 
+        // Copy constructor
+        Edge(const Edge& edge){
+            setSourceId(edge.sourceID);
+            setTargetId(edge.targetID);
+            setRelation(edge.relation);
+            setProperty(edge.property);
+        }
+
+        // this is needed for csr when doing edge_array[offset] = edge...
+        Edge& operator= (const Edge &edge){
+            // self-assignment guard
+            if (this == &edge)
+                return *this;
+
+            // do the copy
+            setSourceId(edge.sourceID);
+            setTargetId(edge.targetID);
+            setRelation(edge.relation);
+            setProperty(edge.property);
+
+            // return the existing object so we can chain this operator
+            return *this;
+        }
+
         // --------------- Getter and Setter ---------------
 
         uint64_t getSourceId() const {
@@ -84,8 +108,11 @@ namespace morphstore{
             return property;
         }
 
-        void setProperty(const std::pair<std::string, std::string> &property) {
-            Edge::property = property;
+        void setProperty(const std::pair<std::string, std::string> &prop) {
+            // first check if there is any key value data, otherwise problems with segfaults
+            if(prop.first != "" && prop.second != ""){
+                Edge::property = prop;
+            }
         }
 
         // function for sorting algorithms in the ldbc-importer:

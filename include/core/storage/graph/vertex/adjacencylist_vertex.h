@@ -53,7 +53,7 @@ namespace morphstore{
         }
 
         // add edges to vertexs' adjacencylist
-        void add_edges(std::vector<morphstore::Edge>& edges) override {
+        void add_edges(const std::vector<morphstore::Edge>& edges) override {
             this->adjacencylist = edges;
         }
 
@@ -61,6 +61,14 @@ namespace morphstore{
         uint64_t get_number_edges() override {
             return adjacencylist.size();
         }
+
+        void print_neighbors() override {
+            for(const auto& edge : adjacencylist){
+                std::cout << "Source-ID: " << edge.getSourceId() << " - Target-ID: " << edge.getTargetId() <<
+                " - Property: { " << edge.getProperty().first << ": " << edge.getProperty().second << " }" << " || ";
+            }
+        }
+
 
         /* old-calculation of vertex size
         size_t get_size_of_vertex() {

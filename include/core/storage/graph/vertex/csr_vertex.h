@@ -37,14 +37,18 @@ namespace morphstore{
         }
 
         // this function has no usage here: the adding of edges happens in the graph file -> csr.h
-        // it's just here because its a pure function in Vertex.h
+        // it's just here because its a pure  function in Vertex.h
         void add_edge(uint64_t from, uint64_t to,unsigned short int rel) override {
             std::cout << " virtual add_edge - no usage: " << from << ", " << to << ", " << rel << std::endl;
         }
 
         // pure function -> no functionality
-        void add_edges(std::vector<morphstore::Edge>& edges) override {
+        void add_edges(const std::vector<morphstore::Edge>& edges) override {
             std::cout << " virtual add_edge - no usage: " << edges[0].getSourceId() << std::endl;
+        }
+
+        void print_neighbors() override {
+            std::cout << " virtual print_neighbors - no usage: " << std::endl;
         }
 
         /* old-calculation of size of a vertex in bytes
