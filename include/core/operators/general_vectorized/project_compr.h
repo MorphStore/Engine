@@ -35,6 +35,7 @@
 #include <type_traits>
 
 #include <cstdint>
+#include <cstring>
 
 namespace morphstore {
 
