@@ -76,8 +76,7 @@ int main() {
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     start = std::chrono::system_clock::now();
-    auto new_col = realloc(const_cast<column<out_f>*>(outPosCol), outPosCol->get_size_compr_byte());    
-    (void) new_col;
+    const_cast<column<out_f>*>(outPosCol)->reallocate();
     end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start;

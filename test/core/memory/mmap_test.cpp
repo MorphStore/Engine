@@ -98,7 +98,7 @@ int main(int /*argc*/, char** /*argv*/) {
     // performance tests
     
     const uint32_t ARRAY_LENGTH = 1000000;
-    uint32_t const object_sizes[7] = {8, 16, 32, 64, 128, 256, 512};
+    uint32_t const object_sizes[8] = {8, 16, 32, 64, 128, 256, 512, 64000};
     //const uint32_t OBJ_SIZE = 32;
     void* ptrs[ARRAY_LENGTH];
 
@@ -160,7 +160,60 @@ int main(int /*argc*/, char** /*argv*/) {
         std::cout << "Alloc: " << elapsed_sec_alloc.count() << ", dealloc: " << elapsed_sec_dealloc.count() << std::endl;
         std::cout << "Needed " << elapsed_seconds.count() << " for " << ARRAY_LENGTH << " allocations and deallocations using std allocator" << std::endl;
     }
-    assert(false);
 
+    std::chrono::time_point<std::chrono::system_clock> alloc_start, alloc_end, dealloc_start, dealloc_end;
+
+    auto start = std::chrono::system_clock::now();
+    for (int k = 0; k < 3; ++k) {
+
+        alloc_start = std::chrono::system_clock::now();
+        for (unsigned int i = 0; i < 1000; ++i) {
+            ptrs[i] = mm_malloc(object_sizes[7]);
+            if (ptrs[i] == nullptr)
+                std::cerr << "Pointer " << i << " got returned as zero" << std::endl;
+            *reinterpret_cast<uint64_t*>(ptrs[i]) = 4;
+        }
+        alloc_end = std::chrono::system_clock::now();
+
+        dealloc_start = std::chrono::system_clock::now();
+        for (unsigned int i = 0; i < 1000; ++i) {
+            mm_free(reinterpret_cast<char*>(ptrs[i]));
+        }
+        dealloc_end = std::chrono::system_clock::now();
+
+    }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+
+    std::chrono::duration<double> elapsed_sec_alloc = alloc_end - alloc_start;
+    std::chrono::duration<double> elapsed_sec_dealloc = dealloc_end - dealloc_start;
+    std::cout << "Alloc: " << elapsed_sec_alloc.count() << ", dealloc: " << elapsed_sec_dealloc.count() << std::endl;
+    std::cout << "Needed " << elapsed_seconds.count() << " for " << ARRAY_LENGTH << " allocations and deallocations using the custom mm" << std::endl;
+
+    start = std::chrono::system_clock::now();
+    for (int k = 0; k < 3; ++k) {
+
+        alloc_start = std::chrono::system_clock::now();
+        for (unsigned int i = 0; i < 1000; ++i) {
+            ptrs[i] = morphstore::stdlib_malloc(object_sizes[7]);
+            if (ptrs[i] == nullptr)
+                std::cerr << "Pointer " << i << " got returned as zero" << std::endl;
+            *reinterpret_cast<uint64_t*>(ptrs[i]) = 4;
+        }
+        alloc_end = std::chrono::system_clock::now();
+        dealloc_start = std::chrono::system_clock::now();
+        for (unsigned int i = 0; i < 1000; ++i) {
+            morphstore::stdlib_free(reinterpret_cast<char*>(ptrs[i]));
+        }
+        dealloc_end = std::chrono::system_clock::now();
+    }
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    elapsed_sec_alloc = alloc_end - alloc_start;
+    elapsed_sec_dealloc = dealloc_end - dealloc_start;
+    std::cout << "Alloc: " << elapsed_sec_alloc.count() << ", dealloc: " << elapsed_sec_dealloc.count() << std::endl;
+    std::cout << "Needed " << elapsed_seconds.count() << " for " << ARRAY_LENGTH << " allocations and deallocations using std allocator" << std::endl;
+
+    assert(false);
     return 0;
 }

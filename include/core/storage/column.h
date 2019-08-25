@@ -68,7 +68,7 @@ class column {
    private:
       column_meta_data m_MetaData;
       void * m_DataUnaligned;
-      voidptr_t m_Data;
+      void * m_Data;
       // @todo Actually, the persistence type only makes sense if we use our
       // own memory manager.
       storage_persistence_type m_PersistenceType;
@@ -88,6 +88,12 @@ class column {
       }
 
    public:
+      inline void reallocate( void )
+      {
+        auto new_col = realloc(m_DataUnaligned, get_size_compr_byte());    
+        m_DataUnaligned = new_col;
+        m_Data = create_aligned_ptr( m_DataUnaligned );
+      }
       inline voidptr_t get_data( void ) const {
          return m_Data;
       }
