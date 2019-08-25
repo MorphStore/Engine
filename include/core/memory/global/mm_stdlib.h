@@ -48,7 +48,7 @@ void *malloc(size_t p_AllocSize) __THROW {
     if (p_AllocSize == 0)
         return nullptr;
 
-    void* ptr = mm_malloc(p_AllocSize);
+    void* ptr = morphstore::mm_malloc(p_AllocSize);
     if (ptr == nullptr)
         throw std::runtime_error("Out of memory");
     trace("Return ptr ", ptr);
@@ -60,7 +60,7 @@ void *malloc(size_t p_AllocSize) __THROW {
 
 void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
 #ifdef USE_MMAP_MM
-    return mm_realloc(p_Ptr, p_AllocSize);
+    return morphstore::mm_realloc(p_Ptr, p_AllocSize);
 #else
     return morphstore::query_memory_manager::get_instance().reallocate(p_Ptr, p_AllocSize);
 #endif
@@ -81,7 +81,7 @@ void free(void *p_FreePtr) __THROW {
     if (p_FreePtr == nullptr)
         return;
 #ifdef USE_MMAP_MM
-    mm_free(p_FreePtr);
+    morphstore::mm_free(p_FreePtr);
 #else
    if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::query_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
       morphstore::query_memory_manager::get_instance().deallocate(p_FreePtr);

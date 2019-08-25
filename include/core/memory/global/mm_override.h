@@ -4,6 +4,8 @@
 #include <core/memory/management/mmap_mm.h>
 #include <core/memory/management/paged_mm.h>
 
+namespace morphstore {
+
 inline void* mm_malloc(size_t p_AllocSize) {
     size_t abs_needed_size = p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo);
 
@@ -66,4 +68,5 @@ inline void mm_free(void* p_FreePtr) {
     }
 }
 
+} // namespace morphstore
 #endif
