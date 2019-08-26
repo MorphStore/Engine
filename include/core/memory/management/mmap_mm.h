@@ -299,7 +299,7 @@ public:
             needed_blocks -= allocate_in_word;
             trace("Word in bitmap is now ", *word_in_bitmap);
             // Move forward in bitmap by one word
-            word_in_bitmap = reinterpret_cast<uint64_t*>(reinterpret_cast<volatile uint64_t>(word_in_bitmap) + sizeof(uint64_t));
+            word_in_bitmap = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(word_in_bitmap) + sizeof(uint64_t));
             while (needed_blocks > 0) {
                  state = getAllocBits64(0, needed_blocks, false);
                  trace("Received further state in bitmap as ", std::hex, state, ", needed blocks is still ", needed_blocks);
