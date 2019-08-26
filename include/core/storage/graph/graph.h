@@ -146,7 +146,7 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "Properties: ";
             v->print_properties();
-            std::cout << "#Edges: " << this->get_number_edges(v->getID());
+            std::cout << "#Edges: " << this->get_degree(v->getID());
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
         }
