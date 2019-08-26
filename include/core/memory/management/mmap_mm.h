@@ -24,58 +24,22 @@ namespace morphstore {
 
 const size_t LINUX_PAGE_SIZE = 1 << 12;
 #ifdef CUSTOM_PAGE_OFFSET
-const size_t db_page_offset = CUSTOM_PAGE_OFFSET > 12 ? CUSTOM_PAGE_OFFSET : 12;
+const size_t DB_PAGE_OFFSET = CUSTOM_PAGE_OFFSET > 12 ? CUSTOM_PAGE_OFFSET : 12;
 #else
-const size_t db_page_offset = 15;
+const size_t DB_PAGE_OFFSET = 15;
 #endif
 
 #ifdef CUSTOM_ALLOCATION_OFFSET
-const size_t allocation_offset = CUSTOM_ALLOCATION_OFFSET;
+const size_t ALLOCATION_OFFSET = CUSTOM_ALLOCATION_OFFSET;
 #else
-const size_t allocation_offset = 27;
+const size_t ALLOCATION_OFFSET = 27;
 #endif
 
+const size_t DB_PAGE_SIZE = 1ul << DB_PAGE_OFFSET;
+const size_t ALLOCATION_SIZE = 1ul << ALLOCATION_OFFSET;
 
-class abstract_mmap_memory_manager : public abstract_memory_manager {
-    virtual size_t getDBPageSize() = 0;
-    virtual size_t getDBPageOffset() = 0;
-    virtual size_t getAllocationSize() = 0;
-    virtual size_t getAllocationOffset() = 0;
-
-    virtual void* allocatePages(size_t size) = 0;
-
-
-};
-
-template<
-    const size_t DB_PAGE_OFFSET,
-    const size_t ALLOCATION_OFFSET
-        >
 class mmap_memory_manager : public abstract_memory_manager {
 public:
-    static const size_t DB_PAGE_SIZE = 1ul << DB_PAGE_OFFSET;
-    static const size_t ALLOCATION_SIZE = 1ul << ALLOCATION_OFFSET;
-
-    size_t getDBPageSize()
-    {
-        return 1ul << DB_PAGE_OFFSET;
-    }
-
-    size_t getDBPageOffset()
-    {
-        return DB_PAGE_OFFSET;
-    }
-
-    size_t getAllocationSize()
-    {
-        return 1ul << ALLOCATION_OFFSET;
-    }
-
-    size_t getAllocationOffset()
-    {
-        return ALLOCATION_OFFSET;
-    }
-
     enum StorageType : uint64_t {
         CONTINUOUS,
         LARGE,
@@ -635,7 +599,7 @@ public:
 
     static inline mmap_memory_manager& getInstance()
     {
-        static thread_local mmap_memory_manager<DB_PAGE_OFFSET,ALLOCATION_OFFSET> instance;
+        static thread_local mmap_memory_manager instance;
         return instance;
     }
 
@@ -957,34 +921,6 @@ private:
 #ifdef USE_FREEMAP
     ListMap<ALLOCATION_SIZE,DB_PAGE_SIZE> freemap;
 #endif
-};
-
-using std_mmap_mm = mmap_memory_manager<db_page_offset,allocation_offset>;
-
-class mmap_mm_keeper {
-
-    static mmap_mm_keeper& getInstance()
-    {
-        static mmap_mm_keeper instance;
-        return instance;
-    }
-
-    size_t m_current_db_page_offset;
-    size_t m_current_allocation_offset;
-
-    abstract_mmap_memory_manager* current_mmap_mm;
-
-    void set(abstract_mmap_memory_manager* instance, const size_t current_db_page_offset, const size_t current_allocation_offset)
-    {
-        current_mmap_mm = instance;
-        m_current_db_page_offset = current_db_page_offset;
-        m_current_allocation_offset = current_allocation_offset;
-    }
-
-    abstract_mmap_memory_manager& get()
-    {
-        return *current_mmap_mm;
-    }
 };
 
 } //namespace morphstore

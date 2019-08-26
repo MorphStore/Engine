@@ -10,20 +10,20 @@ uint64_t __malloc_count = 0;
 
 inline void* mm_malloc(size_t p_AllocSize) {
     ++__malloc_count;
-    size_t abs_needed_size = p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo);
+    size_t abs_needed_size = p_AllocSize + sizeof(morphstore::mmap_memory_manager::ObjectInfo);
 
-    if (abs_needed_size > morphstore::std_mmap_mm::ALLOCATION_SIZE) { // already allocates object info for convenience, aligned to chunksize 
-        return morphstore::std_mmap_mm::getInstance().allocateLarge(p_AllocSize);
+    if (abs_needed_size > morphstore::ALLOCATION_SIZE) { // already allocates object info for convenience, aligned to chunksize 
+        return morphstore::mmap_memory_manager::getInstance().allocateLarge(p_AllocSize);
     }
-    else if (abs_needed_size > (( morphstore::std_mmap_mm::DB_PAGE_SIZE ) - sizeof(morphstore::PageHeader) )) {
-        morphstore::std_mmap_mm::ObjectInfo* info = reinterpret_cast<morphstore::std_mmap_mm::ObjectInfo*>( morphstore::std_mmap_mm::getInstance().allocate(abs_needed_size) );
+    else if (abs_needed_size > (( morphstore::DB_PAGE_SIZE ) - sizeof(morphstore::PageHeader) )) {
+        morphstore::mmap_memory_manager::ObjectInfo* info = reinterpret_cast<morphstore::mmap_memory_manager::ObjectInfo*>( morphstore::mmap_memory_manager::getInstance().allocate(abs_needed_size) );
         info->size = abs_needed_size;
-        return reinterpret_cast<void*>( reinterpret_cast<uint64_t>(info) + sizeof(morphstore::std_mmap_mm::ObjectInfo));
+        return reinterpret_cast<void*>( reinterpret_cast<uint64_t>(info) + sizeof(morphstore::mmap_memory_manager::ObjectInfo));
     }
     else {
-        morphstore::std_mmap_mm::ObjectInfo* info = reinterpret_cast<morphstore::std_mmap_mm::ObjectInfo*>(morphstore::paged_memory_manager::getGlobalInstance().allocate(abs_needed_size));
+        morphstore::mmap_memory_manager::ObjectInfo* info = reinterpret_cast<morphstore::mmap_memory_manager::ObjectInfo*>(morphstore::paged_memory_manager::getGlobalInstance().allocate(abs_needed_size));
         info->size = abs_needed_size;
-        return reinterpret_cast<void*>( reinterpret_cast<uint64_t>(info) + sizeof(morphstore::std_mmap_mm::ObjectInfo));
+        return reinterpret_cast<void*>( reinterpret_cast<uint64_t>(info) + sizeof(morphstore::mmap_memory_manager::ObjectInfo));
     }
 
 }
@@ -36,32 +36,32 @@ inline void* mm_realloc(void* p_Ptr, size_t p_AllocSize) {
     if (p_AllocSize == 0)
         return nullptr;
 
-    morphstore::std_mmap_mm::ObjectInfo* info = reinterpret_cast<morphstore::std_mmap_mm::ObjectInfo*>( reinterpret_cast<uint64_t>(p_Ptr) - sizeof(morphstore::std_mmap_mm::ObjectInfo));
+    morphstore::mmap_memory_manager::ObjectInfo* info = reinterpret_cast<morphstore::mmap_memory_manager::ObjectInfo*>( reinterpret_cast<uint64_t>(p_Ptr) - sizeof(morphstore::mmap_memory_manager::ObjectInfo));
 
-    if (info->size > morphstore::std_mmap_mm::ALLOCATION_SIZE) {
-        return morphstore::std_mmap_mm::getInstance().reallocate(p_Ptr, p_AllocSize);
+    if (info->size > morphstore::ALLOCATION_SIZE) {
+        return morphstore::mmap_memory_manager::getInstance().reallocate(p_Ptr, p_AllocSize);
     }
-    else if (info->size > (( morphstore::std_mmap_mm::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
-        return morphstore::std_mmap_mm::getInstance().reallocate(info, p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo));
+    else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
+        return morphstore::mmap_memory_manager::getInstance().reallocate(info, p_AllocSize + sizeof(morphstore::mmap_memory_manager::ObjectInfo));
     }
     else {
-        void* ptr = morphstore::paged_memory_manager::getGlobalInstance().reallocate(info, p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo));
-        morphstore::std_mmap_mm::ObjectInfo* info = reinterpret_cast<morphstore::std_mmap_mm::ObjectInfo*>(ptr);
-        assert(info->size == p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo));
+        void* ptr = morphstore::paged_memory_manager::getGlobalInstance().reallocate(info, p_AllocSize + sizeof(morphstore::mmap_memory_manager::ObjectInfo));
+        morphstore::mmap_memory_manager::ObjectInfo* info = reinterpret_cast<morphstore::mmap_memory_manager::ObjectInfo*>(ptr);
+        assert(info->size == p_AllocSize + sizeof(morphstore::mmap_memory_manager::ObjectInfo));
         return &(info[1]);
     }
 
 }
 
 inline void mm_free(void* p_FreePtr) {
-    morphstore::std_mmap_mm::ObjectInfo* info = reinterpret_cast<morphstore::std_mmap_mm::ObjectInfo*>( reinterpret_cast<uint64_t>(p_FreePtr) - sizeof(morphstore::std_mmap_mm::ObjectInfo));
+    morphstore::mmap_memory_manager::ObjectInfo* info = reinterpret_cast<morphstore::mmap_memory_manager::ObjectInfo*>( reinterpret_cast<uint64_t>(p_FreePtr) - sizeof(morphstore::mmap_memory_manager::ObjectInfo));
 
     if( MSV_CXX_ATTRIBUTE_LIKELY( morphstore::paged_memory_manager_state_helper::get_instance( ).is_alive( ) ) )
-        if (info->size > morphstore::std_mmap_mm::ALLOCATION_SIZE) {
-            morphstore::std_mmap_mm::getInstance().deallocateLarge(p_FreePtr);
+        if (info->size > morphstore::ALLOCATION_SIZE) {
+            morphstore::mmap_memory_manager::getInstance().deallocateLarge(p_FreePtr);
         }
-        else if (info->size > (( morphstore::std_mmap_mm::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
-            morphstore::std_mmap_mm::getInstance().deallocate(info);
+        else if (info->size > (( morphstore::DB_PAGE_SIZE - sizeof(morphstore::PageHeader) ))) {
+            morphstore::mmap_memory_manager::getInstance().deallocate(info);
         }
         else {
             morphstore::paged_memory_manager::getGlobalInstance().deallocate(info);
