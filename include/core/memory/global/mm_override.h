@@ -6,7 +6,10 @@
 
 namespace morphstore {
 
+uint64_t __malloc_count = 0;
+
 inline void* mm_malloc(size_t p_AllocSize) {
+    ++__malloc_count;
     size_t abs_needed_size = p_AllocSize + sizeof(morphstore::std_mmap_mm::ObjectInfo);
 
     if (abs_needed_size > morphstore::std_mmap_mm::ALLOCATION_SIZE) { // already allocates object info for convenience, aligned to chunksize 
