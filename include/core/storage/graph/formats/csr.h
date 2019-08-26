@@ -127,7 +127,7 @@ namespace morphstore{
 
         void print_neighbors_of_vertex(uint64_t id) override{
             uint64_t offset = node_array[id];
-            uint64_t numberEdges = get_number_edges(id);
+            uint64_t numberEdges = get_degree(id);
 
             for(uint64_t i = offset; i < offset+numberEdges; ++i){
                 std::cout << "Source-ID: " << edge_array[i].getSourceId() << " - Target-ID: " << edge_array[i].getTargetId() << " - Property: { " << edge_array[i].getProperty().first << ": " << edge_array[i].getProperty().second << " }" << " || ";
