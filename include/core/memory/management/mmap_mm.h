@@ -17,7 +17,7 @@
 #include <cassert>
 
 #define USE_FREEMAP
-#define USE_HUGE_TLB
+//#define USE_HUGE_TLB
 //#define USE_VECTOR
 
 namespace morphstore {
