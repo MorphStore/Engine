@@ -17,12 +17,23 @@
 #include <cassert>
 
 #define USE_FREEMAP
+//#define USE_VECTOR
 
 namespace morphstore {
 
 const size_t LINUX_PAGE_SIZE = 1 << 12;
+#ifdef CUSTOM_PAGE_OFFSET
+const size_t db_page_offset = CUSTOM_PAGE_OFFSET > 12 ? CUSTOM_PAGE_OFFSET : 12;
+#else
 const size_t db_page_offset = 15;
+#endif
+
+#ifdef CUSTOM_ALLOCATION_OFFSET
+const size_t allocation_offset = CUSTOM_ALLOCATION_OFFSET;
+#else
 const size_t allocation_offset = 27;
+#endif
+
 
 class abstract_mmap_memory_manager : public abstract_memory_manager {
     virtual size_t getDBPageSize() = 0;
