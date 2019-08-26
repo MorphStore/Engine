@@ -36,7 +36,9 @@ int main( void ){
 
     auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
-    morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
+    // when using workstation @ TUD: social network directory: "~/Downloads/social_network/"
+    //morphstore::LDBCImport ldbcImport("/opt/ldbc_snb_datagen-0.2.8/social_network/");
+    morphstore::LDBCImport ldbcImport("~/Downloads/social_network/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
