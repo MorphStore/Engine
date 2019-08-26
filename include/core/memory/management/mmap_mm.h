@@ -17,6 +17,7 @@
 #include <cassert>
 
 #define USE_FREEMAP
+#define USE_HUGE_TLB
 //#define USE_VECTOR
 
 namespace morphstore {
@@ -617,7 +618,12 @@ public:
 public:
     static mmap_memory_manager* m_Instance;
 
+#ifdef USE_HUGE_TLB
+    const size_t HEAD_STRUCT = 2 << 20;
+#else
     const size_t HEAD_STRUCT = sizeof(ChunkHeader);
+#endif
+
     const size_t IDEAL_OFFSET = ALLOCATION_SIZE - HEAD_STRUCT;
 
     mmap_memory_manager &operator=(mmap_memory_manager const &) = delete;
@@ -653,9 +659,14 @@ public:
             return res;
         }
 
+
         // need at least 2*alloc_size-1 for guaranteed alignment
         const size_t mmap_alloc_size = 2 * ALLOCATION_SIZE + HEAD_STRUCT;
+#ifdef USE_HUGE_TLB
+        char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_POPULATE | MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
+#else
         char* given_ptr = reinterpret_cast<char*>(mmap(nullptr, mmap_alloc_size, PROT_READ | PROT_WRITE, MAP_POPULATE | MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
+#endif
         if (reinterpret_cast<void*>(given_ptr) == reinterpret_cast<void*>(~0l)) {
             //Out of memory...
             throw std::runtime_error("Allocation of memory failed, OOM...");
