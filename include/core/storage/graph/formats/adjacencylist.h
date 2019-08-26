@@ -102,7 +102,7 @@ namespace morphstore{
         }
 
         // get number of neighbors of vertex with id
-        uint64_t get_number_edges(uint64_t id) override {
+        uint64_t get_degree(uint64_t id) override {
             return vertices[id]->get_number_edges();
         }
 

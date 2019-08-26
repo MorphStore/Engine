@@ -93,7 +93,7 @@ namespace morphstore{
                 ++offset;
             }
 
-
+            // to avoid segfualt:
             if(sourceID < getNumberVertices()-1){
                 node_array[sourceID+1] = nextOffset;
             }
@@ -118,7 +118,7 @@ namespace morphstore{
         }
 
         // get number of edges of vertex with id
-        uint64_t get_number_edges(uint64_t id) override {
+        uint64_t get_degree(uint64_t id) override {
             uint64_t offset = node_array[id];
             uint64_t nextOffset = node_array[id+1];
             uint64_t numberEdges = nextOffset - offset;

@@ -125,7 +125,7 @@ namespace morphstore{
         virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge>& relations) = 0;
-        virtual uint64_t get_number_edges(uint64_t id) = 0;
+        virtual uint64_t get_degree(uint64_t id) = 0;
         // for debugging
         virtual void print_neighbors_of_vertex(uint64_t id) = 0;
 
