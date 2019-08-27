@@ -69,6 +69,17 @@ namespace morphstore{
             }
         }
 
+        // function to return a vector of neighbor ids (for BFS)
+        std::vector<uint64_t> get_neighbors_ids() override {
+            std::vector<uint64_t> neighbors;
+            for(auto const& edge : adjacencylist){
+                neighbors.push_back(edge.getTargetId());
+            }
+            return neighbors;
+        }
+
+
+
 
         /* old-calculation of vertex size
         size_t get_size_of_vertex() {

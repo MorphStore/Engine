@@ -87,6 +87,12 @@ namespace morphstore{
             return 0;
         };
 
+        // for BFS alg.: adj-list
+        virtual std::vector<uint64_t> get_neighbors_ids() {
+            // return empty vector: implementation only needed in ADj-Vertex
+            return std::vector<uint64_t>();
+        }
+
 
         // ----------------- DEBUGGING -----------------
         void print_properties() {

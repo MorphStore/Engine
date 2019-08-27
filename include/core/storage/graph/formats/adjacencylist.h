@@ -106,6 +106,11 @@ namespace morphstore{
             return vertices[id]->get_number_edges();
         }
 
+        // get the neighbors-ids into vector for BFS alg.
+        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
+            return vertices.at(id)->get_neighbors_ids();
+        }
+
         /* old-calculation of the graph size in bytes
         size_t get_size_of_graph(){
             size_t size = 0;

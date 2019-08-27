@@ -5,7 +5,7 @@ add_subdirectory( core/persistence )
 add_subdirectory( core/storage )
 add_subdirectory( core/utils )
 
-add_subdirectory(core/storage/graph/adjacencylist)
+add_subdirectory( core/storage/graph/adjacencylist )
 add_subdirectory( core/storage/graph/csr )
 
 add_subdirectory(vector)

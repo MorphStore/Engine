@@ -134,6 +134,18 @@ namespace morphstore{
             }
         }
 
+        // function to return a vector of ids of neighbors for BFS alg.
+        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
+            std::vector<uint64_t> neighbors;
+            uint64_t offset = node_array[id];
+            uint64_t numberEdges = get_degree(id);
+
+            for(uint64_t i = offset; i < offset+numberEdges; ++i){
+                neighbors.push_back(edge_array[i].getTargetId());
+            }
+            return neighbors;
+        }
+
         /* old-calculation of the graph size in bytes
          * size_t get_size_of_graph(){
             size_t size = 0;

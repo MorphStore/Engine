@@ -23,6 +23,8 @@
 
 #include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/formats/adjacencylist.h>
+#include <core/operators/graph/bfs_naive.h>
+
 #include <chrono>  // for high_resolution_clock
 
 int main( void ){
@@ -60,9 +62,14 @@ int main( void ){
     g1->print_vertex_by_id(100168);
     g1->print_vertex_by_id(2000100);
      */
+    g1->print_vertex_by_id(10000);
 
     // calculate size of social graph
     //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
+
+    // BFS TEST:
+    std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
+    bfs->doBFS(10000);
 
     return 0;
 }
