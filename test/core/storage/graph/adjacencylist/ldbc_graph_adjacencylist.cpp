@@ -30,30 +30,32 @@
 int main( void ){
 
     // ------------------------------------ LDBC-IMPORT TEST -----------------------------------
+    /*
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
     std::cout << "* MorphStore-Storage-Test: Adjacency-List Storage Format *" << std::endl;
     std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
+    */
 
-    auto start = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-
-    // when using workstation @ TUD: social network directory: "/home/s8069724/s8069724-home/Dokumente/social_network/"
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
-    //morphstore::LDBCImport ldbcImport("/home/s8069724/s8069724-home/Dokumente/social_network/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
+
+    // start measuring import time:
+    auto startImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     // generate vertices & edges from LDBC files and insert into graph
     ldbcImport->import(g1);
 
     // measuring time:
-    auto finish = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-    std::chrono::duration<double> elapsed = finish - start;
+    auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    auto elapsedImportTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportTime - startImportTime ).count();
 
-    g1->statistics();
-    std::cout << "Import & Graph-Generation Time: " << elapsed.count() << " sec.\n";
+
+    //g1->statistics();
+    std::cout << "Import: " << elapsedImportTime << " millisec.\n";
 
     /*
     // test vertices:
@@ -62,14 +64,23 @@ int main( void ){
     g1->print_vertex_by_id(100168);
     g1->print_vertex_by_id(2000100);
      */
-    g1->print_vertex_by_id(10000);
 
     // calculate size of social graph
     //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
     // BFS TEST:
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
+
+    // start measuring bfs time:
+    auto startBFSTime = std::chrono::high_resolution_clock::now();
+
+    // actual algorithm
     bfs->doBFS(10000);
+
+    // measuring time:
+    auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    auto elapsedBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishBFSTime - startBFSTime ).count();
+    std::cout << "BFS: " << elapsedBFSTime << " millisec.\n";
 
     return 0;
 }

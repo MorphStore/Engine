@@ -51,9 +51,7 @@ namespace morphstore{
         }
 
         void doBFS(uint64_t startVertex){
-            std::cout << "BFS: starting from Vertex " << startVertex << std::endl;
-
-            //uint64_t graphSize = graph.getNumberVertices();
+            //std::cout << "BFS: starting from Vertex " << startVertex << std::endl;
 
             queue.push(startVertex);
             visited[startVertex] = true;
@@ -64,7 +62,7 @@ namespace morphstore{
                 uint64_t currentVertex = queue.front();
                 queue.pop();
 
-                std::cout << "Vertex with ID " << currentVertex << "\t @ Layer " << layer[currentVertex] << std::endl;
+                //std::cout << "Vertex with ID " << currentVertex << "\t @ Layer " << layer[currentVertex] << std::endl;
 
                 // get neighbors of current vertex
                 std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
@@ -73,7 +71,7 @@ namespace morphstore{
                 for(uint64_t i = 0; i < neighbors.size(); i++){
                     uint64_t neighbor = neighbors[i];
 
-                    // If the neighbor hasn't been visited yet, add it to the queue and mark it as visited
+                    // check if neighbor has been visited, if not -> put into queue and mark as visit = true
                     if(!visited[neighbor]){
                         queue.push(neighbor);
                         layer[neighbor] = layer[currentVertex] +1;

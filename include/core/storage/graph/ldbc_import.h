@@ -600,8 +600,8 @@ namespace morphstore{
 
         // MAIN import function: see steps in comments
         void import(std::unique_ptr<Graph>& graph) {
-            std::cout << "Importing LDBC-files into graph ... ";
-            std::cout.flush();
+            //std::cout << "Importing LDBC-files into graph ... ";
+            //std::cout.flush();
 
             // (1) get number vertices and number edges:
             uint64_t numberVertices = get_total_number_vertices();
@@ -622,7 +622,7 @@ namespace morphstore{
             // (6) clear intermediates
             clear_intermediates();
 
-            std::cout << "--> done" << std::endl;
+            //std::cout << "--> done" << std::endl;
         }
     };
 }
