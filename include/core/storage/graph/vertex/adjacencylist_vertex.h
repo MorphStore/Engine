@@ -78,28 +78,24 @@ namespace morphstore{
             return neighbors;
         }
 
-
-
-
-        /* old-calculation of vertex size
-        size_t get_size_of_vertex() {
+        size_t get_size_of_vertex() override {
             size_t size = 0;
             size += sizeof(uint64_t); // id
-            // Adj.List:
-            for(const auto& e : adjList){
-                size += e.size_in_bytes();
-            }
+            size += sizeof(unsigned short int); // entity
+
             // properties:
             size += sizeof(std::unordered_map<std::string, std::string>);
             for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
                 size += sizeof(char)*(property->first.length() + property->second.length());
             }
-            // entities:
-            size += sizeof(unsigned short int);
 
+            // Adj.List:
+            size += sizeof(std::vector<Edge>);
+            for(const auto& e : adjacencylist){
+                size += e.size_in_bytes();
+            }
             return size;
         }
-         */
 
     };
 }

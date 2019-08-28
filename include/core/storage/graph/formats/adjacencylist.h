@@ -27,6 +27,8 @@
 #include "../graph.h"
 #include "../vertex/adjacencylist_vertex.h"
 
+#include <iterator>
+
 namespace morphstore{
 
     class AdjacencyList: public Graph {
@@ -111,16 +113,14 @@ namespace morphstore{
             return vertices.at(id)->get_neighbors_ids();
         }
 
-        /* old-calculation of the graph size in bytes
-        size_t get_size_of_graph(){
+        size_t get_size_of_graph() override {
             size_t size = 0;
-            size += sizeof(std::unordered_map<uint64_t, ADJLISTVertex>);
-            for(std::unordered_map<uint64_t, ADJLISTVertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
-                size += it->second.get_size_of_vertex();
+            size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::AdjacencyListVertex>>);
+                for(auto& it : vertices){
+                size += it.second->get_size_of_vertex();
             }
             return size;
         }
-         */
 
     };
 }

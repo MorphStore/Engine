@@ -51,8 +51,7 @@ namespace morphstore{
             std::cout << " virtual print_neighbors - no usage: " << std::endl;
         }
 
-        /* old-calculation of size of a vertex in bytes
-        size_t get_size_of_vertex() {
+        size_t get_size_of_vertex() override {
             size_t size = 0;
             size += sizeof(uint64_t); // id
             // properties:
@@ -60,12 +59,11 @@ namespace morphstore{
             for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
                 size += sizeof(char)*(property->first.length() + property->second.length());
             }
-            // entities:
+            // entity:
             size += sizeof(unsigned short int);
 
             return size;
         }
-        */
 
     };
 }

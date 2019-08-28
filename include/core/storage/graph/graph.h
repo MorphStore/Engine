@@ -129,6 +129,7 @@ namespace morphstore{
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
         // for debugging
         virtual void print_neighbors_of_vertex(uint64_t id) = 0;
+        virtual size_t get_size_of_graph() = 0;
 
         // -------------------- debugging functions --------------------
 

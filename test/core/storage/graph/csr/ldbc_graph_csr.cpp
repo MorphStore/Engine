@@ -53,6 +53,9 @@ int main( void ){
     auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
     auto elapsedImportTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportTime - startImportTime ).count();
 
+    // size of graph in bytes:
+    size_t size = g1->get_size_of_graph();
+    std::cout << "Size: " << size << " bytes\n";
 
     //g1->statistics();
     std::cout << "Import: " << elapsedImportTime << " millisec.\n";

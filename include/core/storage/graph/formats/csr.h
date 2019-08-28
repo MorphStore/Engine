@@ -146,26 +146,23 @@ namespace morphstore{
             return neighbors;
         }
 
-        /* old-calculation of the graph size in bytes
-         * size_t get_size_of_graph(){
-            size_t size = 0;
+        size_t get_size_of_graph() override {
+            size_t  size = 0;
             // pointer to arrays:
-            size += sizeof(uint64_t*) * 2 + sizeof(unsigned short int*);
+            size += sizeof(uint64_t*) + sizeof(Edge*);
             // vertices:
             size += sizeof(uint64_t) * getNumberVertices();
             // edges:
-            size += sizeof(uint64_t) * getNumberEdges();
-            // val array:
-            size += sizeof(unsigned short int) * getNumberEdges();
-
+            for(uint64_t i = 0; i < getNumberEdges(); i++){
+                size += edge_array[i].size_in_bytes();
+            }
             // vertex map wth actual data:
-            for(std::unordered_map<uint64_t, CSRVertex>::iterator it = vertices.begin(); it != vertices.end(); ++it){
-                size += it->second.get_size_of_vertex();
+            for(auto& it : vertices){
+                size += it.second->get_size_of_vertex();
             }
 
             return size;
         }
-        */
 
     };
 

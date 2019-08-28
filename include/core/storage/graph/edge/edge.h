@@ -117,9 +117,20 @@ namespace morphstore{
 
         // function for sorting algorithms in the ldbc-importer:
         // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
-        bool operator<(const Edge& e) const
-        {
+        bool operator<(const Edge& e) const{
             return getTargetId() < e.getTargetId();
+        }
+
+        size_t size_in_bytes() const{
+            size_t size = 0;
+            size += sizeof(uint64_t) * 2; // source- and target-id
+            size += sizeof(unsigned short int); // relation
+
+            // property:
+            size += sizeof(std::pair<std::string, std::string>);
+            size += sizeof(char)*(property.first.length() + property.second.length());
+
+            return size;
         }
     };
 }
