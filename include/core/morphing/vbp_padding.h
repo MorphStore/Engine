@@ -160,10 +160,7 @@ namespace morphstore {
                 t_Bw, t_vector_extension::vector_helper_t::element_count::value
         >;
         
-        // @todo It would be nice to initialize this in-class. However, the
-        // compiler complains because set1 is not constexpr, even when it is
-        // defined so.
-        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask;
         
         // @todo We could use unrolled routines as we did with vbp_l.
         
@@ -256,10 +253,7 @@ namespace morphstore {
                 t_vector_extension::vector_helper_t::element_count::value
         >;
         
-        // @todo It would be nice to initialize this in-class. However, the
-        // compiler complains because set1 is not constexpr, even when it is
-        // defined so.
-        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask;
         
         // @todo We could use unrolled routines as we did with vbp_l.
         
@@ -346,14 +340,11 @@ namespace morphstore {
 
             static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
 
-            // @todo It would be nice if these were const, but this is
-            // currently not possible, because vectorlib::set1 cannot be used
-            // as a constant expression.
-            static vector_t m_CodesPerVector;
-            static vector_t m_CodesPerWord;
-            static vector_t m_Mask4ModStep;
-            static vector_t m_BwVec;
-            static vector_t m_MaskDecompr;
+            static const vector_t m_CodesPerVector;
+            static const vector_t m_CodesPerWord;
+            static const vector_t m_Mask4ModStep;
+            static const vector_t m_BwVec;
+            static const vector_t m_MaskDecompr;
 
         public:
             rra_vbp_padding_l_general(const base_t * p_Data) : m_Data(p_Data) {
@@ -409,35 +400,35 @@ namespace morphstore {
         };
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_general<
+        const typename t_ve::vector_t rra_vbp_padding_l_general<
                 t_ve, t_Bw, t_Step
         >::m_CodesPerVector = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_general<
+        const typename t_ve::vector_t rra_vbp_padding_l_general<
                 t_ve, t_Bw, t_Step
         >::m_CodesPerWord = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_general<
+        const typename t_ve::vector_t rra_vbp_padding_l_general<
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModStep = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_general<
+        const typename t_ve::vector_t rra_vbp_padding_l_general<
                 t_ve, t_Bw, t_Step
         >::m_BwVec = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(t_Bw);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_general<
+        const typename t_ve::vector_t rra_vbp_padding_l_general<
                 t_ve, t_Bw, t_Step
         >::m_MaskDecompr = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
@@ -457,16 +448,13 @@ namespace morphstore {
             const base_t * const m_Data;
 
             static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
-
-            // @todo It would be nice if these were const, but this is
-            // currently not possible, because vectorlib::set1 cannot be used
-            // as a constant expression.
             static const unsigned m_Shift4DivCodesPerVector =
                     shift_for_muldiv(vbp_padding_l<t_Bw, t_Step>::m_BlockSize);
-            static vector_t m_Mask4ModCodesPerWord;
-            static vector_t m_Mask4ModStep;
-            static vector_t m_BwVec;
-            static vector_t m_MaskDecompr;
+            
+            static const vector_t m_Mask4ModCodesPerWord;
+            static const vector_t m_Mask4ModStep;
+            static const vector_t m_BwVec;
+            static const vector_t m_MaskDecompr;
 
         public:
             rra_vbp_padding_l_special(const base_t * p_Data) : m_Data(p_Data) {
@@ -518,28 +506,28 @@ namespace morphstore {
         };
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_special<
+        const typename t_ve::vector_t rra_vbp_padding_l_special<
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModCodesPerWord = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_special<
+        const typename t_ve::vector_t rra_vbp_padding_l_special<
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModStep = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_special<
+        const typename t_ve::vector_t rra_vbp_padding_l_special<
                 t_ve, t_Bw, t_Step
         >::m_BwVec = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(t_Bw);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_padding_l_special<
+        const typename t_ve::vector_t rra_vbp_padding_l_special<
                 t_ve, t_Bw, t_Step
         >::m_MaskDecompr = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value

@@ -193,10 +193,7 @@ namespace morphstore {
         using src_l = vbp_l<t_Bw, t_vector_extension::vector_helper_t::element_count::value>;
         
         static const size_t countBits = std::numeric_limits<base_t>::digits;
-        // @todo It would be nice to initialize this in-class. However, the
-        // compiler complains because set1 is not constexpr, even when it is
-        // defined so.
-        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask;
         
         struct state_t {
             const base_t * inBase;
@@ -311,10 +308,7 @@ namespace morphstore {
         using src_l = vbp_l<t_bw, t_vector_extension::vector_helper_t::element_count::value>;
         
         static const size_t countBits = std::numeric_limits<base_t>::digits;
-        // @todo It would be nice to initialize this in-class. However, the
-        // compiler complains because set1 is not constexpr, even when it is
-        // defined so.
-        static const vector_t mask; // = vectorlib::set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(t_bw));
+        static const vector_t mask;
         
         struct state_t {
             const base_t * inBase;
@@ -422,15 +416,12 @@ namespace morphstore {
                     std::numeric_limits<base_t>::digits
             );
 
-            // @todo It would be nice if these were const, but this is
-            // currently not possible, because vectorlib::set1 cannot be used
-            // as a constant expression.
-            static vector_t m_BaseBitsVec;
-            static vector_t m_Mask4ModStep;
-            static vector_t m_MaskModBaseBits;
-            static vector_t m_BwVec;
-            static vector_t m_StepVec;
-            static vector_t m_MaskDecompr;
+            static const vector_t m_BaseBitsVec;
+            static const vector_t m_Mask4ModStep;
+            static const vector_t m_MaskModBaseBits;
+            static const vector_t m_BwVec;
+            static const vector_t m_StepVec;
+            static const vector_t m_MaskDecompr;
 
         public:
             rra_vbp_l_general(const base_t * p_Data) : m_Data(p_Data) {
@@ -490,42 +481,42 @@ namespace morphstore {
         };
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_BaseBitsVec = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(std::numeric_limits<typename t_ve::base_t>::digits);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModStep = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_MaskModBaseBits = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(std::numeric_limits<typename t_ve::base_t>::digits));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_BwVec = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(t_Bw);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_StepVec = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(t_Step);
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
-        typename t_ve::vector_t rra_vbp_l_general<
+        const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
         >::m_MaskDecompr = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
