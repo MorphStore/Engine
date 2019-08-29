@@ -63,7 +63,7 @@ const column<uncompr_f> * simple_project(
 ) {
     IMPORT_VECTOR_BOILER_PLATE(t_ve)
     
-    random_read_access<t_ve, t_in_data_f> rra(p_InDataCol->get_data());
+    typename random_read_access<t_ve, t_in_data_f>::type rra(p_InDataCol->get_data());
     
     const base_t * inPos = p_InPosCol->get_data();
     const size_t inPosCount = p_InPosCol->get_count_values();
@@ -95,34 +95,39 @@ const column<uncompr_f> * simple_project(
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define MAKE_VARIANT(vector_extension, in_data_f) { \
+#define STATIC_VBP_NAME(layout) static_vbp_f<layout<>>
+
+#define MAKE_VARIANT(vector_extension, in_data_f, inDataFName) { \
     new typename t_varex_t::operator_wrapper::template for_output_formats<uncompr_f>::template for_input_formats<in_data_f, uncompr_f>( \
         &simple_project<vector_extension, in_data_f> \
     ), \
     STR_EVAL_MACROS(vector_extension), \
-    STR_EVAL_MACROS(in_data_f), \
+    STR_EVAL_MACROS(inDataFName), \
 }
+
+#define MAKE_VARIANT_STATIC_VBP(ve, layout) \
+    MAKE_VARIANT(ve, SINGLE_ARG(static_vbp_f<layout<t_Bw, ve::vector_helper_t::element_count::value>>), STATIC_VBP_NAME(layout))
 
 template<class t_varex_t, unsigned t_Bw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
-        MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f),
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 1>>)),
+        MAKE_VARIANT           (scalar<v64<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP(scalar<v64<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP(scalar<v64<uint64_t>>, vbp_padding_l),
 #ifdef SSE
-        MAKE_VARIANT(sse<v128<uint64_t>>, uncompr_f),
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 2>>)),
+        MAKE_VARIANT           (sse<v128<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP(sse<v128<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP(sse<v128<uint64_t>>, vbp_padding_l),
 #endif
 #ifdef AVXTWO
-        MAKE_VARIANT(avx2<v256<uint64_t>>, uncompr_f),
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 4>>)),
+        MAKE_VARIANT           (avx2<v256<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP(avx2<v256<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP(avx2<v256<uint64_t>>, vbp_padding_l),
 #endif
 #ifdef AVX512
-        MAKE_VARIANT(avx512<v512<uint64_t>>, uncompr_f),
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 8>>)),
+        MAKE_VARIANT           (avx512<v512<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP(avx512<v512<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP(avx512<v512<uint64_t>>, vbp_padding_l),
 #endif
     };
 }
