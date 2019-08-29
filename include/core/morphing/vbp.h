@@ -415,8 +415,10 @@ namespace morphstore {
         
         const base_t * const m_Data;
         
-        static const unsigned m_Shift4DivStep = (t_Step == 1) ? 0 : effective_bitwidth(t_Step - 1);
-        static const unsigned m_ShiftDivBaseBits = effective_bitwidth(std::numeric_limits<base_t>::digits - 1);
+        static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
+        static const unsigned m_ShiftDivBaseBits = shift_for_muldiv(
+                std::numeric_limits<base_t>::digits
+        );
         
         // @todo It would be nice if these were const, but this is currently
         // not possible, because vectorlib::set1 cannot be used as a constant
@@ -499,14 +501,14 @@ namespace morphstore {
             t_ve, vbp_l<t_Bw, t_Step>
     >::m_Mask4ModStep = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_Step - 1);
+    >(mask_for_mod(t_Step));
 
     template<class t_ve, unsigned t_Bw, unsigned t_Step>
     typename t_ve::vector_t random_read_access<
             t_ve, vbp_l<t_Bw, t_Step>
     >::m_MaskModBaseBits = vectorlib::set1<
             t_ve, t_ve::vector_helper_t::granularity::value
-    >(std::numeric_limits<typename t_ve::base_t>::digits - 1);
+    >(mask_for_mod(std::numeric_limits<typename t_ve::base_t>::digits));
 
     template<class t_ve, unsigned t_Bw, unsigned t_Step>
     typename t_ve::vector_t random_read_access<

@@ -344,9 +344,7 @@ namespace morphstore {
 
             const base_t * const m_Data;
 
-            static const unsigned m_Shift4DivStep = (t_Step == 1)
-                    ? 0
-                    : effective_bitwidth(t_Step - 1);
+            static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
 
             // @todo It would be nice if these were const, but this is
             // currently not possible, because vectorlib::set1 cannot be used
@@ -429,7 +427,7 @@ namespace morphstore {
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModStep = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
-        >(t_Step - 1);
+        >(mask_for_mod(t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
         typename t_ve::vector_t rra_vbp_padding_l_general<
@@ -458,19 +456,13 @@ namespace morphstore {
 
             const base_t * const m_Data;
 
-            static const unsigned m_Shift4DivStep = (t_Step == 1)
-                    ? 0
-                    : effective_bitwidth(t_Step - 1);
+            static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
 
             // @todo It would be nice if these were const, but this is
             // currently not possible, because vectorlib::set1 cannot be used
             // as a constant expression.
             static const unsigned m_Shift4DivCodesPerVector =
-                    (vbp_padding_l<t_Bw, t_Step>::m_BlockSize == 1)
-                    ? 0
-                    : effective_bitwidth(
-                            vbp_padding_l<t_Bw, t_Step>::m_BlockSize - 1
-                    );
+                    shift_for_muldiv(vbp_padding_l<t_Bw, t_Step>::m_BlockSize);
             static vector_t m_Mask4ModCodesPerWord;
             static vector_t m_Mask4ModStep;
             static vector_t m_BwVec;
@@ -530,14 +522,14 @@ namespace morphstore {
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModCodesPerWord = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
-        >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step - 1);
+        >(mask_for_mod(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
         typename t_ve::vector_t rra_vbp_padding_l_special<
                 t_ve, t_Bw, t_Step
         >::m_Mask4ModStep = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
-        >(t_Step - 1);
+        >(mask_for_mod(t_Step));
 
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
         typename t_ve::vector_t rra_vbp_padding_l_special<
