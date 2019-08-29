@@ -297,9 +297,12 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        random_read_access<t_ve, t_layout> m_Internal;
+        typename random_read_access<t_ve, t_layout>::type m_Internal;
         
     public:
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, static_vbp_f<t_layout> >;
+        
         random_read_access(const base_t * p_Data) : m_Internal(p_Data) {
             //
         }

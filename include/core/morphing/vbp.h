@@ -429,6 +429,10 @@ namespace morphstore {
         static vector_t m_MaskDecompr;
         
     public:
+        // TODO Implement more efficient variants for certain bit widths.
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, vbp_l<t_Bw, t_Step> >;
+        
         random_read_access(const base_t * p_Data) : m_Data(p_Data) {
             //
         }

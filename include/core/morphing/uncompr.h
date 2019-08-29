@@ -97,6 +97,9 @@ namespace morphstore {
         const base_t * const m_Data;
                 
     public:
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, uncompr_f>;
+        
         random_read_access(const base_t * p_Data) : m_Data(p_Data) {
             //
         }

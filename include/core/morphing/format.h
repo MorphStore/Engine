@@ -282,11 +282,13 @@ public:
 
 template<class t_vector_extension, class t_format>
 struct random_read_access {
-    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
-    
-    random_read_access(const base_t * p_Data);
-    
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE vector_t get(const vector_t & p_Positions);
+//    There must be a member type named `type` with the following interface:
+//
+//    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+//    
+//    constructor(const base_t * p_Data);
+//    
+//    MSV_CXX_ATTRIBUTE_FORCE_INLINE vector_t get(const vector_t & p_Positions);
 };
 
 }
