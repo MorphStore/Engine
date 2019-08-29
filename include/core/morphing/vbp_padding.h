@@ -37,6 +37,7 @@
 #include <vector/vector_primitives.h>
 
 #include <limits>
+#include <type_traits>
 
 #include <cstdint>
 
@@ -328,114 +329,253 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Random read
     // ------------------------------------------------------------------------
+    
+    namespace _random_read_access_variants {
 
+        /**
+         * @brief An implementation of the `random_read_access` interface for
+         * the layout `vbp_padding_l` which works for all combinations of the
+         * bit width and the step, but is quite inefficient.
+         */
+        template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
+        class rra_vbp_padding_l_general {
+            using t_ve = t_vector_extension;
+            IMPORT_VECTOR_BOILER_PLATE(t_ve)
+
+            const base_t * const m_Data;
+
+            static const unsigned m_Shift4DivStep = (t_Step == 1)
+                    ? 0
+                    : effective_bitwidth(t_Step - 1);
+
+            // @todo It would be nice if these were const, but this is
+            // currently not possible, because vectorlib::set1 cannot be used
+            // as a constant expression.
+            static vector_t m_CodesPerVector;
+            static vector_t m_CodesPerWord;
+            static vector_t m_Mask4ModStep;
+            static vector_t m_BwVec;
+            static vector_t m_MaskDecompr;
+
+        public:
+            rra_vbp_padding_l_general(const base_t * p_Data) : m_Data(p_Data) {
+                //
+            }
+
+            MSV_CXX_ATTRIBUTE_FORCE_INLINE
+            vector_t get(const vector_t & p_Positions) {
+                using namespace vectorlib;
+
+                // @todo Replace the division by a multiplication with the
+                // inverse, if possible.
+                return bitwise_and<t_ve>(
+                        shift_right_individual<t_ve>::apply(
+                                gather<
+                                        t_ve,
+                                        iov::UNALIGNED,
+                                        vector_base_t_granularity::value
+                                >(
+                                        m_Data,
+                                        // @todo `bitwise_or` would be possible
+                                        // here, too (maybe more efficient).
+                                        add<t_ve>::apply(
+                                                shift_left<t_ve>::apply(
+                                                        vectorlib::div<
+                                                                t_ve
+                                                        >::apply(
+                                                                p_Positions,
+                                                                m_CodesPerVector
+                                                        ),
+                                                        m_Shift4DivStep
+                                                ),
+                                                bitwise_and<t_ve>(
+                                                        p_Positions,
+                                                        m_Mask4ModStep
+                                                )
+                                        )
+                                ),
+                                mul<t_ve>::apply(
+                                        m_BwVec,
+                                        mod<t_ve>::apply(
+                                                shift_right<t_ve>::apply(
+                                                        p_Positions,
+                                                        m_Shift4DivStep
+                                                ),
+                                                m_CodesPerWord
+                                        )
+                                )
+                        ),
+                        m_MaskDecompr
+                );
+            }
+        };
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_general<
+                t_ve, t_Bw, t_Step
+        >::m_CodesPerVector = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_general<
+                t_ve, t_Bw, t_Step
+        >::m_CodesPerWord = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_general<
+                t_ve, t_Bw, t_Step
+        >::m_Mask4ModStep = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(t_Step - 1);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_general<
+                t_ve, t_Bw, t_Step
+        >::m_BwVec = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(t_Bw);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_general<
+                t_ve, t_Bw, t_Step
+        >::m_MaskDecompr = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(bitwidth_max<typename t_ve::base_t>(t_Bw));
+
+        /**
+         * @brief An implementation of the `random_read_access` interface for
+         * the layout `vbp_padding_l` which works only if the number of code
+         * words per 64-bit word is a power of two for the given bit width,
+         * but is more efficient than `rra_vbp_padding_l_general`.
+         */
+        template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
+        class rra_vbp_padding_l_special {
+            using t_ve = t_vector_extension;
+            IMPORT_VECTOR_BOILER_PLATE(t_ve)
+
+            const base_t * const m_Data;
+
+            static const unsigned m_Shift4DivStep = (t_Step == 1)
+                    ? 0
+                    : effective_bitwidth(t_Step - 1);
+
+            // @todo It would be nice if these were const, but this is
+            // currently not possible, because vectorlib::set1 cannot be used
+            // as a constant expression.
+            static const unsigned m_Shift4DivCodesPerVector =
+                    (vbp_padding_l<t_Bw, t_Step>::m_BlockSize == 1)
+                    ? 0
+                    : effective_bitwidth(
+                            vbp_padding_l<t_Bw, t_Step>::m_BlockSize - 1
+                    );
+            static vector_t m_Mask4ModCodesPerWord;
+            static vector_t m_Mask4ModStep;
+            static vector_t m_BwVec;
+            static vector_t m_MaskDecompr;
+
+        public:
+            rra_vbp_padding_l_special(const base_t * p_Data) : m_Data(p_Data) {
+                //
+            }
+
+            MSV_CXX_ATTRIBUTE_FORCE_INLINE
+            vector_t get(const vector_t & p_Positions) {
+                using namespace vectorlib;
+
+                return bitwise_and<t_ve>(
+                        shift_right_individual<t_ve>::apply(
+                                gather<
+                                        t_ve,
+                                        iov::UNALIGNED,
+                                        vector_base_t_granularity::value
+                                >(
+                                        m_Data,
+                                        // @todo `bitwise_or` would be possible
+                                        // here, too (maybe more efficient).
+                                        add<t_ve>::apply(
+                                                shift_left<t_ve>::apply(
+                                                        shift_right<t_ve>::apply(
+                                                                p_Positions,
+                                                                m_Shift4DivCodesPerVector
+                                                        ),
+                                                        m_Shift4DivStep
+                                                ),
+                                                bitwise_and<t_ve>(
+                                                        p_Positions,
+                                                        m_Mask4ModStep
+                                                )
+                                        )
+                                ),
+                                mul<t_ve>::apply(
+                                        m_BwVec,
+                                        bitwise_and<t_ve>(
+                                                shift_right<t_ve>::apply(
+                                                        p_Positions,
+                                                        m_Shift4DivStep
+                                                ),
+                                                m_Mask4ModCodesPerWord
+                                        )
+                                )
+                        ),
+                        m_MaskDecompr
+                );
+            }
+        };
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_special<
+                t_ve, t_Bw, t_Step
+        >::m_Mask4ModCodesPerWord = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step - 1);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_special<
+                t_ve, t_Bw, t_Step
+        >::m_Mask4ModStep = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(t_Step - 1);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_special<
+                t_ve, t_Bw, t_Step
+        >::m_BwVec = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(t_Bw);
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        typename t_ve::vector_t rra_vbp_padding_l_special<
+                t_ve, t_Bw, t_Step
+        >::m_MaskDecompr = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(bitwidth_max<typename t_ve::base_t>(t_Bw));
+    
+    }
+    
     template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
     class random_read_access<t_vector_extension, vbp_padding_l<t_Bw, t_Step> > {
-        using t_ve = t_vector_extension;
-        IMPORT_VECTOR_BOILER_PLATE(t_ve)
-        
-        const base_t * const m_Data;
-        
-        static const unsigned m_Shift4DivStep = (t_Step == 1)
-                ? 0
-                : effective_bitwidth(t_Step - 1);
-        
-        // @todo It would be nice if these were const, but this is currently
-        // not possible, because vectorlib::set1 cannot be used as a constant
-        // expression.
-        static vector_t m_CodesPerVector;
-        static vector_t m_CodesPerWord;
-        static vector_t m_Mask4ModStep;
-        static vector_t m_BwVec;
-        static vector_t m_MaskDecompr;
-        
     public:
-        // TODO Implement more efficient variants for certain bit widths.
-        // Alias to itself, in this case.
-        using type = random_read_access<t_vector_extension, vbp_padding_l<t_Bw, t_Step> >;
-        
-        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
-            //
-        }
-
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE
-        vector_t get(const vector_t & p_Positions) {
-            using namespace vectorlib;
-
-            return bitwise_and<t_ve>(
-                    shift_right_individual<t_ve>::apply(
-                            gather<
-                                    t_ve,
-                                    iov::UNALIGNED,
-                                    vector_base_t_granularity::value
-                            >(
-                                    m_Data,
-                                    add<t_ve>::apply( // @todo bitwise_or would be possible here, too (maybe more efficient)
-                                            shift_left<t_ve>::apply(
-                                                    vectorlib::div<
-                                                            t_ve
-                                                    >::apply(
-                                                            p_Positions,
-                                                            m_CodesPerVector
-                                                    ),
-                                                    m_Shift4DivStep
-                                            ),
-                                            bitwise_and<t_ve>(
-                                                    p_Positions,
-                                                    m_Mask4ModStep
-                                            )
-                                    )
-                            ),
-                            mul<t_ve>::apply(
-                                    m_BwVec,
-                                    mod<t_ve>::apply(
-                                            shift_right<t_ve>::apply(
-                                                    p_Positions,
-                                                    m_Shift4DivStep
-                                            ),
-                                            m_CodesPerWord
-                                    )
-                            )
-                    ),
-                    m_MaskDecompr
-            );
-        }
+        // Alias to the most efficient implementation depending on t_Bw.
+        using type = typename std::conditional<
+                // If the number of code words per 64-bit word is a power of
+                // two, we can use an efficient implementation.
+                // Bit widths: 1, 2, 4, 8, 13-16, 22-64
+                is_power_of_two(vbp_padding_l<t_Bw, t_Step>::m_BlockSize),
+                _random_read_access_variants::rra_vbp_padding_l_special<
+                        t_vector_extension, t_Bw, t_Step
+                >,
+                // Otherwise, we have to use the less efficient general
+                // implementation.
+                // Bit widths: 3, 5-7, 9-12, 17-21
+                _random_read_access_variants::rra_vbp_padding_l_general<
+                        t_vector_extension, t_Bw, t_Step
+                >
+        >::type;
     };
-
-    template<class t_ve, unsigned t_Bw, unsigned t_Step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, vbp_padding_l<t_Bw, t_Step>
-    >::m_CodesPerVector = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize);
-
-    template<class t_ve, unsigned t_Bw, unsigned t_Step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, vbp_padding_l<t_Bw, t_Step>
-    >::m_CodesPerWord = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(vbp_padding_l<t_Bw, t_Step>::m_BlockSize / t_Step);
-
-    template<class t_ve, unsigned t_Bw, unsigned t_Step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, vbp_padding_l<t_Bw, t_Step>
-    >::m_Mask4ModStep = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_Step - 1);
-
-    template<class t_ve, unsigned t_Bw, unsigned t_Step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, vbp_padding_l<t_Bw, t_Step>
-    >::m_BwVec = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(t_Bw);
-
-    template<class t_ve, unsigned t_Bw, unsigned t_Step>
-    typename t_ve::vector_t random_read_access<
-            t_ve, vbp_padding_l<t_Bw, t_Step>
-    >::m_MaskDecompr = vectorlib::set1<
-            t_ve, t_ve::vector_helper_t::granularity::value
-    >(bitwidth_max<typename t_ve::base_t>(t_Bw));
+    
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_VBP_PADDING_H
