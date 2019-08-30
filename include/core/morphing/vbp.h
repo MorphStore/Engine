@@ -448,7 +448,7 @@ namespace morphstore {
                 );
 
                 vector_t res = vectorlib::gather<
-                        t_ve, iov::UNALIGNED, vector_base_t_granularity::value
+                        t_ve, vector_base_t_granularity::value, sizeof(base_t)
                 >(m_Data, baseIdxs);
 
                 const vector_t bitPosInElem = bitwise_and<t_ve>(
@@ -466,8 +466,8 @@ namespace morphstore {
                 );
                 const vector_t gatherUpper = vectorlib::gather<
                         t_ve,
-                        iov::UNALIGNED,
-                        vector_base_t_granularity::value
+                        vector_base_t_granularity::value,
+                        sizeof(base_t)
                 >(m_Data, nextBaseIdxs);
                 const vector_t resUpper = shift_left_individual<t_ve>::apply(
                         gatherUpper, shiftUpper

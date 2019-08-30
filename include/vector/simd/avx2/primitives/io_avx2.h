@@ -190,13 +190,17 @@ namespace vectorlib {
          return ;
       }
 
+   };
+   
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<avx2<v256<T>>, IOGranularity, Scale> {
       //@todo we should actually provide a specialization (depending on the basetype) here!
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
-      gather( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+      apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
-         return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
+         return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
          
       }
             
@@ -227,15 +231,15 @@ namespace vectorlib {
    };
 
     //@todo we should actually provide a specialization (depending on the basetype) here!
-    template<typename T, int IOGranularity>
-    struct io<avx2<v128<T>>,iov::UNALIGNED, IOGranularity> {
+    template<typename T, int IOGranularity, int Scale>
+    struct gather_t<avx2<v128<T>>, IOGranularity, Scale> {
      
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v128< U > >::vector_t
-        gather( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
+        apply( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-            return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
+            return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
 
           }
     };

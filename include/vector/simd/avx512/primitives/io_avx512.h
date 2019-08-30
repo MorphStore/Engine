@@ -163,12 +163,16 @@ namespace vectorlib {
          return ;
       }
       
+   };
+   
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<avx512<v512<T>>, IOGranularity, Scale> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
-      gather( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
+      apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
-         return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), sizeof(uint64_t));
+         return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), Scale );
          
       }
    };

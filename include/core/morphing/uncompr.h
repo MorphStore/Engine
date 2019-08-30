@@ -108,8 +108,8 @@ namespace morphstore {
         vector_t get(const vector_t & p_Positions) {
             return vectorlib::gather<
                     t_ve,
-                    vectorlib::iov::UNALIGNED,
-                    vector_base_t_granularity::value
+                    vector_base_t_granularity::value,
+                    sizeof(base_t)
             >(m_Data, p_Positions);
         }
     };

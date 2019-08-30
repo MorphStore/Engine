@@ -361,8 +361,8 @@ namespace morphstore {
                         shift_right_individual<t_ve>::apply(
                                 gather<
                                         t_ve,
-                                        iov::UNALIGNED,
-                                        vector_base_t_granularity::value
+                                        vector_base_t_granularity::value,
+                                        sizeof(base_t)
                                 >(
                                         m_Data,
                                         // @todo `bitwise_or` would be possible
@@ -469,8 +469,8 @@ namespace morphstore {
                         shift_right_individual<t_ve>::apply(
                                 gather<
                                         t_ve,
-                                        iov::UNALIGNED,
-                                        vector_base_t_granularity::value
+                                        vector_base_t_granularity::value,
+                                        sizeof(base_t)
                                 >(
                                         m_Data,
                                         // @todo `bitwise_or` would be possible
