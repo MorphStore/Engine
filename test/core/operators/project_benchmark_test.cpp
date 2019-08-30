@@ -35,30 +35,8 @@
 #include <core/utils/preprocessor.h>
 #include <core/utils/variant_executor.h>
 
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/logic_scalar.h>
-#ifdef AVXTWO
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#include <vector/simd/avx2/primitives/logic_avx2.h>
-#endif
-#ifdef AVX512
-#include <vector/simd/avx512/extension_avx512.h>
-#include <vector/simd/avx512/primitives/calc_avx512.h>
-#include <vector/simd/avx512/primitives/create_avx512.h>
-#include <vector/simd/avx512/primitives/io_avx512.h>
-#include <vector/simd/avx512/primitives/logic_avx512.h>
-#endif
-#include <vector/simd/sse/extension_sse.h>
-#include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/sse/primitives/logic_sse.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <iostream>
 #include <random>
@@ -115,7 +93,7 @@ int main(void) {
         // Generated with Python:
         // for bw in range(1, 64+1):
         //   print("{{{: >2}, {{MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<{: >2}, STEP_128>>))}}}}{}".format(bw, bw, "," if bw < 64 else ""))
-        { 1, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 1, STEP_128>>))}},
+//        { 1, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 1, STEP_128>>))}},
 //        { 2, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 2, STEP_128>>))}},
 //        { 3, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 3, STEP_128>>))}},
 //        { 4, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 4, STEP_128>>))}},
