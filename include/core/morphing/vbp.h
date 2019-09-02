@@ -664,13 +664,13 @@ namespace morphstore {
             const base_t * const m_Data;
 
             static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
-            static const unsigned m_ShiftDivBaseBits = shift_for_muldiv(
-                    std::numeric_limits<base_t>::digits
+            static const unsigned m_Shift4DivBaseBitsMulStep = shift_for_muldiv(
+                    std::numeric_limits<base_t>::digits / t_Step
             );
 
             static const vector_t m_BaseBitsVec;
             static const vector_t m_Mask4ModStep;
-            static const vector_t m_MaskModBaseBits;
+            static const vector_t m_Mask4ModBaseBits;
             static const vector_t m_BwVec;
             static const vector_t m_StepVec;
             static const vector_t m_MaskDecompr;
@@ -684,51 +684,48 @@ namespace morphstore {
             vector_t get(const vector_t & p_Positions) {
                 using namespace vectorlib;
 
-                const vector_t elemIdxInVec = bitwise_and<t_ve>(
-                        p_Positions, m_Mask4ModStep
-                );
-                const vector_t bitPosInBuf = mul<t_ve>::apply(
+                const vector_t bitPosInStep = mul<t_ve>::apply(
                         shift_right<t_ve>::apply(p_Positions, m_Shift4DivStep),
                         m_BwVec
                 );
-                const vector_t vecIdxs = shift_right<t_ve>::apply(
-                        bitPosInBuf, m_ShiftDivBaseBits
-                );
-                const vector_t baseIdxs = add<t_ve>::apply(
-                        shift_left<t_ve>::apply(vecIdxs, m_Shift4DivStep),
-                        elemIdxInVec
-                );
-
-                vector_t res = vectorlib::gather<
-                        t_ve, vector_base_t_granularity::value, sizeof(base_t)
-                >(m_Data, baseIdxs);
-
                 const vector_t bitPosInElem = bitwise_and<t_ve>(
-                        bitPosInBuf, m_MaskModBaseBits
+                        bitPosInStep, m_Mask4ModBaseBits
                 );
-
-                res = shift_right_individual<t_ve>::apply(res, bitPosInElem);
-
-                const vector_t nextBaseIdxs = add<t_ve>::apply(
-                    baseIdxs, m_StepVec
+                // Bitwise OR instead of addition would be possible, too.
+                const vector_t baseIdxs = add<t_ve>::apply(
+                        shift_right<t_ve>::apply(
+                                bitPosInStep, m_Shift4DivBaseBitsMulStep
+                        ),
+                        bitwise_and<t_ve>(p_Positions, m_Mask4ModStep)
                 );
-
-                const vector_t shiftUpper = sub<t_ve>::apply(
-                        m_BaseBitsVec, bitPosInElem
+                return bitwise_and<t_ve>(
+                        m_MaskDecompr,
+                        bitwise_or<t_ve>(
+                                shift_right_individual<t_ve>::apply(
+                                        vectorlib::gather<
+                                                t_ve,
+                                                vector_base_t_granularity::value,
+                                                sizeof(base_t)
+                                        >(m_Data, baseIdxs),
+                                        bitPosInElem
+                                ),
+                                shift_left_individual<t_ve>::apply(
+                                        vectorlib::gather<
+                                                t_ve,
+                                                vector_base_t_granularity::value,
+                                                sizeof(base_t)
+                                        >(
+                                                m_Data,
+                                                add<t_ve>::apply(
+                                                        baseIdxs, m_StepVec
+                                                )
+                                        ),
+                                        sub<t_ve>::apply(
+                                                m_BaseBitsVec, bitPosInElem
+                                        )
+                                )
+                        )
                 );
-                const vector_t gatherUpper = vectorlib::gather<
-                        t_ve,
-                        vector_base_t_granularity::value,
-                        sizeof(base_t)
-                >(m_Data, nextBaseIdxs);
-                const vector_t resUpper = shift_left_individual<t_ve>::apply(
-                        gatherUpper, shiftUpper
-                );
-                res = bitwise_and<t_ve>(
-                        m_MaskDecompr, bitwise_or<t_ve>(resUpper, res)
-                );
-
-                return res;
             }
         };
 
@@ -749,7 +746,7 @@ namespace morphstore {
         template<class t_ve, unsigned t_Bw, unsigned t_Step>
         const typename t_ve::vector_t rra_vbp_l_general<
                 t_ve, t_Bw, t_Step
-        >::m_MaskModBaseBits = vectorlib::set1<
+        >::m_Mask4ModBaseBits = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(mask_for_mod(std::numeric_limits<typename t_ve::base_t>::digits));
 
