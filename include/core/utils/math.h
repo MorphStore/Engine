@@ -153,14 +153,14 @@ constexpr inline uint64_t mask_for_mod(uint64_t p_Divisor) {
  * `a / b` can be replaced by `a >> shift_for_muldiv_power_of_two(b)`, if `b`
  * is a power of two.
  * 
- * @param p_Divisor Must be a power of two.
+ * @param p_FactorOrDivisor Must be a power of two.
  * @return A shift offset for replacing multiplicatio(divison) by left(right)
  * shift.
  */
-constexpr inline uint64_t shift_for_muldiv(uint64_t p_Divisor) {
-    return (p_Divisor == 1)
+constexpr inline uint64_t shift_for_muldiv(uint64_t p_FactorOrDivisor) {
+    return (p_FactorOrDivisor == 1)
         ? 0
-        : effective_bitwidth(p_Divisor - 1);
+        : effective_bitwidth(p_FactorOrDivisor - 1);
 }
 
 }
