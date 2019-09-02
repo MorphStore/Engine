@@ -404,7 +404,6 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     
     namespace _random_read_access_variants {
-        // @todo Prevent unsupported bit widths with static_asserts.
         // @todo Think about the restrictions caused by the precision of the
         // multiplication.
 
@@ -415,6 +414,12 @@ namespace morphstore {
          */
         template<class t_vector_extension, unsigned t_Bw>
         class rra_vbp_l_hor_8_16_32_64 {
+            static_assert(
+                    t_Bw == 8 || t_Bw == 16 || t_Bw == 32 || t_Bw == 64,
+                    "rra_vbp_l_hor_8_16_32_64: template parameter t_Bw must be "
+                    "8, 16, 32, or 64, otherwise the results would be incorrect"
+            );
+            
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
             
@@ -458,6 +463,12 @@ namespace morphstore {
          */
         template<class t_vector_extension, unsigned t_Bw>
         class rra_vbp_l_hor_1_2_4_8 {
+            static_assert(
+                    t_Bw == 1 || t_Bw == 2 || t_Bw == 4 || t_Bw == 8,
+                    "rra_vbp_l_hor_1_2_4_8: template parameter t_Bw must be "
+                    "1, 2, 4, or 8, otherwise the results would be incorrect"
+            );
+            
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
             
@@ -580,6 +591,13 @@ namespace morphstore {
          */
         template<class t_vector_extension, unsigned t_Bw>
         class rra_vbp_l_hor_all_but_59_61_62_63 {
+            static_assert(
+                    !( t_Bw == 59 || (t_Bw >= 61 && t_Bw <= 63) ),
+                    "rra_vbp_l_hor_all_but_59_61_62_63: template parameter "
+                    "t_Bw must not be 59, 61, 62, or 63, otherwise the "
+                    "results would be incorrect"
+            );
+            
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
             
@@ -659,6 +677,13 @@ namespace morphstore {
          */
         template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
         class rra_vbp_l_1_2_4_8_16_32_64 {
+            static_assert(
+                    is_power_of_two(t_Bw),
+                    "rra_vbp_l_1_2_4_8_16_32_64: template parameter t_Bw must "
+                    "be a power of two, otherwise the results would be "
+                    "incorrect"
+            );
+            
             using t_ve = t_vector_extension;
             IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
