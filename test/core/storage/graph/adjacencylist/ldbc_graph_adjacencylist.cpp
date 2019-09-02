@@ -38,9 +38,9 @@ int main( void ){
     std::cout << "\n";
     */
 
-   // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/social_network/"
-   std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
-   // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
+    // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/social_network/"
+    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
