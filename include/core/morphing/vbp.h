@@ -653,8 +653,8 @@ namespace morphstore {
         >(bitwidth_max<uint64_t>(t_Bw));
 
         /**
-         * `random_read_access` for `vbp_l`. Works for all combinations of the
-         * step and the bit width.
+         * @brief `random_read_access` for `vbp_l`. Works for all combinations
+         * of the step and the bit width.
          */
         template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
         class rra_vbp_l_general {
@@ -664,9 +664,10 @@ namespace morphstore {
             const base_t * const m_Data;
 
             static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
-            static const unsigned m_Shift4DivBaseBitsMulStep = shift_for_muldiv(
-                    std::numeric_limits<base_t>::digits / t_Step
+            static const unsigned m_Shift4DivBaseBits = shift_for_muldiv(
+                    std::numeric_limits<base_t>::digits
             );
+            static const unsigned m_Shift4MulStep = shift_for_muldiv(t_Step);
 
             static const vector_t m_BaseBitsVec;
             static const vector_t m_Mask4ModStep;
@@ -693,8 +694,11 @@ namespace morphstore {
                 );
                 // Bitwise OR instead of addition would be possible, too.
                 const vector_t baseIdxs = add<t_ve>::apply(
-                        shift_right<t_ve>::apply(
-                                bitPosInStep, m_Shift4DivBaseBitsMulStep
+                        shift_left<t_ve>::apply(
+                                shift_right<t_ve>::apply(
+                                        bitPosInStep, m_Shift4DivBaseBits
+                                ),
+                        m_Shift4MulStep
                         ),
                         bitwise_and<t_ve>(p_Positions, m_Mask4ModStep)
                 );
