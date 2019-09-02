@@ -651,6 +651,96 @@ namespace morphstore {
         >::m_MaskDecompr = vectorlib::set1<
                 t_ve, t_ve::vector_helper_t::granularity::value
         >(bitwidth_max<uint64_t>(t_Bw));
+        
+        /**
+         * @brief `random_read_access` for `vbp_l` with any step (vertical and
+         * horizontal layout). Works only if the bit width is a power of two,
+         * i.e., for 1, 2, 4, 8, 16, 32, 64 bit.
+         */
+        template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
+        class rra_vbp_l_1_2_4_8_16_32_64 {
+            using t_ve = t_vector_extension;
+            IMPORT_VECTOR_BOILER_PLATE(t_ve)
+
+            const base_t * const m_Data;
+     
+            static const unsigned m_Shift4DivStep = shift_for_muldiv(t_Step);
+            static const unsigned m_Shift4MulBw = shift_for_muldiv(t_Bw);
+            static const unsigned m_Shift4DivBaseBits = shift_for_muldiv(
+                    std::numeric_limits<base_t>::digits
+            );
+            static const unsigned m_Shift4MulStep = shift_for_muldiv(t_Step);
+            
+            static const vector_t m_Mask4ModStep;
+            static const vector_t m_Mask4ModBaseBits;
+            static const vector_t m_MaskDecompr;
+
+        public:
+            rra_vbp_l_1_2_4_8_16_32_64(const base_t * p_Data) : m_Data(p_Data) {
+                //
+            }
+            
+            MSV_CXX_ATTRIBUTE_FORCE_INLINE
+            vector_t get(const vector_t & p_Positions) {
+                using namespace vectorlib;
+                
+                const vector_t bitPosInStep = shift_left<t_ve>::apply(
+                        shift_right<t_ve>::apply(p_Positions, m_Shift4DivStep),
+                        m_Shift4MulBw
+                );
+                return bitwise_and<t_ve>(
+                        m_MaskDecompr,
+                        shift_right_individual<t_ve>::apply(
+                                vectorlib::gather<
+                                        t_ve,
+                                        vector_base_t_granularity::value,
+                                        sizeof(base_t)
+                                >(
+                                        m_Data,
+                                        // Bitwise OR instead of addition would
+                                        // be possible, too.
+                                        add<t_ve>::apply(
+                                                shift_left<t_ve>::apply(
+                                                        shift_right<t_ve>::apply(
+                                                                bitPosInStep,
+                                                                m_Shift4DivBaseBits
+                                                        ),
+                                                        m_Shift4MulStep
+                                                ),
+                                                bitwise_and<t_ve>(
+                                                        p_Positions,
+                                                        m_Mask4ModStep
+                                                )
+                                        )
+                                ),
+                                bitwise_and<t_ve>(
+                                        bitPosInStep, m_Mask4ModBaseBits
+                                )
+                        )
+                );
+            }
+        };
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        const typename t_ve::vector_t rra_vbp_l_1_2_4_8_16_32_64<
+                t_ve, t_Bw, t_Step
+        >::m_Mask4ModStep = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(mask_for_mod(t_Step));
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        const typename t_ve::vector_t rra_vbp_l_1_2_4_8_16_32_64<
+                t_ve, t_Bw, t_Step
+        >::m_Mask4ModBaseBits = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(mask_for_mod(std::numeric_limits<typename t_ve::base_t>::digits));
+
+        template<class t_ve, unsigned t_Bw, unsigned t_Step>
+        const typename t_ve::vector_t rra_vbp_l_1_2_4_8_16_32_64<
+                t_ve, t_Bw, t_Step
+        >::m_MaskDecompr = vectorlib::set1<
+                t_ve, t_ve::vector_helper_t::granularity::value
+        >(bitwidth_max<typename t_ve::base_t>(t_Bw));
 
         /**
          * @brief `random_read_access` for `vbp_l`. Works for all combinations
@@ -698,7 +788,7 @@ namespace morphstore {
                                 shift_right<t_ve>::apply(
                                         bitPosInStep, m_Shift4DivBaseBits
                                 ),
-                        m_Shift4MulStep
+                                m_Shift4MulStep
                         ),
                         bitwise_and<t_ve>(p_Positions, m_Mask4ModStep)
                 );
@@ -820,10 +910,17 @@ namespace morphstore {
                         >::type
                 >::type,
                 // Vertical layout.
-                // @todo Implement some optimized variants here.
-                _random_read_access_variants::rra_vbp_l_general<
-                        t_vector_extension, t_Bw, t_Step
-                >
+                typename std::conditional<
+                        is_power_of_two(t_Bw),
+                        // Bit width is a power of two.
+                        _random_read_access_variants::rra_vbp_l_1_2_4_8_16_32_64<
+                                t_vector_extension, t_Bw, t_Step
+                        >,
+                        // Bit width is not a power of two.
+                        _random_read_access_variants::rra_vbp_l_general<
+                                t_vector_extension, t_Bw, t_Step
+                        >
+                >::type
         >::type;
     };
 }
