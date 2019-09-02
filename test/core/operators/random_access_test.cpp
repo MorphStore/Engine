@@ -95,7 +95,7 @@ const column<uncompr_f> * simple_project(
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define STATIC_VBP_NAME(layout) static_vbp_f<layout<>>
+#define STATIC_VBP_NAME(layout, stepName) static_vbp_f<layout<bw, stepName>>
 
 #define MAKE_VARIANT(vector_extension, in_data_f, inDataFName) { \
     new typename t_varex_t::operator_wrapper::template for_output_formats<uncompr_f>::template for_input_formats<in_data_f, uncompr_f>( \
@@ -105,29 +105,56 @@ const column<uncompr_f> * simple_project(
     STR_EVAL_MACROS(inDataFName), \
 }
 
-#define MAKE_VARIANT_STATIC_VBP(ve, layout) \
-    MAKE_VARIANT(ve, SINGLE_ARG(static_vbp_f<layout<t_Bw, ve::vector_helper_t::element_count::value>>), STATIC_VBP_NAME(layout))
+#define MAKE_VARIANT_STATIC_VBP_HOR(ve, layout) \
+    MAKE_VARIANT( \
+            ve, \
+            SINGLE_ARG(static_vbp_f<layout<t_Bw, 1>>), \
+            STATIC_VBP_NAME(layout, hor) \
+    )
+
+#define MAKE_VARIANT_STATIC_VBP_VER(ve, layout) \
+    MAKE_VARIANT( \
+            ve, \
+            SINGLE_ARG(static_vbp_f<layout< \
+                    t_Bw, ve::vector_helper_t::element_count::value \
+            >>), \
+            STATIC_VBP_NAME(layout, ver) \
+    )
+
+#define MAKE_VARIANT_STATIC_VBP_PAD(ve, layout) \
+    MAKE_VARIANT( \
+            ve, \
+            SINGLE_ARG(static_vbp_f<layout< \
+                    t_Bw, ve::vector_helper_t::element_count::value \
+            >>), \
+            STATIC_VBP_NAME(layout, pad) \
+    )
 
 template<class t_varex_t, unsigned t_Bw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
-        MAKE_VARIANT           (scalar<v64<uint64_t>>, uncompr_f, uncompr_f),
-        MAKE_VARIANT_STATIC_VBP(scalar<v64<uint64_t>>, vbp_l),
-        MAKE_VARIANT_STATIC_VBP(scalar<v64<uint64_t>>, vbp_padding_l),
+        MAKE_VARIANT               (scalar<v64<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP_HOR(scalar<v64<uint64_t>>, vbp_l),
+        // Note that, for scalar, processing, the natural step for the vertical
+        // layout would be 1, i.e., the same as for the horizontal layout.
+        MAKE_VARIANT_STATIC_VBP_PAD(scalar<v64<uint64_t>>, vbp_padding_l),
 #ifdef SSE
-        MAKE_VARIANT           (sse<v128<uint64_t>>, uncompr_f, uncompr_f),
-        MAKE_VARIANT_STATIC_VBP(sse<v128<uint64_t>>, vbp_l),
-        MAKE_VARIANT_STATIC_VBP(sse<v128<uint64_t>>, vbp_padding_l),
+        MAKE_VARIANT               (sse<v128<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP_HOR(sse<v128<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_VER(sse<v128<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_PAD(sse<v128<uint64_t>>, vbp_padding_l),
 #endif
 #ifdef AVXTWO
-        MAKE_VARIANT           (avx2<v256<uint64_t>>, uncompr_f, uncompr_f),
-        MAKE_VARIANT_STATIC_VBP(avx2<v256<uint64_t>>, vbp_l),
-        MAKE_VARIANT_STATIC_VBP(avx2<v256<uint64_t>>, vbp_padding_l),
+        MAKE_VARIANT               (avx2<v256<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP_HOR(avx2<v256<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_VER(avx2<v256<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_PAD(avx2<v256<uint64_t>>, vbp_padding_l),
 #endif
 #ifdef AVX512
-        MAKE_VARIANT           (avx512<v512<uint64_t>>, uncompr_f, uncompr_f),
-        MAKE_VARIANT_STATIC_VBP(avx512<v512<uint64_t>>, vbp_l),
-        MAKE_VARIANT_STATIC_VBP(avx512<v512<uint64_t>>, vbp_padding_l),
+        MAKE_VARIANT               (avx512<v512<uint64_t>>, uncompr_f, uncompr_f),
+        MAKE_VARIANT_STATIC_VBP_HOR(avx512<v512<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_VER(avx512<v512<uint64_t>>, vbp_l),
+        MAKE_VARIANT_STATIC_VBP_PAD(avx512<v512<uint64_t>>, vbp_padding_l),
 #endif
     };
 }
