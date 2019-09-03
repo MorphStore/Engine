@@ -56,7 +56,7 @@ namespace morphstore{
         }
 
         // actual BFS (naive) algorithm: takes the start-node id and returns the number of explored vertices
-        uint64_t doBFS(uint64_t startVertex){
+        uint64_t do_BFS(uint64_t startVertex){
 
             uint64_t exploredVertices = 0;
 
@@ -99,16 +99,15 @@ namespace morphstore{
         // writes results to local file for further analysis
         void do_measurements(){
 
-            std::ofstream fs;
-            std::string filename = "/home/tim/Documents/TUD/(8) Informatik SS 2019/MorphStore/bfs_measurements.csv";
-            // open file for writing and delete existing stuff:
-            fs.open(filename, std::fstream::out | std::ofstream::trunc);
+            // Intermediate data structure:
+            // size = graphSize*2, because we sequentially store both results (exploredVertices, needed Time) for every vertex
+            uint64_t* results = new uint64_t[graphSize*2];
 
             for(uint64_t i = 0; i < graphSize; ++i){
                 // start measuring bfs time:
                 auto startBFSTime = std::chrono::high_resolution_clock::now();
 
-                uint64_t exploredVertices = doBFS(i);
+                uint64_t exploredVertices = do_BFS(i);
 
                 auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
                 auto elapsedBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishBFSTime - startBFSTime ).count();
@@ -116,10 +115,24 @@ namespace morphstore{
                 // set every entry in visited array back to { false }
                 clear_visited_array();
 
-                // write to file
-                fs << exploredVertices << "," << elapsedBFSTime << "\n";
+                // write to intermediate array:
+                results[i*2] = exploredVertices;
+                results[i*2+1] = elapsedBFSTime;
             }
+
+            // WRITE INTERMEDIATES TO FILE:
+            std::ofstream fs;
+            std::string filename = "/home/tim/Documents/TUD/(8) Informatik SS 2019/MorphStore/bfs_measurements.csv";
+            // open file for writing and delete existing stuff:
+            fs.open(filename, std::fstream::out | std::ofstream::trunc);
+
+            for(uint64_t j = 0; j < graphSize*2; ++j){
+                fs << results[j] << "," << results[j+1] << "\n";
+                ++j;
+            }
+
             fs.close();
+            delete [] results;
         }
 
     };
