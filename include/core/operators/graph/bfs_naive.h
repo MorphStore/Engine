@@ -18,7 +18,7 @@
 /**
  * @file bfs.h
  * @brief naive (simple) BFS implementation to traverse graph of type CSR OR AdjacencyList
- * @todo implement optimized version of BFS -> now just for simplicity
+ * @todo implement vectorized BFS (AVX2, AVX-512)
  */
 
 #ifndef MORPHSTORE_BFS_NAIVE_H
@@ -27,6 +27,7 @@
 #include "../../storage/graph/graph.h"
 
 #include <queue>
+#include <chrono>
 
 namespace morphstore{
 
@@ -37,7 +38,7 @@ namespace morphstore{
         uint64_t graphSize;
         // Create a "visited" array (true or false) to keep track of if we visited a vertex.
         std::vector<bool> visited = { false };
-        std::vector<uint64_t> layer;
+        //std::vector<uint64_t> layer;
         // Create a queue for the nodes we visit.
         std::queue<uint64_t> queue;
 
@@ -47,16 +48,22 @@ namespace morphstore{
         BFS(std::unique_ptr<morphstore::Graph>& g) : graph(std::move(g)){
             graphSize = graph->getNumberVertices();
             visited.resize(graphSize);
-            layer.resize(graphSize);
+            //layer.resize(graphSize);
         }
 
-        void doBFS(uint64_t startVertex){
-            //std::cout << "BFS: starting from Vertex " << startVertex << std::endl;
+        uint64_t get_graph_size(){
+            return graphSize;
+        }
+
+        // actual BFS (naive) algorithm: takes the start-node id and returns the number of explored vertices
+        uint64_t doBFS(uint64_t startVertex){
+
+            uint64_t exploredVertices = 0;
 
             queue.push(startVertex);
             visited[startVertex] = true;
 
-            layer[startVertex] = 0;
+            //layer[startVertex] = 0;
 
             while(!queue.empty()){
                 uint64_t currentVertex = queue.front();
@@ -68,18 +75,51 @@ namespace morphstore{
                 std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
 
                 // Loop through all of neighbors of current vertex
-                for(uint64_t i = 0; i < neighbors.size(); i++){
+                for(uint64_t i = 0; i < neighbors.size(); ++i){
                     uint64_t neighbor = neighbors[i];
 
                     // check if neighbor has been visited, if not -> put into queue and mark as visit = true
                     if(!visited[neighbor]){
                         queue.push(neighbor);
-                        layer[neighbor] = layer[currentVertex] +1;
+                        //layer[neighbor] = layer[currentVertex] +1;
                         visited[neighbor] = true;
+                        ++exploredVertices;
                     }
                 }
             }
+            return exploredVertices;
+        }
 
+        // this function sets every cell to false in visited array
+        void clear_visited_array(){
+            std::fill(visited.begin(), visited.end(), false);
+        }
+
+        // function that measures for every vertex the number and time of explored vertices in BFS
+        // writes results to local file for further analysis
+        void do_measurements(){
+
+            std::ofstream fs;
+            std::string filename = "/home/tim/Documents/TUD/(8) Informatik SS 2019/MorphStore/bfs_measurements.csv";
+            // open file for writing and delete existing stuff:
+            fs.open(filename, std::fstream::out | std::ofstream::trunc);
+
+            for(uint64_t i = 0; i < graphSize; ++i){
+                // start measuring bfs time:
+                auto startBFSTime = std::chrono::high_resolution_clock::now();
+
+                uint64_t exploredVertices = doBFS(i);
+
+                auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+                auto elapsedBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishBFSTime - startBFSTime ).count();
+
+                // set every entry in visited array back to { false }
+                clear_visited_array();
+
+                // write to file
+                fs << exploredVertices << "," << elapsedBFSTime << "\n";
+            }
+            fs.close();
         }
 
     };

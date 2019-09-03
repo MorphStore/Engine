@@ -26,6 +26,7 @@
 #include <core/operators/graph/bfs_naive.h>
 
 #include <chrono>  // for high_resolution_clock
+#include <fstream>
 
 int main( void ){
 
@@ -73,19 +74,8 @@ int main( void ){
     // calculate size of social graph
     //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
-    // BFS TEST:
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-
-    // start measuring bfs time:
-    auto startBFSTime = std::chrono::high_resolution_clock::now();
-
-    // actual algorithm
-    bfs->doBFS(10000);
-
-    // measuring time:
-    auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-    auto elapsedBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishBFSTime - startBFSTime ).count();
-    std::cout << "BFS: " << elapsedBFSTime << " millisec.\n";
+    bfs->do_measurements();
 
     return 0;
 }
