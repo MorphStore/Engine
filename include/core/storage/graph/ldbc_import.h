@@ -624,19 +624,6 @@ namespace morphstore{
 
             //std::cout << "--> done" << std::endl;
         }
-
-        void print_vertex_rel_lookup(){
-            std::cout << "VertexRealtionsLookup: " << std::endl;
-
-            for(auto &rel: vertexRelationsLookup){
-                for(auto& edge : rel.second){
-                    if(edge.getProperty().first != ""){
-                        std::cout << "Vertex-id: " << rel.first << " | ";
-                        std::cout << "Edge-Property: " << edge.getProperty().first << ": " << edge.getProperty().second << "\n";
-                    }
-                }
-            }
-        }
     };
 }
 

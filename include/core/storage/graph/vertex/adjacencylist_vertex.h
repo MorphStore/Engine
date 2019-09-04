@@ -53,18 +53,6 @@ namespace morphstore{
 
         // add edges to vertexs' adjacencylist
         void add_edges(std::vector<morphstore::Edge> edges) override {
-            //adjacencylist.resize(edges.size());
-           /*
-	    for(uint64_t i = 0; i < edges.size(); ++i){
-                adjacencylist.push_back(morphstore::Edge(edges[i]));
-            }
-           
-	   for(const auto& e : edges){
-                if(e.getProperty().first != ""){
-                    std::cout << e.getProperty().first << ": " << e.getProperty().second << std::endl;
-                }
-            }
-	   */
             this->adjacencylist = edges;
         }
 

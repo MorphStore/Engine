@@ -40,8 +40,8 @@ int main( void ){
     */
 
     // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/social_network/"
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
-    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
+    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
@@ -70,18 +70,9 @@ int main( void ){
     g1->print_vertex_by_id(100168);
     g1->print_vertex_by_id(2000100);
      */
-    g1->print_neighbors_of_vertex(100449);
 
     // calculate size of social graph
     //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
-
-    g1->print_vertex_by_id(0);
-    g1->print_vertex_by_id(10000);
-    g1->print_vertex_by_id(500000);
-    g1->print_vertex_by_id(1000000);
-    g1->print_vertex_by_id(2000000);
-    g1->print_vertex_by_id(3000000);
-
     g1->print_vertex_by_id(1035174);
     g1->print_neighbors_of_vertex(1035174);
 

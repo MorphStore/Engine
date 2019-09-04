@@ -68,12 +68,6 @@ namespace morphstore{
 
         // function that adds a single property key-value pair to vertex
         void add_property(const std::pair<std::string, std::string>& property){
-            /*
-            auto it = properties.find(property.first);
-            if(it != properties.end()){
-                it->second = property.second;
-            }
-             */
             this->properties[property.first] = std::move(property.second);
         }
 
