@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <utility>
+#include <iostream>
 #include <string>
 
 namespace morphstore{
@@ -54,6 +55,7 @@ namespace morphstore{
             setProperty(prop);
         }
 
+	/*
         // Copy constructor
         Edge(const Edge& edge){
             setSourceId(edge.sourceID);
@@ -61,6 +63,7 @@ namespace morphstore{
             setRelation(edge.relation);
             setProperty(edge.property);
         }
+	*/
 
         // this is needed for csr when doing edge_array[offset] = edge...
         Edge& operator= (const Edge &edge){
@@ -108,15 +111,18 @@ namespace morphstore{
             return property;
         }
 
-        void setProperty(const std::pair<std::string, std::string> &prop) {
+        void setProperty(const std::pair<std::string, std::string> prop) {
             // first check if there is any key value data, otherwise problems with segfaults
-            /*
+            
             if(prop.first != "" && prop.second != ""){
-                Edge::property = prop;
+                Edge::property.first = prop.first;
+                Edge::property.second = prop.second;
             }
-             */
+            	
+	     /*
             Edge::property.first = prop.first;
             Edge::property.second = prop.second;
+	*/
         }
 
         // function for sorting algorithms in the ldbc-importer:
