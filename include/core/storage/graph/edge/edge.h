@@ -101,8 +101,11 @@ namespace morphstore{
         }
 
         void setProperty(const std::pair<std::string, std::string> prop) {
-            Edge::property.first = prop.first;
-            Edge::property.second = prop.second;
+            // first check if there is any key value data, otherwise problems with segfaults
+            if(prop.first != "" && prop.second != ""){
+                Edge::property.first = prop.first;
+                Edge::property.second = prop.second;
+            }
         }
 
         // function for sorting algorithms in the ldbc-importer:

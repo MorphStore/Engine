@@ -63,18 +63,14 @@ int main( void ){
     //g1->statistics();
     std::cout << "Import: " << elapsedImportTime << " millisec.\n";
 
-    /*
-    // test vertices:
-    g1->print_vertex_by_id(100454);
-    g1->print_vertex_by_id(100450);
-    g1->print_vertex_by_id(100168);
-    g1->print_vertex_by_id(2000100);
-     */
-
     // calculate size of social graph
-    //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
+    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
+
+    /* Test Vertex, which contains edges with properties:
+     *
     g1->print_vertex_by_id(1035174);
     g1->print_neighbors_of_vertex(1035174);
+    */
 
     /*
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
