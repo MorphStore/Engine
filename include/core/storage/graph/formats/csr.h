@@ -84,7 +84,7 @@ namespace morphstore{
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of neighbors
-        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge>& relations) override {
+        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge> relations) override {
             uint64_t offset = node_array[sourceID];
             uint64_t nextOffset = offset + relations.size();
 

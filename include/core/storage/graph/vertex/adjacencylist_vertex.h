@@ -48,12 +48,18 @@ namespace morphstore{
 
         // function to add a single edge to vertexs adjlist
         void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
-            Edge e(from, to, rel);
-            this->adjacencylist.push_back(e);
+            this->adjacencylist.push_back(Edge(from, to, rel));
         }
 
         // add edges to vertexs' adjacencylist
-        void add_edges(const std::vector<morphstore::Edge>& edges) override {
+        void add_edges(std::vector<morphstore::Edge> edges) override {
+            /*
+            adjacencylist.resize(edges.size());
+            for(uint64_t i = 0; i < edges.size(); ++i){
+                adjacencylist.push_back(edges[i]);
+            }
+             */
+
             this->adjacencylist = edges;
         }
 

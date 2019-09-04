@@ -124,7 +124,7 @@ namespace morphstore{
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) = 0;
         virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
-        virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge>& relations) = 0;
+        virtual void add_edges(uint64_t sourceID, std::vector<morphstore::Edge> relations) = 0;
         virtual uint64_t get_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
         // for debugging
@@ -151,6 +151,19 @@ namespace morphstore{
             std::cout << "#Edges: " << this->get_degree(v->getID());
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
+        }
+
+        void print_entity_relationship_dicts(){
+            std::cout << "Entity-Dict: " << std::endl;
+            for(auto const& entry : entityDictionary){
+                std::cout << entry.first << " -> " << entry.second << std::endl;
+            }
+            std::cout << "\n";
+
+            std::cout << "Relationship-Dict: " << std::endl;
+            for(auto const& rel : relationDictionary){
+                std::cout << rel.first << " -> " << rel.second << std::endl;
+            }
         }
 
     };
