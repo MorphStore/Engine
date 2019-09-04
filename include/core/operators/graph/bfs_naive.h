@@ -71,12 +71,9 @@ namespace morphstore{
 
                 //std::cout << "Vertex with ID " << currentVertex << "\t @ Layer " << layer[currentVertex] << std::endl;
 
-                // get neighbors of current vertex
-                std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
-
                 // Loop through all of neighbors of current vertex
-                for(uint64_t i = 0; i < neighbors.size(); ++i){
-                    uint64_t neighbor = neighbors[i];
+                for(uint64_t i = 0; i < graph->get_neighbors_ids(currentVertex).size(); ++i){
+                    uint64_t neighbor = graph->get_neighbors_ids(currentVertex)[i];
 
                     // check if neighbor has been visited, if not -> put into queue and mark as visit = true
                     if(!visited[neighbor]){
@@ -101,7 +98,7 @@ namespace morphstore{
 
             // Intermediate data structure:
             // size = graphSize*2, because we sequentially store both results (exploredVertices, needed Time) for every vertex
-            uint64_t* results = new uint64_t[graphSize*2];
+            uint64_t* results = (uint64_t *) malloc(graphSize * 2 * sizeof(uint64_t));
 
             for(uint64_t i = 0; i < graphSize; ++i){
                 // start measuring bfs time:
@@ -118,20 +115,33 @@ namespace morphstore{
                 // write to intermediate array:
                 results[i*2] = exploredVertices;
                 results[i*2+1] = elapsedBFSTime;
+
+                if(i % 1000 == 0) std::cout << "BFS" << i << " / " << graphSize << std::endl;
             }
 
             // WRITE INTERMEDIATES TO FILE:
             std::ofstream fs;
+            std::stringstream ss;
             std::string filename = "/home/tim/Documents/TUD/(8) Informatik SS 2019/MorphStore/bfs_measurements.csv";
             // open file for writing and delete existing stuff:
             fs.open(filename, std::fstream::out | std::ofstream::trunc);
 
             for(uint64_t j = 0; j < graphSize*2; ++j){
-                fs << results[j] << "," << results[j+1] << "\n";
+                ss << results[j] << "," << results[j+1] << "\n";
                 ++j;
             }
+            fs << ss.str() ;
 
             fs.close();
+
+            /*
+            // NEW APPROACH
+            auto myfile = std::fstream("/home/tim/Documents/TUD/(8) Informatik SS 2019/MorphStore/bfs_measurements.csv", std::ios::out | std::ios::binary);
+            auto fileSize = graphSize * 2 * sizeof(uint64_t);
+            myfile.write((char*)&results[0], fileSize);
+            myfile.close();
+            */
+
             delete [] results;
         }
 

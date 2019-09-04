@@ -74,8 +74,17 @@ int main( void ){
     // calculate size of social graph
     //std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
 
+    g1->print_vertex_by_id(0);
+    g1->print_vertex_by_id(10000);
+    g1->print_vertex_by_id(500000);
+    g1->print_vertex_by_id(1000000);
+    g1->print_vertex_by_id(2000000);
+    g1->print_vertex_by_id(3000000);
+
+    /*
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
     bfs->do_measurements();
+    */
 
     return 0;
 }

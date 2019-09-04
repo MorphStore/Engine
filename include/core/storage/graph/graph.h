@@ -120,7 +120,7 @@ namespace morphstore{
         virtual storageFormat getStorageFormat() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
         virtual void add_vertex() = 0;
-        virtual int add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0;
+        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) = 0;
         virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;

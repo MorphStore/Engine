@@ -68,7 +68,7 @@ namespace morphstore{
         }
 
         // adding a vertex with its properties
-        int add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) override {
+        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) override {
             std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
             v->setProperties(props);
             vertices[v->getID()] = v;
