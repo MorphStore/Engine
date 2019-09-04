@@ -93,7 +93,7 @@ namespace morphstore{
                 ++offset;
             }
 
-            // to avoid segfualt:
+            // to avoid buffer overflow:
             if(sourceID < getNumberVertices()-1){
                 node_array[sourceID+1] = nextOffset;
             }
