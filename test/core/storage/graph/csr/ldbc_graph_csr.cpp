@@ -62,9 +62,6 @@ int main( void ){
     //g1->statistics();
     std::cout << "Import: " << elapsedImportTime << " millisec.\n";
 
-    // calculate size of social graph
-    std::cout << "Size of social network: " << socialGraph.get_size_of_graph() << " Bytes\n";
-
     /* Test Vertex, which contains edges with properties:
      *
     g1->print_vertex_by_id(1035174);
