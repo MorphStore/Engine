@@ -186,6 +186,7 @@ public:
             return ( digit + 1 ) * DB_PAGE_SIZE;
         }
     };
+public:
     class ChunkHeader;
 
     class AllocationStatus {
@@ -480,10 +481,6 @@ public:
                                     void* addr = reinterpret_cast<void*>(
                                             start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
 
-                                    /*assert(start_of_actual_chunk + ALLOCATION_SIZE > reinterpret_cast<uint64_t>(addr));
-                                    assert(reinterpret_cast<uint64_t>(addr) + size - 1 < start_of_actual_chunk + ALLOCATION_SIZE);
-                                    assert(isAllocatable(addr, size));*/
-
                                     trace("Returning address on ", addr, " as next allocatable slot");
                                     m_info.status.lastBitmapLocation = loc;
                                     return addr; 
@@ -602,11 +599,29 @@ public:
             return reinterpret_cast<void*>( getBitmapAddress() + ALLOCATION_SIZE / DB_PAGE_SIZE * ALLOC_BITS / 8);
         }
 
-    //private:
         inline uint64_t getAllocBits64(uint8_t startOffset, uint32_t count_blocks, bool isStart = true)
         {
             // Increment since we start from the first two indicated bits
-            startOffset += ALLOC_BITS;
+            const uint64_t ALLONE = ~0ul;
+            const uint64_t STARTONE = ~(1ul << 62);
+
+            if (startOffset == 0 && count_blocks >= 32 && isStart == false)
+                return ALLONE;
+
+            if (!isStart) {
+                if (count_blocks >= 64u - startOffset)
+                    return (ALLONE) >> startOffset;
+                else
+                    return ((ALLONE) >> startOffset) & ~((1ul << (64 - count_blocks*ALLOC_BITS - startOffset)) -1);
+            }
+            else {
+                if (count_blocks >= 64u - startOffset)
+                    return (STARTONE) >> startOffset;
+                else
+                    return ((STARTONE) >> startOffset) & ~((1ul << (64 - count_blocks*ALLOC_BITS - startOffset)) -1);
+            }
+
+            /*startOffset += ALLOC_BITS;
             uint8_t i = startOffset;
             uint64_t state = 0;
 
@@ -617,7 +632,7 @@ public:
                 i+=ALLOC_BITS; 
             }
 
-            return state;
+            return state;*/
         }
 
         void dumpBitmap()
@@ -763,13 +778,11 @@ public:
 
     void* allocatePages(size_t size, void* chunk_location)
     {
-        //assert(size <= ALLOCATION_SIZE);
         trace( "Page allocation request for size ", std::hex, size, " on location ", chunk_location);
         if (size < DB_PAGE_SIZE) {
             size = DB_PAGE_SIZE;
         }
 
-        //assert((reinterpret_cast<uint64_t>(chunk_location) & (ALLOCATION_SIZE-1)) == 0);
         ChunkHeader* header = reinterpret_cast<ChunkHeader*>(reinterpret_cast<uint64_t>(chunk_location) - sizeof(ChunkHeader));
         void* ptr = header->findNextAllocatableSlot(size);
         trace( "header on ", header, " found next allocatable slot as ", ptr);
@@ -777,9 +790,6 @@ public:
             return nullptr;
         }
         header->setAllocated(ptr, size);
-        //Remove this
-        uint64_t* i = reinterpret_cast<uint64_t*>(ptr);
-        i[8] = 0;
 
         return ptr;
     }
