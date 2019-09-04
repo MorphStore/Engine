@@ -136,7 +136,7 @@ public:
     void* allocate(size_t size) override
     {
         auto& manager = m_mmap_manager;
-        size += sizeof(mmap_memory_manager::ObjectInfo); // Additional space for type and allocation information
+        size += sizeof(ObjectInfo); // Additional space for type and allocation information
 
         void* object_loc = nullptr;
         void* page_loc = nullptr;
@@ -233,10 +233,10 @@ public:
             throw std::runtime_error("Reallocation failed");
             return nullptr;
         }
-        mmap_memory_manager::ObjectInfo* info = reinterpret_cast<mmap_memory_manager::ObjectInfo*>(ptr);
+        ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         memcpy(ret, ptr, info->size > size ? size : info->size); 
         deallocate(ptr);
-        info = reinterpret_cast<mmap_memory_manager::ObjectInfo*>(ret);
+        info = reinterpret_cast<ObjectInfo*>(ret);
         info->size = size;
         return ret;
     }
