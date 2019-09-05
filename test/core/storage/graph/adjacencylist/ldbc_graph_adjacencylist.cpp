@@ -40,8 +40,9 @@ int main( void ){
     */
 
     // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/social_network/"
+    // NEVER FORGET THE LAST / in address!!!
     // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/opt/ldbc_snb_datagen-0.2.8/social_network/"));
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/opt/ldbc_snb_datagen-0.2.8/social_network/social_network_1/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
@@ -50,7 +51,7 @@ int main( void ){
     auto startImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     // generate vertices & edges from LDBC files and insert into graph
-    ldbcImport->import(g1);
+    ldbcImport->import(*g1);
 
     // measuring time:
     auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
@@ -60,14 +61,19 @@ int main( void ){
     size_t size = g1->get_size_of_graph();
     std::cout << "Size: " << size << " bytes\n";
 
-    //g1->statistics();
+    g1->statistics();
     std::cout << "Import: " << elapsedImportTime << " millisec.\n";
 
-    /* Test Vertex, which contains edges with properties:
+    /* Test Vertex, which contains edges with properties (SERVER):
      *
     g1->print_vertex_by_id(1035174);
     g1->print_neighbors_of_vertex(1035174);
     */
+
+    /* Test Vertex, which contains edges with properties (MY PC):*/
+    g1->print_vertex_by_id(100449);
+    g1->print_neighbors_of_vertex(100449);
+
 
     /*
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);

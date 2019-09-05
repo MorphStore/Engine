@@ -54,7 +54,7 @@ namespace morphstore{
             return entity;
         }
 
-        void setEntity(unsigned short e) {
+        void setEntity(const unsigned short e) {
             Vertex::entity = e;
         }
 
@@ -62,18 +62,18 @@ namespace morphstore{
             return properties;
         }
 
-        void setProperties(const std::unordered_map<std::string, std::string> &props) {
+        void setProperties(const std::unordered_map<std::string, std::string> props) {
             Vertex::properties = props;
         }
 
         // function that adds a single property key-value pair to vertex
-        void add_property(const std::pair<std::string, std::string>& property){
-            this->properties[property.first] = std::move(property.second);
+        void add_property(const std::pair<std::string, std::string> property){
+            this->properties[property.first] = property.second;//std::move(property.second);
         }
 
 
         // ----------------- (pure) virtual functions -----------------
-        virtual void add_edges(std::vector<morphstore::Edge> edges) = 0;
+        virtual void add_edges(const std::vector<morphstore::Edge> edges) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void print_neighbors() = 0;
         virtual size_t get_size_of_vertex() = 0;
@@ -91,7 +91,7 @@ namespace morphstore{
 
         // ----------------- DEBUGGING -----------------
         void print_properties() {
-            for (const auto &entry : properties) {
+            for (const auto entry  : properties) {
                 std::cout << "{" << entry.first << ": " << entry.second << "}";
             }
             std::cout << "\n";

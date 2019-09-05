@@ -100,7 +100,7 @@ namespace morphstore{
 
         // this function reads the vertices-files and creates vertices in a graph
         // + creates the entityLookup (number to string) for the graph
-        void generate_vertices(std::unique_ptr<Graph>& graph) {
+        void generate_vertices(Graph& graph) {
 
             if (!verticesPaths.empty()) {
                 //std::cout << "(1/2) Generating LDBC-Vertices ...";
@@ -184,9 +184,9 @@ namespace morphstore{
 
                                 //-----------------------------------------------------
                                 // create vertex and insert into graph with properties
-                                uint64_t systemID = graph->add_vertex_with_properties(properties);
+                                uint64_t systemID = graph.add_vertex_with_properties(properties);
                                 // add entity number to vertex
-                                graph->add_entity_to_vertex(systemID, entityNumber);
+                                graph.add_entity_to_vertex(systemID, entityNumber);
                                 // map entity and ldbc id to system generated id
                                 globalIdLookupMap.insert({{entity, ldbcID}, systemID});
                                 //-----------------------------------------------------
@@ -203,9 +203,10 @@ namespace morphstore{
                     // insert entity-number with string into map
                     entitiesLookup.insert(std::make_pair(entityNumber, entity));
                     ++entityNumber;
+                    attributes.clear();
                 }
                 // graph gets full entity-list here:
-                graph->setEntityDictionary(entitiesLookup);
+                graph.setEntityDictionary(entitiesLookup);
             }
 
         }
@@ -404,7 +405,7 @@ namespace morphstore{
 
         // this function reads the relation-files and fills the intermediate: vertexRelationLookup
         // + creates the relationLookup (number to string) for the graph
-        void fill_vertexRelationsLookup(std::unique_ptr<Graph>& graph){
+        void fill_vertexRelationsLookup(Graph& graph){
 
             if(!relationsPaths.empty()) {
                 //std::cout << "(2/2) Generating LDBC-Edges ...";
@@ -487,8 +488,8 @@ namespace morphstore{
                         }
                         // iterate through multiValue map and assign property to vertex
                         for(const auto &pair : multiValueAttr){
-                            const std::pair<std::string, std::string>& keyValuePair = {propertyKey, pair.second};
-                            graph->add_property_to_vertex(pair.first, keyValuePair);
+                            //const std::pair<std::string, std::string> keyValuePair = {propertyKey, pair.second};
+                            graph.add_property_to_vertex(pair.first, {propertyKey, pair.second});
                         }
 
                     }
@@ -542,7 +543,6 @@ namespace morphstore{
 
                                         // insert relation into vertexRealtionsLookup:
                                         vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber));
-
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
@@ -572,7 +572,7 @@ namespace morphstore{
 
                 }
                 // graph gets full relation-list here:
-                graph->setRelationDictionary(relationsLookup);
+                graph.setRelationDictionary(relationsLookup);
             }
         }
 
@@ -586,20 +586,20 @@ namespace morphstore{
         }
 
         // this function writes the actual data from the intermediate vertexRelationsLookup into the graph
-        void generate_edges(std::unique_ptr<Graph>& graph){
+        void generate_edges(Graph&  graph){
             // firstly, sorting the intermediates with their target IDs ASC
             sort_VertexRelationsLookup();
 
-            uint64_t graphSize = graph->getNumberVertices();
+            uint64_t graphSize = graph.getNumberVertices();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
                 // add edge data:
-                graph->add_edges(vertexID, vertexRelationsLookup[vertexID]);
+                graph.add_edges(vertexID, vertexRelationsLookup[vertexID]);
             }
         }
 
         // MAIN import function: see steps in comments
-        void import(std::unique_ptr<Graph>& graph) {
+        void import(Graph&  graph) {
             //std::cout << "Importing LDBC-files into graph ... ";
             //std::cout.flush();
 
@@ -608,7 +608,7 @@ namespace morphstore{
             uint64_t numberEdges = get_total_number_edges();
 
             // (2) allocate graph memory
-            graph->allocate_graph_structure(numberVertices, numberEdges);
+            graph.allocate_graph_structure(numberVertices, numberEdges);
 
             // (3) generate vertices
             generate_vertices(graph);

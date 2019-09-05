@@ -36,8 +36,7 @@ namespace morphstore{
          * node array: index is vertex-id; array cell contains offset in edge_array
          * edge array: every cell contains pointer to edge object of vertex
          */
-        // TODO: construct a graph-topology struct ?
-        // TODO: free memory in destructor
+        // TODO: free memory in destructor ?
         uint64_t* node_array = nullptr;
         Edge* edge_array = nullptr;
 
@@ -68,7 +67,7 @@ namespace morphstore{
         }
 
         // adding a vertex with its properties
-        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) override {
+        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) override {
             std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
             v->setProperties(props);
             vertices[v->getID()] = v;
@@ -84,7 +83,7 @@ namespace morphstore{
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of neighbors
-        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge> relations) override {
+        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) override {
             uint64_t offset = node_array[sourceID];
             uint64_t nextOffset = offset + relations.size();
 
@@ -100,7 +99,7 @@ namespace morphstore{
         }
 
         // function to add a single property to vertex
-        void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) override {
+        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
             if(exist_id(id)){
                 vertices[id]->add_property(property);
             }else{
@@ -109,7 +108,7 @@ namespace morphstore{
         }
 
         // adding entity to vertex
-        void add_entity_to_vertex(const uint64_t id, unsigned short int entity) override {
+        void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) override {
             if(exist_id(id)){
                 vertices[id]->setEntity(entity);
             }else{

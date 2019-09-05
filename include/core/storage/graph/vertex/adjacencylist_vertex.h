@@ -52,7 +52,7 @@ namespace morphstore{
         }
 
         // add edges to vertexs' adjacencylist
-        void add_edges(std::vector<morphstore::Edge> edges) override {
+        void add_edges(const std::vector<morphstore::Edge> edges) override {
             this->adjacencylist = edges;
         }
 

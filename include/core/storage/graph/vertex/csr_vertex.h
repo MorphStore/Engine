@@ -43,7 +43,7 @@ namespace morphstore{
         }
 
         // pure function -> no functionality
-        void add_edges(std::vector<morphstore::Edge> edges) override {
+        void add_edges(const std::vector<morphstore::Edge> edges) override {
             std::cout << " virtual add_edge - no usage: " << edges[0].getSourceId() << std::endl;
         }
 

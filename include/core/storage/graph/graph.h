@@ -58,7 +58,7 @@ namespace morphstore{
             return entityDictionary;
         }
 
-        void setEntityDictionary(const std::map<unsigned short, std::string> &ent) {
+        void setEntityDictionary(const std::map<unsigned short, std::string>& ent) {
             this->entityDictionary = ent;
         }
 
@@ -66,7 +66,7 @@ namespace morphstore{
             return relationDictionary;
         }
 
-        void setRelationDictionary(const std::map<unsigned short, std::string> &rel) {
+        void setRelationDictionary(const std::map<unsigned short, std::string>& rel) {
             this->relationDictionary = rel;
         }
 
@@ -120,11 +120,11 @@ namespace morphstore{
         virtual storageFormat getStorageFormat() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
         virtual void add_vertex() = 0;
-        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string>& props ) = 0;
-        virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string>& property) = 0;
-        virtual void add_entity_to_vertex(const uint64_t id, unsigned short int entity) = 0;
+        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) = 0;
+        virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
+        virtual void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
-        virtual void add_edges(uint64_t sourceID, std::vector<morphstore::Edge> relations) = 0;
+        virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
         virtual uint64_t get_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
         // for debugging

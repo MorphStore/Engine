@@ -54,7 +54,7 @@ namespace morphstore{
         }
 
         // adding a vertex with its properties
-        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> &props) override {
+        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props) override {
             std::shared_ptr<Vertex> v = std::make_shared<AdjacencyListVertex>();
             v->setProperties(props);
             vertices[v->getID()] = v;
@@ -62,7 +62,7 @@ namespace morphstore{
         }
 
         // function to add a single property to vertex
-        void add_property_to_vertex(uint64_t id, const std::pair<std::string, const std::string> &property) override {
+        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
             if (exist_id(id)) {
                 vertices[id]->add_property(property);
             } else {
@@ -71,7 +71,7 @@ namespace morphstore{
         }
 
         // adding entity to vertex
-        void add_entity_to_vertex(const uint64_t id, unsigned short int entity) override {
+        void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) override {
             if (exist_id(id)) {
                 vertices[id]->setEntity(entity);
             } else {
@@ -89,7 +89,7 @@ namespace morphstore{
         }
 
         // function that adds multiple edges (list of neighbors) at once to vertex
-        void add_edges(uint64_t sourceID, std::vector<morphstore::Edge> relations) override {
+        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) override {
             if (exist_id(sourceID)) {
                 if (relations.size() != 0) {
                     vertices[sourceID]->add_edges(relations);
