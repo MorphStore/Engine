@@ -13,6 +13,7 @@
 #include <mutex>
 #include <sys/mman.h>
 #include <string.h>
+#include <cstring>
 
 #include <cassert>
 
@@ -241,14 +242,15 @@ public:
         }
     }
 
-    void _zeroset(void *s, size_t n)
+    inline void _zeroset(void *s, size_t n)
     {
-        n = n >> 3;
+        std::memset(s, 0, n);
+        /*n = n >> 3;
         uint64_t *p = reinterpret_cast<uint64_t*>(s);
         for (; n>0; --n) {
             *p = 0ul;
             ++p;
-        }
+        }*/
     }
 
     void reset()
@@ -448,14 +450,127 @@ public:
 
         return true;
     }
+    
+    void* findNextInst(size_t size)
+    {
+        uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
+        const uint64_t start_of_actual_chunk = reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader);
+        const uint64_t slots_needed = (size >> DB_PAGE_OFFSET) + ( ((size % DB_PAGE_SIZE) == 0) ? 0 : 1);
+        const size_t end_of_allocation_bitmap = reinterpret_cast<size_t>(bitmap) + ( (ALLOCATION_SIZE >> DB_PAGE_OFFSET) * ALLOC_BITS / 8 /*Bits per byte*/);
+
+        uint64_t continuousPageCounter = 0;
+        uint64_t bit_start = 0;
+
+        uint64_t locStore;
+        uint64_t locMod;
+
+        while (reinterpret_cast<uint64_t>(loc) + slots_needed*ALLOC_BITS / 8 < end_of_allocation_bitmap) {
+            locStore = *loc;
+            locMod = locStore & 0xaaaaaaaaaaaaaaaaul;
+            trace("Location is ", locMod);
+
+            continuousPageCounter = __builtin_ctzl(locMod) / ALLOC_BITS;
+            
+            trace("Page counter is ", continuousPageCounter);
+            uint64_t bit_offset = 64 - continuousPageCounter * ALLOC_BITS;
+            trace("Bit offset is ", bit_offset);
+
+            if (continuousPageCounter > 0) {
+                bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset + ALLOC_BITS;
+
+                while (continuousPageCounter < slots_needed) {
+                    ++loc;
+                    trace("Current loc for bit_start is ", loc, " with value ", std::hex, *loc);
+
+                    locStore = *loc;
+                    locMod = locStore & 0xaaaaaaaaaaaaaaaaul;
+
+                    size_t newBlocks = __builtin_clzl(locMod) / ALLOC_BITS;
+                    trace("newBlocks: ", newBlocks);
+
+                    if (newBlocks == 32) {
+                        continuousPageCounter += newBlocks;
+                    }
+                    else if (continuousPageCounter + newBlocks >= slots_needed) {
+                        continuousPageCounter += newBlocks;
+                    }
+                    else {
+                        break;
+                    }
+                    trace("continuousPageCounter is now ", continuousPageCounter);
+                }
+
+                if (continuousPageCounter >= slots_needed) {
+                    void* addr = reinterpret_cast<void*>(
+                            start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
+
+                    trace("Returning address on ", addr, " as next allocatable slot");
+                    m_info.status.lastBitmapLocation = loc;
+                    return addr; 
+                }
+            }
+            else if (__builtin_popcountl(locMod) >= slots_needed) {
+                continuousPageCounter = 0;
+                uint64_t bit_offset = ALLOC_BITS;
+
+                while (bit_offset <= 64) {
+                    uint8_t bits = (*loc >> (64 - bit_offset)) & 0b11ul;
+                    // space is available
+                    if (bits == 0) {
+                        bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
+                        if ( ALLOCATION_SIZE / DB_PAGE_SIZE * ALLOC_BITS - bit_start < slots_needed * ALLOC_BITS )
+                            return nullptr;
+                        trace("Current loc for bit_start is ", loc, " with value ", std::hex, *loc);
+                        continuousPageCounter++;
+                        do {
+                            if (continuousPageCounter >= slots_needed) {
+                                void* addr = reinterpret_cast<void*>(
+                                        start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
+
+                                trace("Returning address on ", addr, " as next allocatable slot");
+                                m_info.status.lastBitmapLocation = loc;
+                                return addr; 
+                            }
+
+                            bit_offset += ALLOC_BITS;
+                            if (bit_offset > 64) {
+                                bit_offset = ALLOC_BITS;
+                                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                            }
+                            
+                            bits = (*loc >> (64 - bit_offset)) & 0b11ul;
+                            if (bits == 0)
+                                continuousPageCounter++;
+                        } while (bits == 0);
+
+                        trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
+                        bit_start = 0;
+                        continuousPageCounter = 0;
+                    }
+                    else {
+                        trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
+                        bit_start = 0;
+                        continuousPageCounter = 0;
+                    }
+                    bit_offset += ALLOC_BITS;
+                }
+
+            }
+
+            continuousPageCounter = 0;
+            ++loc;
+        }
+
+        return nullptr;
+    }
 
     void* findNextAllocatableSlot(size_t size)
     {
         //assert(size <= ALLOCATION_SIZE);
         // TODO: replace with strategy pattern
-        uint64_t* loc = m_info.status.lastBitmapLocation;
-        uint64_t* previous_start = loc;
-        //uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
+        //uint64_t* loc = m_info.status.lastBitmapLocation;
+        //uint64_t* previous_start = loc;
+        uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
         const uint64_t start_of_actual_chunk = reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader);
         const uint64_t slots_needed = (size >> DB_PAGE_OFFSET) + ( ((size % DB_PAGE_SIZE) == 0) ? 0 : 1);
         trace("Trying to find gap for ", slots_needed, " slots");
@@ -469,53 +584,60 @@ public:
             //First check if space is not full
             uint64_t bit_offset = ALLOC_BITS;
 
-            // check within one word
-            while (bit_offset <= 64) {
-                uint8_t bits = (*loc >> (64 - bit_offset)) & 0b11ul;
-                // space is available
-                if (bits == 0) {
-                    bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
-                    if ( ALLOCATION_SIZE / DB_PAGE_SIZE * ALLOC_BITS - bit_start < slots_needed * ALLOC_BITS )
-                        return nullptr;
-                    trace("Current loc for bit_start is ", loc, " with value ", std::hex, *loc);
-                    continuousPageCounter++;
-                    do {
-                        if (continuousPageCounter >= slots_needed) {
-                            void* addr = reinterpret_cast<void*>(
-                                    start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
+            if ( *loc < ~(0x4ul << 60) ) {
+                // check within one word
+                while (bit_offset <= 64) {
+                    uint64_t bits = (*loc & (0b11ul << (64 - bit_offset)));
+                    // space is available
+                    if (bits == 0) {
+                        bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
+                        if ( ALLOCATION_SIZE / DB_PAGE_SIZE * ALLOC_BITS - bit_start < slots_needed * ALLOC_BITS )
+                            return nullptr;
+                        trace("Current loc for bit_start is ", loc, " with value ", std::hex, *loc);
+                        continuousPageCounter++;
+                        do {
+                            if (continuousPageCounter >= slots_needed) {
+                                void* addr = reinterpret_cast<void*>(
+                                        start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
 
-                            trace("Returning address on ", addr, " as next allocatable slot");
-                            m_info.status.lastBitmapLocation = loc;
-                            return addr; 
-                        }
+                                trace("Returning address on ", addr, " as next allocatable slot");
+                                m_info.status.lastBitmapLocation = loc;
+                                return addr; 
+                            }
 
-                        bit_offset += ALLOC_BITS;
-                        if (bit_offset > 64) {
-                            bit_offset = ALLOC_BITS;
-                            loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
-                        }
-                        
-                        bits = (*loc >> (64 - bit_offset)) & 0b11ul;
-                        if (bits == 0)
-                            continuousPageCounter++;
-                    } while (bits == 0);
+                            bit_offset += ALLOC_BITS;
+                            if (bit_offset > 64) {
+                                bit_offset = ALLOC_BITS;
+                                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                            }
+                            
+                            bits = (*loc >> (64 - bit_offset)) & 0b11ul;
+                            if (bits == 0)
+                                continuousPageCounter++;
+                        } while (bits == 0);
 
-                    trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
-                    bit_start = 0;
-                    continuousPageCounter = 0;
+                        trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
+                        bit_start = 0;
+                        continuousPageCounter = 0;
+                    }
+                    else {
+                        trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
+                        bit_start = 0;
+                        continuousPageCounter = 0;
+                    }
+                    bit_offset += ALLOC_BITS;
                 }
-                else {
-                    trace("Bits ", bits, " on offset ", bit_offset, " were not zero");
-                    bit_start = 0;
-                    continuousPageCounter = 0;
-                }
-                bit_offset += ALLOC_BITS;
+                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                trace( "loc moved forward to ", loc);
             }
-            loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
-            trace( "loc moved forward to ", loc);
+            else {
+                bit_start = 0;
+                continuousPageCounter = 0;
+                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+            }
         }
 
-        const size_t previous_end_in_bitmap = reinterpret_cast<size_t>(previous_start) + ( (ALLOCATION_SIZE >> DB_PAGE_OFFSET) * ALLOC_BITS / 8 /*Bits per byte*/);
+        /*const size_t previous_end_in_bitmap = reinterpret_cast<size_t>(previous_start) + ( (ALLOCATION_SIZE >> DB_PAGE_OFFSET) * ALLOC_BITS / 8 );
         while (reinterpret_cast<uint64_t>(loc) + slots_needed*ALLOC_BITS / 8 < previous_end_in_bitmap) {
             //First check if space is not full
             uint64_t bit_offset = ALLOC_BITS;
@@ -535,9 +657,9 @@ public:
                             void* addr = reinterpret_cast<void*>(
                                     start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
 
-                            /*assert(start_of_actual_chunk + ALLOCATION_SIZE > reinterpret_cast<uint64_t>(addr));
-                            assert(reinterpret_cast<uint64_t>(addr) + size - 1 < start_of_actual_chunk + ALLOCATION_SIZE);
-                            assert(isAllocatable(addr, size));*/
+                            //assert(start_of_actual_chunk + ALLOCATION_SIZE > reinterpret_cast<uint64_t>(addr));
+                            //assert(reinterpret_cast<uint64_t>(addr) + size - 1 < start_of_actual_chunk + ALLOCATION_SIZE);
+                            //assert(isAllocatable(addr, size));
 
                             trace("Returning address on ", addr, " as next allocatable slot");
                             m_info.status.lastBitmapLocation = loc;
@@ -568,7 +690,7 @@ public:
             }
             loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
             trace( "loc moved forward to ", loc);
-        }
+        }*/
 
         return nullptr;
     }
