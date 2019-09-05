@@ -588,7 +588,7 @@ public:
             uint64_t bit_offset = ALLOC_BITS;
 
             //if ( __builtin_ctzl(*loc) > 0 || __builtin_popcountl( *loc & 0xaaaaaaaaaaaaaaaaul ) >= slots_needed) {
-            if ( *loc < ~(0x4ul << 60) ) {
+            if ( (*loc & 0xaaaaaaaaaaaaaaaaul) < 0xaaaaaaaaaaaaaaaaul ) {
                 // check within one word
                 while (bit_offset <= 64) {
                     uint64_t bits = (*loc & (0b11ul << (64 - bit_offset)));
