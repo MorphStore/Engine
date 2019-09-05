@@ -571,19 +571,23 @@ public:
         //uint64_t* loc = m_info.status.lastBitmapLocation;
         //uint64_t* previous_start = loc;
         uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
+
         const uint64_t start_of_actual_chunk = reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader);
         const uint64_t slots_needed = (size >> DB_PAGE_OFFSET) + ( ((size % DB_PAGE_SIZE) == 0) ? 0 : 1);
+        const uint64_t needed_offset = slots_needed * ALLOC_BITS / 8;
+        const uint64_t bitmap_size = (ALLOCATION_SIZE >> DB_PAGE_OFFSET) * ALLOC_BITS / 8
         trace("Trying to find gap for ", slots_needed, " slots");
 
         uint64_t continuousPageCounter = 0;
         uint64_t bit_start = 0;
 
-        const size_t end_of_allocation_bitmap = reinterpret_cast<size_t>(bitmap) + ( (ALLOCATION_SIZE >> DB_PAGE_OFFSET) * ALLOC_BITS / 8 /*Bits per byte*/);
+        const size_t end_of_allocation_bitmap = reinterpret_cast<size_t>(bitmap) + ( bitmap_size );
 
-        while (reinterpret_cast<uint64_t>(loc) + slots_needed*ALLOC_BITS / 8 < end_of_allocation_bitmap) {
+        while (reinterpret_cast<uint64_t>(loc) + needed_offset < end_of_allocation_bitmap) {
             //First check if space is not full
             uint64_t bit_offset = ALLOC_BITS;
 
+            //if ( __builtin_ctzl(*loc) > 0 || __builtin_popcountl( *loc & 0xaaaaaaaaaaaaaaaaul ) >= slots_needed) {
             if ( *loc < ~(0x4ul << 60) ) {
                 // check within one word
                 while (bit_offset <= 64) {
@@ -601,17 +605,17 @@ public:
                                         start_of_actual_chunk + DB_PAGE_SIZE * (bit_start / ALLOC_BITS));
 
                                 trace("Returning address on ", addr, " as next allocatable slot");
-                                m_info.status.lastBitmapLocation = loc;
+                                //m_info.status.lastBitmapLocation = loc;
                                 return addr; 
                             }
 
                             bit_offset += ALLOC_BITS;
                             if (bit_offset > 64) {
                                 bit_offset = ALLOC_BITS;
-                                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                                ++loc;
                             }
                             
-                            bits = (*loc >> (64 - bit_offset)) & 0b11ul;
+                            bits = (*loc & (0b11ul << (64 - bit_offset)));
                             if (bits == 0)
                                 continuousPageCounter++;
                         } while (bits == 0);
@@ -627,13 +631,13 @@ public:
                     }
                     bit_offset += ALLOC_BITS;
                 }
-                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                ++loc;
                 trace( "loc moved forward to ", loc);
             }
             else {
                 bit_start = 0;
                 continuousPageCounter = 0;
-                loc = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(loc) + sizeof(uint64_t));
+                ++loc;
             }
         }
 
