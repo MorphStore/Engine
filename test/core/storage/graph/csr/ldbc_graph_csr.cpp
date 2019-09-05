@@ -38,10 +38,10 @@ int main( void ){
     std::cout << "\n";
      */
 
-    // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/social_network/"
+    // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/ldbc_sn_data/"
     // NEVER FORGET THE LAST / in address!!!
-    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(("/home/pfeiffer/social_network/"));
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/opt/ldbc_snb_datagen-0.2.8/social_network/social_network_1/");
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_1/");
+    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/opt/ldbc_snb_datagen-0.2.8/social_network/social_network_1/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::CSR>();
@@ -64,15 +64,15 @@ int main( void ){
     std::cout << "Import: " << elapsedImportTime << " millisec.\n";
 
     /* Test Vertex, which contains edges with properties (SERVER):
-     *
-    g1->print_vertex_by_id(1035174);
-    g1->print_neighbors_of_vertex(1035174);
-    */
+     */
+    // g1->print_vertex_by_id(1035174);
+    // g1->print_neighbors_of_vertex(1035174);
+    
 
-    /* Test Vertex, which contains edges with properties (MY PC):*/
+    /* Test Vertex, which contains edges with properties (MY PC):
     g1->print_vertex_by_id(100449);
     g1->print_neighbors_of_vertex(100449);
-
+    */
 
     /*
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
