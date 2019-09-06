@@ -39,19 +39,7 @@ int main() {
     const unsigned t_bw = 1;
     unsigned countValues = 
                 64 << 20;
-    auto origCol = /*generate_with_distr(
-            countValues,
-            std::uniform_int_distribution<uint64_t>(
-                    0, bitwidth_max<uint64_t>(t_bw) - 1
-            ),
-            false
-    );*/
-    
-     generate_exact_number(
-        countValues,
-        10 << 10,
-        123,
-        12345);
+
 
     //select_handwritten_buffer_compr_out<8>(origCol, val)
     using in_f = uncompr_f;
@@ -63,20 +51,44 @@ int main() {
     // If no estimate is provided: Pessimistic allocation size (for
     // uncompressed data), reached only if all input data elements pass the
     // selection.
-    const column<out_f>* outPosCol = morph<
-            scalar<v64 <uint64_t>>,
-            out_f,
-            in_f
-                >( origCol );
 
-    auto originalSize = outPosCol->get_size_used_byte();
-    std::cout << "Column compressed bytes for " << countValues << " values: " << outPosCol->get_size_compr_byte();
-    std::cout << ", bytes used: " << outPosCol->get_size_used_byte() << std::endl;
+    const unsigned ARRAY_SIZE = 5;
+    column<in_f>* cols[ARRAY_SIZE];
+
+    for (unsigned i = 0; i < ARRAY_SIZE; i++)
+    {
+        cols[i] = const_cast<column<in_f>*>(
+            generate_exact_number(
+                countValues,
+                10 << 10,
+                123,
+                12345) );
+    }
+    const column<in_f>** actualCols = const_cast<const column<in_f>**>(cols);
+    std::cout << "Generated numbers" << std::endl;
+
+    column<out_f>* outcols[ARRAY_SIZE];
+    for (unsigned i = 0; i < ARRAY_SIZE; i++)
+    {
+        outcols[i] = const_cast<column<out_f>*>(
+            morph<
+                scalar<v64 <uint64_t>>,
+                out_f,
+                in_f
+                    >( actualCols[i] ) );
+    }
+    const column<out_f>** outPosCols = const_cast<const column<out_f>**>(outcols);
+
+    auto originalSize = outPosCols[0]->get_size_used_byte();
+    std::cout << "Column compressed bytes for " << countValues << " values: " << outPosCols[0]->get_size_compr_byte();
+    std::cout << ", bytes used: " << outPosCols[0]->get_size_used_byte() << std::endl;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     start = std::chrono::system_clock::now();
-    const_cast<column<out_f>*>(outPosCol)->reallocate();
+    for (unsigned i = 0; i < ARRAY_SIZE; i++) {
+        const_cast<column<out_f>*>(outPosCols[i])->reallocate();
+    }
     end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start;
