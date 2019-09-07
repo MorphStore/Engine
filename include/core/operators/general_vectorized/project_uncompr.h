@@ -22,7 +22,7 @@ namespace morphstore {
          vector_t p_PosVector
       ) {
          //@todo: Is it better to avoid gather here?
-         return (vectorlib::gather<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_DataPtr, p_PosVector));
+         return (vectorlib::gather<VectorExtension, vector_size_bit::value, sizeof(base_t)>(p_DataPtr, p_PosVector));
       }
    };
 

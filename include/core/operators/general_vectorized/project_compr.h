@@ -35,6 +35,7 @@
 #include <type_traits>
 
 #include <cstdint>
+#include <cstring>
 
 namespace morphstore {
 
@@ -47,7 +48,7 @@ struct project_processing_unit_wit {
 
     struct state_t {
         nonselective_write_iterator<t_ve, t_out_data_f> m_Wit;
-        random_read_access<t_ve, t_in_data_f> m_Rra;
+        typename random_read_access<t_ve, t_in_data_f>::type m_Rra;
 
         state_t(uint8_t * p_OutData, const base_t * p_InData) :
                 m_Wit(p_OutData), m_Rra(p_InData)

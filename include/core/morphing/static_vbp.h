@@ -33,8 +33,6 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
-// @todo Remove this once static_vbp_f is generic w.r.t. the underlying layout.
-#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
@@ -59,14 +57,14 @@ namespace morphstore {
     /**
      * @brief The vertical bit packed format with a static bit width.
      */
-    template<unsigned t_bw, unsigned t_step>
+    template<class t_layout>
     struct static_vbp_f : public format {
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            return vbp_l<t_bw, t_step>::get_size_max_byte(p_CountValues);
+            return t_layout::get_size_max_byte(p_CountValues);
         }
         
-        static const size_t m_BlockSize = vbp_l<t_bw, t_step>::m_BlockSize;
+        static const size_t m_BlockSize = t_layout::m_BlockSize;
     };
     
     
@@ -87,17 +85,10 @@ namespace morphstore {
      * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
-            uncompr_f
+    template<class t_vector_extension, class t_layout>
+    struct morph_t<t_vector_extension, static_vbp_f<t_layout>, uncompr_f
     > {
-        using out_f = static_vbp_f<t_bw, t_step>;
+        using out_f = static_vbp_f<t_layout>;
         using in_f = uncompr_f;
         
         static
@@ -119,7 +110,7 @@ namespace morphstore {
             uint8_t * out8 = outCol->get_data();
             const uint8_t * const initOut8 = out8;
 
-            morph_batch<t_vector_extension, vbp_l<t_bw, t_step>, uncompr_f>(
+            morph_batch<t_vector_extension, t_layout, uncompr_f>(
                     in8, out8, outCountLogCompr
             );
             const size_t sizeComprByte = out8 - initOut8;
@@ -150,18 +141,10 @@ namespace morphstore {
      * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            uncompr_f,
-            static_vbp_f<t_bw, t_step>
-    > {
+    template<class t_vector_extension, class t_layout>
+    struct morph_t<t_vector_extension, uncompr_f, static_vbp_f<t_layout> > {
         using out_f = uncompr_f;
-        using in_f = static_vbp_f<t_bw, t_step>;
+        using in_f = static_vbp_f<t_layout>;
         
         static
         const column<out_f> *
@@ -185,7 +168,7 @@ namespace morphstore {
             auto outCol = new column<out_f>(outSizeByte);
             uint8_t * out8 = outCol->get_data();
 
-            morph_batch<t_vector_extension, uncompr_f, vbp_l<t_bw, t_step> >(
+            morph_batch<t_vector_extension, uncompr_f, t_layout>(
                     in8, out8, inCountLogCompr
             );
             
@@ -210,14 +193,13 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step,
+            class t_layout,
             template<class, class...> class t_op_vector,
             class ... t_extra_args
     >
     struct decompress_and_process_batch<
             t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
+            static_vbp_f<t_layout>,
             t_op_vector,
             t_extra_args ...
     > {
@@ -231,17 +213,16 @@ namespace morphstore {
         ) {
             decompress_and_process_batch<
                     t_vector_extension,
-                    vbp_l<t_bw, t_step>,
+                    t_layout,
                     t_op_vector,
                     t_extra_args ...
-            >::apply(
-                    p_In8, p_CountIn8, p_State
-            );
+            >::apply(p_In8, p_CountIn8, p_State);
         }
     };
     
     // This is deprecated, we decided not to use this approach.
-#if 1
+    // @todo Remove this.
+#if 0
     // Iterator implementation with a load in each call of next().
     // Seems to be faster for all bit widths.
     
@@ -267,7 +248,7 @@ namespace morphstore {
             return retVal;
         };
     };
-#else
+#elif 0
     // Iterator implementation with a check in each call of next().
     // Seems to be slower for all bit widths.
     
@@ -311,14 +292,17 @@ namespace morphstore {
     // Random read
     // ------------------------------------------------------------------------
 
-    template<class t_vector_extension, unsigned t_bw, unsigned t_step>
-    class random_read_access<t_vector_extension, static_vbp_f<t_bw, t_step> > {
+    template<class t_vector_extension, class t_layout>
+    class random_read_access<t_vector_extension, static_vbp_f<t_layout> > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        random_read_access<t_ve, vbp_l<t_bw, t_step> > m_Internal;
+        typename random_read_access<t_ve, t_layout>::type m_Internal;
         
     public:
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, static_vbp_f<t_layout> >;
+        
         random_read_access(const base_t * p_Data) : m_Internal(p_Data) {
             //
         }
@@ -334,14 +318,14 @@ namespace morphstore {
     // ------------------------------------------------------------------------
 
     // @todo Take t_step into account correctly.
-    template<class t_vector_extension, unsigned t_bw, unsigned t_step>
+    template<class t_vector_extension, class t_layout>
     class selective_write_iterator<
-            t_vector_extension, static_vbp_f<t_bw, t_step>
+            t_vector_extension, static_vbp_f<t_layout>
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        using out_f = static_vbp_f<t_bw, t_step>;
+        using out_f = static_vbp_f<t_layout>;
         
         uint8_t * m_Out;
         const uint8_t * const m_InitOut;
@@ -359,7 +343,7 @@ namespace morphstore {
                     m_StartBuffer
             );
             // @todo This should not be inlined.
-            morph_batch<t_ve, vbp_l<t_bw, t_step>, uncompr_f>(
+            morph_batch<t_ve, t_layout, uncompr_f>(
                     buffer8, m_Out, m_CountBuffer
             );
             size_t overflow = m_Buffer - m_EndBuffer;
@@ -414,7 +398,7 @@ namespace morphstore {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
                 );
-                morph_batch<t_ve, vbp_l<t_bw, t_step>, uncompr_f>(
+                morph_batch<t_ve, t_layout, uncompr_f>(
                     buffer8, m_Out, outCountLogCompr
                 );
                 outSizeComprByte = m_Out - m_InitOut;

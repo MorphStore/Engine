@@ -24,6 +24,7 @@
 #include <core/memory/mm_glob.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/printing.h>
@@ -45,7 +46,7 @@ void small_example( ) {
     auto origCol = generate_sorted_unique(128);
     auto comprCol = morph<
             sse<v128<uint64_t>>,
-            static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
+            static_vbp_f<vbp_l<8, sizeof(__m128i) / sizeof(uint64_t)> >
     >(origCol);
     auto decomprCol = morph<sse<v128<uint64_t>>, uncompr_f>(comprCol);
     

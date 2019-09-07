@@ -26,6 +26,7 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -89,9 +90,9 @@ struct inc_t<uncompr_f, uncompr_f> {
 };
 
 template<unsigned t_bw>
-struct inc_t<uncompr_f, static_vbp_f<t_bw, 1> > {
+struct inc_t<uncompr_f, static_vbp_f<vbp_l<t_bw, 1>>> {
     using out_f = uncompr_f;
-    using in_f = static_vbp_f<t_bw, 1>;
+    using in_f = static_vbp_f<vbp_l<t_bw, 1> >;
     static const column<out_f> * apply(const column<in_f> * p_InDataCol) {
         const uint8_t * inData = p_InDataCol->get_data();
         const size_t inDataCount = p_InDataCol->get_count_values();
@@ -103,7 +104,7 @@ struct inc_t<uncompr_f, static_vbp_f<t_bw, 1> > {
 
         for(unsigned i = 0; i < inDataCount; i += 64) {
             uint8_t * inBuffer8 = reinterpret_cast<uint8_t *>(inBuffer64);
-            unpack<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_bw, 1>(inData, inBuffer8, 64);
+            morph_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, vbp_l<t_bw, 1>>(inData, inBuffer8, 64);
             for(unsigned k = 0; k < 64; k++)
                 outData[i + k] = inBuffer64[k] + 1;
         }
@@ -114,8 +115,8 @@ struct inc_t<uncompr_f, static_vbp_f<t_bw, 1> > {
 };
 
 template<unsigned t_bw>
-struct inc_t<static_vbp_f<t_bw, 1>, uncompr_f> {
-    using out_f = static_vbp_f<t_bw, 1>;
+struct inc_t<static_vbp_f<vbp_l<t_bw, 1>>, uncompr_f> {
+    using out_f = static_vbp_f<vbp_l<t_bw, 1> >;
     using in_f = uncompr_f;
     static const column<out_f> * apply(const column<in_f> * p_InDataCol) {
         const uint64_t * inData = p_InDataCol->get_data();
@@ -130,7 +131,7 @@ struct inc_t<static_vbp_f<t_bw, 1>, uncompr_f> {
             for(unsigned k = 0; k < 64; k++)
                 outBuffer64[k] = inData[i + k] + 1;
             const uint8_t * outBuffer8 = reinterpret_cast<uint8_t *>(outBuffer64);
-            pack<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_bw, 1>(outBuffer8, 64, outData);
+            morph_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l<t_bw, 1>, uncompr_f>(outBuffer8, outData, 64);
         }
 
         outDataCol->set_meta_data(inDataCount, out_f::get_size_max_byte(inDataCount));
@@ -139,9 +140,9 @@ struct inc_t<static_vbp_f<t_bw, 1>, uncompr_f> {
 };
 
 template<unsigned t_bw>
-struct inc_t<static_vbp_f<t_bw, 1>, static_vbp_f<t_bw, 1> > {
-    using out_f = static_vbp_f<t_bw, 1>;
-    using in_f = static_vbp_f<t_bw, 1>;
+struct inc_t<static_vbp_f<vbp_l<t_bw, 1>>, static_vbp_f<vbp_l<t_bw, 1>>> {
+    using out_f = static_vbp_f<vbp_l<t_bw, 1> >;
+    using in_f = static_vbp_f<vbp_l<t_bw, 1> >;
     static const column<out_f> * apply(const column<in_f> * p_InDataCol) {
         const uint8_t * inData = p_InDataCol->get_data();
         const size_t inDataCount = p_InDataCol->get_count_values();
@@ -154,11 +155,11 @@ struct inc_t<static_vbp_f<t_bw, 1>, static_vbp_f<t_bw, 1> > {
 
         for(unsigned i = 0; i < inDataCount; i += 64) {
             uint8_t * inBuffer8 = reinterpret_cast<uint8_t *>(inBuffer64);
-            unpack<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_bw, 1>(inData, inBuffer8, 64);
+            morph_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, vbp_l<t_bw, 1>>(inData, inBuffer8, 64);
             for(unsigned k = 0; k < 64; k++)
                 outBuffer64[k] = inBuffer64[k] + 1;
             const uint8_t * outBuffer8 = reinterpret_cast<const uint8_t *>(outBuffer64);
-            pack<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_bw, 1>(outBuffer8, 64, outData);
+            morph_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l<t_bw, 1>, uncompr_f>(outBuffer8, outData, 64);
         }
 
         outDataCol->set_meta_data(inDataCount, out_f::get_size_max_byte(inDataCount));
@@ -183,9 +184,9 @@ struct inc_t<static_vbp_f<t_bw, 1>, static_vbp_f<t_bw, 1> > {
 
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT(uncompr_f, "uncompr_f", uncompr_f, "uncompr_f", bw), \
-    MAKE_VARIANT(uncompr_f, "uncompr_f", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw), \
-    MAKE_VARIANT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", uncompr_f, "uncompr_f", bw), \
-    MAKE_VARIANT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw)
+    MAKE_VARIANT(uncompr_f, "uncompr_f", SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>), "static_vbp_f<vbp_l<bw, 1>>", bw), \
+    MAKE_VARIANT(SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>), "static_vbp_f<vbp_l<bw, 1>>", uncompr_f, "uncompr_f", bw), \
+    MAKE_VARIANT(SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>), "static_vbp_f<vbp_l<bw, 1>>", SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>), "static_vbp_f<vbp_l<bw, 1>>", bw)
 
 // ****************************************************************************
 // Main program.

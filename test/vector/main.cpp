@@ -73,7 +73,7 @@ int main( void ) {
    compressstore< sse < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,2);
    std::cout << "sse compress store, 128 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec128=gather<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
+   testvec128=gather<sse< v128< uint64_t > >, 128, uint64_t>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "sse gather " << temp << "\n";
    
@@ -198,11 +198,11 @@ int main( void ) {
    compressstore< avx2 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,2);
    std::cout << "avx2 compress store, 256 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec128=gather<avx2< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
+   testvec128=gather<avx2< v128< uint64_t > >, 128, uint64_t>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "avx2 gather, 128 bit " << temp << "\n";
 
-   testvec256=gather<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data,gatherTest256);
+   testvec256=gather<avx2< v256< uint64_t > >, 256, uint64_t>(data,gatherTest256);
    temp=_mm256_extract_epi64(testvec256,0);
    std::cout << "avx2 gather, 256 bit " << temp << "\n";
    
@@ -335,7 +335,7 @@ int main( void ) {
    compressstore< avx512 < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,2);
    std::cout << "avx512 compress store, 128 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec512=gather<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data,gatherTest512);
+   testvec512=gather<avx512< v512< uint64_t > >, 512, uint64_t>(data,gatherTest512);
    temp=extract_value<avx512< v512< uint64_t > >, 64>(testvec512,0);
    std::cout << "avx512 gather " << temp << "\n";
    
