@@ -44,8 +44,8 @@
 
 #define DYNAMIC_VBP_STATIC_ASSERTS_VECTOR_EXTENSION \
     static_assert( \
-            t_BlockSize64 % vector_size_bit::value == 0, \
-            "dynamic_vbp_f: template parameter t_BlockSize64 must be a multiple of the vector size in bits" \
+            t_BlockSizeLog % vector_size_bit::value == 0, \
+            "dynamic_vbp_f: template parameter t_BlockSizeLog must be a multiple of the vector size in bits" \
     ); \
     static_assert( \
             t_PageSizeBlocks % vector_size_byte::value == 0, \
@@ -70,20 +70,21 @@ namespace morphstore {
      * a fixed number of blocks.
      * 
      * There are two template parameters controlling the concrete layout:
-     * - `t_BlockSize64` The number of uncompressed (64-bit) data elements per
-     *   block
+     * - `t_BlockSizeLog` The number of logical data elements per block
      * - `t_PageSizeBlocks` The number of blocks per page.
      * 
      * In fact, for a block size of 128 data elements and 16 blocks per page,
-     * this is the format called SIMD-BP128 in the literature, with the 
-     * difference that we use 64-bit instead of 32-bit date elements.
+     * this is the format called SIMD-BP128 in the literature, with the
+     * following differences:
+     * - we use 64-bit instead of 32-bit data elements
+     * - we pack a block of zeros with a bit width of 1 instead of omitting it
      */
     // @todo Make this properly depend on the underlying layout.
-    template<size_t t_BlockSize64, size_t t_PageSizeBlocks, unsigned t_Step>
+    template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks, unsigned t_Step>
     struct dynamic_vbp_f : public format {
         static_assert(
-                t_BlockSize64 > 0,
-                "dynamic_vbp_f: template parameter t_BlockSize64 must be greater than 0"
+                t_BlockSizeLog > 0,
+                "dynamic_vbp_f: template parameter t_BlockSizeLog must be greater than 0"
         );
         static_assert(
                 t_PageSizeBlocks > 0,
@@ -94,18 +95,18 @@ namespace morphstore {
                 "dynamic_vbp_f: template parameter t_Step must be greater than 0"
         );
         static_assert(
-                t_BlockSize64 % t_Step == 0,
-                "dynamic_vbp_f: template parameter t_BlockSize64 must be a multiple of template parameter t_Step"
+                t_BlockSizeLog % t_Step == 0,
+                "dynamic_vbp_f: template parameter t_BlockSizeLog must be a multiple of template parameter t_Step"
         );
         
-        static const size_t m_PageSize64 = t_PageSizeBlocks * t_BlockSize64;
+        static const size_t m_PageSizeLog = t_PageSizeBlocks * t_BlockSizeLog;
         static const size_t m_MetaSize8 = t_PageSizeBlocks * sizeof(uint8_t);
         
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
             // These numbers are exact (assuming that the check above
             // succeeded).
-            const size_t pageCount = p_CountValues / m_PageSize64;
+            const size_t pageCount = p_CountValues / m_PageSizeLog;
             const size_t totalMetaSizeByte = pageCount * m_MetaSize8;
             // These numbers are worst cases, which are only reached if all
             // blocks require the maximum bit width of 64.
@@ -114,7 +115,7 @@ namespace morphstore {
             return totalDataSizeByte + totalMetaSizeByte;
         }
         
-        static const size_t m_BlockSize = t_BlockSize64;
+        static const size_t m_BlockSize = t_BlockSizeLog;
         
         template<class t_vector_extension>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -131,7 +132,7 @@ namespace morphstore {
             >(0);
             for(
                     unsigned baseIdx = 0;
-                    baseIdx < convert_size<uint64_t, base_t>(t_BlockSize64);
+                    baseIdx < convert_size<uint64_t, base_t>(t_BlockSizeLog);
                     baseIdx += vector_element_count::value
             )
                 pseudoMaxVec = bitwise_or<t_ve>(
@@ -166,13 +167,13 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            size_t t_BlockSize64,
+            size_t t_BlockSizeLog,
             size_t t_PageSizeBlocks,
             unsigned t_Step
     >
     struct morph_batch_t<
             t_vector_extension,
-            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>,
+            dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>,
             uncompr_f
     > {
         using t_ve = t_vector_extension;
@@ -180,7 +181,7 @@ namespace morphstore {
                 
         DYNAMIC_VBP_STATIC_ASSERTS_VECTOR_EXTENSION
         
-        using out_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        using out_f = dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>;
         
         static void apply(
                 const uint8_t * & in8, uint8_t * & out8, size_t countLog
@@ -188,7 +189,7 @@ namespace morphstore {
             using namespace vectorlib;
             
             const size_t countLogComplPages = round_down_to_multiple(
-                    countLog, out_f::m_PageSize64
+                    countLog, out_f::m_PageSizeLog
             );
             const size_t countLogIncomplPage = countLog - countLogComplPages;
             
@@ -215,7 +216,7 @@ namespace morphstore {
 
                     // Pack the data with that bit width.
                     pack_switch<t_ve, vbp_l, vector_element_count::value>(
-                            bw, in8, out8, t_BlockSize64
+                            bw, in8, out8, t_BlockSizeLog
                     );
                 }
             }
@@ -224,7 +225,7 @@ namespace morphstore {
                 uint8_t * const outMeta8 = out8;
                 out8 += out_f::m_MetaSize8;
                 const size_t countBlocksIncomplPage =
-                        countLogIncomplPage / t_BlockSize64;
+                        countLogIncomplPage / t_BlockSizeLog;
                 for(
                         unsigned blockIdx = 0;
                         blockIdx < countBlocksIncomplPage;
@@ -240,7 +241,7 @@ namespace morphstore {
 
                     // Pack the data with that bit width.
                     pack_switch<t_ve, vbp_l, vector_element_count::value>(
-                            bw, in8, out8, t_BlockSize64
+                            bw, in8, out8, t_BlockSizeLog
                     );
                 }
                 // Fill the meta data of remaining blocks with a marker to
@@ -260,14 +261,14 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            size_t t_BlockSize64,
+            size_t t_BlockSizeLog,
             size_t t_PageSizeBlocks,
             unsigned t_Step
     >
     struct morph_batch_t<
             t_vector_extension,
             uncompr_f,
-            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>
+            dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -275,7 +276,7 @@ namespace morphstore {
         DYNAMIC_VBP_STATIC_ASSERTS_VECTOR_EXTENSION
         
         using out_f = uncompr_f;
-        using in_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        using in_f = dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>;
         
         static void apply(
                 const uint8_t * & in8, uint8_t * & out8, size_t countLog
@@ -296,12 +297,12 @@ namespace morphstore {
                         blockIdx++
                 )
                     unpack_switch<t_ve, vbp_l, vector_element_count::value>(
-                            inMeta8[blockIdx], in8, out8, t_BlockSize64
+                            inMeta8[blockIdx], in8, out8, t_BlockSizeLog
                     );
                 // If the last page is incomplete, then this increment is
                 // actually too high. However, this is fine for the condition
                 // of the while-loop.
-                countLogDecompr += in_f::m_PageSize64;
+                countLogDecompr += in_f::m_PageSizeLog;
             }
         }
     };
@@ -317,7 +318,7 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            size_t t_BlockSize64,
+            size_t t_BlockSizeLog,
             size_t t_PageSizeBlocks,
             unsigned t_Step,
             template<class, class ...> class t_op_vector,
@@ -325,14 +326,14 @@ namespace morphstore {
     >
     struct decompress_and_process_batch<
             t_vector_extension,
-            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>,
+            dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>,
             t_op_vector,
             t_extra_args ...
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        using in_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        using in_f = dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>;
         
         static void apply(
                 const uint8_t * & p_In8,
@@ -356,7 +357,7 @@ namespace morphstore {
                         blockIdx++
                 ) {
                     const unsigned bw = inMeta8[blockIdx];
-                    const size_t blockSize8 = t_BlockSize64 * bw / bitsPerByte;
+                    const size_t blockSize8 = t_BlockSizeLog * bw / bitsPerByte;
                     decompress_and_process_batch_switch<
                             t_ve,
                             vbp_l,
@@ -377,26 +378,26 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            size_t t_BlockSize64,
+            size_t t_BlockSizeLog,
             size_t t_PageSizeBlocks,
             unsigned t_Step
     >
     class selective_write_iterator<
             t_vector_extension,
-            dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>
+            dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        using out_f = dynamic_vbp_f<t_BlockSize64, t_PageSizeBlocks, t_Step>;
+        using out_f = dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>;
         
         uint8_t * m_OutMeta;
         uint8_t * m_OutData;
         size_t m_BlockIdxInPage;
         const uint8_t * const m_InitOut;
         // @todo Think about this number.
-        static const size_t m_CountBuffer = out_f::m_PageSize64;
-        static const size_t m_CountBufferBlocks = m_CountBuffer / t_BlockSize64;
+        static const size_t m_CountBuffer = out_f::m_PageSizeLog;
+        static const size_t m_CountBufferBlocks = m_CountBuffer / t_BlockSizeLog;
         MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
                 m_CountBuffer + vector_element_count::value - 1
         ];
@@ -405,7 +406,7 @@ namespace morphstore {
         size_t m_Count;
         
         void compress_buffer() {
-            // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
+            // Assumes that m_CountBuffer is 2^i * out_f::m_PageSizeLog,
             // where i <= 0, i.e., the buffer is as large as a page or a
             // half of it, our a quarter of it, ....
             const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
@@ -422,7 +423,7 @@ namespace morphstore {
                 m_OutMeta[m_BlockIdxInPage + blockIdx] =
                         static_cast<uint8_t>(bw);
                 pack_switch<t_ve, vbp_l, t_Step>(
-                        bw, buffer8, m_OutData, t_BlockSize64
+                        bw, buffer8, m_OutData, t_BlockSizeLog
                 );
             }
             m_BlockIdxInPage += m_CountBufferBlocks;
@@ -481,13 +482,13 @@ namespace morphstore {
             uint8_t * endOut;
             if(countLog) {
                 const size_t outCountLogCompr = round_down_to_multiple(
-                        countLog, t_BlockSize64
+                        countLog, t_BlockSizeLog
                 );
 
-                // Assumes that m_CountBuffer is 2^i * out_f::m_PageSize64,
+                // Assumes that m_CountBuffer is 2^i * out_f::m_PageSizeLog,
                 // where i <= 0, i.e., the buffer is as large as a page or a
                 // half of it, our a quarter of it, ....
-                const size_t countFullBlocks = countLog / t_BlockSize64;
+                const size_t countFullBlocks = countLog / t_BlockSizeLog;
                 const uint8_t * buffer8 = reinterpret_cast<const uint8_t *>(
                         m_StartBuffer
                 );
@@ -502,7 +503,7 @@ namespace morphstore {
                     m_OutMeta[m_BlockIdxInPage + blockIdx] =
                             static_cast<uint8_t>(bw);
                     pack_switch<t_ve, vbp_l, t_Step>(
-                            bw, buffer8, m_OutData, t_BlockSize64
+                            bw, buffer8, m_OutData, t_BlockSizeLog
                     );
                 }
                 m_BlockIdxInPage += countFullBlocks;

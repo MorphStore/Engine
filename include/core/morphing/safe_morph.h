@@ -183,7 +183,7 @@ namespace morphstore {
     
     // Compression
             
-    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // @todo It would be nice to have the template parameters t_BlockSizeLog and
     // t_PageSizeBlocks here as well, but the compiler complains then.
     #define MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector_extension) \
         template<> \
@@ -209,6 +209,8 @@ namespace morphstore {
             } \
         };
 
+    // @todo This always consumes a lot of time, even if dynamic_vbp_f in not
+    // used in the respective compilation unit.
     MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE
     MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
@@ -224,7 +226,7 @@ namespace morphstore {
 
     // Decompression.
             
-    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // @todo It would be nice to have the template parameters t_BlockSizeLog and
     // t_PageSizeBlocks here as well, but the compiler complains then.
     #define MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector_extension) \
     template<> \
@@ -250,6 +252,8 @@ namespace morphstore {
         } \
     };
 
+    // @todo This always consumes a lot of time, even if dynamic_vbp_f in not
+    // used in the respective compilation unit.
     MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
 #ifdef SSE
     MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
