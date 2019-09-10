@@ -69,7 +69,7 @@ namespace morphstore {
     
     
     // ************************************************************************
-    // Morph-operators (column-level)
+    // Morph-operators (batch-level)
     // ************************************************************************
     
     // ------------------------------------------------------------------------
@@ -86,45 +86,15 @@ namespace morphstore {
      * detected at compile-time.
      */
     template<class t_vector_extension, class t_layout>
-    struct morph_t<t_vector_extension, static_vbp_f<t_layout>, uncompr_f
+    struct morph_batch_t<
+            t_vector_extension, static_vbp_f<t_layout>, uncompr_f
     > {
-        using out_f = static_vbp_f<t_layout>;
-        using in_f = uncompr_f;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const size_t countLog = inCol->get_count_values();
-            const size_t outCountLogCompr = round_down_to_multiple(
-                    countLog, out_f::m_BlockSize
+        static void apply(
+                const uint8_t * & in8, uint8_t * & out8, size_t countLog
+        ) {
+            return morph_batch<t_vector_extension, t_layout, uncompr_f>(
+                    in8, out8, countLog
             );
-            const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
-                    countLog - outCountLogCompr
-            );
-            
-            const uint8_t * in8 = inCol->get_data();
-            
-            auto outCol = new column<out_f>(
-                    get_size_max_byte_any_len<out_f>(countLog)
-            );
-            uint8_t * out8 = outCol->get_data();
-            const uint8_t * const initOut8 = out8;
-
-            morph_batch<t_vector_extension, t_layout, uncompr_f>(
-                    in8, out8, outCountLogCompr
-            );
-            const size_t sizeComprByte = out8 - initOut8;
-            
-            if(outSizeRestByte) {
-                out8 = create_aligned_ptr(out8);
-                memcpy(out8, in8, outSizeRestByte);
-            }
-
-            outCol->set_meta_data(
-                    countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
-            );
-            
-            return outCol;
         }
     };
     
@@ -142,46 +112,18 @@ namespace morphstore {
      * detected at compile-time.
      */
     template<class t_vector_extension, class t_layout>
-    struct morph_t<t_vector_extension, uncompr_f, static_vbp_f<t_layout> > {
-        using out_f = uncompr_f;
-        using in_f = static_vbp_f<t_layout>;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const uint8_t * in8 = inCol->get_data();
-            const size_t inSizeComprByte = inCol->get_size_compr_byte();
-            const size_t inSizeUsedByte = inCol->get_size_used_byte();
-            
-            const size_t countLog = inCol->get_count_values();
-            const uint8_t * const inRest8 = create_aligned_ptr(
-                    in8 + inSizeComprByte
+    struct morph_batch_t<
+            t_vector_extension, uncompr_f, static_vbp_f<t_layout>
+    > {
+        static void apply(
+                const uint8_t * & in8, uint8_t * & out8, size_t countLog
+        ) {
+            return morph_batch<t_vector_extension, uncompr_f, t_layout>(
+                    in8, out8, countLog
             );
-            const size_t inCountLogRest = (inSizeComprByte < inSizeUsedByte)
-                    ? convert_size<uint8_t, uint64_t>(
-                            inSizeUsedByte - (inRest8 - in8)
-                    )
-                    : 0;
-            const size_t inCountLogCompr = countLog - inCountLogRest;
-            
-            const size_t outSizeByte = out_f::get_size_max_byte(countLog);
-            auto outCol = new column<out_f>(outSizeByte);
-            uint8_t * out8 = outCol->get_data();
-
-            morph_batch<t_vector_extension, uncompr_f, t_layout>(
-                    in8, out8, inCountLogCompr
-            );
-            
-            memcpy(
-                    out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
-            );
-            
-            outCol->set_meta_data(countLog, outSizeByte);
-
-            return outCol;
         }
     };
-    
+
     
     // ************************************************************************
     // Interfaces for accessing compressed data
