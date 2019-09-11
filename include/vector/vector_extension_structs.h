@@ -22,9 +22,13 @@
 #    include <vector/simd/sse/extension_sse.h>
 #  endif
 
+#ifdef NEON
+#   include <vector/simd/neon/extension_neon.h>
+#endif
+
 #include <vector/scalar/extension_scalar.h>
 
-namespace vector{
+namespace vectorlib{
 
 #define IMPORT_VECTOR_BOILER_PLATE(VectorExtension) \
    using vector_element_count MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::element_count; \

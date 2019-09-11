@@ -23,7 +23,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
    template<>
    struct add<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -37,6 +37,34 @@ namespace vector{
          return _mm512_add_epi64( p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct add<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm256_add_epi64( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct add<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm_add_epi64( p_vec1, p_vec2);
+      }
+   };
+   
    template<>
    struct sub<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -76,6 +104,38 @@ namespace vector{
          return _mm512_mul_epu32( p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct mul<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
+         info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         return _mm256_mul_epu32( p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct mul<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
+         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
+         return _mm_mul_epu32( p_vec1, p_vec2);
+      }
+   };
+   
+   
    template<>
    struct div<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -91,6 +151,12 @@ namespace vector{
             _mm512_xor_si512(
                _mm512_castpd_si512(
                   _mm512_add_pd(
+                     // @todo This rounds the result to the nearest integer,
+                     // but we want it to be rounded down, since this would be
+                     // the expected outcome of an integer division. There is
+                     // no _mm512_floor_pd (like in SSE and AVX). I tried
+                     // _mm512_div_round_pd with all possible rounding modes,
+                     // but none of them worked...
                      _mm512_div_pd(
                         _mm512_castsi512_pd(p_vec1),
                         _mm512_castsi512_pd(p_vec2)
@@ -160,8 +226,21 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (avx512)" );
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_left_individual<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_data,
+         typename avx512<v512<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
+         return _mm512_sllv_epi64(p_data, p_distance);
       }
    };
    template<>
@@ -173,8 +252,21 @@ namespace vector{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (avx512)" );
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi64(p_vec1, p_distance);
+      }
+   };
+   template<>
+   struct shift_right_individual<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_data,
+         typename avx512<v512<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
+         return _mm512_srlv_epi64(p_data, p_distance);
       }
    };
 }

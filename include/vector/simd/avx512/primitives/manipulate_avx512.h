@@ -21,7 +21,7 @@
 
 #include <functional>
 
-namespace vector{
+namespace vectorlib{
     template<typename T>
     struct manipulate<avx512<v512<T>>, 64> {
         

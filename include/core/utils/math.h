@@ -61,6 +61,12 @@ MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_div( unsigned numerator, unsigned den
     return ( numerator + denominator - 1 ) / denominator;
 }
 
+MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_to_multiple(
+        size_t p_Size, size_t p_Factor
+) {
+    return round_up_div(p_Size, p_Factor) * p_Factor;
+}
+
 MSV_CXX_ATTRIBUTE_INLINE unsigned round_down_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
@@ -123,6 +129,38 @@ constexpr inline t_uintX_t bitwidth_max(unsigned p_Bw) {
     return (p_Bw == std::numeric_limits<t_uintX_t>::digits)
             ? std::numeric_limits<t_uintX_t>::max()
             : (static_cast<t_uintX_t>(1) << p_Bw) - 1;
+}
+
+/**
+ * @brief Calculates the bit mask that can be used for replacing a modulo
+ * operation by a bitwise AND.
+ * 
+ * `a % b` can be replaced by `a & mask_for_mod_power_of_two(b)`, if `b` is a
+ * power of two.
+ * 
+ * @param p_Divisor Must be a power of two.
+ * @return A bit mask for replacing modulo by bitwise AND.
+ */
+constexpr inline uint64_t mask_for_mod(uint64_t p_Divisor) {
+    return p_Divisor - 1;
+}
+
+/**
+ * Calculates the shift offset that can be used for replacing an integer
+ * multiplication(division) by a left(right) shift.
+ * 
+ * `a * b` can be replaced by `a << shift_for_muldiv_power_of_two(b)` and
+ * `a / b` can be replaced by `a >> shift_for_muldiv_power_of_two(b)`, if `b`
+ * is a power of two.
+ * 
+ * @param p_FactorOrDivisor Must be a power of two.
+ * @return A shift offset for replacing multiplicatio(divison) by left(right)
+ * shift.
+ */
+constexpr inline uint64_t shift_for_muldiv(uint64_t p_FactorOrDivisor) {
+    return (p_FactorOrDivisor == 1)
+        ? 0
+        : effective_bitwidth(p_FactorOrDivisor - 1);
 }
 
 }

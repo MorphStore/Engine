@@ -47,7 +47,7 @@
 #include <vector/simd/avx2/primitives/extract_avx2.h>
 #endif
 
-
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/compare_sse.h>
@@ -56,6 +56,7 @@
 #include <vector/simd/sse/primitives/logic_sse.h>
 #include <vector/simd/sse/primitives/manipulate_sse.h>
 #include <vector/simd/sse/primitives/extract_sse.h>
+#endif
 
 #include <vector/scalar/extension_scalar.h>
 #include <vector/scalar/primitives/calc_scalar.h>
@@ -86,7 +87,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     using varex_t = variant_executor_helper<1, 2>::type
         ::for_variant_params<std::string>
@@ -108,7 +109,7 @@ int main( void ) {
     };
     
     //The following are the variants for the general_vectorized version
-    /*const std::vector<varex_t::variant_t> variants = {
+   /* const std::vector<varex_t::variant_t> variants = {
         MAKE_VARIANT(scalar<v64<uint64_t>>),
         MAKE_VARIANT(sse<v128<uint64_t>>),
         #ifdef AVXTWO
@@ -138,12 +139,12 @@ int main( void ) {
         auto inDataCol = generate_with_distr(
             inDataCount,
             std::uniform_int_distribution<uint64_t>(100, 200),
-            false
+                true
         );
         auto inPosCol = generate_with_distr(
             inPosCount,
             std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
-            false
+                true
         );
         varex.print_datagen_done();
         

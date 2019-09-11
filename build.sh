@@ -54,11 +54,35 @@ function printHelp {
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
         echo ""
-	echo "features:"
+        echo "targets:"
+        echo "	-bA|--buildAll"
+        echo "	     Builds all targets in the src directory"
+        echo "	-bEx|--buildExamples"
+        echo "	     Builds all examples"
+        echo "	-bMbm|--buildMicroBms"
+        echo "	     Builds all micro-benchmarks"
+        echo "	-bSSB|--buildSSB"
+        echo "	     Builds all SSB queries (if the generated sources are available)"
+        echo "	--target TARGETNAME"
+        echo "	     Builds only the target TARGETNAME, which must be included in one of the target groups selected using the above \"-b\"-arguments"
+        echo "	     It is possible to specify multiple target names by providing a quoted white-space-separated list for TARGETNAME"
+        echo "	     Defaults to \"all\", i.e., if omited, all targets of the selected target groups will be built"
+	echo ""
+        echo "features:"
 	echo "	-avx512"
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
 	echo "	     Builds with avx2 support"
+        echo "	-sse4"
+	echo "	     Builds with sse4.2 support"
+        echo "	-armneon"
+	echo "	     Builds with neon support (for ARM)"
+        echo ""
+        echo "energy:"
+        echo "	-rapl "
+        echo "	     Builds with RAPL support"
+        echo "	-odroid"
+        echo "	     Builds with support for the Odroid-XU3 sensors"
 }
 
 buildType=""
@@ -81,8 +105,17 @@ testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
+buildAll="-DBUILD_ALL=False"
+buildExamples="-DBUILD_EXAMPLES=False"
+buildMicroBms="-DBUILD_MICROBMS=False"
+buildSSB="-DBUILD_SSB=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
+sse4="-DCSSE=False"
+rapl="DCRAPL=False"
+odroid="DCODROID=False"
+neon="DCNEON=False"
+target="all"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -188,6 +221,22 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
+        -bA|--buildAll)
+	buildAll="-DBUILD_ALL=True"
+	shift # past argument
+	;;
+        -bEx|--buildExamples)
+	buildExamples="-DBUILD_EXAMPLES=True"
+	shift # past argument
+	;;
+        -bMbm|--buildMicroBms)
+	buildMicroBms="-DBUILD_MICROBMS=True"
+	shift # past argument
+	;;
+        -bSSB|--buildSSB)
+	buildSSB="-DBUILD_SSB=True"
+	shift # past argument
+	;;
 	-avx512)
 	avx512="-DCAVX512=True"
         avxtwo="-DCAVXTWO=True"
@@ -197,11 +246,32 @@ case $key in
         avxtwo="-DCAVXTWO=True"
 	shift # past argument
 	;;
+        -sse4)
+        sse4="-DCSSE=True"
+	shift # past argument
+	;;
+        -armneon)
+        neon="-DCNEON=True"
+	shift # past argument
+	;;
 	-tVt|--testVectoring)
 	runCtest=true
 	testVectors="-DCTEST_VECTOR=True"
 	shift # past argument
 	;;
+        -rapl)
+        rapl="-DCRAPL=True"
+	shift # past argument
+	;;
+        -odroid)
+        odroid="-DCODROID=True"
+	shift # past argument
+	;;
+	--target)
+	target=$2
+	shift
+	shift
+        ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -232,18 +302,19 @@ then
 	exit 1
 fi
 
-printf "Using buildMode: $buildMode and make with: $makeParallel\n"
+printf "Using buildMode: $buildMode and make with: $makeParallel $target\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo -DCSSE=True"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
 fi
+addBuilds="$buildAll $buildExamples $buildMicroBms $buildSSB"
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo -G "Unix Makefiles" ../
-make -C build/ VERBOSE=1 $makeParallel
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon -G "Unix Makefiles" ../
+make -C build/ VERBOSE=1 $makeParallel $target
 
 if [ "$runCtest" = true ] ; then
 	cd build && ctest --output-on-failure #--extra-verbose

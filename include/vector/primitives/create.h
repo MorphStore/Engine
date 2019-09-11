@@ -16,7 +16,7 @@
 
 #include <vector/vector_extension_structs.h>
 
-namespace vector{
+namespace vectorlib{
     
    
    template<class VectorExtension, int IOGranularity>
@@ -33,6 +33,7 @@ namespace vector{
    }
    
     /*! Creates a vector filled with sequential numbers starting at a with step width b.
+     * @todo: should be typename VectorExtension::base_t instead of int
     */
    template<class VectorExtension,  int IOGranularity>
    typename VectorExtension::vector_t

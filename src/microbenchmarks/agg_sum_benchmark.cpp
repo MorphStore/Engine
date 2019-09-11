@@ -25,9 +25,14 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/uncompr.h>
+
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+
 #include <core/operators/general_vectorized/agg_sum_compr.h>
 //#include <core/operators/scalar/agg_sum_compr_iterator.h>
-#include <core/operators/scalar/agg_sum_uncompr.h>
+//#include <core/operators/scalar/agg_sum_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -40,38 +45,43 @@
 #include <tuple>
 #include <vector>
 
-using namespace morphstore;
-using namespace vector;
-
 
 // ****************************************************************************
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define MAKE_VARIANT(in_data_f, inDataFName, bw) { \
+#define MAKE_VARIANT(ps,in_data_f, inDataFName,bw) { \
     new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<in_data_f>( \
-        &agg_sum<scalar<v64<uint64_t>>, in_data_f> \
+        &agg_sum<ps, in_data_f> \
     ), \
+    STR_EVAL_MACROS(ps), \
     STR_EVAL_MACROS(inDataFName), \
     bw \
 }
 
 #define MAKE_VARIANTS(bw) \
-    MAKE_VARIANT(uncompr_f, "uncompr_f", bw), \
-    MAKE_VARIANT(SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>", bw)
+    MAKE_VARIANT(scalar<v64<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 1>), "static_vbp_f<bw, 1>",bw), \
+    MAKE_VARIANT(sse<v128<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 2>), "static_vbp_f<bw, 1>",bw), \
+    MAKE_VARIANT(avx2<v256<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 4>), "static_vbp_f<bw, 1>",bw),/* \
+    MAKE_VARIANT(avx512<v512<uint64_t>>,SINGLE_ARG(static_vbp_f<bw, 8>), "static_vbp_f<bw, 1>",bw)
+    */
+    
 
 // ****************************************************************************
 // Main program.
 // ****************************************************************************
 
 int main(void) {
+    
+    using namespace morphstore;
+    using namespace vectorlib;
     // @todo This should not be necessary.
-    fail_if_self_managed_memory();
+    //fail_if_self_managed_memory();
     
     using varex_t = variant_executor_helper<1, 1>::type
-        ::for_variant_params<std::string, unsigned>
+        ::for_variant_params<std::string, std::string, unsigned>
         ::for_setting_params<>;
-    varex_t varex({}, {"in_data_f", "bw"}, {});
+    varex_t varex({}, {"ps","in_data_f", "bw"}, {});
     
     const size_t countValues = 128 * 1000 * 1000;
     

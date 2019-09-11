@@ -20,12 +20,13 @@
 #include <vector/scalar/primitives/create_scalar.h>
 #include <vector/scalar/primitives/logic_scalar.h>
 
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
-
+#endif
 
 #ifdef AVXTWO
 #include <vector/simd/avx2/extension_avx2.h>
@@ -47,9 +48,9 @@
 #include <vector/primitives/io.h>
 #include <core/utils/preprocessor.h>
 
-//#include <core/operators/general_vectorized/calc_uncompr.h> //For operators using the vector lib
-#include <core/operators/scalar/calc_uncompr.h>
-#include <core/operators/vectorized/calc_uncompr.h>
+#include <core/operators/general_vectorized/calc_uncompr.h> //For operators using the vector lib
+//#include <core/operators/scalar/calc_uncompr.h>
+//#include <core/operators/vectorized/calc_uncompr.h>
 
 
 #define MAKE_VARIANT(fn,ps) \
@@ -66,7 +67,7 @@
 int main( void ) {
     
     using namespace morphstore;
-    using namespace vector;
+    using namespace vectorlib;
    
     //using varex_t = variant_executor_helper<1, 2, const size_t>::type
     using varex_t = variant_executor_helper<1, 2>::type
@@ -82,7 +83,7 @@ int main( void ) {
 
 
     
-    const std::vector<varex_t::variant_t> variants_minus = {
+   /* const std::vector<varex_t::variant_t> variants_minus = {
         MAKE_VARIANT(std::minus,scalar<v64<uint64_t>>),
         #ifdef AVXTWO
         MAKE_VARIANT(std::minus,avx2<v256<uint64_t>>)
@@ -95,13 +96,15 @@ int main( void ) {
         MAKE_VARIANT(std::plus,avx2<v256<uint64_t>>),
         #endif
         
-    };
+    };*/
     
     //The following are the variants for the general_vectorized version
-    /*
+    
     const std::vector<varex_t::variant_t> variants_minus = {
         MAKE_VARIANT(sub,scalar<v64<uint64_t>>),
+        #ifdef SSE
         MAKE_VARIANT(sub,sse<v128<uint64_t>>),
+        #endif
         #ifdef AVXTWO
         MAKE_VARIANT(sub,avx2<v256<uint64_t>>),
         #endif
@@ -112,7 +115,9 @@ int main( void ) {
         
     const std::vector<varex_t::variant_t> variants_plus = {
         MAKE_VARIANT(add,scalar<v64<uint64_t>>),
+        #ifdef SSE
         MAKE_VARIANT(add,sse<v128<uint64_t>>),
+        #endif
         #ifdef AVXTWO
         MAKE_VARIANT(add,avx2<v256<uint64_t>>),
         #endif
@@ -120,7 +125,7 @@ int main( void ) {
         MAKE_VARIANT(add,avx512<v512<uint64_t>>)
         #endif
     };
-    */
+    
 
     
     // Define the setting parameters.

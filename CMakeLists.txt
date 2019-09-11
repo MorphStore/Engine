@@ -66,6 +66,21 @@ IF(CAVX512)
 	message(STATUS "AVX512 and AVX2 support switched on")
 ENDIF(CAVX512)
 
+IF(CNEON)
+        morph_flag(-DNEON)
+	morph_flag(-mfpu=neon)
+	morph_flag(-flax-vector-conversions)
+        message(STATUS "NEON support switched on")
+ENDIF(CNEON)
+
+IF(CRAPL)
+    morph_flag(-DRAPL)
+ENDIF(CRAPL)
+
+IF(CODROID)
+    morph_flag(-DODROID)
+ENDIF(CODROID)
+
 morph_flag(-march=native)
 
 # remove build type to allow for custom flag handling
@@ -184,10 +199,14 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories( include )
 
-add_subdirectory( src )
+if( BUILD_ALL OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
+    add_subdirectory( src )
+endif( BUILD_ALL OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
 
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTest has been enabled" )
 	enable_testing()
-	add_subdirectory( test )
+  if ( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )
+      add_subdirectory( test )
+  endif( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )
 endif( RUN_CTESTS )

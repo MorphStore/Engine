@@ -3,7 +3,7 @@
 //
 
 #ifndef MORPHSTORE_VECTOR_DATASTRUCTURES_HASH_BINARY_KEY_MAP_H
-#define MORPHSTORE_VECTOR_DATASTRUCTURES_HASH_MAP_H
+#define MORPHSTORE_VECTOR_DATASTRUCTURES_HASH_BINARY_KEY_MAP_H
 
 #include <core/memory/mm_glob.h>
 #include <core/utils/preprocessor.h>
@@ -19,7 +19,7 @@
 #include <cstddef> //size_t
 #include <algorithm> //std::fill
 
-namespace vector {
+namespace vectorlib {
    /**
     * Hash set constant size (NO RESIZING), linear probing
     * @tparam VectorExtension

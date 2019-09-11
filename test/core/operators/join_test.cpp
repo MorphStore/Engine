@@ -32,7 +32,7 @@
 #include <vector/scalar/extension_scalar.h>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 int main( void ) {
     const bool allGood = test_op_2in_2out_1val(

@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <core/utils/preprocessor.h>
-namespace vector {
+namespace vectorlib {
 
    template<uint16_t BitWidth, typename T>
    struct vector_view {

@@ -29,44 +29,26 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
-#include <vector/primitives/compare.h>
-#include <vector/primitives/io.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
+#include <vector/vector_primitives.h>
 
 #include <tuple>
 
 #include <cstdint>
 
 namespace morphstore {
+    
+    // Note that the format uncompr_f is currently defined in "format.h".
+    // @todo Move it here.
+    
+    
+    // ************************************************************************
+    // Interfaces for accessing compressed data
+    // ************************************************************************
 
-#if 0
-    // Hand-written scalar.
-    
-    template<template<class> class t_op_processing_unit>
-    struct decompress_and_process_batch<vector::scalar<vector::v64<uint64_t>>, uncompr_f, t_op_processing_unit> {
-        static void apply(
-                const uint8_t * & p_In8,
-                size_t p_CountIn8,
-                typename t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::state_t & p_State
-        ) {
-            const uint64_t * in64 = reinterpret_cast<const uint64_t *>(p_In8);
-            const size_t countIn64 = convert_size<uint8_t, uint64_t>(p_CountIn8);
+    // ------------------------------------------------------------------------
+    // Sequential read
+    // ------------------------------------------------------------------------
 
-            for(size_t i = 0; i < countIn64; i++)
-                t_op_processing_unit<vector::scalar<vector::v64<uint64_t>>>::apply(in64[i], p_State);
-        }
-    };
-    
-#else
-    // Generic with vector-lib.
-    
     template<
             class t_vector_extension,
             template<class, class ...> class t_op_vector,
@@ -91,9 +73,9 @@ namespace morphstore {
 
             for(size_t i = 0; i < countInBase; i += vector_element_count::value)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
-                        vector::load<
+                        vectorlib::load<
                                 t_ve,
-                                vector::iov::ALIGNED,
+                                vectorlib::iov::ALIGNED,
                                 vector_base_t_granularity::value
                         >(inBase + i),
                         p_State
@@ -102,48 +84,40 @@ namespace morphstore {
             p_In8 += p_CountIn8;
         }
     };
-#endif
 
-#if 0
-    // Hand-written scalar.
-    
-    template<>
-    class write_iterator<vector::scalar<vector::v64<uint64_t>>, uncompr_f> {
-        IMPORT_VECTOR_BOILER_PLATE(vector::scalar<vector::v64<uint64_t>>)
+    // ------------------------------------------------------------------------
+    // Random read
+    // ------------------------------------------------------------------------
 
-        uint64_t * m_Out64;
-        const uint64_t * const m_InitOut64;
-
+    template<class t_vector_extension>
+    class random_read_access<t_vector_extension, uncompr_f> {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        const base_t * const m_Data;
+                
     public:
-        selective_write_iterator(uint8_t * p_Out) :
-                m_Out64(reinterpret_cast<uint64_t *>(p_Out)),
-                m_InitOut64(m_Out64)
-        {
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, uncompr_f>;
+        
+        random_read_access(const base_t * p_Data) : m_Data(p_Data) {
             //
         }
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
-        void write(vector_t p_Data, vector_mask_t p_Mask) {
-            vector::compressstore<
-                    vector::scalar<vector::v64<uint64_t>>,
-                    vector::iov::UNALIGNED, 
-                    vector_base_t_granularity::value
-            >(m_Out64, p_Data, p_Mask);
-            // @todo Use primitive.
-            m_Out64 += p_Mask;
-        }
-
-        void done() {
-            //
-        }
-
-        size_t get_count() const {
-            return m_Out64 - m_InitOut64;
+        vector_t get(const vector_t & p_Positions) {
+            return vectorlib::gather<
+                    t_ve,
+                    vector_base_t_granularity::value,
+                    sizeof(base_t)
+            >(m_Data, p_Positions);
         }
     };
-#else
-    // Generic with vector-lib.
     
+    // ------------------------------------------------------------------------
+    // Sequential write
+    // ------------------------------------------------------------------------
+
     template<class t_vector_extension>
     class selective_write_iterator<t_vector_extension, uncompr_f> {
         using t_ve = t_vector_extension;
@@ -163,9 +137,9 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
-            vector::compressstore<
+            vectorlib::compressstore<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_OutBase, p_Data, p_Mask);
             m_OutBase += p_MaskPopCount;
@@ -177,7 +151,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
 
@@ -191,7 +165,6 @@ namespace morphstore {
             return m_OutBase - m_InitOutBase;
         }
     };
-#endif
     
 }
 #endif //MORPHSTORE_CORE_MORPHING_UNCOMPR_H

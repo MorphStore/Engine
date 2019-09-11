@@ -12,7 +12,7 @@
 
 namespace morphstore {
 
-       using namespace vector;
+       using namespace vectorlib;
        
    template<class VectorExtension>
    struct project_t_processing_unit {
@@ -22,7 +22,7 @@ namespace morphstore {
          vector_t p_PosVector
       ) {
          //@todo: Is it better to avoid gather here?
-         return (vector::gather<VectorExtension, vector::iov::UNALIGNED, vector_size_bit::value>(p_DataPtr, p_PosVector));
+         return (vectorlib::gather<VectorExtension, vector_size_bit::value, sizeof(base_t)>(p_DataPtr, p_PosVector));
       }
    };
 
@@ -36,13 +36,13 @@ namespace morphstore {
          size_t const p_Count
       ) {
          for(size_t i = 0; i < p_Count; ++i) {
-            vector_t posVector = vector::load<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_PosPtr);
+            vector_t posVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_PosPtr);
             vector_t lookupVector =
                project_t_processing_unit<VectorExtension>::apply(
                   p_DataPtr,
                   posVector
                );
-            vector::store<VectorExtension, vector::iov::ALIGNED, vector_size_bit::value>(p_OutPtr, lookupVector);
+            vectorlib::store<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_OutPtr, lookupVector);
             p_PosPtr += vector_element_count::value;
             p_OutPtr += vector_element_count::value;
          }

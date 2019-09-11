@@ -33,23 +33,12 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
-#include <core/morphing/vbp_routines.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/primitives/create.h>
-#include <vector/primitives/io.h>
-// @todo The following includes should not be necessary.
-#include <vector/scalar/primitives/compare_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/simd/sse/primitives/compare_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/avx2/primitives/compare_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/vector_primitives.h>
 
-#include <immintrin.h>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -68,28 +57,19 @@ namespace morphstore {
     /**
      * @brief The vertical bit packed format with a static bit width.
      */
-    template<unsigned t_bw, unsigned t_step>
+    template<class t_layout>
     struct static_vbp_f : public format {
-        static_assert(
-                (1 <= t_bw) && (t_bw <= std::numeric_limits<uint64_t>::digits),
-                "static_vbp_f: template parameter t_bw must satisfy 1 <= t_bw <= 64"
-        );
-        static_assert(
-                t_step > 0,
-                "static_vbp_f: template parameter t_step must be greater than 0"
-        );
-
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            return p_CountValues * t_bw / bitsPerByte;
+            return t_layout::get_size_max_byte(p_CountValues);
         }
         
-        static const size_t m_BlockSize = t_step * sizeof(uint64_t) * bitsPerByte;
+        static const size_t m_BlockSize = t_layout::m_BlockSize;
     };
     
     
     // ************************************************************************
-    // Morph-operators
+    // Morph-operators (batch-level)
     // ************************************************************************
     
     // ------------------------------------------------------------------------
@@ -102,54 +82,19 @@ namespace morphstore {
      * 
      * This operator is completely generic with respect to the configuration of
      * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `pack`-function and can, thus, be
+     * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
-            uncompr_f
+    template<class t_vector_extension, class t_layout>
+    struct morph_batch_t<
+            t_vector_extension, static_vbp_f<t_layout>, uncompr_f
     > {
-        using out_f = static_vbp_f<t_bw, t_step>;
-        using in_f = uncompr_f;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const size_t countLog = inCol->get_count_values();
-            const size_t outCountLogCompr = round_down_to_multiple(
-                    countLog, out_f::m_BlockSize
+        static void apply(
+                const uint8_t * & in8, uint8_t * & out8, size_t countLog
+        ) {
+            return morph_batch<t_vector_extension, t_layout, uncompr_f>(
+                    in8, out8, countLog
             );
-            const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
-                    countLog - outCountLogCompr
-            );
-            
-            const uint8_t * in8 = inCol->get_data();
-            
-            auto outCol = new column<out_f>(
-                    get_size_max_byte_any_len<out_f>(countLog)
-            );
-            uint8_t * out8 = outCol->get_data();
-            const uint8_t * const initOut8 = out8;
-
-            pack<t_vector_extension, t_bw, t_step>(in8, outCountLogCompr, out8);
-            const size_t sizeComprByte = out8 - initOut8;
-            
-            if(outSizeRestByte) {
-                out8 = create_aligned_ptr(out8);
-                memcpy(out8, in8, outSizeRestByte);
-            }
-
-            outCol->set_meta_data(
-                    countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
-            );
-            
-            return outCol;
         }
     };
     
@@ -163,58 +108,22 @@ namespace morphstore {
      * 
      * This operator is completely generic with respect to the configuration of
      * its template parameters. However, invalid combinations will lack a
-     * template specialization of the `unpack`-function and can, thus, be
+     * template specialization of the `morph_batch`-function and can, thus, be
      * detected at compile-time.
      */
-    template<
-            class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step
-    >
-    struct morph_t<
-            t_vector_extension,
-            uncompr_f,
-            static_vbp_f<t_bw, t_step>
+    template<class t_vector_extension, class t_layout>
+    struct morph_batch_t<
+            t_vector_extension, uncompr_f, static_vbp_f<t_layout>
     > {
-        using out_f = uncompr_f;
-        using in_f = static_vbp_f<t_bw, t_step>;
-        
-        static
-        const column<out_f> *
-        apply(const column<in_f> * inCol) {
-            const uint8_t * in8 = inCol->get_data();
-            const size_t inSizeComprByte = inCol->get_size_compr_byte();
-            const size_t inSizeUsedByte = inCol->get_size_used_byte();
-            
-            const size_t countLog = inCol->get_count_values();
-            const uint8_t * const inRest8 = create_aligned_ptr(
-                    in8 + inSizeComprByte
+        static void apply(
+                const uint8_t * & in8, uint8_t * & out8, size_t countLog
+        ) {
+            return morph_batch<t_vector_extension, uncompr_f, t_layout>(
+                    in8, out8, countLog
             );
-            const size_t inCountLogRest = (inSizeComprByte < inSizeUsedByte)
-                    ? convert_size<uint8_t, uint64_t>(
-                            inSizeUsedByte - (inRest8 - in8)
-                    )
-                    : 0;
-            const size_t inCountLogCompr = countLog - inCountLogRest;
-            
-            const size_t outSizeByte = out_f::get_size_max_byte(countLog);
-            auto outCol = new column<out_f>(outSizeByte);
-            uint8_t * out8 = outCol->get_data();
-
-            unpack<t_vector_extension, t_bw, t_step>(
-                    in8, out8, inCountLogCompr
-            );
-            
-            memcpy(
-                    out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
-            );
-            
-            outCol->set_meta_data(countLog, outSizeByte);
-
-            return outCol;
         }
     };
-    
+
     
     // ************************************************************************
     // Interfaces for accessing compressed data
@@ -226,14 +135,13 @@ namespace morphstore {
     
     template<
             class t_vector_extension,
-            unsigned t_bw,
-            unsigned t_step,
+            class t_layout,
             template<class, class...> class t_op_vector,
             class ... t_extra_args
     >
     struct decompress_and_process_batch<
             t_vector_extension,
-            static_vbp_f<t_bw, t_step>,
+            static_vbp_f<t_layout>,
             t_op_vector,
             t_extra_args ...
     > {
@@ -245,20 +153,18 @@ namespace morphstore {
                         t_extra_args ...
                 >::state_t & p_State
         ) {
-            unpack_and_process<
+            decompress_and_process_batch<
                     t_vector_extension,
-                    t_bw,
-                    t_step,
+                    t_layout,
                     t_op_vector,
                     t_extra_args ...
-            >(
-                    p_In8, p_CountIn8, p_State
-            );
+            >::apply(p_In8, p_CountIn8, p_State);
         }
     };
     
     // This is deprecated, we decided not to use this approach.
-#if 1
+    // @todo Remove this.
+#if 0
     // Iterator implementation with a load in each call of next().
     // Seems to be faster for all bit widths.
     
@@ -284,7 +190,7 @@ namespace morphstore {
             return retVal;
         };
     };
-#else
+#elif 0
     // Iterator implementation with a check in each call of next().
     // Seems to be slower for all bit widths.
     
@@ -323,20 +229,45 @@ namespace morphstore {
         };
     };
 #endif
+
+    // ------------------------------------------------------------------------
+    // Random read
+    // ------------------------------------------------------------------------
+
+    template<class t_vector_extension, class t_layout>
+    class random_read_access<t_vector_extension, static_vbp_f<t_layout> > {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        typename random_read_access<t_ve, t_layout>::type m_Internal;
+        
+    public:
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, static_vbp_f<t_layout> >;
+        
+        random_read_access(const base_t * p_Data) : m_Internal(p_Data) {
+            //
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions) {
+            return m_Internal.get(p_Positions);
+        }
+    };
     
     // ------------------------------------------------------------------------
     // Sequential write
     // ------------------------------------------------------------------------
 
     // @todo Take t_step into account correctly.
-    template<class t_vector_extension, unsigned t_bw, unsigned t_step>
+    template<class t_vector_extension, class t_layout>
     class selective_write_iterator<
-            t_vector_extension, static_vbp_f<t_bw, t_step>
+            t_vector_extension, static_vbp_f<t_layout>
     > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
-        using out_f = static_vbp_f<t_bw, t_step>;
+        using out_f = static_vbp_f<t_layout>;
         
         uint8_t * m_Out;
         const uint8_t * const m_InitOut;
@@ -354,8 +285,8 @@ namespace morphstore {
                     m_StartBuffer
             );
             // @todo This should not be inlined.
-            pack<t_ve, t_bw, t_step>(
-                    buffer8, m_CountBuffer, m_Out
+            morph_batch<t_ve, t_layout, uncompr_f>(
+                    buffer8, m_Out, m_CountBuffer
             );
             size_t overflow = m_Buffer - m_EndBuffer;
             memcpy(m_StartBuffer, m_EndBuffer, overflow * sizeof(base_t));
@@ -377,9 +308,9 @@ namespace morphstore {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
-            vector::compressstore<
+            vectorlib::compressstore<
                     t_ve,
-                    vector::iov::UNALIGNED,
+                    vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
             >(m_Buffer, p_Data, p_Mask);
             m_Buffer += p_MaskPopCount;
@@ -393,7 +324,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vector::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
         
@@ -409,7 +340,9 @@ namespace morphstore {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
                 );
-                pack<t_ve, t_bw, t_step>(buffer8, outCountLogCompr, m_Out);
+                morph_batch<t_ve, t_layout, uncompr_f>(
+                    buffer8, m_Out, outCountLogCompr
+                );
                 outSizeComprByte = m_Out - m_InitOut;
 
                 const size_t outCountLogRest = countLog - outCountLogCompr;

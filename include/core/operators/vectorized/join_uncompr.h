@@ -32,7 +32,7 @@ const std::tuple<
         const column<uncompr_f> *,
         const column<uncompr_f> *
 >
-nested_loop_join<vector::avx2<vector::v256<uint64_t>>>(
+nested_loop_join<vectorlib::avx2<vectorlib::v256<uint64_t>>>(
         const column<uncompr_f> * const inDataLCol,
         const column<uncompr_f> * const inDataRCol,
         const size_t outCountEstimate
@@ -44,7 +44,7 @@ nested_loop_join<vector::avx2<vector::v256<uint64_t>>>(
     // column order if necessary.
     if(inDataLCount < inDataRCount) {
         auto outPosRL = nested_loop_join<
-                vector::avx2<vector::v256<uint64_t>>,
+                vectorlib::avx2<vectorlib::v256<uint64_t>>,
                 uncompr_f,
                 uncompr_f
         >(

@@ -15,7 +15,7 @@
 #include <vector/primitives/io.h>
 
 
-namespace vector {
+namespace vectorlib {
 
 
    template<typename T, int IOGranularity>

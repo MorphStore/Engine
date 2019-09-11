@@ -123,7 +123,7 @@ template<
    class InFormatLCol,
    class InFormatRCol
 >
-struct semi_join_t {
+struct semi_equi_join_t /* {
    static
    column< OutFormatCol > const *
    apply(
@@ -131,7 +131,7 @@ struct semi_join_t {
       column< InFormatRCol > const * const p_InDataRCol,
       size_t const outCountEstimate = 0
    ) = delete;
-};
+}*/;
 
 
 template<
@@ -142,7 +142,7 @@ template<
    class InFormatLCol,
    class InFormatRCol
 >
-struct join_t {
+struct natural_equi_join_t/* {
    static
    std::tuple<
       column< OutFormatLCol > const *,
@@ -153,7 +153,7 @@ struct join_t {
       column< InFormatRCol > const * const p_InDataRCol,
       size_t const outCountEstimate = 0
    ) = delete;
-};
+}*/;
 
 
 
@@ -173,13 +173,13 @@ join(
    column< InFormatRCol > const * const p_InDataRCol,
    size_t const outCountEstimate = 0
 ) {
-   return join_t<
+   return natural_equi_join_t<
       VectorExtension,
-      vector::hash_map<
+      vectorlib::hash_map<
          VectorExtension,
-         vector::multiply_mod_hash,
-         vector::size_policy_hash::EXPONENTIAL,
-         vector::scalar_key_vectorized_linear_search,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
          60
       >,
       OutFormatLCol,
@@ -202,13 +202,13 @@ semi_join(
    column< InFormatRCol > const * const p_InDataRCol,
    size_t const outCountEstimate = 0
 ) {
-   return semi_join_t<
+   return semi_equi_join_t<
       VectorExtension,
-      vector::hash_set<
+      vectorlib::hash_set<
          VectorExtension,
-         vector::multiply_mod_hash,
-         vector::size_policy_hash::EXPONENTIAL,
-         vector::scalar_key_vectorized_linear_search,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
          60
       >,
       OutFormatCol,

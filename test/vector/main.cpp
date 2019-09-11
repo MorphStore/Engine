@@ -44,7 +44,7 @@
 int main( void ) {
     
 
-   using namespace vector;
+   using namespace vectorlib;
    using namespace morphstore;
    
    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(100,1,5);
@@ -67,13 +67,13 @@ int main( void ) {
    
    sse< v128< uint64_t > >::vector_t testvec128;
    testvec128=load<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data);
-   vector::store < sse < v128 < uint64_t > > , iov::ALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128);
+   vectorlib::store < sse < v128 < uint64_t > > , iov::ALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128);
    std::cout << "sse aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< sse < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,2);
    std::cout << "sse compress store, 128 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec128=gather<sse< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
+   testvec128=gather<sse< v128< uint64_t > >, 128, uint64_t>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "sse gather " << temp << "\n";
    
@@ -192,17 +192,17 @@ int main( void ) {
    
    avx2< v256< uint64_t > >::vector_t testvec256;
    testvec256=load<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data);
-   vector::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
+   vectorlib::store < avx2 < v256 < uint64_t > > , iov::ALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256);
    std::cout << "avx2 aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< avx2 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,2);
    std::cout << "avx2 compress store, 256 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec128=gather<avx2< v128< uint64_t > >, iov::UNALIGNED, 128>(data,gatherTest128);
+   testvec128=gather<avx2< v128< uint64_t > >, 128, uint64_t>(data,gatherTest128);
    temp=_mm_extract_epi64(testvec128,0);
    std::cout << "avx2 gather, 128 bit " << temp << "\n";
 
-   testvec256=gather<avx2< v256< uint64_t > >, iov::UNALIGNED, 256>(data,gatherTest256);
+   testvec256=gather<avx2< v256< uint64_t > >, 256, uint64_t>(data,gatherTest256);
    temp=_mm256_extract_epi64(testvec256,0);
    std::cout << "avx2 gather, 256 bit " << temp << "\n";
    
@@ -323,10 +323,10 @@ int main( void ) {
    
    
    testvec512=load<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data);
-   vector::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
+   vectorlib::store < avx512 < v512 < uint64_t > > , iov::ALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512);
    std::cout << "avx512 aligned store " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   vector::compressstore< avx512 < v512 < uint64_t > > , iov::UNALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512,128);
+   vectorlib::compressstore< avx512 < v512 < uint64_t > > , iov::UNALIGNED, 512 > ((uint64_t*) outColumn->get_data(),testvec512,128);
    std::cout << "avx512 compress store, 512 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
    compressstore< avx512 < v256 < uint64_t > > , iov::UNALIGNED, 256 > ((uint64_t*) outColumn->get_data(),testvec256,4);
@@ -335,7 +335,7 @@ int main( void ) {
    compressstore< avx512 < v128 < uint64_t > > , iov::UNALIGNED, 128 > ((uint64_t*) outColumn->get_data(),testvec128,2);
    std::cout << "avx512 compress store, 128 bit " << ((uint64_t*) outColumn->get_data())[0] << "\n";
    
-   testvec512=gather<avx512< v512< uint64_t > >, iov::UNALIGNED, 512>(data,gatherTest512);
+   testvec512=gather<avx512< v512< uint64_t > >, 512, uint64_t>(data,gatherTest512);
    temp=extract_value<avx512< v512< uint64_t > >, 64>(testvec512,0);
    std::cout << "avx512 gather " << temp << "\n";
    

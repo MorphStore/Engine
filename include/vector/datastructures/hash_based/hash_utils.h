@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace vector {
+namespace vectorlib {
 
    /**
     * Enum class to denote the size policy for a specific hash based datastructure.

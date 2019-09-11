@@ -48,6 +48,11 @@ namespace morphstore {
    };
    using voidptr_t = voidptr_helper;
 
+   template< int Alignment, typename T, size_t N >
+   struct alignas( Alignment ) aligned_array : public std::array< T, N >{
+      template< class... U >
+      aligned_array( U&&... u ) : std::array< T, N >{ std::forward< U >( u )... } {}
+   };
 
 #  define IMM_INT32(N) std::integral_constant< int32_t, N >()
 #  define IMM_UINT32(N) std::integral_constant< uint32_t, N >()

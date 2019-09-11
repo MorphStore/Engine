@@ -19,7 +19,7 @@
 #include <cstddef> //size_t
 #include <algorithm> //std::fill
 
-namespace vector {
+namespace vectorlib {
 
    /**
     * Hash set constant size (NO RESIZING), linear probing

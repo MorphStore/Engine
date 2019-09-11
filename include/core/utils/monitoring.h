@@ -24,13 +24,17 @@
 #ifndef MORPHSTORE_CORE_UTILS_MONITORING_H_
 #define MORPHSTORE_CORE_UTILS_MONITORING_H_
 
+#include <core/memory/mm_glob.h>
+#include <core/memory/stl_wrapper/vector.h>
+#include <core/memory/stl_wrapper/map.h>
+//#include <core/memory/stl_wrapper/string.h>
+#include <string>
 #include <iostream>
 #include <algorithm>
 #include <tuple>
 #include <atomic>
 #include <functional>
-#include <vector>
-#include <map>
+
 #include <unordered_map>
 #include <chrono>
 #include <iomanip>
@@ -135,7 +139,7 @@ namespace morphstore {
 
 		monitoring_parameter(const std::string name, size_t id, T value) :
 			monitoring_info(name, id),
-			maxValues(1024),
+			maxValues(1024000),
 			lastValue(0)
 		{
 			values = (T*) malloc( maxValues * sizeof(T) );
@@ -231,10 +235,10 @@ namespace morphstore {
 	} CompareMonitorInfo;
 
 
-	typedef std::map< std::string, monitoring_counter* > monitorIntervalMap;
-	typedef std::map< std::string, monitoring_parameter<bool>* > monitorBoolParameterMap;
-	typedef std::map< std::string, monitoring_parameter<int64_t>* > monitorIntegerParameterMap;
-	typedef std::map< std::string, monitoring_parameter<double>* > monitorDoubleParameterMap;
+	typedef morphstore::map< std::string, monitoring_counter* > monitorIntervalMap;
+	typedef morphstore::map< std::string, monitoring_parameter<bool>* > monitorBoolParameterMap;
+	typedef morphstore::map< std::string, monitoring_parameter<int64_t>* > monitorIntegerParameterMap;
+	typedef morphstore::map< std::string, monitoring_parameter<double>* > monitorDoubleParameterMap;
 
 	class SuperMon {
 	public:
@@ -246,7 +250,7 @@ namespace morphstore {
 		virtual ~SuperMon() {};
 
 		virtual std::string getTupleAsString(char delim) const = 0;
-		virtual void addHeadKeys(const std::vector< std::string >& hKeys) = 0;
+		virtual void addHeadKeys(const morphstore::vector< std::string >& hKeys) = 0;
 
 		void startInterval(const std::string& ident) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
@@ -335,15 +339,15 @@ namespace morphstore {
 		//}
 
 		template< class T >
-		void insertSorted(T& fromMap, std::vector< monitoring_info* >& toVec) const {
+		void insertSorted(T& fromMap, morphstore::vector< monitoring_info* >& toVec) const {
 			for (auto info : fromMap) {
 				toVec.insert(std::upper_bound(toVec.begin(), toVec.end(), info.second, CompareMonitorInfo), info.second);
 			}
 			//std::for_each(std::begin(fromMap), std::end(fromMap), [&](const auto& x) {toVec.insert(std::upper_bound(toVec.begin(), toVec.end(), x.second, CompareMonitorInfo), x.second); });
 		}
 
-		std::vector< monitoring_info* > createSortedCounterList() const {
-			std::vector< monitoring_info* > sortedInfo;
+		morphstore::vector< monitoring_info* > createSortedCounterList() const {
+			morphstore::vector< monitoring_info* > sortedInfo;
 			sortedInfo.reserve(intervalData.size() + boolParams.size() + integerParams.size() + doubleParams.size());
 			insertSorted(intervalData, sortedInfo);
 			insertSorted(boolParams, sortedInfo);
@@ -389,7 +393,7 @@ namespace morphstore {
 		virtual std::string getAllheads(char delim) const = 0;
 
 		std::string printAllData(/*monitoring_logger& log, */char delim, const size_t idx ) const {
-			std::vector< monitoring_info* > sortedInfo = createSortedCounterList();
+			morphstore::vector< monitoring_info* > sortedInfo = createSortedCounterList();
 
 			std::stringstream ss;
 			ss << getTupleAsString(delim);
@@ -426,7 +430,7 @@ public:
 	virtual void write( const char* text ) = 0;
 	virtual void write( uint64_t val ) = 0;
 	virtual void write( double val ) = 0;
-	virtual void log(std::vector< SuperMon* > monitors) = 0;
+	virtual void log(morphstore::vector< SuperMon* > monitors) = 0;
 };
 
 class monitoring_shell_logger : public monitoring_logger {
@@ -448,7 +452,7 @@ public:
 		printf( "%f", val );
 	}
 
-	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED std::vector< SuperMon* > monitors) {}
+	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED morphstore::vector< SuperMon* > monitors) {}
 
 	static monitoring_shell_logger & get_instance(void) {
 		static monitoring_shell_logger* instance;
@@ -481,7 +485,7 @@ public:
 		printf("%f", val);
 	}
 
-	virtual void log(std::vector< SuperMon* > monitors) {
+	virtual void log(morphstore::vector< SuperMon* > monitors) {
 		std::cout << monitors[0]->getAllheads('\t') << std::endl;
 		size_t maxLines = monitors[0]->getMaxLines();
 		for (size_t idx = 0; idx < maxLines; ++idx) {
@@ -526,7 +530,7 @@ public:
 		error( "[Monitoring] Monitoring File Logger is yet to be implemented -- nothing logged." );
 	}
 
-	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED std::vector< SuperMon* > monitors) {}
+	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED morphstore::vector< SuperMon* > monitors) {}
 
 	static monitoring_file_logger & get_instance(void) {
 		static monitoring_file_logger instance;
@@ -601,7 +605,7 @@ public:
 		return instance;
 	}
 
-	void log( const std::vector< SuperMon* >& monitors) {
+	void log( const morphstore::vector< SuperMon* >& monitors) {
 		std::cout << "Logging for json" << std::endl;
 		for (auto mon : monitors) {
 			std::cout << " Mon " << mon->id << std::endl;
@@ -612,7 +616,7 @@ public:
 	void write(MSV_CXX_ATTRIBUTE_PPUNUSED uint64_t val) override {};
 	void write(MSV_CXX_ATTRIBUTE_PPUNUSED double val) override {};
 
-	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED std::vector< SuperMon* > monitors) {
+	virtual void log(MSV_CXX_ATTRIBUTE_PPUNUSED morphstore::vector< SuperMon* > monitors) {
 		/*std::stringstream json = "[";
 		
 		for (size_t idx = 0; idx < monitors.size(); ++idx ) {
@@ -671,7 +675,7 @@ public:
 		//return print::printTuple(delim, key);
 	}
 
-	void addHeadKeys(const std::vector< std::string >& hKeys) override {
+	void addHeadKeys(const morphstore::vector< std::string >& hKeys) override {
 		for (const std::string& s : hKeys) {
 			keyHeads.push_back(s);
 		}
@@ -684,7 +688,7 @@ public:
 	}
 
 	std::tuple< T... > key;
-	std::vector< std::string > keyHeads;
+	morphstore::vector< std::string > keyHeads;
 };
 
 class Monitoring {
@@ -727,26 +731,26 @@ public:
 		return nullptr;
 	}
 
-	void addKeyHeads(std::vector< std::string >& headVec, std::string& head) {
+	void addKeyHeads(morphstore::vector< std::string >& headVec, std::string& head) {
 		headVec.push_back(head);
 	}
 
 	template< typename... HeadVals >
-	void addKeyHeads(std::vector< std::string >& headVec, std::string& head, HeadVals&... heads) {
+	void addKeyHeads(morphstore::vector< std::string >& headVec, std::string& head, HeadVals&... heads) {
 		addKeyHeads(headVec, head);
 		addKeyHeads(headVec, heads...);
 	}
 
 	/*template< typename... headVals >
 	void create(SuperMon* mon, const std::string& head, headVals... heads) {
-		std::vector< std::string > headKeys;
+		morphstore::vector< std::string > headKeys;
 		addKeyHeads(headKeys, head, heads...);
 		for (size_t i = 0; i < headkeys.size(); ++i) {
 			std::cout << "######### HEAD KEY " << headkeys[i] << std:.endl;
 		}
 	}*/
 
-	void create(SuperMon* mon, const std::vector< std::string >& headKeys) {
+	void create(SuperMon* mon, const morphstore::vector< std::string >& headKeys) {
 		mon->addHeadKeys(headKeys);
 	}
 
@@ -857,12 +861,12 @@ public:
 	}
 
 	std::atomic< size_t > rollingMonitorId = { 0 };
-	std::vector< SuperMon* > monVec;
+	morphstore::vector< SuperMon* > monVec;
 };
 
 	#define MONITORING_CREATE_MONITOR( ... ) 					Monitoring::get_instance().create( __VA_ARGS__ );
 	#define MONITORING_MAKE_MONITOR( ... ) 						Monitoring::get_instance().createMonitor( __VA_ARGS__ )
-	#define MONITORING_KEY_IDENTS( ... ) 						std::vector< std::string > { __VA_ARGS__ }
+	#define MONITORING_KEY_IDENTS( ... ) 						morphstore::vector< std::string > { __VA_ARGS__ }
 	#define MONITORING_START_INTERVAL_FOR( ident, ... ) 		Monitoring::get_instance().startIntervalFor( ident, __VA_ARGS__ )
 	#define MONITORING_END_INTERVAL_FOR( ident, ... ) 			Monitoring::get_instance().endIntervalFor( ident, __VA_ARGS__ )
 	#define MONITORING_ADD_BOOL_FOR( ident, val, ... ) 			Monitoring::get_instance().addBoolFor( ident, val, __VA_ARGS__ )
@@ -873,7 +877,7 @@ public:
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
 	#define MONITORING_PRINT_MONITORS(logger)					Monitoring::get_instance().printAll( *logger )
 	#define MONITORING_CLEAR_ALL()								Monitoring::get_instance().clearAll()
-	#define MONITORING_INIT_CRITICAL_TIMING()					std::vector< std::pair< std::string, uint64_t > > criticalTimings
+	#define MONITORING_INIT_CRITICAL_TIMING()					morphstore::vector< std::pair< std::string, uint64_t > > criticalTimings
 	#define MONITORING_START_CRITICAL_TIMING( timer )			auto startTp_##timer =std::chrono::high_resolution_clock::now()
 	#define MONITORING_END_CRITICAL_TIMING( timer )				\
 																auto endTp_##timer =std::chrono::high_resolution_clock::now(); \

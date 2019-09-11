@@ -33,7 +33,7 @@
 #define TEST_DATA_COUNT 100
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 void init_data( column< uncompr_f > * const dataColumn ) {
    uint64_t * data = dataColumn->get_data( );

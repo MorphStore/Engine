@@ -67,9 +67,9 @@ struct select_processing_unit_wit {
         selective_write_iterator<t_ve, t_out_f> m_Wit;
 
         state_t(base_t p_Predicate, uint8_t * p_Out, base_t p_Pos) :
-                m_Predicate(vector::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
-                m_Pos(vector::set_sequence<t_ve, vector_base_t_granularity::value>(p_Pos, 1)),
-                m_Inc(vector::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
+                m_Predicate(vectorlib::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
+                m_Pos(vectorlib::set_sequence<t_ve, vector_base_t_granularity::value>(p_Pos, 1)),
+                m_Inc(vectorlib::set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value)),
                 m_Wit(p_Out)
         {
             //
@@ -84,7 +84,7 @@ struct select_processing_unit_wit {
 #endif
         if(mask)
             p_State.m_Wit.write(p_State.m_Pos, mask);
-        p_State.m_Pos = vector::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+        p_State.m_Pos = vectorlib::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
     }
 };
     
@@ -101,7 +101,7 @@ struct my_select_wit_t {
     IMPORT_VECTOR_BOILER_PLATE(t_ve)
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
     using t_compare_special_ve = t_compare<t_ve, vector_base_t_granularity::value>;
-    using t_compare_special_sc = t_compare<vector::scalar<vector::v64<uint64_t>>, vector::scalar<vector::v64<uint64_t>>::vector_helper_t::granularity::value>;
+    using t_compare_special_sc = t_compare<vectorlib::scalar<vectorlib::v64<uint64_t>>, vectorlib::scalar<vectorlib::v64<uint64_t>>::vector_helper_t::granularity::value>;
 #endif
     
     static const column<t_out_pos_f> * apply(
@@ -109,7 +109,7 @@ struct my_select_wit_t {
             const uint64_t val,
             const size_t outPosCountEstimate = 0
     ) {
-        using namespace vector;
+        using namespace vectorlib;
         
         const uint8_t * inData = inDataCol->get_data();
         const uint8_t * const initInData = inData;

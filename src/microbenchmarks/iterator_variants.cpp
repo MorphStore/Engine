@@ -26,6 +26,7 @@
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -53,11 +54,13 @@
 #include <vector/simd/avx512/primitives/io_avx512.h>
 #include <vector/simd/avx512/primitives/logic_avx512.h>
 #endif
+#ifdef SSE
 #include <vector/simd/sse/extension_sse.h>
 #include <vector/simd/sse/primitives/calc_sse.h>
 #include <vector/simd/sse/primitives/create_sse.h>
 #include <vector/simd/sse/primitives/io_sse.h>
 #include <vector/simd/sse/primitives/logic_sse.h>
+#endif
 
 #include <iostream>
 #include <limits>
@@ -66,7 +69,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 // ****************************************************************************
 // Iterator implementations.
@@ -200,7 +203,7 @@ public:
 // ****************************************************************************
 
 template<unsigned bw, template<unsigned> class t_iterator>
-const column<uncompr_f> * my_morph__static(const column<static_vbp_f<bw, 1> > * p_InCol) {
+const column<uncompr_f> * my_morph__static(const column<static_vbp_f<vbp_l<bw, 1>>> * p_InCol) {
     const size_t inCount = p_InCol->get_count_values();
     uint64_t * in = p_InCol->get_data();
     auto outCol = new column<uncompr_f>(uncompr_f::get_size_max_byte(inCount));
@@ -215,7 +218,7 @@ const column<uncompr_f> * my_morph__static(const column<static_vbp_f<bw, 1> > * 
 }
 
 template<unsigned bw, template<unsigned> class t_iterator>
-const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<bw, 1> > * p_InCol) {
+const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<vbp_l<bw, 1>>> * p_InCol) {
     const size_t inCount = p_InCol->get_count_values();
     uint64_t * in = p_InCol->get_data();
     auto outCol = new column<uncompr_f>(uncompr_f::get_size_max_byte(inCount));
@@ -243,7 +246,7 @@ const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<bw, 1> > 
 }
 
 #define MAKE_VARIANT_MYMORPH(scope, approach, bw) { \
-    new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<static_vbp_f<bw, 1> >( \
+    new varex_t::operator_wrapper::for_output_formats<uncompr_f>::for_input_formats<static_vbp_f<vbp_l<bw, 1>>>( \
         &my_morph__ ## scope <bw, read_iterator__ ## scope ## _ ## approach> \
     ), \
     STR_EVAL_MACROS(scope), \
@@ -253,7 +256,7 @@ const column<uncompr_f> * my_morph__instance(const column<static_vbp_f<bw, 1> > 
 
 #define MAKE_VARIANTS(bw) \
     MAKE_VARIANT_MORPH(uncompr_f, bw), \
-    MAKE_VARIANT_MORPH(SINGLE_ARG(static_vbp_f<bw, 1>), bw), \
+    MAKE_VARIANT_MORPH(SINGLE_ARG(static_vbp_f<vbp_l<bw, 1>>), bw), \
     MAKE_VARIANT_MYMORPH(instance, check  , bw), \
     MAKE_VARIANT_MYMORPH(static  , check  , bw), \
     MAKE_VARIANT_MYMORPH(instance, nocheck, bw), \

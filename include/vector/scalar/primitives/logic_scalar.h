@@ -10,11 +10,13 @@
 #include <vector/primitives/logic.h>
 
 
-namespace vector {
+namespace vectorlib {
 
 
+   //@todo: The commented part does not compile using clang++
+   //type of specialized non-type template argument depends on a template parameter of the partial specialization
    template<typename T>
-   struct logic<scalar<v64<T>>, scalar<v64<T>>::vector_helper_t::size_bit::value > {
+   struct logic<scalar<v64<T>>, 64/*scalar<v64<T>>::vector_helper_t::size_bit::value*/ > {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename scalar<v64<T>>::vector_t

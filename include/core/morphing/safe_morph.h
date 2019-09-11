@@ -42,12 +42,10 @@
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/vbp.h>
+#include <core/morphing/vbp_padding.h>
 #include <core/storage/column.h>
 #include <vector/vector_extension_structs.h>
-#include <vector/scalar/extension_scalar.h>
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx512/extension_avx512.h>
-#include <vector/simd/sse/extension_sse.h>
 
 #include <cstdint>
 
@@ -71,7 +69,7 @@ namespace morphstore {
         static
         const column<t_f> *
         apply(const column<t_f> * inCol) {
-            return morph<vector::scalar<vector::v64<uint64_t>>, t_f, t_f>(
+            return morph<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_f, t_f>(
                     inCol
             );
         };
@@ -96,19 +94,19 @@ namespace morphstore {
     
     // Compression
 
-    #define MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector_extension) \
+    #define MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector_extension, layout) \
         template<unsigned t_bw> \
         struct safe_morph_t< \
-                static_vbp_f< \
+                static_vbp_f<layout< \
                         t_bw, \
                         vector_extension::vector_helper_t::element_count::value \
-                >, \
+                > >, \
                 uncompr_f \
         > { \
-            using dst_f = static_vbp_f< \
+            using dst_f = static_vbp_f<layout< \
                     t_bw, \
                     vector_extension::vector_helper_t::element_count::value \
-            >; \
+            > >; \
             using src_f = uncompr_f; \
              \
             static \
@@ -118,33 +116,39 @@ namespace morphstore {
             } \
         };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_padding_l)
+#ifdef SSE
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_padding_l)
+#endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_padding_l)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_COMPR
 
     // Decompression.
 
-    #define MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector_extension) \
+    #define MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector_extension, layout) \
     template<unsigned t_bw> \
     struct safe_morph_t< \
             uncompr_f, \
-            static_vbp_f< \
+            static_vbp_f<layout< \
                     t_bw, \
                     vector_extension::vector_helper_t::element_count::value \
-            > \
+            > > \
     > { \
         using dst_f = uncompr_f; \
-        using src_f = static_vbp_f< \
+        using src_f = static_vbp_f<layout< \
                 t_bw, \
                 vector_extension::vector_helper_t::element_count::value \
-        >; \
+        > >; \
          \
         static \
         const column<dst_f> * \
@@ -153,13 +157,19 @@ namespace morphstore {
         } \
     };
 
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>, vbp_padding_l)
+#ifdef SSE
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>, vbp_padding_l)
+#endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>, vbp_padding_l)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_l)
+    MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>, vbp_padding_l)
 #endif
 
     #undef MAKE_SAFE_MORPH_STATIC_VBP_DECOMPR
@@ -173,7 +183,7 @@ namespace morphstore {
     
     // Compression
             
-    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // @todo It would be nice to have the template parameters t_BlockSizeLog and
     // t_PageSizeBlocks here as well, but the compiler complains then.
     #define MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector_extension) \
         template<> \
@@ -199,20 +209,24 @@ namespace morphstore {
             } \
         };
 
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::scalar<vector::v64<uint64_t>>)
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::sse<vector::v128<uint64_t>>)
+    // @todo This always consumes a lot of time, even if dynamic_vbp_f in not
+    // used in the respective compilation unit.
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_COMPR
 
     // Decompression.
             
-    // @todo It would be nice to have the template parameters t_BlockSize64 and
+    // @todo It would be nice to have the template parameters t_BlockSizeLog and
     // t_PageSizeBlocks here as well, but the compiler complains then.
     #define MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector_extension) \
     template<> \
@@ -238,13 +252,17 @@ namespace morphstore {
         } \
     };
 
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::scalar<vector::v64<uint64_t>>)
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::sse<vector::v128<uint64_t>>)
+    // @todo This always consumes a lot of time, even if dynamic_vbp_f in not
+    // used in the respective compilation unit.
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
 #ifdef AVXTWO
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx2<vector::v256<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
 #endif
 #ifdef AVX512
-    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vector::avx512<vector::v512<uint64_t>>)
+    MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
 #endif
 
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR

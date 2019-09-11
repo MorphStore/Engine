@@ -11,8 +11,9 @@
 #include <vector/primitives/calc.h>
 
 #include <functional>
+#include <limits>
 
-namespace vector{
+namespace vectorlib{
    template<>
    struct add<scalar<v64<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -112,8 +113,28 @@ namespace vector{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (scalar)" );
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (scalar)" );
          return p_vec1 << p_distance;
+      }
+   };
+   template<>
+   struct shift_left_individual<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::vector_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_data,
+         typename scalar<v64<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (scalar)" );
+         // The scalar shift does not do anything when the distance is the
+         // number of digits.
+         // @todo Currently, this is a workaround, rethink whether we want it
+         // this way and whether shift_left above should do it the same way.
+         if(p_distance == std::numeric_limits<scalar<v64<uint64_t>>::vector_t>::digits)
+             return 0;
+         else
+             return p_data << p_distance;
       }
    };
    template<>
@@ -125,8 +146,28 @@ namespace vector{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (scalar)" );
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (scalar)" );
          return p_vec1 >> p_distance;
+      }
+   };
+   template<>
+   struct shift_right_individual<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::vector_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_data,
+         typename scalar<v64<uint64_t>>::vector_t const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (scalar)" );
+         // The scalar shift does not do anything when the distance is the
+         // number of digits.
+         // @todo Currently, this is a workaround, rethink whether we want it
+         // this way and whether shift_left above should do it the same way.
+         if(p_distance == std::numeric_limits<scalar<v64<uint64_t>>::vector_t>::digits)
+             return 0;
+         else
+             return p_data >> p_distance;
       }
    };
 }

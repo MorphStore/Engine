@@ -9,7 +9,7 @@
 
 #include <vector/vector_primitives.h>
 
-namespace vector {
+namespace vectorlib {
 
 
 
