@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_MORPHING_UNCOMPR_H
 
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>

@@ -8,6 +8,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 
 #include <vector/general_vector_extension.h>
 #include <vector/vector_primitives.h>

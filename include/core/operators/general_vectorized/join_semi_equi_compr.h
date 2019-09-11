@@ -9,6 +9,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 
 #include <core/operators/interfaces/join.h>
 

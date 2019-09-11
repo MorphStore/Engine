@@ -26,6 +26,7 @@
 
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>

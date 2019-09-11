@@ -28,6 +28,7 @@
 //#include <core/operators/interfaces/select.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -124,6 +125,7 @@ struct my_select_wit_t {
         const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
                 inDataSizeUsedByte - (inDataRest8 - inData)
         );
+        // @todo This is wrong, see project_compr.h
         const size_t inCountLogCompr = inDataCountLog - inCountLogRest;
 
         // If no estimate is provided: Pessimistic allocation size (for
