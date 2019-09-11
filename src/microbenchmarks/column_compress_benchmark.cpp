@@ -52,10 +52,10 @@ int main() {
     // uncompressed data), reached only if all input data elements pass the
     // selection.
 
-    const unsigned ARRAY_SIZE = 5;
-    column<in_f>* cols[ARRAY_SIZE];
+    const unsigned ARRAY_SIZE = 100;
+    column<in_f>* cols[1];
 
-    for (unsigned i = 0; i < ARRAY_SIZE; i++)
+    for (unsigned i = 0; i < 1; i++)
     {
         cols[i] = const_cast<column<in_f>*>(
             generate_exact_number(
@@ -67,8 +67,8 @@ int main() {
     const column<in_f>** actualCols = const_cast<const column<in_f>**>(cols);
     std::cout << "Generated numbers" << std::endl;
 
-    column<out_f>* outcols[ARRAY_SIZE];
-    for (unsigned i = 0; i < ARRAY_SIZE; i++)
+    column<out_f>* outcols[1];
+    /*for (unsigned i = 0; i < 0; i++)
     {
         outcols[i] = const_cast<column<out_f>*>(
             morph<
@@ -76,23 +76,44 @@ int main() {
                 out_f,
                 in_f
                     >( actualCols[i] ) );
-    }
+    }*/
     const column<out_f>** outPosCols = const_cast<const column<out_f>**>(outcols);
+    outcols[0] = const_cast<column<out_f>*>(
+        morph<
+            scalar<v64 <uint64_t>>,
+            out_f,
+            in_f
+                >( actualCols[0] ) );
 
     auto originalSize = outPosCols[0]->get_size_used_byte();
     std::cout << "Column compressed bytes for " << countValues << " values: " << outPosCols[0]->get_size_compr_byte();
     std::cout << ", bytes used: " << outPosCols[0]->get_size_used_byte() << std::endl;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::duration<double> accumulation(0.0);
+    std::chrono::duration<double> elapsed_seconds;
 
-    start = std::chrono::system_clock::now();
     for (unsigned i = 0; i < ARRAY_SIZE; i++) {
-        const_cast<column<out_f>*>(outPosCols[i])->reallocate();
+        if (i % 10 == 0)
+            std::cout << "at step " << i << std::endl;
+        outcols[0] = const_cast<column<out_f>*>(
+            morph<
+                scalar<v64 <uint64_t>>,
+                out_f,
+                in_f
+                    >( actualCols[0] ) );
+        start = std::chrono::system_clock::now();
+        const_cast<column<out_f>*>(outPosCols[0])->reallocate();
+        end = std::chrono::system_clock::now();
+        if (i != ARRAY_SIZE -1)
+            free(const_cast<column<out_f>*>(outPosCols[0]));
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        accumulation += elapsed_seconds;
     }
-    end = std::chrono::system_clock::now();
 
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "Needed " << elapsed_seconds.count() << " for reallocing " << originalSize << " bytes" << std::endl;
+    accumulation = accumulation / ARRAY_SIZE;
+
+    std::cout << "Needed " << accumulation.count() << " for reallocing " << originalSize << " bytes " << std::endl;
 
     return 0;
 }
