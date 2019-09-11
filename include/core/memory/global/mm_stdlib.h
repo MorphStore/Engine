@@ -24,10 +24,14 @@
 #ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_STDLIB_H
 #define MORPHSTORE_CORE_MEMORY_GLOBAL_MM_STDLIB_H
 
+#include <iostream>
+
 #include <core/utils/preprocessor.h>
 #include <core/memory/management/abstract_mm.h>
 #include <core/memory/global/mm_override.h>
 #include <core/memory/morphstore_mm.h>
+
+#define ENABLE_MALLOC_COUNT
 
 extern "C" {
 #if !defined( MSV_DEBUG_MALLOC ) || defined( MSV_NO_LOG )
@@ -42,8 +46,18 @@ extern "C" {
  *
  * @return Pointer to allocated memory.
  */
+
+#ifdef ENABLE_MALLOC_COUNT
+int malloc_count = 0;
+int realloc_count = 0;
+int free_count = 0;
+#endif
+
 void *malloc(size_t p_AllocSize) __THROW {
-    trace("Request for allocsize ", p_AllocSize);
+#ifdef ENABLE_MALLOC_COUNT
+    wtf("Malloc for: ", p_AllocSize);
+    malloc_count++;
+#endif
 #ifdef USE_MMAP_MM
     if (p_AllocSize == 0)
         return nullptr;
@@ -59,6 +73,9 @@ void *malloc(size_t p_AllocSize) __THROW {
 }
 
 void *realloc( void * p_Ptr, size_t p_AllocSize ) __THROW {
+#ifdef ENABLE_MALLOC_COUNT
+    realloc_count++;
+#endif
 #ifdef USE_MMAP_MM
     return morphstore::mm_realloc(p_Ptr, p_AllocSize);
 #else
@@ -80,6 +97,9 @@ void free(void *p_FreePtr) __THROW {
     // standard semantics
     if (p_FreePtr == nullptr)
         return;
+#ifdef ENABLE_MALLOC_COUNT
+    free_count++;
+#endif
 #ifdef USE_MMAP_MM
     morphstore::mm_free(p_FreePtr);
 #else
