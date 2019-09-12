@@ -281,10 +281,16 @@ namespace morphstore {
         static void apply(
                 const uint8_t * & in8, uint8_t * & out8, size_t countLog
         ) {
-            size_t countLogDecompr = 0;
             // Iterate over all complete pages and possibly the final
             // incomplete page in the input.
-            while(countLogDecompr < countLog) {
+            for(
+                    size_t countLogDecompr = 0;
+                    countLogDecompr < countLog;
+                    // If the last page is incomplete, then this increment is
+                    // actually too high. However, this is fine for the
+                    // condition of the while-loop.
+                    countLogDecompr += in_f::m_PageSizeLog
+            ) {
                 const uint8_t * const inMeta8 = in8;
                 in8 += in_f::m_MetaSize8;
                 // Iterate over all blocks in the current input page. In the
@@ -299,10 +305,6 @@ namespace morphstore {
                     unpack_switch<t_ve, vbp_l, vector_element_count::value>(
                             inMeta8[blockIdx], in8, out8, t_BlockSizeLog
                     );
-                // If the last page is incomplete, then this increment is
-                // actually too high. However, this is fine for the condition
-                // of the while-loop.
-                countLogDecompr += in_f::m_PageSizeLog;
             }
         }
     };
@@ -337,14 +339,19 @@ namespace morphstore {
         
         static void apply(
                 const uint8_t * & p_In8,
-                size_t p_CountIn8,
+                size_t p_CountInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
-            const uint8_t * const endIn8 = p_In8 + p_CountIn8;
-            
             // Iterate over all complete pages and possibly the final
             // incomplete page in the input.
-            while(p_In8 < endIn8) {
+            for(
+                    size_t countLogProcessed = 0;
+                    countLogProcessed < p_CountInLog;
+                    // If the last page is incomplete, then this increment is
+                    // actually too high. However, this is fine for the
+                    // condition of the while-loop.
+                    countLogProcessed += in_f::m_PageSizeLog
+            ) {
                 const uint8_t * const inMeta8 = p_In8;
                 p_In8 += in_f::m_MetaSize8;
                 // Iterate over all blocks in the current input page. In the
@@ -355,9 +362,7 @@ namespace morphstore {
                         unsigned blockIdx = 0;
                         blockIdx < t_PageSizeBlocks;
                         blockIdx++
-                ) {
-                    const unsigned bw = inMeta8[blockIdx];
-                    const size_t blockSize8 = t_BlockSizeLog * bw / bitsPerByte;
+                )
                     decompress_and_process_batch_switch<
                             t_ve,
                             vbp_l,
@@ -365,9 +370,8 @@ namespace morphstore {
                             t_op_vector,
                             t_extra_args ...
                     >(
-                            bw, p_In8, blockSize8, p_State
+                            inMeta8[blockIdx], p_In8, t_BlockSizeLog, p_State
                     );
-                }
             }
         }
     };

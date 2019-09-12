@@ -147,7 +147,7 @@ namespace morphstore {
     > {
         static void apply(
                 const uint8_t * & p_In8,
-                size_t p_CountIn8,
+                size_t p_CountInLog,
                 typename t_op_vector<
                         t_vector_extension,
                         t_extra_args ...
@@ -158,7 +158,7 @@ namespace morphstore {
                     t_layout,
                     t_op_vector,
                     t_extra_args ...
-            >::apply(p_In8, p_CountIn8, p_State);
+            >::apply(p_In8, p_CountInLog, p_State);
         }
     };
     

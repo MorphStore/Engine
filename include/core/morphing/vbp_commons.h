@@ -291,7 +291,7 @@ namespace morphstore {
     void decompress_and_process_batch_switch(
             unsigned bitwidth,
             const uint8_t * & in8,
-            size_t countIn8,
+            size_t countInLog,
             typename t_op_vector<
                     t_vector_extension, t_extra_args ...
             >::state_t & opState
@@ -301,72 +301,72 @@ namespace morphstore {
         switch(bitwidth) {
             // Generated with Python:
             // for bw in range(1, 64+1):
-            //   print("case {: >2}: decompress_and_process_batch<t_ve, t_src_l<{: >2}, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;".format(bw, bw))
-            case  1: decompress_and_process_batch<t_ve, t_src_l< 1, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  2: decompress_and_process_batch<t_ve, t_src_l< 2, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  3: decompress_and_process_batch<t_ve, t_src_l< 3, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  4: decompress_and_process_batch<t_ve, t_src_l< 4, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  5: decompress_and_process_batch<t_ve, t_src_l< 5, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  6: decompress_and_process_batch<t_ve, t_src_l< 6, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  7: decompress_and_process_batch<t_ve, t_src_l< 7, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  8: decompress_and_process_batch<t_ve, t_src_l< 8, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case  9: decompress_and_process_batch<t_ve, t_src_l< 9, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 10: decompress_and_process_batch<t_ve, t_src_l<10, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 11: decompress_and_process_batch<t_ve, t_src_l<11, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 12: decompress_and_process_batch<t_ve, t_src_l<12, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 13: decompress_and_process_batch<t_ve, t_src_l<13, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 14: decompress_and_process_batch<t_ve, t_src_l<14, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 15: decompress_and_process_batch<t_ve, t_src_l<15, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 16: decompress_and_process_batch<t_ve, t_src_l<16, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 17: decompress_and_process_batch<t_ve, t_src_l<17, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 18: decompress_and_process_batch<t_ve, t_src_l<18, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 19: decompress_and_process_batch<t_ve, t_src_l<19, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 20: decompress_and_process_batch<t_ve, t_src_l<20, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 21: decompress_and_process_batch<t_ve, t_src_l<21, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 22: decompress_and_process_batch<t_ve, t_src_l<22, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 23: decompress_and_process_batch<t_ve, t_src_l<23, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 24: decompress_and_process_batch<t_ve, t_src_l<24, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 25: decompress_and_process_batch<t_ve, t_src_l<25, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 26: decompress_and_process_batch<t_ve, t_src_l<26, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
+            //   print("case {: >2}: decompress_and_process_batch<t_ve, t_src_l<{: >2}, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;".format(bw, bw))
+            case  1: decompress_and_process_batch<t_ve, t_src_l< 1, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  2: decompress_and_process_batch<t_ve, t_src_l< 2, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  3: decompress_and_process_batch<t_ve, t_src_l< 3, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  4: decompress_and_process_batch<t_ve, t_src_l< 4, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  5: decompress_and_process_batch<t_ve, t_src_l< 5, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  6: decompress_and_process_batch<t_ve, t_src_l< 6, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  7: decompress_and_process_batch<t_ve, t_src_l< 7, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  8: decompress_and_process_batch<t_ve, t_src_l< 8, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case  9: decompress_and_process_batch<t_ve, t_src_l< 9, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 10: decompress_and_process_batch<t_ve, t_src_l<10, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 11: decompress_and_process_batch<t_ve, t_src_l<11, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 12: decompress_and_process_batch<t_ve, t_src_l<12, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 13: decompress_and_process_batch<t_ve, t_src_l<13, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 14: decompress_and_process_batch<t_ve, t_src_l<14, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 15: decompress_and_process_batch<t_ve, t_src_l<15, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 16: decompress_and_process_batch<t_ve, t_src_l<16, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 17: decompress_and_process_batch<t_ve, t_src_l<17, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 18: decompress_and_process_batch<t_ve, t_src_l<18, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 19: decompress_and_process_batch<t_ve, t_src_l<19, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 20: decompress_and_process_batch<t_ve, t_src_l<20, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 21: decompress_and_process_batch<t_ve, t_src_l<21, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 22: decompress_and_process_batch<t_ve, t_src_l<22, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 23: decompress_and_process_batch<t_ve, t_src_l<23, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 24: decompress_and_process_batch<t_ve, t_src_l<24, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 25: decompress_and_process_batch<t_ve, t_src_l<25, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 26: decompress_and_process_batch<t_ve, t_src_l<26, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
 #ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
-            case 27: decompress_and_process_batch<t_ve, t_src_l<27, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 28: decompress_and_process_batch<t_ve, t_src_l<28, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 29: decompress_and_process_batch<t_ve, t_src_l<29, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 30: decompress_and_process_batch<t_ve, t_src_l<30, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 31: decompress_and_process_batch<t_ve, t_src_l<31, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 32: decompress_and_process_batch<t_ve, t_src_l<32, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 33: decompress_and_process_batch<t_ve, t_src_l<33, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 34: decompress_and_process_batch<t_ve, t_src_l<34, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 35: decompress_and_process_batch<t_ve, t_src_l<35, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 36: decompress_and_process_batch<t_ve, t_src_l<36, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 37: decompress_and_process_batch<t_ve, t_src_l<37, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 38: decompress_and_process_batch<t_ve, t_src_l<38, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 39: decompress_and_process_batch<t_ve, t_src_l<39, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 40: decompress_and_process_batch<t_ve, t_src_l<40, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 41: decompress_and_process_batch<t_ve, t_src_l<41, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 42: decompress_and_process_batch<t_ve, t_src_l<42, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 43: decompress_and_process_batch<t_ve, t_src_l<43, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 44: decompress_and_process_batch<t_ve, t_src_l<44, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 45: decompress_and_process_batch<t_ve, t_src_l<45, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 46: decompress_and_process_batch<t_ve, t_src_l<46, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 47: decompress_and_process_batch<t_ve, t_src_l<47, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 48: decompress_and_process_batch<t_ve, t_src_l<48, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 49: decompress_and_process_batch<t_ve, t_src_l<49, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 50: decompress_and_process_batch<t_ve, t_src_l<50, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 51: decompress_and_process_batch<t_ve, t_src_l<51, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 52: decompress_and_process_batch<t_ve, t_src_l<52, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 53: decompress_and_process_batch<t_ve, t_src_l<53, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 54: decompress_and_process_batch<t_ve, t_src_l<54, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 55: decompress_and_process_batch<t_ve, t_src_l<55, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 56: decompress_and_process_batch<t_ve, t_src_l<56, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 57: decompress_and_process_batch<t_ve, t_src_l<57, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 58: decompress_and_process_batch<t_ve, t_src_l<58, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 59: decompress_and_process_batch<t_ve, t_src_l<59, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 60: decompress_and_process_batch<t_ve, t_src_l<60, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 61: decompress_and_process_batch<t_ve, t_src_l<61, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 62: decompress_and_process_batch<t_ve, t_src_l<62, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 63: decompress_and_process_batch<t_ve, t_src_l<63, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
-            case 64: decompress_and_process_batch<t_ve, t_src_l<64, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countIn8, opState); break;
+            case 27: decompress_and_process_batch<t_ve, t_src_l<27, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 28: decompress_and_process_batch<t_ve, t_src_l<28, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 29: decompress_and_process_batch<t_ve, t_src_l<29, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 30: decompress_and_process_batch<t_ve, t_src_l<30, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 31: decompress_and_process_batch<t_ve, t_src_l<31, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 32: decompress_and_process_batch<t_ve, t_src_l<32, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 33: decompress_and_process_batch<t_ve, t_src_l<33, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 34: decompress_and_process_batch<t_ve, t_src_l<34, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 35: decompress_and_process_batch<t_ve, t_src_l<35, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 36: decompress_and_process_batch<t_ve, t_src_l<36, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 37: decompress_and_process_batch<t_ve, t_src_l<37, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 38: decompress_and_process_batch<t_ve, t_src_l<38, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 39: decompress_and_process_batch<t_ve, t_src_l<39, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 40: decompress_and_process_batch<t_ve, t_src_l<40, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 41: decompress_and_process_batch<t_ve, t_src_l<41, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 42: decompress_and_process_batch<t_ve, t_src_l<42, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 43: decompress_and_process_batch<t_ve, t_src_l<43, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 44: decompress_and_process_batch<t_ve, t_src_l<44, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 45: decompress_and_process_batch<t_ve, t_src_l<45, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 46: decompress_and_process_batch<t_ve, t_src_l<46, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 47: decompress_and_process_batch<t_ve, t_src_l<47, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 48: decompress_and_process_batch<t_ve, t_src_l<48, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 49: decompress_and_process_batch<t_ve, t_src_l<49, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 50: decompress_and_process_batch<t_ve, t_src_l<50, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 51: decompress_and_process_batch<t_ve, t_src_l<51, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 52: decompress_and_process_batch<t_ve, t_src_l<52, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 53: decompress_and_process_batch<t_ve, t_src_l<53, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 54: decompress_and_process_batch<t_ve, t_src_l<54, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 55: decompress_and_process_batch<t_ve, t_src_l<55, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 56: decompress_and_process_batch<t_ve, t_src_l<56, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 57: decompress_and_process_batch<t_ve, t_src_l<57, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 58: decompress_and_process_batch<t_ve, t_src_l<58, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 59: decompress_and_process_batch<t_ve, t_src_l<59, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 60: decompress_and_process_batch<t_ve, t_src_l<60, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 61: decompress_and_process_batch<t_ve, t_src_l<61, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 62: decompress_and_process_batch<t_ve, t_src_l<62, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 63: decompress_and_process_batch<t_ve, t_src_l<63, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
+            case 64: decompress_and_process_batch<t_ve, t_src_l<64, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
 #endif
             case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH

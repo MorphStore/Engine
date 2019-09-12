@@ -263,19 +263,17 @@ namespace morphstore {
 #endif
         static void apply(
                 const uint8_t * & in8,
-                size_t countIn8,
+                size_t countInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
         ) {
             using namespace vectorlib;
             
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);
-            const base_t * const endInBase =
-                    inBase + convert_size<uint8_t, base_t>(countIn8);
             
             const size_t blockSizeVec =
                     src_l::m_BlockSize / vector_element_count::value;
             
-            while(inBase < endInBase) {
+            for(size_t i = 0; i < countInLog; i += src_l::m_BlockSize) {
                 const vector_t tmp = load<
                         t_ve, iov::ALIGNED, vector_size_bit::value
                 >(inBase);
@@ -536,8 +534,7 @@ namespace morphstore {
     }
     
     template<class t_vector_extension, unsigned t_Bw, unsigned t_Step>
-    class random_read_access<t_vector_extension, vbp_padding_l<t_Bw, t_Step> > {
-    public:
+    struct random_read_access<t_vector_extension, vbp_padding_l<t_Bw, t_Step> > {
         // Alias to the most efficient implementation depending on t_Bw.
         using type = typename std::conditional<
                 // If the number of code words per 64-bit word is a power of

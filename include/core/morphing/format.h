@@ -64,6 +64,7 @@ struct representation {
      */
     static size_t get_size_max_byte(size_t p_CountValues) = delete;
 
+    // @todo Rename this to m_BlockSizeLog.
     static const size_t m_BlockSize;
 };
 
@@ -138,9 +139,17 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len<uncompr_f>(
     return uncompr_f::get_size_max_byte(p_CountValues);
 }
 
+// @todo This interface is deprecated, we could remove it.
 template<class t_format>
 class read_iterator;
 
+// @todo As the implementation of this interface is (always?) very similar to
+// that of the decompressing batch-level morph-operator, we should think about
+// merging them somehow.
+/**
+ * @brief The interface for sequential read access to data in any
+ * (un)compressed format.
+ */
 template<
         class t_vector_extension,
         class t_format,
@@ -150,9 +159,24 @@ template<
         class ... t_extra_args
 >
 struct decompress_and_process_batch {
+    /**
+     * @brief Decompresses the given input buffer and passes each decompressed
+     * vector to the given operator core, instead of materializing the
+     * decompressed data.
+     * 
+     * Usually, the implementation of this function will be quite close to that
+     * of the corresponding decompressing batch-level morph-operator.
+     * 
+     * @param p_In8 The start of the (un)compressed input buffer. After the
+     * function returns, this pointer points to the next byte behind the data
+     * read during this call.
+     * @param p_CountInLog The number of logical data elements to process.
+     * Must be a multiple of the format's block size `t_format::m_BlockSize`.
+     * @param p_State The internal state of the operator core.
+     */
     static void apply(
             const uint8_t * & p_In8,
-            size_t p_CountIn8,
+            size_t p_CountInLog,
             typename t_op_vector<
                     t_vector_extension, t_extra_args ...
             >::state_t & p_State

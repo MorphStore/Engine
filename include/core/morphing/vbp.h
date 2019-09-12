@@ -250,20 +250,20 @@ namespace morphstore {
                 uint8_t * & out8,
                 size_t countLog
         ) {
-            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
-            base_t * outBase = reinterpret_cast<base_t *>(out8);
-            state_t s(inBase, outBase);
+            state_t s(
+                    reinterpret_cast<const base_t *>(in8),
+                    reinterpret_cast<base_t *>(out8)
+            );
+            
 #ifdef VBP_USE_MIN_CYCLE_LEN
             const size_t cycleLenVec = src_l::minimum_cycle_len();
-            const size_t cycleLenBase = cycleLenVec * vector_element_count::value;
-            const size_t cycleCount = countLog / cycleLenBase;
-            for(size_t i = 0; i < cycleCount; i++)
-                unpack_block<cycleLenVec, 0>(s);
 #else
-            const size_t blockSize = vector_size_bit::value;
-            for(size_t i = 0; i < countLog; i += blockSize)
-                unpack_block<countBits, 0>(s);
+            const size_t cycleLenVec = vector_size_bit::value;
 #endif
+            const size_t cycleLenBase =
+                    cycleLenVec * vector_element_count::value;
+            for(size_t i = 0; i < countLog; i += cycleLenBase)
+                unpack_block<cycleLenVec, 0>(s);
             
             in8 = reinterpret_cast<const uint8_t *>(s.inBase);
             out8 = reinterpret_cast<uint8_t *>(s.outBase);
@@ -362,20 +362,20 @@ namespace morphstore {
 #endif
         static void apply(
                 const uint8_t * & in8,
-                size_t countIn8,
+                size_t countInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & opState
         ) {
-            const base_t * inBase = reinterpret_cast<const base_t *>(in8);
-            const base_t * const endInBase = inBase + convert_size<uint8_t, base_t>(countIn8);
-            state_t s(inBase);
+            state_t s(reinterpret_cast<const base_t *>(in8));
+            
 #ifdef VBP_USE_MIN_CYCLE_LEN
-            const unsigned cycleLen = src_l::minimum_cycle_len();
-            while(s.inBase < endInBase)
-                unpack_and_process_block<cycleLen, 0>(s, opState);
+            const size_t cycleLenVec = src_l::minimum_cycle_len();
 #else
-            while(s.inBase < endInBase)
-                unpack_and_process_block<countBits, 0>(s, opState);
+            const size_t cycleLenVec = vector_size_bit::value;
 #endif
+            const size_t cycleLenBase =
+                    cycleLenVec * vector_element_count::value;
+            for(size_t i = 0; i < countInLog; i += cycleLenBase)
+                unpack_and_process_block<cycleLenVec, 0>(s, opState);
             
             in8 = reinterpret_cast<const uint8_t *>(s.inBase);
         }
