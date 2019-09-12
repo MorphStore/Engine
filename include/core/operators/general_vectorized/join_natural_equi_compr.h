@@ -204,7 +204,9 @@ namespace morphstore {
             natural_equi_join_build_processing_unit_wit,
             DataStructure
          >::apply(
-            inBuildDataPtr, inBuildDataSizeComprByte, witBuildComprState
+            inBuildDataPtr,
+            p_InDataLCol->get_count_values_compr(),
+            witBuildComprState
          );
 
          if(inBuildDataSizeComprByte != inBuildDataSizeUsedByte) {
@@ -221,7 +223,9 @@ namespace morphstore {
                natural_equi_join_build_processing_unit_wit,
                DataStructure
             >::apply(
-               inBuildDataPtr, inBuildDataSizeUncomprVecByte, witBuildComprState
+               inBuildDataPtr,
+               convert_size<uint8_t, uint64_t>(inBuildDataSizeUncomprVecByte),
+               witBuildComprState
             );
             const size_t inBuildSizeScalarRemainderByte = inBuildSizeRestByte % vector_size_byte::value;
             if(inBuildSizeScalarRemainderByte) {
@@ -238,7 +242,11 @@ namespace morphstore {
                   natural_equi_join_build_processing_unit_wit,
                   DataStructure
                >::apply(
-                  inBuildDataPtr, inBuildSizeScalarRemainderByte, witBuildUncomprState
+                  inBuildDataPtr,
+                  convert_size<uint8_t, uint64_t>(
+                     inBuildSizeScalarRemainderByte
+                  ),
+                  witBuildUncomprState
                );
             }
          }
@@ -264,7 +272,9 @@ namespace morphstore {
             OutFormatLCol,
             OutFormatRCol
          >::apply(
-            inProbeDataPtr, inProbeDataSizeComprByte, witProbeComprState
+            inProbeDataPtr,
+            p_InDataRCol->get_count_values_compr(),
+            witProbeComprState
          );
          size_t outSizeLComprByte;
          size_t outSizeRComprByte;
@@ -291,7 +301,9 @@ namespace morphstore {
                OutFormatLCol,
                OutFormatRCol
             >::apply(
-               inProbeDataPtr, inProbeDataSizeUncomprVecByte, witProbeComprState
+               inProbeDataPtr,
+               convert_size<uint8_t, uint64_t>(inProbeDataSizeUncomprVecByte),
+               witProbeComprState
             );
             bool outLAddedPadding;
             bool outRAddedPadding;
@@ -328,7 +340,11 @@ namespace morphstore {
                   uncompr_f,
                   uncompr_f
                >::apply(
-                  inProbeDataPtr, inProbeSizeScalarRemainderByte, witProbeUncomprState
+                  inProbeDataPtr,
+                  convert_size<uint8_t, uint64_t>(
+                     inProbeSizeScalarRemainderByte
+                  ),
+                  witProbeUncomprState
                );
 
                std::tie(

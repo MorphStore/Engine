@@ -196,7 +196,7 @@ public:
         const size_t inPosCountLogRest = (inPosSizeComprByte < inPosSizeUsedByte)
                 ? convert_size<uint8_t, uint64_t>(inPosSizeUsedByte - (inPosRest8 - inPos))
                 : 0;
-        const size_t inPosCountLogCompr = inPosCountLog - inPosCountLogRest;
+        const size_t inPosCountLogCompr = inPosCol->get_count_values_compr();
 
         auto outDataCol = new column<t_out_data_f>(
                 get_size_max_byte_any_len<t_out_data_f>(inPosCountLog)
@@ -221,7 +221,7 @@ public:
                 t_out_data_f,
                 t_in_data_f
         >::apply(
-                inPos, inPosSizeComprByte, witComprState
+                inPos, inPosCountLogCompr, witComprState
         );
         
         if(inPosSizeComprByte == inPosSizeUsedByte) {
@@ -254,7 +254,7 @@ public:
                     t_out_data_f,
                     t_in_data_f
             >::apply(
-                    inPos, inPosSizeUncomprVecByte, witComprState
+                    inPos, convert_size<uint8_t, uint64_t>(inPosSizeUncomprVecByte), witComprState
             );
             
             // Finish the compressed output. This might already initialize the
