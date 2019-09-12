@@ -64,13 +64,14 @@
 #undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS
 #undef VBP_FORCE_INLINE_UNPACK_AND_PROCESS_SWITCH
 
-// @todo Remove this workaround. We should find a cleaner way to do this.
+// @todo Remove this workaround. We should find a cleaner way to do this. This
+// should be a build-script argument.
 /**
  * If the following macro is defined, only the routines for the bitwidths
  * actually needed for SSB at scale factor 1 are compiled, which reduces the
  * compile time significantly.
  */
-#define VBP_LIMIT_ROUTINES_FOR_SSB_SF1
+#undef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
 
 namespace morphstore {
     
