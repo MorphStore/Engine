@@ -116,16 +116,16 @@ public:
 
     explicit paged_memory_manager() :
          abstract_memory_manager{}, m_mmap_manager(mmap_memory_manager::getInstance()), current_page(nullptr), current_chunk(nullptr) {
-             debug("setting paged mm active");
+             trace("setting paged mm active");
              paged_memory_manager_state_helper::get_instance().set_alive( true );
-             debug("setting paged mm active - out");
+             trace("setting paged mm active - out");
          }
 
     virtual ~paged_memory_manager( void )
     {  
-         debug("setting paged mm inactive");
+         trace("setting paged mm inactive");
          paged_memory_manager_state_helper::get_instance().set_alive( false );
-         debug("setting paged mm inactive - out");
+         trace("setting paged mm inactive - out");
     }
 
     void init()
@@ -166,7 +166,7 @@ public:
                 current_page = reinterpret_cast<Page*>(page_loc);
                 new (page_loc) Page();
                 object_loc = current_page->allocate(size);
-                debug("[PAGED_MM] Actually you should not be able to reach this");
+                trace("[PAGED_MM] Actually you should not be able to reach this");
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
 
@@ -176,8 +176,8 @@ public:
                 Page* page = new (page_loc) Page();
                 current_page = page;
                 object_loc = page->allocate(size);
+                trace("[PAGED_MM] Second allocation yielded no object, trying anew ");
                 trace("Allocated object on ", object_loc, " with size ", std::hex, size);
-                debug("[PAGED_MM] Second allocation yielded no object, trying anew ");
                 if (object_loc == nullptr)
                     throw std::runtime_error("Allocation failed");
 
@@ -197,6 +197,7 @@ public:
 
     void deallocate(void* addr) override
     {
+        trace("[PAGED_MM] Deallocating on ", addr);
         Page* page = getPage(addr);
         page->deallocate(addr); 
     } 
@@ -204,6 +205,7 @@ public:
     //TODO: set protected and only available to test 
     void setCurrentChunk(void* chunk)
     {
+        trace("[paged_mm] Setting current chunk ", chunk);
         current_page = nullptr;
         current_chunk = chunk;
     }

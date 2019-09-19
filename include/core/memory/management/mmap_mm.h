@@ -68,8 +68,8 @@ struct MemNode {
 
 struct MemPair {
     MemPair() : memloc(0), count(0) {}
-    size_t memloc : 50;
-    size_t count : 14;
+    size_t memloc : (64 - DB_PAGE_OFFSET);
+    size_t count : DB_PAGE_OFFSET;
 
     MemNode* getFirstMemNode()
     {
@@ -89,13 +89,13 @@ struct MemPair {
             return nullptr;
 
         --count;
-        MemNode* node = reinterpret_cast<MemNode*>( memloc << 14);
+        MemNode* node = reinterpret_cast<MemNode*>( memloc << DB_PAGE_OFFSET);
         if (node->next == nullptr) {
             memloc = 0;
         }
         else {
             MemNode* newFirst = node->next;
-            memloc = reinterpret_cast<size_t>( node->next ) >> 14 ;
+            memloc = reinterpret_cast<size_t>( node->next ) >> DB_PAGE_OFFSET ;
             newFirst->prev = node->prev;
         } 
         return node;
@@ -111,14 +111,14 @@ struct MemPair {
             node->next = nullptr;
             node->prev = node;
 
-            memloc = reinterpret_cast<size_t>(ptr) >> 14;
+            memloc = reinterpret_cast<size_t>(ptr) >> DB_PAGE_OFFSET;
             ++count;
             return;
         }
 
         ++count;
 
-        MemNode* first = reinterpret_cast<MemNode*>( memloc << 14 );
+        MemNode* first = reinterpret_cast<MemNode*>( memloc << DB_PAGE_OFFSET);
         MemNode* endNode = first->prev;
 
         endNode->next = node;
@@ -312,11 +312,14 @@ public:
         while (needed_blocks > 0) {
              state = getAllocBits64(0, needed_blocks, false);
              trace("Received further state in bitmap as ", std::hex, state, ", needed blocks is still ", needed_blocks);
-             *word_in_bitmap = state;
+             *word_in_bitmap |= state;
              needed_blocks -= sizeof(uint64_t) * 8 / ALLOC_BITS;
              trace("Word in bitmap is now ", *word_in_bitmap, " on ", word_in_bitmap);
              word_in_bitmap = reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(word_in_bitmap) + sizeof(uint64_t));
         }
+
+        trace("Returning for address ", getChunkPointer(this));
+        
 
         //// Checks for non-release
         //uint64_t last_page_offset = (size % DB_PAGE_SIZE == 0) ? size - DB_PAGE_SIZE : size - (size % DB_PAGE_SIZE);
@@ -373,9 +376,9 @@ public:
                 dealloced_page_counter++;
             }
             else {
-                return;
                 trace("Word is now ", std::hex, *word, ", end found, dealloced ", dealloced_page_counter, " pages");
                 endFound = true;
+                return;
             }
         }
 
@@ -568,13 +571,14 @@ public:
     {
         const uint64_t start_of_actual_chunk = reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader);
         const uint64_t needed_offset = slots_needed * ALLOC_BITS / 8;
+        const uint64_t bit_trunc = (slots_needed * ALLOC_BITS) % 8;
 
         uint64_t continuousPageCounter = 0;
         uint64_t bit_start = 0;
 
         uint64_t* loc = start;
 
-        while (reinterpret_cast<uint64_t>(loc) + needed_offset < reinterpret_cast<uint64_t>(end)) {
+        while (reinterpret_cast<uint64_t>(loc) + needed_offset + (bit_trunc == 0 ? 0 : 1) < reinterpret_cast<uint64_t>(end)) {
             //First check if space is not full
             uint64_t bit_offset = ALLOC_BITS;
 
@@ -585,7 +589,7 @@ public:
                     uint64_t bits = (*loc & (0b11ul << (64 - bit_offset)));
                     // space is available
                     if (bits == 0) {
-                        if ( reinterpret_cast<uint64_t>(loc) + needed_offset > reinterpret_cast<uint64_t>(end) )
+                        if ( reinterpret_cast<uint64_t>(loc) + ( (bit_trunc + bit_offset - ALLOC_BITS) / 8 ) + needed_offset >= reinterpret_cast<uint64_t>(end) )
                             return nullptr;
                         bit_start = (reinterpret_cast<uint64_t>(loc) - reinterpret_cast<uint64_t>(bitmap)) * 8 + bit_offset - ALLOC_BITS;
                         trace("Current loc for bit_start is ", loc, " with value ", std::hex, *loc);
@@ -641,7 +645,7 @@ public:
         //assert(size <= ALLOCATION_SIZE);
         // TODO: replace with strategy pattern
         uint64_t* loc = m_info.status.lastBitmapLocation;
-        //uint64_t* previous_start = loc;
+        uint64_t* previous_start = loc;
         //uint64_t* loc = reinterpret_cast<uint64_t*>(bitmap);
 
         //const uint64_t start_of_actual_chunk = reinterpret_cast<uint64_t>(this) + sizeof(ChunkHeader);
@@ -653,10 +657,20 @@ public:
         uint64_t* const end_of_allocation_bitmap = reinterpret_cast<uint64_t*>(reinterpret_cast<size_t>(bitmap) + ( bitmap_size ));
 
         void* ptr = iterateFromStartToEnd(slots_needed, loc, end_of_allocation_bitmap);
-        if (ptr != nullptr)
+        /*uint64_t chunkPtr = reinterpret_cast<uint64_t>(getChunkPointer(this));
+        uint64_t chunkEnd = chunkPtr + ALLOCATION_SIZE;
+        trace("Chunk start on ", chunkPtr);
+        trace("Chunk end on ", chunkEnd);*/
+        if (ptr != nullptr) {
+            trace("Ptr is on ", ptr, " while size is ", std::hex, size, " whiled end of demanded ptr is ", std::hex, reinterpret_cast<uint64_t>(ptr) + size);
+            //assert(reinterpret_cast<uint64_t>(ptr) >= chunkPtr && reinterpret_cast<uint64_t>(ptr) + size < chunkEnd);
             return ptr;
+        }
 
-        ptr = iterateFromStartToEnd(slots_needed, reinterpret_cast<uint64_t*>(bitmap), m_info.status.lastBitmapLocation);
+        ptr = iterateFromStartToEnd(slots_needed, reinterpret_cast<uint64_t*>(bitmap), previous_start);
+
+        trace("Ptr is on ", ptr, " while size is ", std::hex, size, " whiled end of demanded ptr is ", std::hex, reinterpret_cast<uint64_t>(ptr) + size);
+        //assert(ptr == nullptr || (reinterpret_cast<uint64_t>(ptr) >= chunkPtr && reinterpret_cast<uint64_t>(ptr) + size < chunkEnd));
         return ptr;
 
         /*while (reinterpret_cast<uint64_t>(loc) + needed_offset < end_of_allocation_bitmap) {
@@ -874,8 +888,8 @@ public:
     mmap_memory_manager &operator=(mmap_memory_manager const &) = delete;
     virtual ~mmap_memory_manager( void )
     {
-             debug("setting mmap mm inactive");
-             debug("setting mmap mm inactive - out");
+             trace("setting mmap mm inactive");
+             trace("setting mmap mm inactive - out");
     }
 
     static inline mmap_memory_manager& getInstance()
@@ -1019,37 +1033,27 @@ public:
 
     void* allocate(size_t size) override
     {
-        if (size > ALLOCATION_SIZE) {
-            void* ptr = allocateLarge(size);
-            if (ptr == nullptr)
-                throw std::runtime_error("Out of memory");
-
-            trace("Returning pointer on ", ptr, " for size ", size);
-            return ptr;
-        }
-        else {
 #ifdef USE_FREEMAP
-            void* freemapptr = freemap.getMemory(size);
-            if (freemapptr != nullptr)
-                return freemapptr;
+        void* freemapptr = freemap.getMemory(size);
+        if (freemapptr != nullptr)
+            return freemapptr;
 #endif
 
+        if (m_current_chunk == nullptr)
+            m_current_chunk = allocateContinuous();
+
+        void* ptr = allocatePages(size, m_current_chunk);
+        if (ptr == nullptr) {
+            trace("Needing new chunk, allocating...");
+            m_current_chunk = allocateContinuous();
+
             if (m_current_chunk == nullptr)
-                m_current_chunk = allocateContinuous();
+                throw std::runtime_error("Out of memory");
 
-            void* ptr = allocatePages(size, m_current_chunk);
-            if (ptr == nullptr) {
-                debug("Needing new chunk, allocating...");
-                m_current_chunk = allocateContinuous();
-
-                if (m_current_chunk == nullptr)
-                    throw std::runtime_error("Out of memory");
-
-                ptr = allocatePages(size, m_current_chunk);
-            }
-            trace("Returning pointer on ", ptr, " for size ", size);
-            return ptr;
+            ptr = allocatePages(size, m_current_chunk);
         }
+        trace("Returning pointer on ", ptr, " for size ", size);
+        return ptr;
     }
 
     void deallocate(void* const ptr) override
@@ -1138,7 +1142,7 @@ public:
 
     void * reallocate_back(void* ptr, size_t size)
     {
-        debug("[MMAP_MM] Called reallocate_back");
+        trace("[MMAP_MM] Called reallocate_back");
 
         ObjectInfo* info = reinterpret_cast<ObjectInfo*>(ptr);
         ChunkHeader* header = ChunkHeader::getChunkHeader(ptr);
@@ -1146,14 +1150,14 @@ public:
             return ptr;
 
         if (info->getSize() > size) {
-            debug("Size ", size, " is smaller than former size ", info->getSize());
+            trace("Size ", size, " is smaller than former size ", info->getSize());
             header->setDeallocatedEnd(ptr, info->getSize(), size);
             info->size = size;
             return ptr;
         }
 
         void* ret = allocate(size);
-        debug("Reallocating ", size, " bytes for ", info->getSize(), " by allocating anew");
+        trace("Reallocating ", size, " bytes for ", info->getSize(), " by allocating anew");
         if (ret == nullptr) {
             throw std::runtime_error("Allocation failed");
             return nullptr;
@@ -1185,8 +1189,8 @@ private:
         freemap()
 #endif
         {
-             debug("setting mmap mm active");
-             debug("setting mmap mm active - out");
+             trace("setting mmap mm active");
+             trace("setting mmap mm active - out");
         }
 
     // used for direct allocation calls

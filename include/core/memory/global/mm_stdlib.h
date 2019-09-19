@@ -31,7 +31,7 @@
 #include <core/memory/global/mm_override.h>
 #include <core/memory/morphstore_mm.h>
 
-#define ENABLE_MALLOC_COUNT
+//#define ENABLE_MALLOC_COUNT
 
 extern "C" {
 #if !defined( MSV_DEBUG_MALLOC ) || defined( MSV_NO_LOG )
