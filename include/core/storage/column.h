@@ -90,6 +90,8 @@ class column {
    public:
       inline void reallocate( void )
       {
+        if (get_size_used_byte() == get_size_compr_byte())
+            return;
         auto new_col = realloc(m_DataUnaligned, get_size_compr_byte());    
         m_DataUnaligned = new_col;
         m_Data = create_aligned_ptr( m_DataUnaligned );
@@ -114,7 +116,10 @@ class column {
       }
       inline void set_size_compr_byte( size_t p_SizeComprByte ) {
          m_MetaData.m_SizeComprByte = p_SizeComprByte;
+         //TODO: lay out in seperate procedure
+         reallocate();
       }
+
       inline void set_meta_data(
          size_t p_CountValues,
          size_t p_SizeUsedByte,
