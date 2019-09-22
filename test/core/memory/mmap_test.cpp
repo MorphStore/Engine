@@ -38,7 +38,7 @@ int main(int /*argc*/, char** /*argv*/) {
     morphstore::column<morphstore::uncompr_f>* col[COL_COUNT];
 
     for (int i = COL_COUNT-1; i>=0; --i) {
-        std::cout << "Allocating column " << i << std::endl;
+        //std::cout << "Allocating column " << i << std::endl;
         col[i] = morphstore::column<morphstore::uncompr_f>::create_global_column(11000000);
     }
 
@@ -52,13 +52,13 @@ int main(int /*argc*/, char** /*argv*/) {
     obj_ptr = morphstore::mm_realloc(obj_ptr, 64);
 
     reinterpret_cast<uint64_t*>(obj_ptr)[5] = 64;
-    std::cout << "Current val: " << *reinterpret_cast<uint64_t*>(obj_ptr) << std::endl;
+    //std::cout << "Current val: " << *reinterpret_cast<uint64_t*>(obj_ptr) << std::endl;
     assert(*reinterpret_cast<uint64_t*>(obj_ptr) == 64);
 
     obj_ptr = morphstore::mm_realloc(obj_ptr, 8);
     assert(*reinterpret_cast<uint64_t*>(obj_ptr) == 64);
     morphstore::mm_free(obj_ptr);
-    std::cout << "Done realloc" << std::endl;
+    //std::cout << "Done realloc" << std::endl;
 
 // Testing Speed
     unsigned inDataCount = 234000;
