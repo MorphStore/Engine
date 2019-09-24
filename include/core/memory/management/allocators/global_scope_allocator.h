@@ -24,8 +24,7 @@
 #ifndef MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H
 #define MORPHSTORE_CORE_MEMORY_MANAGEMENT_ALLOCATORS_GLOBAL_SCOPE_ALLOCATOR_H
 
-
-#ifndef MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H
+#if !defined MORPHSTORE_CORE_MEMORY_GLOBAL_MM_HOOKS_H && !defined MSV_NO_SELFMANAGED_MEMORY
 #  error "Memory Hooks ( global/mm_hooks.h ) has to be included before perpetual (global scoped) allocator."
 #endif
 
@@ -65,6 +64,7 @@ namespace morphstore {
 
       //
       global_scope_stdlib_allocator( void ) /*throw( )*/ {
+#ifdef MSV_NO_SELFMANAGED_MEMORY
          if( ! (
             ( stdlib_malloc_ptr == nullptr ) ||
             ( stdlib_malloc_ptr == nullptr ) ||
@@ -74,6 +74,7 @@ namespace morphstore {
 //               exit( 1 );
                throw( 1 );
             }
+#endif
       }
       global_scope_stdlib_allocator( const global_scope_stdlib_allocator & ) throw( ) { }
       template< class U >
@@ -102,11 +103,11 @@ namespace morphstore {
       }
 
       void deallocate( pointer p_FreePtr, MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_NumElements ) {
-//#ifdef USE_MMAP_MM
-//          free( static_cast< void* >( p_FreePtr ));
-//#else
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+          free( static_cast< void* >( p_FreePtr ));
+#else
           stdlib_free( static_cast< void * >( p_FreePtr ) );
-//#endif
+#endif
       }
    };
    template <class T1, class T2>

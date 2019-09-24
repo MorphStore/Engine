@@ -33,7 +33,7 @@
 #include <vector>
 
 using namespace morphstore;
-using namespace vector;
+using namespace vectorlib;
 
 int main() {
     const unsigned t_bw = 1;
@@ -43,7 +43,7 @@ int main() {
 
     //select_handwritten_buffer_compr_out<8>(origCol, val)
     using in_f = uncompr_f;
-    using out_f = static_vbp_f<t_bw, 1>;
+    using out_f = static_vbp_f<vbp_l<t_bw, 1>>;
 
     //const size_t inDataCount = origCol->get_count_values();
     //const uint64_t * const inData = origCol->get_data();

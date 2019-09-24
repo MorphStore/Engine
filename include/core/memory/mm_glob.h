@@ -25,6 +25,8 @@
 #define MORPHSTORE_CORE_MEMORY_MM_GLOB_H
 #ifndef MSV_NO_SELFMANAGED_MEMORY
 #  include <core/memory/morphstore_mm.h>
+#else
+#  include <core/memory/management/allocators/global_scope_allocator.h>
 #endif
 
 
