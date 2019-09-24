@@ -104,8 +104,6 @@ namespace morphstore {
         
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            // These numbers are exact (assuming that the check above
-            // succeeded).
             const size_t pageCount = p_CountValues / m_PageSizeLog;
             const size_t totalMetaSizeByte = pageCount * m_MetaSize8;
             // These numbers are worst cases, which are only reached if all
