@@ -8,6 +8,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 
 #include <vector/general_vector_extension.h>
 #include <vector/vector_primitives.h>
@@ -165,7 +166,7 @@ namespace morphstore {
             OutFormatGroupExtents,
             DataStructure
          >::apply(
-            inData, inDataSizeComprByte, witComprState
+            inData, p_InDataCol->get_count_values_compr(), witComprState
          );
 
          size_t outSizeGroupIdComprByte, outSizeGroupExtentsComprByte;
@@ -200,7 +201,9 @@ namespace morphstore {
                OutFormatGroupExtents,
                DataStructure
             >::apply(
-               inData, inDataSizeUncomprVecByte, witComprState
+               inData,
+               convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte),
+               witComprState
             );
 
             bool outAddedPaddingGroupIds, outAddedPaddingGroupExtents;
@@ -244,7 +247,9 @@ namespace morphstore {
                   uncompr_f,
                   DataStructure
                >::apply(
-                  inData, inSizeScalarRemainderByte, witUncomprState
+                  inData,
+                  convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
+                  witUncomprState
                );
 
                // Finish the output column's uncompressed rest part.

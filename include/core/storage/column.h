@@ -22,9 +22,7 @@
  */
 
 #include <core/storage/column_helper.h>
-#ifdef MSV_NO_SELFMANAGED_MEMORY
 #include <core/memory/management/utils/alignment_helper.h>
-#endif
 #include <core/morphing/format.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
@@ -133,6 +131,62 @@ class column {
           set_meta_data(p_CountValues, p_SizeUsedByte, 0);
       }
       
+        // The following utility functions for working with the subdivision of
+        // a column into a compressed main part and an uncompressed rest part
+        // can definitely be simplified. However, they work and should not
+        // matter w.r.t. performance anyway.
+      
+        /**
+         * @brief Returns a pointer to the start of the uncompressed rest part
+         * of the column.
+         * 
+         * If the column's format is uncompressed or there is no compressed
+         * data in the column, then this will point to the start of the
+         * column's data buffer.
+         * 
+         * If the column does not contain any uncompressed data, then the
+         * returned pointer will point to the address where this data would
+         * start if it existed.
+         * 
+         * @return A pointer to the start of the uncompressed rest part of the
+         * column.
+         */
+        inline const voidptr_t get_data_uncompr_start() const {
+            return voidptr_t(create_aligned_ptr(
+                    static_cast<const uint8_t *>(m_Data) +
+                    m_MetaData.m_SizeComprByte
+            ));
+        }
+        
+        /**
+         * Returns the number of logical data elements in the uncompressed rest
+         * part of the column.
+         * 
+         * @return The number of data elements in the uncompressed rest part of
+         * the column.
+         */
+        inline size_t get_count_values_uncompr() const {
+            return (m_MetaData.m_SizeComprByte == m_MetaData.m_SizeUsedByte)
+                    ? 0
+                    : convert_size<uint8_t, uint64_t>(
+                            m_MetaData.m_SizeUsedByte - (
+                                    static_cast<const uint8_t *>(get_data_uncompr_start()) -
+                                    static_cast<const uint8_t *>(m_Data.m_Ptr)
+                            )
+                    );
+        }
+        
+        /**
+         * Returns the number of logical data elements in the compressed main
+         * part of the column.
+         * 
+         * @return The number of data elements in the compressed main part of
+         * the column.
+         */
+        inline size_t get_count_values_compr() const {
+            return m_MetaData.m_CountLogicalValues - get_count_values_uncompr();
+        }
+        
       // Creates a global scoped column. Intended for base data.
       static column< F > * create_global_column(size_t p_SizeAllocByte) {
          return new
