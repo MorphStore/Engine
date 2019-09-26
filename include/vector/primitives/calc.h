@@ -37,6 +37,18 @@ namespace vectorlib{
          typename VectorExtension::vector_t const & p_vec2
       ) = delete;
    };
+   
+   template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
+   struct min {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename VectorExtension::vector_t
+      apply(
+         typename VectorExtension::vector_t const & p_vec1,
+         typename VectorExtension::vector_t const & p_vec2
+      ) = delete;
+   };
+   
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    struct hadd {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

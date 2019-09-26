@@ -9,6 +9,7 @@
 #include <core/memory/mm_glob.h>
 #include <vector/scalar/extension_scalar.h>
 #include <vector/primitives/calc.h>
+#include <algorithm>
 
 #include <functional>
 #include <limits>
@@ -27,6 +28,21 @@ namespace vectorlib{
          return p_vec1 + p_vec2;
       }
    };
+   
+   template<>
+   struct min<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::vector_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
+         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - build minimum of 64 bit integer values from two registers (sse)" );
+         return std::min(p_vec1,p_vec2);
+      }
+   };
+   
    template<>
    struct sub<scalar<v64<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

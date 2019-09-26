@@ -65,6 +65,48 @@ namespace vectorlib{
       }
    };
    
+   namespace vectorlib{
+   template<>
+   struct min<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Minimum of 64 bit integer values from two registers (avx512)" );
+         return _mm512_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct min<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm256_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct min<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   
    template<>
    struct sub<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

@@ -49,6 +49,22 @@ namespace vectorlib{
          return _mm_sub_epi64( p_vec1, p_vec2);
       }
    };
+   
+   template<>
+   struct min<sse<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::vector_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - build minimum of 64 bit integer values from two registers (sse)" );
+         return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi64(p_vec2, p_vec1));
+      }
+   };
+      
+      
    template<>
    struct hadd<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
