@@ -28,6 +28,7 @@
 //#include <core/operators/interfaces/select.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -117,14 +118,7 @@ struct my_select_wit_t {
         const size_t inDataSizeComprByte = inDataCol->get_size_compr_byte();
         const size_t inDataSizeUsedByte = inDataCol->get_size_used_byte();
         
-        // @todo Simplify this.
-        const uint8_t * const inDataRest8 = create_aligned_ptr(
-                inData + inDataSizeComprByte
-        );
-        const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
-                inDataSizeUsedByte - (inDataRest8 - inData)
-        );
-        const size_t inCountLogCompr = inDataCountLog - inCountLogRest;
+        const size_t inCountLogCompr = inDataCol->get_count_values_compr();
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
@@ -166,7 +160,7 @@ struct my_select_wit_t {
 #endif
                 t_out_pos_f
         >::apply(
-                inData, inDataSizeComprByte, witComprState
+                inData, inCountLogCompr, witComprState
         );
         
         if(inDataSizeComprByte == inDataSizeUsedByte) {
@@ -201,7 +195,7 @@ struct my_select_wit_t {
 #endif
                     t_out_pos_f
             >::apply(
-                    inData, inDataSizeUncomprVecByte, witComprState
+                    inData, convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte), witComprState
             );
             
             // Finish the compressed output. This might already initialize the
@@ -252,7 +246,7 @@ struct my_select_wit_t {
 #endif
                         uncompr_f
                 >::apply(
-                        inData, inSizeScalarRemainderByte, witUncomprState
+                        inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState
                 );
                 
                 // Finish the output column's uncompressed rest part.

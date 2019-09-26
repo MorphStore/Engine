@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_MORPHING_UNCOMPR_H
 
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
@@ -65,13 +66,12 @@ namespace morphstore {
         
         static void apply(
                 const uint8_t * & p_In8,
-                size_t p_CountIn8,
+                size_t p_CountInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
             const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
-            const size_t countInBase = convert_size<uint8_t, base_t>(p_CountIn8);
 
-            for(size_t i = 0; i < countInBase; i += vector_element_count::value)
+            for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
                         vectorlib::load<
                                 t_ve,
@@ -81,7 +81,7 @@ namespace morphstore {
                         p_State
                 );
             
-            p_In8 += p_CountIn8;
+            p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
         }
     };
 

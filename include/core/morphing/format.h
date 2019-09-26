@@ -64,6 +64,7 @@ struct representation {
      */
     static size_t get_size_max_byte(size_t p_CountValues) = delete;
 
+    // @todo Rename this to m_BlockSizeLog.
     static const size_t m_BlockSize;
 };
 
@@ -138,9 +139,17 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len<uncompr_f>(
     return uncompr_f::get_size_max_byte(p_CountValues);
 }
 
+// @todo This interface is deprecated, we could remove it.
 template<class t_format>
 class read_iterator;
 
+// @todo As the implementation of this interface is (always?) very similar to
+// that of the decompressing batch-level morph-operator, we should think about
+// merging them somehow.
+/**
+ * @brief The interface for sequential read access to data in any
+ * (un)compressed format.
+ */
 template<
         class t_vector_extension,
         class t_format,
@@ -150,134 +159,28 @@ template<
         class ... t_extra_args
 >
 struct decompress_and_process_batch {
+    /**
+     * @brief Decompresses the given input buffer and passes each decompressed
+     * vector to the given operator core, instead of materializing the
+     * decompressed data.
+     * 
+     * Usually, the implementation of this function will be quite close to that
+     * of the corresponding decompressing batch-level morph-operator.
+     * 
+     * @param p_In8 The start of the (un)compressed input buffer. After the
+     * function returns, this pointer points to the next byte behind the data
+     * read during this call.
+     * @param p_CountInLog The number of logical data elements to process.
+     * Must be a multiple of the format's block size `t_format::m_BlockSize`.
+     * @param p_State The internal state of the operator core.
+     */
     static void apply(
             const uint8_t * & p_In8,
-            size_t p_CountIn8,
+            size_t p_CountInLog,
             typename t_op_vector<
                     t_vector_extension, t_extra_args ...
             >::state_t & p_State
     );
-};
-
-// @todo If a write-iterator knows that its data is sorted then it could do
-// more optimizations, e.g., when determining the bit width, only the last
-// value in the block would need to be considered, since it is always the
-// greatest.
-
-/**
- * @brief The interface for writing compressed data selectively.
- */
-template<class t_vector_extension, class t_format>
-struct selective_write_iterator {
-    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
-            
-    selective_write_iterator(uint8_t * p_Out);
-    
-    /**
-     * @brief Stores the elements of the given data vector selected by the
-     * given mask to the output.
-     * 
-     * Internally, buffering may take place, such that it is not guaranteed
-     * that the data is stored to the output immediately.
-     * 
-     * `done` must be called after the last call to this function to
-     * guarantee that the data is stores to the output in any case.
-     * 
-     * @param p_Data
-     * @param p_Mask
-     */
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
-            vector_t p_Data, vector_mask_t p_Mask
-    );
-
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
-            vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
-    );
-    
-    /**
-     * @brief Makes sure that all possibly buffered data is stored to the
-     * output and returns useful information for further processing.
-     * 
-     * This function should always be called after the last call to `write`.
-     * 
-     * For compressed output formats, the output's uncompressed rest part is
-     * initialized if the number of data elements stored using this instance is
-     * not compressible in the output format.
-     * 
-     * @return A tuple with the following elements:
-     * 1. The size of the output's *compressed* part in bytes.
-     * 2. `true` if the output's *uncompressed* part has been initialized,
-     *    `false` otherwise.
-     * 3. A pointer to the end of the stored (un)compressed data, which can be
-     *    used to continue storing data to the output.
-     */
-    std::tuple<size_t, bool, uint8_t *> done();
-    
-    /**
-     * @brief Returns the number of logical data elements that were stored
-     * using this instance.
-     * @return The number of logical data elements stored using this instance.
-     */
-    size_t get_count_values() const;
-};
-
-/**
- * The interface for writing compressed data non-selectively.
- */
-// Currently, we have no implementations for non-selective write-iterators yet.
-// Therefore, we delegate to the selective counterpart. This enables the
-// implementation of non-selective operators against the non-selective
-// interface.
-// @todo Implement the non-selective write-iterators.
-template<class t_vector_extension, class t_format>
-class nonselective_write_iterator {
-    IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
-    
-    selective_write_iterator<t_vector_extension, t_format> m_Wit;
-    
-public:
-    nonselective_write_iterator(uint8_t * p_Out) : m_Wit(p_Out) {
-        //
-    };
-    
-    /**
-     * @brief Stores the given data vector to the output.
-     * 
-     * Internally, buffering may take place, such that it is not guaranteed
-     * that the data is stored to the output immediately.
-     * 
-     * `done` must be called after the last call to this function to
-     * guarantee that the data is stores to the output in any case.
-     * 
-     * @param p_Data
-     */
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data) {
-        m_Wit.write(
-                p_Data,
-                bitwidth_max<vector_mask_t>(vector_element_count::value)
-        );
-    }
-    
-    /**
-     * @brief Makes sure that all possibly buffered data is stored to the
-     * output and returns useful information for further processing.
-     * 
-     * This function should always be called after the last call to `write`.
-     * 
-     * For compressed output formats, the output's uncompressed rest part is
-     * initialized if the number of data elements stored using this instance is
-     * not compressible in the output format.
-     * 
-     * @return A tuple with the following elements:
-     * 1. The size of the output's *compressed* part in bytes.
-     * 2. `true` if the output's *uncompressed* part has been initialized,
-     *    `false` otherwise.
-     * 3. A pointer to the end of the stored (un)compressed data, which can be
-     *    used to continue storing data to the output.
-     */
-    std::tuple<size_t, bool, uint8_t *> done() {
-        return m_Wit.done();
-    }
 };
 
 template<class t_vector_extension, class t_format>
