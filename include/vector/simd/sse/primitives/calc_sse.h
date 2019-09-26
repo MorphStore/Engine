@@ -60,7 +60,7 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - build minimum of 64 bit integer values from two registers (sse)" );
-         return _mm256_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi64(p_vec2, p_vec1));
+         return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi64(p_vec2, p_vec1));
       }
    };
       
