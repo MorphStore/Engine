@@ -37,6 +37,22 @@ namespace vectorlib{
          return vaddq_u64( p_vec1, p_vec2);
       }
    };
+   
+
+   template<>
+   struct min<neon<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename neon<v128<uint64_t>>::vector_t
+      apply(
+         typename neon<v128<uint64_t>>::vector_t const & p_vec1,
+         typename neon<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (neon)" );
+         return vbslq_u64(vcltq_u64(p_vec1, p_vec2),p_vec1, p_vec2);
+      }
+   };
+   
    template<>
    struct sub<neon<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
