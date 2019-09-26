@@ -24,6 +24,7 @@
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/delta.h>
+#include <core/morphing/for.h>
 #include <core/morphing/format.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
@@ -58,10 +59,10 @@ using namespace vectorlib;
 
 // Packing the deltas with 64 bits is, of course, not useful at all. However,
 // this is just for testing if the cascade works.
-#define MAKE_VARIANT_DELTA_VBP(vector_extension) \
+#define MAKE_VARIANT_CASC_VBP(vector_extension, log_f) \
     MAKE_VARIANT( \
             vector_extension, \
-            SINGLE_ARG(delta_f< \
+            SINGLE_ARG(log_f< \
                     1024, \
                     vector_extension::vector_helper_t::element_count::value, \
                     vbp_l< \
@@ -69,7 +70,7 @@ using namespace vectorlib;
                             vector_extension::vector_helper_t::element_count::value \
                     > \
             >), \
-            SINGLE_ARG(delta_f<1024, step, vbp_l<64, step> >) \
+            SINGLE_ARG(log_f<1024, step, vbp_l<64, step> >) \
     )
 
 // ****************************************************************************
@@ -94,15 +95,19 @@ int main(void) {
         MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f, uncompr_f),
         
         // Compressed variants.
-        MAKE_VARIANT_DELTA_VBP(scalar<v64<uint64_t>>),
+        MAKE_VARIANT_CASC_VBP(scalar<v64<uint64_t>>, delta_f),
+        MAKE_VARIANT_CASC_VBP(scalar<v64<uint64_t>>, for_f),
 #ifdef SSE
-        MAKE_VARIANT_DELTA_VBP(sse<v128<uint64_t>>),
+        MAKE_VARIANT_CASC_VBP(sse<v128<uint64_t>>, delta_f),
+        MAKE_VARIANT_CASC_VBP(sse<v128<uint64_t>>, for_f),
 #endif
 #ifdef AVXTWO
-        MAKE_VARIANT_DELTA_VBP(avx2<v256<uint64_t>>),
+        MAKE_VARIANT_CASC_VBP(avx2<v256<uint64_t>>, delta_f),
+        MAKE_VARIANT_CASC_VBP(avx2<v256<uint64_t>>, for_f),
 #endif
 #ifdef AVX512
-        MAKE_VARIANT_DELTA_VBP(avx512<v512<uint64_t>>)
+        MAKE_VARIANT_CASC_VBP(avx512<v512<uint64_t>>, delta_f)
+        MAKE_VARIANT_CASC_VBP(avx512<v512<uint64_t>>, for_f)
 #endif
     };
     

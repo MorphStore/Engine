@@ -40,6 +40,7 @@
 
 #include <core/morphing/delta.h>
 #include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/for.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
@@ -330,6 +331,70 @@ namespace morphstore {
 #endif
             
     #undef MAKE_SAFE_MORPH_DELTA_DECOMPR
+    
+    // ------------------------------------------------------------------------
+    // Format for_f
+    // ------------------------------------------------------------------------
+    
+    // The page size in blocks template parameter of the format for_f
+    // corresponds to the vector extension that naturally fits for working with
+    // this format.
+    
+    // Compression
+            
+    #define MAKE_SAFE_MORPH_FOR_COMPR(vector_extension) \
+    template<size_t t_BlockSizeLog, class t_inner_f> \
+    struct safe_morph_t<for_f<t_BlockSizeLog, vector_extension::vector_helper_t::element_count::value, t_inner_f>, uncompr_f> { \
+        using dst_f = for_f<t_BlockSizeLog, vector_extension::vector_helper_t::element_count::value, t_inner_f>; \
+        using src_f = uncompr_f; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vector_extension, dst_f, src_f>(inCol); \
+        }; \
+    };
+    
+    MAKE_SAFE_MORPH_FOR_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_FOR_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+    MAKE_SAFE_MORPH_FOR_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+#endif
+#ifdef AVX512
+    MAKE_SAFE_MORPH_FOR_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+#endif
+            
+    #undef MAKE_SAFE_MORPH_FOR_COMPR
+
+    // Decompression
+            
+    #define MAKE_SAFE_MORPH_FOR_DECOMPR(vector_extension) \
+    template<size_t t_BlockSizeLog, class t_inner_f> \
+    struct safe_morph_t<uncompr_f, for_f<t_BlockSizeLog, vector_extension::vector_helper_t::element_count::value, t_inner_f> > { \
+        using dst_f = uncompr_f; \
+        using src_f = for_f<t_BlockSizeLog, vector_extension::vector_helper_t::element_count::value, t_inner_f>; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vector_extension, dst_f, src_f>(inCol); \
+        }; \
+    };
+    
+    MAKE_SAFE_MORPH_FOR_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_FOR_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+    MAKE_SAFE_MORPH_FOR_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+#endif
+#ifdef AVX512
+    MAKE_SAFE_MORPH_FOR_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+#endif
+            
+    #undef MAKE_SAFE_MORPH_FOR_DECOMPR
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_SAFE_MORPH_H
