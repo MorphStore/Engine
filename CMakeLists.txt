@@ -177,6 +177,16 @@ configure_file(
    ${CMAKE_BINARY_DIR}/generated/cmake_template.h
 )
 
+execute_process(
+        COMMAND python3 vbp_routine_gen.py
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/morphing
+        OUTPUT_FILE vbp_routines.h
+        RESULT_VARIABLE retValVBPRoutineGen
+)
+if(retValVBPRoutineGen EQUAL "1")
+    message( FATAL_ERROR "Generation of the routines for vertical bit packing (vbp_l) failed.")
+endif()
+
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories( include )
