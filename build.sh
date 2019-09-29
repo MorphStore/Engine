@@ -79,10 +79,14 @@ function printHelp {
 	echo "	     Builds with neon support (for ARM)"
         echo ""
         echo "energy:"
-        echo "	-rapl "
+        echo "	-rapl"
         echo "	     Builds with RAPL support"
         echo "	-odroid"
         echo "	     Builds with support for the Odroid-XU3 sensors"
+        echo ""
+        echo "compression:"
+        echo "	--vbpLimitRoutinesForSSBSF1"
+        echo "	     Build the vertical bit-packing routines only for the bit widths required for executing SSB at scale factor 1, to speed up the build."
 }
 
 buildType=""
@@ -116,6 +120,7 @@ rapl="DCRAPL=False"
 odroid="DCODROID=False"
 neon="DCNEON=False"
 target="all"
+vbpLimitRoutinesForSSBSF1="-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -272,6 +277,10 @@ case $key in
 	shift
 	shift
         ;;
+        --vbpLimitRoutinesForSSBSF1)
+        vbpLimitRoutinesForSSBSF1="-DVBP_LIMIT_ROUTINES_FOR_SSB_SF1=True"
+        shift # past argument
+        ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -313,7 +322,7 @@ fi
 addBuilds="$buildAll $buildExamples $buildMicroBms $buildSSB"
 
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 
 if [ "$runCtest" = true ] ; then

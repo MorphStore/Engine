@@ -162,6 +162,15 @@ else ( DEFINED ENABLE_MONITORING )
 	morph_flag("-UMSV_USE_MONITORING")
 endif ( DEFINED ENABLE_MONITORING )
 
+if ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to to TRUE\n" )
+	morph_flag("-DVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
+	set( ignoreMe ${VBP_LIMIT_ROUTINES_FOR_SSB_SF1} )
+else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to FALSE\n" )
+	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
+endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+
 MESSAGE( ${MorphStoreProjectConf} )
 file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
