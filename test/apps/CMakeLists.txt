@@ -1,10 +1,6 @@
 add_executable( operator_test operator.cpp )
 FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/apps/operator_test )
 target_compile_options( operator_test PRIVATE
-                        -Wall
-                        -Wextra
-                        -pedantic
-                        -fstack-protector-all
                         -msse4.2 
                         -msse2
                         -mavx2 
