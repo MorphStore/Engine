@@ -200,9 +200,9 @@ struct my_select_wit_t {
             
             // Finish the compressed output. This might already initialize the
             // output column's uncompressed rest part.
-            bool outAddedPadding;
+            uint8_t * outAppendUncompr;
             std::tie(
-                    outSizeComprByte, outAddedPadding, outPos
+                    outSizeComprByte, outAppendUncompr, outPos
             ) = witComprState.m_Wit.done();
             outCountLog = witComprState.m_Wit.get_count_values();
             
@@ -211,13 +211,6 @@ struct my_select_wit_t {
             const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
                 // If there is such an uncompressed scalar rest.
-                
-                // Pad the output pointer such that it points to the beginning
-                // of the output column's uncompressed rest, if this has not
-                // already been done when finishing the output column's
-                // compressed part.
-                if(!outAddedPadding)
-                    outPos = create_aligned_ptr(outPos);
                 
                 // The state of the selective write_iterator for the
                 // uncompressed output.
@@ -229,7 +222,7 @@ struct my_select_wit_t {
 #endif
                 >::state_t witUncomprState(
                         val,
-                        outPos,
+                        outAppendUncompr,
                         inCountLogCompr + inDataSizeUncomprVecByte / sizeof(base_t)
                 );
 

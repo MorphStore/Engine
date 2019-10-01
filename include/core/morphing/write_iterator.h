@@ -149,15 +149,20 @@ namespace morphstore {
          * 
          * @return A tuple with the following elements:
          * 1. The size of the output's *compressed* part in bytes.
-         * 2. `true` if the output's *uncompressed* part has been initialized,
-         *    `false` otherwise.
-         * 3. A pointer to the end of the stored (un)compressed data, which can
-         *    be used to continue storing data to the output.
+         * 2. A pointer to the byte where more uncompressed data elements can
+         *    be appended. If the uncompressed rest part of the column has
+         *    already been started, then this points to the next byte after the
+         *    uncompressed rest. Otherwise, this points to the byte where the
+         *    uncompressed rest would begin.
+         * 3. A pointer to the byte after the last acutally used byte (be it
+         *    in the compressed main part or the uncompressed rest). This is
+         *    only meant to be used for size calculations, not for appending
+         *    more data elements.
          */
-        std::tuple<size_t, bool, uint8_t *> done() {
+        std::tuple<size_t, uint8_t *, uint8_t *> done() {
             const size_t countLog = m_Buffer - m_StartBuffer;
-            bool startedUncomprPart = false;
             size_t outSizeComprByte;
+            uint8_t * outAppendUncompr;
             if(countLog) {
                 const size_t outCountLogCompr = round_down_to_multiple(
                         countLog, t_format::m_BlockSize
@@ -182,17 +187,21 @@ namespace morphstore {
                             sizeOutLogRest
                     );
                     m_Out += sizeOutLogRest;
-                    startedUncomprPart = true;
+                    outAppendUncompr = m_Out;
                 }
+                else
+                    outAppendUncompr = create_aligned_ptr(m_Out);
                 
                 m_Count += countLog;
             }
-            else
+            else {
                 outSizeComprByte = m_Out - m_InitOut;
+                outAppendUncompr = create_aligned_ptr(m_Out);
+            }
 
             return std::make_tuple(
                     outSizeComprByte,
-                    startedUncomprPart,
+                    outAppendUncompr,
                     m_Out
             );
         }
@@ -259,12 +268,17 @@ namespace morphstore {
          * 
          * @return A tuple with the following elements:
          * 1. The size of the output's *compressed* part in bytes.
-         * 2. `true` if the output's *uncompressed* part has been initialized,
-         *    `false` otherwise.
-         * 3. A pointer to the end of the stored (un)compressed data, which can
-         *    be used to continue storing data to the output.
+         * 2. A pointer to the byte where more uncompressed data elements can
+         *    be appended. If the uncompressed rest part of the column has
+         *    already been started, then this points to the next byte after the
+         *    uncompressed rest. Otherwise, this points to the byte where the
+         *    uncompressed rest would begin.
+         * 3. A pointer to the byte after the last acutally used byte (be it
+         *    in the compressed main part or the uncompressed rest). This is
+         *    only meant to be used for size calculations, not for appending
+         *    more data elements.
          */
-        std::tuple<size_t, bool, uint8_t *> done() {
+        std::tuple<size_t, uint8_t *, uint8_t *> done() {
             return m_Wit.done();
         }
     };

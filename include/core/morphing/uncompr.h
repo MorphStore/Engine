@@ -155,9 +155,11 @@ namespace morphstore {
             );
         }
 
-        std::tuple<size_t, bool, uint8_t *> done() {
+        std::tuple<size_t, uint8_t *, uint8_t *> done() {
             return std::make_tuple(
-                    0, true, reinterpret_cast<uint8_t *>(m_OutBase)
+                    0,
+                    reinterpret_cast<uint8_t *>(m_OutBase),
+                    reinterpret_cast<uint8_t *>(m_OutBase)
             );
         }
 

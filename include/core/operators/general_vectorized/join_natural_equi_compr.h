@@ -301,22 +301,18 @@ namespace morphstore {
                convert_size<uint8_t, uint64_t>(inProbeDataSizeUncomprVecByte),
                witProbeComprState
             );
-            bool outLAddedPadding;
-            bool outRAddedPadding;
+            uint8_t * outLAppendUncompr;
+            uint8_t * outRAppendUncompr;
             std::tie(
-               outSizeLComprByte, outLAddedPadding, outLPtr
+               outSizeLComprByte, outLAppendUncompr, outLPtr
             ) = witProbeComprState.m_WitOutLData.done();
             std::tie(
-               outSizeRComprByte, outRAddedPadding, outRPtr
+               outSizeRComprByte, outRAppendUncompr, outRPtr
             ) = witProbeComprState.m_WitOutRData.done();
             outCountLog = witProbeComprState.m_WitOutLData.get_count_values();
 
             const size_t inProbeSizeScalarRemainderByte = inProbeSizeRestByte % vector_size_byte::value;
             if(inProbeSizeScalarRemainderByte) {
-               if(!outLAddedPadding)
-                  outLPtr = create_aligned_ptr(outLPtr);
-               if(!outRAddedPadding)
-                  outRPtr = create_aligned_ptr(outRPtr);
                typename natural_equi_join_probe_processing_unit_wit<
                   scalar<v64<uint64_t>>,
                   DataStructure,
@@ -324,8 +320,8 @@ namespace morphstore {
                   uncompr_f
                >::state_t witProbeUncomprState(
                   ds,
-                  outLPtr,
-                  outRPtr,
+                  outLAppendUncompr,
+                  outRAppendUncompr,
                   inProbeCountLogCompr + inProbeDataSizeUncomprVecByte / sizeof(base_t)
                );
                decompress_and_process_batch<

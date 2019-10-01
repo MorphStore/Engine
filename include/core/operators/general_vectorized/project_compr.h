@@ -258,9 +258,9 @@ public:
             
             // Finish the compressed output. This might already initialize the
             // output column's uncompressed rest part.
-            bool outDataAddedPadding;
+            uint8_t * outDataAppendUncompr;
             std::tie(
-                    outDataSizeComprByte, outDataAddedPadding, outData
+                    outDataSizeComprByte, outDataAppendUncompr, outData
             ) = witComprState.m_Wit.done();
             outDataCountLog = inPosCountLogCompr + round_down_to_multiple(
                     inPosCountLogRest, vector_element_count::value
@@ -272,13 +272,6 @@ public:
                     inPosSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
                 // If there is such an uncompressed scalar rest.
-                
-                // Pad the output pointer such that it points to the beginning
-                // of the output column's uncompressed rest, if this has not
-                // already been done when finishing the output column's
-                // compressed part.
-                if(!outDataAddedPadding)
-                    outData = create_aligned_ptr(outData);
                 
                 // We want to avoid actual scalar processing here, because this
                 // would require a scalar implementation of the
@@ -337,10 +330,10 @@ public:
                 
                 // Copy only the valid part of the temporary output buffer to
                 // the actual output buffer.
-                memcpy(outData, tmpOut, inSizeScalarRemainderByte);
+                memcpy(outDataAppendUncompr, tmpOut, inSizeScalarRemainderByte);
                 
                 // Finish the output column's uncompressed rest part.
-                outData += inSizeScalarRemainderByte;
+                outData = outDataAppendUncompr + inSizeScalarRemainderByte;
                 outDataCountLog += inPosCountLogScalarRemainder;
             }
         }

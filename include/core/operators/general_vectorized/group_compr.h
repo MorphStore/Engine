@@ -203,23 +203,19 @@ namespace morphstore {
                witComprState
             );
 
-            bool outAddedPaddingGroupIds, outAddedPaddingGroupExtents;
+            uint8_t * outAppendUncomprGroupIds;
+            uint8_t * outAppendUncomprGroupExtents;
 
             std::tie(
-               outSizeGroupIdComprByte, outAddedPaddingGroupIds, outPosGroupId
+               outSizeGroupIdComprByte, outAppendUncomprGroupIds, outPosGroupId
             ) = witComprState.m_WitGroupIds.done();
             std::tie(
-               outSizeGroupExtentsComprByte, outAddedPaddingGroupExtents, outPosGroupExtents
+               outSizeGroupExtentsComprByte, outAppendUncomprGroupExtents, outPosGroupExtents
             ) = witComprState.m_WitGroupExtents.done();
 
 
             const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
-               if(!outAddedPaddingGroupIds)
-                  outPosGroupId = create_aligned_ptr(outPosGroupId);
-               if(!outAddedPaddingGroupExtents)
-                  outPosGroupExtents = create_aligned_ptr(outPosGroupExtents);
-
                typename group_processing_unit_wit<
                   scalar<v64<uint64_t>>,
                   uncompr_f,
@@ -227,8 +223,8 @@ namespace morphstore {
                   DataStructure
                >::state_t witUncomprState(
                   ds,
-                  outPosGroupId,
-                  outPosGroupExtents,
+                  outAppendUncomprGroupIds,
+                  outAppendUncomprGroupExtents,
                   witComprState.m_CurrentDataInPosition,
                   witComprState.m_CurrentGroupId
                );
