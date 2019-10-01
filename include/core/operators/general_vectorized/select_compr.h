@@ -175,7 +175,7 @@ struct my_select_wit_t {
             
             // Pad the input pointer such that it points to the beginning of
             // the input column's uncompressed rest part.
-            inData = create_aligned_ptr(inData);
+            inData = inDataCol->get_data_uncompr_start();
             // The size of the input column's uncompressed rest part.
             const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
             

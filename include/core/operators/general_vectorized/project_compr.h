@@ -103,7 +103,7 @@ class my_project_wit_t {
         
         const uint8_t * in8 = inDataCol->get_data();
         const uint8_t * inEndCompr8 = in8 + sizeComprByte;
-        const uint8_t * inRest8 = create_aligned_ptr(inEndCompr8);
+        const uint8_t * inRest8 = inDataCol->get_data_uncompr_start();
 
         const size_t sizeInRest8 = sizeUsedByte - (inRest8 - in8);
 
@@ -118,6 +118,7 @@ class my_project_wit_t {
         memcpy(origRest, inRest8, sizeInRest8);
         memset(origRest + sizeInRest8, 0, sizeAllocOrigRest - sizeInRest8);
 
+        // @todo Use batch-level morph-operator instead.
         nonselective_write_iterator<t_ve, t_in_data_f> wit(
                 const_cast<uint8_t *>(inEndCompr8)
         );
@@ -149,6 +150,7 @@ class my_project_wit_t {
         return origRestUnaligned;
     }
     
+    // @todo Avoid this altogether.
     static void restore_in_data_column(
             const column<t_in_data_f> * inDataCol, uint8_t * origRestUnaligned
     ) {
@@ -157,10 +159,9 @@ class my_project_wit_t {
             return;
         
         const size_t sizeUsedByte = inDataCol->get_size_used_byte();
-        const size_t sizeComprByte = inDataCol->get_size_compr_byte();
         
         const uint8_t * in8 = inDataCol->get_data();
-        const uint8_t * inRest8 = create_aligned_ptr(in8 + sizeComprByte);
+        const uint8_t * inRest8 = inDataCol->get_data_uncompr_start();
 
         const size_t sizeInRest8 = sizeUsedByte - (inRest8 - in8);
         
@@ -190,9 +191,7 @@ public:
         const size_t inPosSizeUsedByte = inPosCol->get_size_used_byte();
         
         // @todo Simplify this.
-        const uint8_t * const inPosRest8 = create_aligned_ptr(
-                inPos + inPosSizeComprByte
-        );
+        const uint8_t * const inPosRest8 = inPosCol->get_data_uncompr_start();
         const size_t inPosCountLogRest = (inPosSizeComprByte < inPosSizeUsedByte)
                 ? convert_size<uint8_t, uint64_t>(inPosSizeUsedByte - (inPosRest8 - inPos))
                 : 0;
@@ -236,7 +235,7 @@ public:
             
             // Pad the input pointer such that it points to the beginning of
             // the input position column's uncompressed rest part.
-            inPos = create_aligned_ptr(inPos);
+            inPos = inPosRest8;
             // The size of the input column's uncompressed rest part.
             const size_t inPosSizeRestByte =
                     initInPos + inPosSizeUsedByte - inPos;

@@ -126,9 +126,7 @@ namespace morphstore {
          size_t  const           inBuildDataSizeUsedByte    = p_InDataLCol->get_size_used_byte();
          size_t  const           inProbeDataSizeUsedByte    = p_InDataRCol->get_size_used_byte();
 
-         uint8_t const * const   inProbeDataRest8           = create_aligned_ptr(
-            inProbeDataPtr + inProbeDataSizeComprByte
-         );
+         uint8_t const * const   inProbeDataRest8           = p_InDataRCol->get_data_uncompr_start();
          const size_t inProbeCountLogRest = convert_size<uint8_t, uint64_t>(
             inProbeDataSizeUsedByte - (inProbeDataRest8 - inProbeDataPtr)
          );
@@ -170,7 +168,7 @@ namespace morphstore {
          );
 
          if(inBuildDataSizeComprByte != inBuildDataSizeUsedByte) {
-            inBuildDataPtr = create_aligned_ptr( inBuildDataPtr );
+            inBuildDataPtr = p_InDataLCol->get_data_uncompr_start();
             size_t const inBuildSizeRestByte = startBuildDataPtr + inBuildDataSizeUsedByte - inBuildDataPtr;
 
             const size_t inBuildDataSizeUncomprVecByte = round_down_to_multiple(
@@ -240,7 +238,7 @@ namespace morphstore {
             ) = witProbeComprState.m_WitOutData.done();
             outCountLog = witProbeComprState.m_WitOutData.get_count_values();
          } else {
-            inProbeDataPtr = create_aligned_ptr( inProbeDataPtr );
+            inProbeDataPtr = inProbeDataRest8;
             size_t const inProbeSizeRestByte = startProbeDataPtr + inProbeDataSizeUsedByte - inProbeDataPtr;
             const size_t inProbeDataSizeUncomprVecByte = round_down_to_multiple(
                inProbeSizeRestByte, vector_size_byte::value

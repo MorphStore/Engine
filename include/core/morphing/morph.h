@@ -230,9 +230,7 @@ struct morph_t<t_vector_extension, uncompr_f, t_src_f> {
         const size_t inSizeUsedByte = inCol->get_size_used_byte();
 
         const size_t countLog = inCol->get_count_values();
-        const uint8_t * const inRest8 = create_aligned_ptr(
-                in8 + inSizeComprByte
-        );
+        const uint8_t * const inRest8 = inCol->get_data_uncompr_start();
         const size_t inCountLogRest = (inSizeComprByte < inSizeUsedByte)
                 ? convert_size<uint8_t, uint64_t>(
                         inSizeUsedByte - (inRest8 - in8)

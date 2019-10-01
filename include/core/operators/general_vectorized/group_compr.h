@@ -119,9 +119,6 @@ namespace morphstore {
 
          DataStructure ds( inDataCountLog );
 
-//         const uint8_t * const inDataRest8 = create_aligned_ptr(
-//            inData + inDataSizeComprByte
-//         );
 //         const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
 //            inDataSizeUsedByte - (inDataRest8 - inData)
 //         );
@@ -184,7 +181,7 @@ namespace morphstore {
             ) = witComprState.m_WitGroupExtents.done();
             groupExtentsCount = witComprState.m_CurrentGroupId;
          } else {
-            inData = create_aligned_ptr(inData);
+            inData = p_InDataCol->get_data_uncompr_start();
             // The size of the input column's uncompressed rest part.
             const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
 
