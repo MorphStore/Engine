@@ -321,9 +321,11 @@ else
 fi
 addBuilds="$buildAll $buildExamples $buildMicroBms $buildSSB"
 
+set -e # Abort the build if any of the following commands fails.
 mkdir -p build
 cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
+set +e
 
 if [ "$runCtest" = true ] ; then
 	cd build && ctest --output-on-failure #--extra-verbose
