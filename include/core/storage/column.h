@@ -21,17 +21,19 @@
  * @todo Which headers should be included to use the memory manager here?
  */
 
+#ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
+#define MORPHSTORE_CORE_STORAGE_COLUMN_H
+
 #include <core/storage/column_helper.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/morph_batch.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
 
 #include <type_traits>
 
-#ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
-#define MORPHSTORE_CORE_STORAGE_COLUMN_H
-
+#include <cstring>
 
 namespace morphstore {
 
@@ -81,6 +83,8 @@ class column {
       // own memory manager.
       storage_persistence_type m_PersistenceType;
       
+      mutable bool m_IsPreparedForRndAccess;
+      
       column(
          storage_persistence_type p_PersistenceType,
          size_t p_SizeAllocatedByte
@@ -98,7 +102,8 @@ class column {
             : malloc( p_SizeAllocatedByte )
          },
 #endif
-         m_PersistenceType{ p_PersistenceType }
+         m_PersistenceType{ p_PersistenceType },
+         m_IsPreparedForRndAccess(false)
       {
          //
       }
@@ -217,6 +222,49 @@ class column {
          */
         inline size_t get_count_values_compr() const {
             return m_MetaData.m_CountLogicalValues - get_count_values_uncompr();
+        }
+        
+        /**
+         * @brief Prepares this column for random access.
+         * 
+         * To enable random access to any logical position *on compressed
+         * data*, the uncompressed rest part is padded with zeros and appended
+         * in compressed form to the compressed main part.
+         * 
+         * No action is taken if any of the following holds:
+         * - this column has been prepared for random access before
+         * - the format of this column is uncompressed
+         * - the uncompressed rest part is empty
+         * 
+         * @return `true` if action was taken, `false` otherwise.
+         */
+        template<class t_vector_extension>
+        bool prepare_for_random_access() const {
+            if(m_IsPreparedForRndAccess || std::is_same<F, uncompr_f>::value)
+                return false;
+            
+            const size_t countLogUncompr = get_count_values_uncompr();
+            if(!countLogUncompr)
+                return false;
+            
+            const uint8_t * rest8 = get_data_uncompr_start();
+            const size_t countLogUncomprRoundUp =
+                    round_up_to_multiple(countLogUncompr, F::m_BlockSize);
+            memset(
+                    const_cast<uint8_t *>(rest8) + convert_size<uint64_t, uint8_t>(countLogUncompr),
+                    0,
+                    convert_size<uint64_t, uint8_t>(
+                            countLogUncomprRoundUp - countLogUncompr
+                    )
+            );
+            uint8_t * comprEnd =
+                    static_cast<uint8_t *>(m_Data) + m_MetaData.m_SizeComprByte;
+            morph_batch<t_vector_extension, F, uncompr_f>(
+                    rest8, comprEnd, countLogUncomprRoundUp
+            );
+            
+            m_IsPreparedForRndAccess = true;
+            return true;
         }
         
       // Creates a global scoped column. Intended for base data.
