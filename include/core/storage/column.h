@@ -27,6 +27,8 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
 
+#include <type_traits>
+
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
@@ -157,10 +159,35 @@ class column {
          * column.
          */
         inline const voidptr_t get_data_uncompr_start() const {
-            return voidptr_t(create_aligned_ptr(
-                    static_cast<const uint8_t *>(m_Data) +
+            return voidptr_t(create_data_uncompr_start(
+                    static_cast<uint8_t *>(m_Data) +
                     m_MetaData.m_SizeComprByte
             ));
+        }
+        
+        /**
+         * @brief Returns a pointer to the byte where the uncompressed rest
+         * part of a column would start, given the end of the compressed main
+         * part.
+         * 
+         * @param p_ComprEnd A pointer to the byte immediately behind the
+         * compressed main part.
+         * @return A pointer to the start of the uncompressed rest part.
+         */
+        inline static uint8_t * create_data_uncompr_start(uint8_t * p_ComprEnd) {
+            if(std::is_same<F, uncompr_f>::value)
+                return create_aligned_ptr(p_ComprEnd);
+            else
+                // Between the compressed main part and the uncompressed rest
+                // part, we reserve enough space for two more compressed
+                // blocks. This space is needed when the column is prepared for
+                // random access in the project-operator. We need space for two
+                // compressed blocks, since the size of the uncompressed rest
+                // can exceed the size of one block, due to the way the
+                // operators handle the scalar part of the uncompressed rest.
+                return create_aligned_ptr(
+                        p_ComprEnd + 2 * F::get_size_max_byte(F::m_BlockSize)
+                );
         }
         
         /**

@@ -115,17 +115,28 @@ template<class t_format>
 MSV_CXX_ATTRIBUTE_FORCE_INLINE size_t get_size_max_byte_any_len(
         size_t p_CountValues
 ) {
-    const size_t countValuesCompr = round_down_to_multiple(
+    // We use round_UP_to_multiple() instead of round_DOWN_to_multiple(), since
+    // for random access (project-operator) we need space to materialize the
+    // uncompressed rest in compressed form. We even add one block size, since
+    // due to the *scalar* part of the processing of the uncompressed rest part
+    // of a column, the uncompressed rest part could contain more data elements
+    // than one block. We assume here, that the block size is much larger than
+    // the number of data elements per vector register, which holds for the
+    // formats actually allowing random access.
+    // @todo This extra size is only necesssary for formats allowing random
+    // access.
+    const size_t countValuesCompr = round_up_to_multiple(
             p_CountValues, t_format::m_BlockSize
-    );
+    ) + t_format::m_BlockSize;
     const size_t sizeComprByte = t_format::get_size_max_byte(countValuesCompr);
     // We pessimistically assume that an extra t_format::m_BlockSize data
     // elements need to be stored uncompressed. This way, we account for the
     // case that the final number of logical data elements in the column is
     // less than p_CountValues, which could have the consequence that less data
     // elements can be stored compressed.
+    // @todo This probably does not suffice in all cases.
     const size_t sizeUncomprByte = uncompr_f::get_size_max_byte(
-                    p_CountValues - countValuesCompr + t_format::m_BlockSize
+            p_CountValues % t_format::m_BlockSize + t_format::m_BlockSize
     );
     return get_size_with_alignment_padding(sizeComprByte + sizeUncomprByte);
 }

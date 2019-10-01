@@ -202,7 +202,7 @@ struct morph_t<t_vector_extension, t_dst_f, uncompr_f> {
         const size_t sizeComprByte = out8 - initOut8;
 
         if(outSizeRestByte) {
-            out8 = create_aligned_ptr(out8);
+            out8 = column<t_dst_f>::create_data_uncompr_start(out8);
             memcpy(out8, in8, outSizeRestByte);
         }
 

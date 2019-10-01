@@ -178,7 +178,7 @@ namespace morphstore {
 
                 const size_t outCountLogRest = countLog - outCountLogCompr;
                 if(outCountLogRest) {
-                    m_Out = create_aligned_ptr(m_Out);
+                    m_Out = column<t_format>::create_data_uncompr_start(m_Out);
                     const size_t sizeOutLogRest =
                             uncompr_f::get_size_max_byte(outCountLogRest);
                     memcpy(
@@ -190,13 +190,13 @@ namespace morphstore {
                     outAppendUncompr = m_Out;
                 }
                 else
-                    outAppendUncompr = create_aligned_ptr(m_Out);
+                    outAppendUncompr = column<t_format>::create_data_uncompr_start(m_Out);
                 
                 m_Count += countLog;
             }
             else {
                 outSizeComprByte = m_Out - m_InitOut;
-                outAppendUncompr = create_aligned_ptr(m_Out);
+                outAppendUncompr = column<t_format>::create_data_uncompr_start(m_Out);
             }
 
             return std::make_tuple(
