@@ -37,6 +37,11 @@
  * column's data buffer must be morphed separately, e.g., within the
  * column-level morph-operator, the write iterators, or within the batch-level
  * morph-operator of some container format.
+ * 
+ * @todo The batch-level morph-operator was moved to a separate header
+ * (morph_batch.h) to avoid some cases of cyclic include relationships. We
+ * should solve this issue in a proper way and reinsert the batch-level
+ * morph-operator here.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_MORPH_H
@@ -44,6 +49,7 @@
 
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/morph_batch.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
@@ -52,31 +58,6 @@
 #include <cstring>
 
 namespace morphstore {
-
-// ****************************************************************************
-// Batch-level
-// ****************************************************************************
-
-template<
-        class t_vector_extension, class t_dst_f, class t_src_f
->
-struct morph_batch_t {
-    static void apply(
-            // @todo Maybe we should use base_t instead of uint8_t. This could
-            // save us some casting in several places.
-            const uint8_t * & in8, uint8_t * & out8, size_t countLog
-    ) = delete;
-};
-
-template<
-        class t_vector_extension, class t_dst_f, class t_src_f
->
-void morph_batch(const uint8_t * & in8, uint8_t * & out8, size_t countLog) {
-    return morph_batch_t<t_vector_extension, t_dst_f, t_src_f>::apply(
-            in8, out8, countLog
-    );
-}
-
 
 // ****************************************************************************
 // Column-level
