@@ -104,12 +104,16 @@ namespace morphstore {
         
         // Assumes that the provided number is a multiple of m_BlockSize.
         static size_t get_size_max_byte(size_t p_CountValues) {
-            const size_t pageCount = p_CountValues / m_PageSizeLog;
-            const size_t totalMetaSizeByte = pageCount * m_MetaSize8;
+            // Actually, the format needs one meta data section of m_MetaSize8
+            // bytes for each *page*. However, depending on the block size of
+            // cascades, write-iterators, etc., there could be incomplete
+            // pages. The worst case is only one block per page, so we reserve
+            // enough memory for one meta data section per *block*.
+            const size_t blockCount = p_CountValues / t_BlockSizeLog;
+            const size_t totalMetaSizeByte = blockCount * m_MetaSize8;
             // These numbers are worst cases, which are only reached if all
             // blocks require the maximum bit width of 64.
-            const size_t totalDataSizeByte = p_CountValues *
-                    std::numeric_limits<uint64_t>::digits / bitsPerByte;
+            const size_t totalDataSizeByte = p_CountValues * sizeof(uint64_t);
             return totalDataSizeByte + totalMetaSizeByte;
         }
         
