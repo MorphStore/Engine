@@ -118,7 +118,6 @@ namespace morphstore {
             case 24: morph_batch<t_vector_extension, t_dst_l<24, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 25: morph_batch<t_vector_extension, t_dst_l<25, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 26: morph_batch<t_vector_extension, t_dst_l<26, t_Step>, uncompr_f>(in8, out8, countLog); break;
-#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 27: morph_batch<t_vector_extension, t_dst_l<27, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 28: morph_batch<t_vector_extension, t_dst_l<28, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 29: morph_batch<t_vector_extension, t_dst_l<29, t_Step>, uncompr_f>(in8, out8, countLog); break;
@@ -126,6 +125,7 @@ namespace morphstore {
             case 31: morph_batch<t_vector_extension, t_dst_l<31, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 32: morph_batch<t_vector_extension, t_dst_l<32, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 33: morph_batch<t_vector_extension, t_dst_l<33, t_Step>, uncompr_f>(in8, out8, countLog); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 34: morph_batch<t_vector_extension, t_dst_l<34, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 35: morph_batch<t_vector_extension, t_dst_l<35, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 36: morph_batch<t_vector_extension, t_dst_l<36, t_Step>, uncompr_f>(in8, out8, countLog); break;
@@ -156,8 +156,8 @@ namespace morphstore {
             case 61: morph_batch<t_vector_extension, t_dst_l<61, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 62: morph_batch<t_vector_extension, t_dst_l<62, t_Step>, uncompr_f>(in8, out8, countLog); break;
             case 63: morph_batch<t_vector_extension, t_dst_l<63, t_Step>, uncompr_f>(in8, out8, countLog); break;
-            case 64: morph_batch<t_vector_extension, t_dst_l<64, t_Step>, uncompr_f>(in8, out8, countLog); break;
 #endif
+            case 64: morph_batch<t_vector_extension, t_dst_l<64, t_Step>, uncompr_f>(in8, out8, countLog); break;
             // Packing does not require the case for VBP_BW_NOBLOCK.
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
@@ -216,7 +216,6 @@ namespace morphstore {
             case 24: morph_batch<t_vector_extension, uncompr_f, t_src_l<24, t_Step>>(in8, out8, countLog); break;
             case 25: morph_batch<t_vector_extension, uncompr_f, t_src_l<25, t_Step>>(in8, out8, countLog); break;
             case 26: morph_batch<t_vector_extension, uncompr_f, t_src_l<26, t_Step>>(in8, out8, countLog); break;
-#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 27: morph_batch<t_vector_extension, uncompr_f, t_src_l<27, t_Step>>(in8, out8, countLog); break;
             case 28: morph_batch<t_vector_extension, uncompr_f, t_src_l<28, t_Step>>(in8, out8, countLog); break;
             case 29: morph_batch<t_vector_extension, uncompr_f, t_src_l<29, t_Step>>(in8, out8, countLog); break;
@@ -224,6 +223,7 @@ namespace morphstore {
             case 31: morph_batch<t_vector_extension, uncompr_f, t_src_l<31, t_Step>>(in8, out8, countLog); break;
             case 32: morph_batch<t_vector_extension, uncompr_f, t_src_l<32, t_Step>>(in8, out8, countLog); break;
             case 33: morph_batch<t_vector_extension, uncompr_f, t_src_l<33, t_Step>>(in8, out8, countLog); break;
+#ifndef VBP_LIMIT_ROUTINES_FOR_SSB_SF1
             case 34: morph_batch<t_vector_extension, uncompr_f, t_src_l<34, t_Step>>(in8, out8, countLog); break;
             case 35: morph_batch<t_vector_extension, uncompr_f, t_src_l<35, t_Step>>(in8, out8, countLog); break;
             case 36: morph_batch<t_vector_extension, uncompr_f, t_src_l<36, t_Step>>(in8, out8, countLog); break;
@@ -254,8 +254,8 @@ namespace morphstore {
             case 61: morph_batch<t_vector_extension, uncompr_f, t_src_l<61, t_Step>>(in8, out8, countLog); break;
             case 62: morph_batch<t_vector_extension, uncompr_f, t_src_l<62, t_Step>>(in8, out8, countLog); break;
             case 63: morph_batch<t_vector_extension, uncompr_f, t_src_l<63, t_Step>>(in8, out8, countLog); break;
-            case 64: morph_batch<t_vector_extension, uncompr_f, t_src_l<64, t_Step>>(in8, out8, countLog); break;
 #endif
+            case 64: morph_batch<t_vector_extension, uncompr_f, t_src_l<64, t_Step>>(in8, out8, countLog); break;
             case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
@@ -358,8 +358,8 @@ namespace morphstore {
             case 61: decompress_and_process_batch<t_ve, t_src_l<61, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
             case 62: decompress_and_process_batch<t_ve, t_src_l<62, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
             case 63: decompress_and_process_batch<t_ve, t_src_l<63, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
-            case 64: decompress_and_process_batch<t_ve, t_src_l<64, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
 #endif
+            case 64: decompress_and_process_batch<t_ve, t_src_l<64, t_Step>, t_op_vector, t_extra_args ...>::apply(in8, countInLog, opState); break;
             case VBP_BW_NOBLOCK: /* do nothing */ break;
 #ifdef VBP_ROUTINE_SWITCH_CHECK_BITWIDTH
             default: throw std::runtime_error(
