@@ -94,6 +94,7 @@ morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)
 morph_flag(-Wno-comment)
 morph_flag(-fstack-protector-all)
+morph_flag(-fno-tree-vectorize)
 
 ########### <Checking Defines
 set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
