@@ -4,6 +4,16 @@ function is_power_of_two () {
     (( n > 0 && (n & (n - 1)) == 0 ))
 }
 
+function is_int () {
+    re="^[0-9]+$"
+    if [[ $1 =~ $re ]]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
 function printHelp {
 	echo "build.sh -buildMode [-loggerControl] [-memory] [-jN]"
 	echo "buildMode:"
@@ -61,8 +71,8 @@ function printHelp {
         echo "	     Builds all examples"
         echo "	-bMbm|--buildMicroBms"
         echo "	     Builds all micro-benchmarks"
-        echo "	-bSSB|--buildSSB"
-        echo "	     Builds all SSB queries (if the generated sources are available)"
+        echo "	-bSSB sf|--buildSSB sf"
+        echo "	     Builds all SSB queries for scale factor sf (if the generated sources are available)"
         echo "	--target TARGETNAME"
         echo "	     Builds only the target TARGETNAME, which must be included in one of the target groups selected using the above \"-b\"-arguments"
         echo "	     It is possible to specify multiple target names by providing a quoted white-space-separated list for TARGETNAME"
@@ -238,8 +248,13 @@ case $key in
 	buildMicroBms="-DBUILD_MICROBMS=True"
 	shift # past argument
 	;;
-        -bSSB|--buildSSB)
-	buildSSB="-DBUILD_SSB=True"
+	-bSSB|--buildSSB)
+	if ! is_int $2; then
+		echo "-bSSB or --buildSSB must be followed by the scale factor as an integer"
+		exit -1
+	fi
+	buildSSB="-DBUILD_SSB=$2"
+	shift
 	shift # past argument
 	;;
 	-avx512)
