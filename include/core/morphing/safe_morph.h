@@ -41,6 +41,7 @@
 #include <core/morphing/delta.h>
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/for.h>
+#include <core/morphing/k_wise_ns.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
@@ -269,6 +270,58 @@ namespace morphstore {
 
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR
 
+    // ------------------------------------------------------------------------
+    // Format k_wise_ns_f
+    // ------------------------------------------------------------------------
+            
+#ifdef SSE
+    template<>
+    struct safe_morph_t<
+            k_wise_ns_f<
+                    vectorlib::sse<
+                            vectorlib::v128<uint64_t>
+                    >::vector_helper_t::element_count::value
+            >,
+            uncompr_f
+    > {
+        using dst_f = k_wise_ns_f<
+                vectorlib::sse<
+                        vectorlib::v128<uint64_t>
+                >::vector_helper_t::element_count::value
+        >;
+        using src_f = uncompr_f;
+        
+        static
+        const column<dst_f> *
+        apply(const column<src_f> * inCol) {
+            return morph<vectorlib::sse<vectorlib::v128<uint64_t>>, dst_f, src_f>(inCol);
+        };
+    };
+            
+    template<>
+    struct safe_morph_t<
+            uncompr_f,
+            k_wise_ns_f<
+                    vectorlib::sse<
+                            vectorlib::v128<uint64_t>
+                    >::vector_helper_t::element_count::value
+            >
+    > {
+        using dst_f = uncompr_f;
+        using src_f = k_wise_ns_f<
+                vectorlib::sse<
+                        vectorlib::v128<uint64_t>
+                >::vector_helper_t::element_count::value
+        >;
+        
+        static
+        const column<dst_f> *
+        apply(const column<src_f> * inCol) {
+            return morph<vectorlib::sse<vectorlib::v128<uint64_t>>, dst_f, src_f>(inCol);
+        };
+    };
+#endif
+    
     // ------------------------------------------------------------------------
     // Format delta_f
     // ------------------------------------------------------------------------

@@ -112,6 +112,27 @@ constexpr inline unsigned effective_bitwidth(uint64_t p_Val) {
     return std::numeric_limits<uint64_t>::digits - __builtin_clzll(p_Val | 1);
 }
 
+constexpr inline unsigned zero_bytes(uint64_t p_Val) {
+    // Should we ever change the definition such that 0 has 0 effective bits,
+    // then don't forget that the return value of __builtin_clzll is undefined
+    // for 0.
+    return __builtin_clzll(p_Val | 1) / bitsPerByte;
+}
+
+/**
+ * @brief Calculates the number of effective bytes of the given 64-bit value.
+ * 
+ * This is the minimum number of bytes required to represent this value. Note
+ * that, by definition, the integer `0` has one effective byte. Thus, this
+ * function's return value is always in the range [1, 8].
+ * 
+ * @param p_Val The 64-bit value.
+ * @return The number of bytes required to represent the given value.
+ */
+constexpr inline unsigned effective_bytewidth(uint64_t p_Val) {
+    return sizeof(uint64_t) - zero_bytes(p_Val);
+}
+
 /**
  * @brief Calculates the maximum unsigned integer of the given bit width.
  * 
