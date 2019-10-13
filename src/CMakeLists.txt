@@ -1,3 +1,4 @@
+add_subdirectory( calibration )
 add_subdirectory( examples )
 add_subdirectory( microbenchmarks )
 

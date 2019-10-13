@@ -153,6 +153,20 @@ constexpr inline t_uintX_t bitwidth_max(unsigned p_Bw) {
 }
 
 /**
+ * @brief Calculates the minimum unsigned integer of the given bit width.
+ * 
+ * The template parameter `t_uintX_t` should be one of the `uint*_t` types from
+ * the header `&lt;cstdint&gt;`.
+ * 
+ * @param p_Bw The bit width.
+ * @return The lowest unsigned integer of the given bit width.
+ */
+template<typename t_uintX_t>
+constexpr inline t_uintX_t bitwidth_min(unsigned p_Bw) {
+    return static_cast<t_uintX_t>(1) << (p_Bw - 1);
+}
+
+/**
  * @brief Calculates the bit mask that can be used for replacing a modulo
  * operation by a bitwise AND.
  * 
