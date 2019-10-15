@@ -11,6 +11,8 @@
  * Created on 27. Juni 2019, 21:40
  */
 
+// @todo This code is deprecated. Use data_properties.h instead.
+
 #ifndef HISTOGRAM_H
 #define HISTOGRAM_H
 
