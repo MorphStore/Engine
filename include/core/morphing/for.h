@@ -151,6 +151,11 @@ namespace morphstore {
             for(unsigned i = 0; i < vector_element_count::value; i++)
                 if(tmp[i] < minBase)
                     minBase = tmp[i];
+            
+            // The maximum value of base_t is used to indicate that a block is
+            // empty. Thus, we cannot use it as a reference value.
+            if(minBase == std::numeric_limits<base_t>::max())
+                minBase--;
 
             return minBase;
         }
@@ -202,10 +207,22 @@ namespace morphstore {
             for(size_t countLogCompr = 0; countLogCompr < p_CountLog;) {
                 base_t * const outMeta = reinterpret_cast<base_t *>(p_Out8);
                 p_Out8 += convert_size<base_t, uint8_t>(t_PageSizeBlocks);
+                const size_t countBlocksInThisPage = std::min(
+                        t_PageSizeBlocks,
+                        (p_CountLog - countLogCompr) / t_BlockSizeLog
+                );
+                if(countBlocksInThisPage < t_PageSizeBlocks)
+                    // If this page in incomplete, i.e., there are empty blocks
+                    // in it, then we flag the first empty block by storing the
+                    // maximum value of base_t as the reference value. This is
+                    // interpreted accordingly by the decompression side.
+                    outMeta[countBlocksInThisPage] =
+                            std::numeric_limits<base_t>::max();
+                
                 // Iterate over all blocks in the current input page.
                 for(
                         unsigned blockIdx = 0;
-                        blockIdx < t_PageSizeBlocks && countLogCompr < p_CountLog;
+                        blockIdx < countBlocksInThisPage;
                         blockIdx++, countLogCompr += t_BlockSizeLog
                 ) {
                     // FOR part.
@@ -295,9 +312,17 @@ namespace morphstore {
                 p_In8 += convert_size<base_t, uint8_t>(t_PageSizeBlocks);
                 for(
                         unsigned blockIdx = 0;
-                        blockIdx < t_PageSizeBlocks && countLogDecompr < p_CountLog;
+                        blockIdx < t_PageSizeBlocks;
                         blockIdx++, countLogDecompr += t_BlockSizeLog
                 ) {
+                    const base_t refScalar = inMetaBase[blockIdx];
+                    if(refScalar == std::numeric_limits<base_t>::max())
+                        // This is an incomplete page and we have encountered
+                        // the first empty block (after which no other
+                        // non-empty block will follow in this page). We can
+                        // skip to the next page.
+                        break;
+                    
                     // Inner part.
 #ifdef FOR_UNCOMPRESSED_OFFSETS
                     const size_t tmpSizeByte = t_BlockSizeLog * sizeof(base_t);
@@ -313,7 +338,7 @@ namespace morphstore {
                     // FOR part.
                     const vector_t refVec = set1<
                             t_ve, vector_base_t_granularity::value
-                    >(inMetaBase[blockIdx]);
+                    >(refScalar);
                     for(
                             size_t i = 0;
                             i < t_BlockSizeLog;
@@ -392,9 +417,17 @@ namespace morphstore {
                 p_In8 += convert_size<base_t, uint8_t>(t_PageSizeBlocks);
                 for(
                         unsigned blockIdx = 0;
-                        blockIdx < t_PageSizeBlocks && countLogDecompr < p_CountInLog;
+                        blockIdx < t_PageSizeBlocks;
                         blockIdx++, countLogDecompr += t_BlockSizeLog
                 ) {
+                    const base_t refScalar = inMetaBase[blockIdx];
+                    if(refScalar == std::numeric_limits<base_t>::max())
+                        // This is an incomplete page and we have encountered
+                        // the first empty block (after which no other
+                        // non-empty block will follow in this page). We can
+                        // skip to the next page.
+                        break;
+                    
                     // Inner part.
 #ifdef FOR_UNCOMPRESSED_OFFSETS
                     const size_t tmpSizeByte = t_BlockSizeLog * sizeof(base_t);
@@ -410,7 +443,7 @@ namespace morphstore {
                     // FOR part.
                     const vector_t refVec = set1<
                             t_ve, vector_base_t_granularity::value
-                    >(inMetaBase[blockIdx]);
+                    >(refScalar);
                     for(
                             size_t i = 0;
                             i < t_BlockSizeLog;
