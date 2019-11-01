@@ -17,7 +17,7 @@
 
 /**
  * @file adjacencylist.h
- * @brief Derived ADJ-List storage format class. Base: graph.h
+ * @brief Derived adj. list storage format class. Base: graph.h
  * @todo
 */
 
@@ -34,7 +34,6 @@ namespace morphstore{
     class AdjacencyList: public Graph {
 
     public:
-
 
         storageFormat getStorageFormat() const override {
             return adjacencylist;
@@ -99,6 +98,7 @@ namespace morphstore{
             }
         }
 
+        // for debugging: print neighbors a vertex
         void print_neighbors_of_vertex(uint64_t id) override{
             vertices[id]->print_neighbors();
         }
@@ -113,6 +113,7 @@ namespace morphstore{
             return vertices.at(id)->get_neighbors_ids();
         }
 
+        // for measuring the size in bytes:
         std::pair<size_t, size_t> get_size_of_graph() override {
             std::pair<size_t, size_t> index_data_size;
             size_t data_size = 0;

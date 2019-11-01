@@ -16,8 +16,8 @@
  **********************************************************************************************/
 
 /**
- * @file avertex.h
- * @brief Derived vertex calss for ADJ_LIST storage format: base-class: vertex
+ * @file adjacencylistvertex.h
+ * @brief Derived vertex calss for adj. list storage format: base-class: vertex
  * @todo
 */
 
@@ -32,8 +32,7 @@ namespace morphstore{
 
     protected:
         std::vector<Edge> adjacencylist;
-
-	// BFS OPTIMIZATION APPROACH:
+        // additional adjacency list that only contains the target ids -> for bfs measurements
         std::vector<uint64_t> adjacencylistBFS;
 
     public:
@@ -58,7 +57,7 @@ namespace morphstore{
         void add_edges(const std::vector<morphstore::Edge> edges) override {
             this->adjacencylist = edges;
 
-	    // BFS OPTIMIZATION APPROACH:
+            // for the additional adjacency list: transformation
             for(auto edge : edges){
                 adjacencylistBFS.push_back(edge.getTargetId());
             }
@@ -69,6 +68,7 @@ namespace morphstore{
 	    return adjacencylist.size();
         }
 
+        // debugging:
         void print_neighbors() override {
             for(const auto& edge : adjacencylist){
                 std::cout << "Source-ID: " << edge.getSourceId() << " - Target-ID: " << edge.getTargetId() <<
@@ -78,17 +78,17 @@ namespace morphstore{
 
         // function to return a vector of neighbor ids (for BFS)
         std::vector<uint64_t> get_neighbors_ids() override {
-            /*
+            /* old approach
             std::vector<uint64_t> neighbors;
             for(auto const& edge : adjacencylist){
                 neighbors.push_back(edge.getTargetId());
             }
             return neighbors;
              */
-            // BFS OPTIMIZATION APPROACH:
             return adjacencylistBFS;
         }
 
+        // get size of vertex in bytes:
         size_t get_data_size_of_vertex() override {
             size_t size = 0;
             size += sizeof(uint64_t); // id

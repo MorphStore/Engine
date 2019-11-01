@@ -37,7 +37,7 @@ namespace morphstore{
         }
 
         // this function has no usage here: the adding of edges happens in the graph file -> csr.h
-        // it's just here because its a pure  function in Vertex.h
+        // it's just here because it's a pure function in Vertex.h
         void add_edge(uint64_t from, uint64_t to,unsigned short int rel) override {
             std::cout << " virtual add_edge - no usage: " << from << ", " << to << ", " << rel << std::endl;
         }
@@ -47,10 +47,12 @@ namespace morphstore{
             std::cout << " virtual add_edge - no usage: " << edges[0].getSourceId() << std::endl;
         }
 
+        // debugging
         void print_neighbors() override {
             std::cout << " virtual print_neighbors - no usage: " << std::endl;
         }
 
+        // get size of csr vertex in bytes:
         size_t get_data_size_of_vertex() override {
             size_t size = 0;
             // properties:

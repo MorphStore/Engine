@@ -47,7 +47,7 @@ namespace morphstore{
             return graphSize;
         }
 
-        // ------------------------------------------ BFS impl. ------------------------------------------
+        // ------------------------------------------ BFS algorithm ------------------------------------------
 
         // actual BFS algorithm: takes the start-node id and returns the number of explored vertices
         uint64_t do_BFS(uint64_t startVertex){

@@ -17,78 +17,49 @@
 
 /**
  * @file ldbc_graph_csr.cpp
- * @brief Test for generating social network graph in CSR format
+ * @brief Test for generating social network graph in CSR format + BFS measurements
  * @todo
  */
 
 #include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/formats/csr.h>
-#include <core/operators/graph/bfs_naive.h>
+#include <core/operators/graph/top_down_bfs.h>
 
 #include <chrono>  // for high_resolution_clock
 
 int main( void ){
 
-    // ------------------------------------ LDBC-IMPORT TEST ------------------------------------
+    // ------------------------------------ LDBC-IMPORT TEST -----------------------------------
     /*
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: Compressed Row Storage Format *" << std::endl;
+    std::cout << "* MorphStore-Storage-Test: CSR Storage Format *" << std::endl;
     std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
-     */
+    */
 
-    // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/ldbc_sn_data/"
-    // NEVER FORGET THE LAST / in address!!!
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_10/");
-    // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/opt/ldbc_snb_datagen-0.2.8/social_network/social_network_1/");
+    // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_1/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::CSR>();
 
-    // start measuring import time:
-    //auto startImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-
-    // generate vertices & edges from LDBC files and insert into graph
+    // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*g1);
 
-    // get some graph infos:
-    g1->measure_degree_count("/home/pfeiffer/measurements/csr/graph_degree_count_SF10.csv");
+    // measure degree distribution and write to file (file path as parameter):
+    g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
 
-    // measuring time:
-    //auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-    //auto elapsedImportTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportTime - startImportTime ).count();
+    // some statistics (DEBUG)
+    // g1->statistics();
 
-    //g1->statistics();
-
-    // size of graph in bytes:
-    //std::pair<size_t, size_t> size = g1->get_size_of_graph();
-    //std::cout << "index: " << size.first << " - data: " << size.second << std::endl; // size in bytes
-    //std::cout << elapsedImportTime << std::endl; // time in milli sec.
-
-    /* Test Vertex, which contains edges with properties (SERVER):
-     */
+    // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
     // g1->print_vertex_by_id(1035174);
     // g1->print_neighbors_of_vertex(1035174);
 
-    /* Test Vertex, which contains edges with properties (MY PC):
-    g1->print_vertex_by_id(100449);
-    g1->print_neighbors_of_vertex(100449);
-    */
-
-    //g1->print_vertex_by_id(1033808);
-
-    /* BFS single test:
-    std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-    auto startImportBFSTime = std::chrono::high_resolution_clock::now();
-    uint64_t explored = bfs->do_BFS(1033808);
-    auto finishImportBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the$
-    auto elapsedImportBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportBFSTime - startImportBFSTime ).count();
-    std::cout << explored << " -> " << elapsedImportBFSTime << std::endl;
-    */
-
-    //std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-    //bfs->do_measurements(10000, "/home/pfeiffer/measurements/csr/bfs_SF10.csv");
+    // Execute BFS measurements:
+    // std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
+    // bfs->do_measurements(10000, "/home/pfeiffer/measurements/csr/bfs_SF1.csv");
 
     return 0;
 }

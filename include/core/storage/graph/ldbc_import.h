@@ -27,6 +27,7 @@
 #include <core/storage/graph/formats/adjacencylist.h>
 #include <core/storage/graph/formats/csr.h>
 
+// experimental/filesystem to read file directories
 #include <experimental/filesystem>
 #include <vector>
 #include <string>
@@ -267,8 +268,6 @@ namespace morphstore{
 
                 // iterate through vector of relation-addresses
                 for (const auto &address : relationsPaths) {
-
-                    // TODO OPTIMIZE HERE: remove string operations
                     // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
                     std::string relation = address.substr(getDirectory().size(),
                                                           address.size() - getDirectory().size() - 4);
@@ -296,8 +295,7 @@ namespace morphstore{
                     if (relationFile.is_open()) {
                         fileSize = static_cast<uint64_t>(relationFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
                         relationFile.clear();
-                        relationFile.seekg(0,
-                                           std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                        relationFile.seekg(0, std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
                     }
 
                     // allocate memory
@@ -477,9 +475,9 @@ namespace morphstore{
                                 if(start == 0){
                                     propertyKey = row.substr(row.find(delimiter) + 1);
                                 }else{
-				    // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
+                                    // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
                                     systemID = globalIdLookupMap[{fromEntity, row.substr(0, row.find(delimiter))}];
-				    value = row.substr(row.find(delimiter) + 1);
+                                    value = row.substr(row.find(delimiter) + 1);
                                     multiValueAttr[systemID] = std::move(value);
                                 }
 
@@ -549,7 +547,7 @@ namespace morphstore{
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
 
-                                        // insert relation into vertexRealtionsLookup with its edge-property:
+                                        // insert relation into vertexRelationsLookup with its edge-property:
                                         vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber, {propertyKey, value}));
                                     }
                                 }
@@ -598,7 +596,7 @@ namespace morphstore{
             }
         }
 
-        // MAIN import function: see steps in comments
+        // MAIN IMPORT FUNCTION: see steps in comments
         void import(Graph&  graph) {
             //std::cout << "Importing LDBC-files into graph ... ";
             //std::cout.flush();

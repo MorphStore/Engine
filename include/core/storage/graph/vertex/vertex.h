@@ -18,7 +18,7 @@
 /**
  * @file vertex.h
  * @brief abstract vertex class for storage formats
- * @todo add vertex size calculation
+ * @todo
 */
 
 #ifndef MORPHSTORE_VERTEX_H
@@ -84,7 +84,7 @@ namespace morphstore{
 
         // for BFS alg.: adj-list
         virtual std::vector<uint64_t> get_neighbors_ids() {
-            // return empty vector: implementation only needed in ADj-Vertex
+            // return empty vector: implementation only needed in adj - Vertex
             return std::vector<uint64_t>();
         }
 

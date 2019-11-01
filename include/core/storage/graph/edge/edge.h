@@ -17,7 +17,7 @@
 
 /**
  * @file edge.h
- * @brief Edge class which represents a relationship between 2 Vertices
+ * @brief Edge class which represents a relationship object betwenn two vertices
  * @todo
 */
 
@@ -114,6 +114,7 @@ namespace morphstore{
             return getTargetId() < e.getTargetId();
         }
 
+        // get size of edge object in bytes:
         size_t size_in_bytes() const{
             size_t size = 0;
             size += sizeof(uint64_t) * 2; // source- and target-id

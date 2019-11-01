@@ -18,7 +18,7 @@
 /**
  * @file csr.h
  * @brief Derived CSR storage format class. Base: graph.h
- * @todo add_edge() functionality is missing -> needs a realloc()-strategy
+ * @todo
 */
 
 #ifndef MORPHSTORE_CSR_H
@@ -32,16 +32,14 @@ namespace morphstore{
     class CSR: public Graph{
 
     private:
-        /* graph topology: hybrid approach
+        /* graph topology:
          * node array: index is vertex-id; array cell contains offset in edge_array
-         * edge array: every cell contains pointer to edge object of vertex
+         * edge array: contains target id of relationship
+         * edge value array: contains edge object with addtional information (same index with edge array)
          */
-        // TODO: free memory in destructor ?
         uint64_t* node_array = nullptr;
-        Edge* edge_array = nullptr;
-	
-	// BFS OPTIMIZATION APPROACH:
-        uint64_t* edge_targetID_array = nullptr;
+        uint64_t* edge_array = nullptr;
+        Edge* edge_value_array = nullptr;
 
     public:
 
@@ -57,10 +55,8 @@ namespace morphstore{
             vertices.reserve(numberVertices);
 
             node_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
-            edge_array = (Edge*) malloc(numberEdges * sizeof(Edge));
-
-	    // BFS OPTIMIZATION APPROACH:
-            edge_targetID_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
+            edge_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
+            edge_value_array = (Edge*) malloc(numberEdges * sizeof(Edge));
 
             // init node array:
             node_array[0] = 0;
@@ -80,7 +76,7 @@ namespace morphstore{
             return v->getID();
         }
 
-        // TODO: add a single edge in graph arrays -> needs a memory reallocating stragety
+        // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
         void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
             if(exist_id(from) && exist_id(to)){
                 std::cout << rel << std::endl;
@@ -88,18 +84,16 @@ namespace morphstore{
         }
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
-        // every vertex id contains a list of neighbors
+        // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) override {
             uint64_t offset = node_array[sourceID];
             uint64_t nextOffset = offset + relations.size();
 
+            // fill the arrays
             for(const auto & edge : relations){
-                edge_array[offset] = edge;
-
-		// BFS OPTIMIZATION APPROACH:
-                edge_targetID_array[offset] = edge.getTargetId();
-                
-		++offset;
+                edge_value_array[offset] = edge;
+                edge_array[offset] = edge.getTargetId();
+                ++offset;
             }
 
             // to avoid buffer overflow:
@@ -136,18 +130,19 @@ namespace morphstore{
             }else{
                 nextOffset = node_array[id+1];
             }
-	    if(offset == nextOffset) return 0;
+
+            if(offset == nextOffset) return 0;
             uint64_t numberEdges = nextOffset - offset;
-	    //if(id == 1030169) std::cout << "edges: " << numberEdges << " - offset: " << offset << " - nextOffset: " << nextOffset << std::endl;
             return numberEdges;
         }
 
+        // for debugging:
         void print_neighbors_of_vertex(uint64_t id) override{
             uint64_t offset = node_array[id];
             uint64_t numberEdges = get_degree(id);
 
             for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                std::cout << "Source-ID: " << edge_array[i].getSourceId() << " - Target-ID: " << edge_array[i].getTargetId() << " - Property: { " << edge_array[i].getProperty().first << ": " << edge_array[i].getProperty().second << " }" << " || ";
+                std::cout << "Source-ID: " << edge_value_array[i].getSourceId() << " - Target-ID: " << edge_value_array[i].getTargetId() << " - Property: { " << edge_value_array[i].getProperty().first << ": " << edge_value_array[i].getProperty().second << " }" << " || ";
             }
         }
 
@@ -156,20 +151,16 @@ namespace morphstore{
              std::vector<uint64_t> neighbors;
              uint64_t offset = node_array[id];
              uint64_t numberEdges = get_degree(id);
-             /*
-             for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                 neighbors.push_back(edge_array[i].getTargetId());
-             }*/
-	     
-             // BFS OPTIMIZATION APPROACH:
-	     /*Problem is that it does not put the second element into the vector -> alternative to insert()  ???*/
+
+             // avoiding out of bounds ...
              if( offset < getNumberEdges()){
-	       neighbors.insert(neighbors.end(), edge_targetID_array+offset, edge_targetID_array+offset+numberEdges);
-	     }
-	     //std::vector<uint64_t> neighbors(edge_targetID_array+offset, edge_targetID_array+offset+numberEdges-1);
+                 neighbors.insert(neighbors.end(), edge_array+offset, edge_array+offset+numberEdges);
+             }
+
              return neighbors;
         }
 
+        // get size of storage format:
         std::pair<size_t, size_t> get_size_of_graph() override {
             std::pair<size_t, size_t> index_data_size;
             size_t data_size = 0;
@@ -197,17 +188,14 @@ namespace morphstore{
             index_size += sizeof(uint64_t*) * 2 + sizeof(Edge*);
             // edges array values:
             for(uint64_t i = 0; i < getNumberEdges(); i++){
-		index_size += sizeof(uint64_t); // node_array with offsets
-                data_size += edge_array[i].size_in_bytes(); // edge value arrray with object
+                index_size += sizeof(uint64_t); // node_array with offsets
+                data_size += edge_value_array[i].size_in_bytes(); // edge value array with object
             }
 
             index_data_size = {index_size, data_size};
 
             return index_data_size;
         }
-
     };
-
 }
-
 #endif //MORPHSTORE_CSR_H

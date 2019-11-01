@@ -17,8 +17,8 @@
 
 /**
  * @file graph.h
- * @brief abstract graph class for any storage format --> CSR,ADJ
- * @todo graph-size calculation!!
+ * @brief base graph class for any storage format --> CSR,ADJ
+ * @todo
 */
 
 #ifndef MORPHSTORE_GRAPH_H
@@ -120,7 +120,7 @@ namespace morphstore{
             return vertices[id];
         }
 
-	// function that return a list of pair < vertex id, degree > DESC
+	    // function to return a list of pair < vertex id, degree > DESC:
         std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC(){
             std::vector<std::pair<uint64_t, uint64_t>> vertexDegreeList;
             vertexDegreeList.reserve(numberVertices);
@@ -129,27 +129,26 @@ namespace morphstore{
                 vertexDegreeList.push_back({i, this->get_degree(i)});
             }
             // sort the vector on degree DESC
-            /*std::sort(vertexDegreeList.begin(), vertexDegreeList.end(), [](auto &left, auto &right) {
+            std::sort(vertexDegreeList.begin(), vertexDegreeList.end(), [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t ,uint64_t> &right) {
                 return left.second > right.second;
-            });*/
-	    std::sort(vertexDegreeList.begin(), vertexDegreeList.end(), [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t ,uint64_t> &right) {
-                return left.second > right.second;
-	    });
+            });
 
             return vertexDegreeList;
         }
-	
-	// function to measure graph characteristics (degree and count):
-	void measure_degree_count(std::string filePath){
-	    std::vector<std::pair<uint64_t, uint64_t>> verticesDegree = get_list_of_degree_DESC();
-	    // unordered map for mapping degree to count:
-	    std::unordered_map<uint64_t, uint64_t> results;
-	    for(uint64_t i = 0; i < verticesDegree.size(); ++i){
-		// increment count in results for a given degree:
-	    	results[verticesDegree[i].second]++;
- 	    }
-	    // write to file:
-	    std::ofstream fs;
+
+        // function to measure graph characteristics (degree and count):
+        void measure_degree_count(std::string filePath){
+            std::vector<std::pair<uint64_t, uint64_t>> verticesDegree = get_list_of_degree_DESC();
+            // unordered map for mapping degree to count:
+	        std::unordered_map<uint64_t, uint64_t> results;
+
+	        for(uint64_t i = 0; i < verticesDegree.size(); ++i){
+		        // increment count in results for a given degree:
+	    	    results[verticesDegree[i].second]++;
+	        }
+
+	        // write to file:
+	        std::ofstream fs;
             std::stringstream ss;
             // open file for writing and delete existing stuff:
             fs.open(filePath, std::fstream::out | std::ofstream::trunc);
@@ -158,9 +157,8 @@ namespace morphstore{
                 ss << m.first << "," << m.second << "\n";
             }
             fs << ss.str() ;
-
             fs.close();
-	}
+        }
 
         // -------------------- pure virtual functions --------------------
 
@@ -174,11 +172,12 @@ namespace morphstore{
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
         virtual uint64_t get_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
-	virtual std::pair<size_t, size_t> get_size_of_graph() = 0;
-	// for debugging
-        virtual void print_neighbors_of_vertex(uint64_t id) = 0;
+	    virtual std::pair<size_t, size_t> get_size_of_graph() = 0;
 
         // -------------------- debugging functions --------------------
+
+        // for debugging
+        virtual void print_neighbors_of_vertex(uint64_t id) = 0;
 
         void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
