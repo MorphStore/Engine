@@ -41,44 +41,55 @@ int main( void ){
 
     // when using server with ssh pfeiffer@141.76.47.9: directory = "/home/pfeiffer/ldbc_sn_data/"
     // NEVER FORGET THE LAST / in address!!!
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_1/");
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_10/");
     // std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/opt/ldbc_snb_datagen-0.2.8/social_network/social_network_1/");
 
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
 
     // start measuring import time:
-    auto startImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    //auto startImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
 
     // generate vertices & edges from LDBC files and insert into graph
     ldbcImport->import(*g1);
 
+    // get some graph infos:
+    g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
+
     // measuring time:
-    auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-    auto elapsedImportTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportTime - startImportTime ).count();
+    //auto finishImportTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    //auto elapsedImportTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportTime - startImportTime ).count();
+
+    //g1->statistics();
 
     // size of graph in bytes:
-    size_t size = g1->get_size_of_graph();
-    std::cout << "Size: " << size << " bytes\n";
-
-    g1->statistics();
-    std::cout << "Import: " << elapsedImportTime << " millisec.\n";
+    //std::pair<size_t, size_t> size = g1->get_size_of_graph();
+    //std::cout << "index: " << size.first << " - data: " << size.second << std::endl; // size in bytes
+    //std::cout << elapsedImportTime << std::endl; // time in milli sec.
 
     /* Test Vertex, which contains edges with properties (SERVER):
      */
     // g1->print_vertex_by_id(1035174);
     // g1->print_neighbors_of_vertex(1035174);
-    
 
     /* Test Vertex, which contains edges with properties (MY PC):
     g1->print_vertex_by_id(100449);
     g1->print_neighbors_of_vertex(100449);
     */
 
-    /*
+    //g1->print_vertex_by_id(1033808);
+
+    /*BFS single test:
     std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-    bfs->do_measurements();
+    auto startImportBFSTime = std::chrono::high_resolution_clock::now();
+    uint64_t explored = bfs->do_BFS(1033808);
+    auto finishImportBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
+    auto elapsedImportBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishImportBFSTime - startImportBFSTime ).count(); 
+    std::cout << explored << " -> " << elapsedImportBFSTime << std::endl;
     */
+
+    //std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
+    //bfs->do_measurements(10000, "/home/pfeiffer/measurements/adjacency_list/bfs_SF10.csv");
 
     return 0;
 }

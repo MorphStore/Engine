@@ -113,13 +113,34 @@ namespace morphstore{
             return vertices.at(id)->get_neighbors_ids();
         }
 
-        size_t get_size_of_graph() override {
-            size_t size = 0;
-            size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::AdjacencyListVertex>>);
-                for(auto& it : vertices){
-                size += it.second->get_size_of_vertex();
+        std::pair<size_t, size_t> get_size_of_graph() override {
+            std::pair<size_t, size_t> index_data_size;
+            size_t data_size = 0;
+            size_t index_size = 0;
+
+            // lookup dicts: entity dict  + relation dict.
+            index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
+            for(auto& ent : entityDictionary){
+                index_size += sizeof(unsigned short int);
+                index_size += sizeof(char)*(ent.second.length());
             }
-            return size;
+            for(auto& rel : relationDictionary){
+                index_size += sizeof(unsigned short int);
+                index_size += sizeof(char)*(rel.second.length());
+            }
+
+            // container for indexes:
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::AdjacencyListVertex>>);
+            for(auto& it : vertices){
+                // index size of vertex: size of id and sizeof pointer 
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::AdjacencyListVertex>);
+                // data size:
+                data_size += it.second->get_data_size_of_vertex();
+            }
+
+            index_data_size = {index_size, data_size};
+
+            return index_data_size;
         }
 
     };

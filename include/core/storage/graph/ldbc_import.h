@@ -462,7 +462,7 @@ namespace morphstore{
                         std::unordered_map<uint64_t, std::string> multiValueAttr;
                         uint64_t systemID;
                         std::string value;
-
+			
                         for(size_t i = 0; i < fileSize; ++i){
                             if(buffer[i] == '\n'){
                                 // get a row into string form buffer with start- and end-point
@@ -477,9 +477,9 @@ namespace morphstore{
                                 if(start == 0){
                                     propertyKey = row.substr(row.find(delimiter) + 1);
                                 }else{
-                                    // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
-                                    systemID = globalIdLookupMap.at({fromEntity, row.substr(0, row.find(delimiter))});
-                                    value = row.substr(row.find(delimiter) + 1);
+				    // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
+                                    systemID = globalIdLookupMap[{fromEntity, row.substr(0, row.find(delimiter))}];
+				    value = row.substr(row.find(delimiter) + 1);
                                     multiValueAttr[systemID] = std::move(value);
                                 }
 
@@ -497,7 +497,7 @@ namespace morphstore{
                     else{
 
                         isRelation = true;
-
+			
                         bool hasProperties = false;
                         std::string propertyKey;
                         uint64_t fromID, toID;
@@ -612,7 +612,7 @@ namespace morphstore{
 
             // (3) generate vertices
             generate_vertices(graph);
-
+	    
             // (4) read relations and write to intermediate results
             fill_vertexRelationsLookup(graph);
 

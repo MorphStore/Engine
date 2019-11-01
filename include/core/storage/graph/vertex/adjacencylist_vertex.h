@@ -33,6 +33,9 @@ namespace morphstore{
     protected:
         std::vector<Edge> adjacencylist;
 
+	// BFS OPTIMIZATION APPROACH:
+        std::vector<uint64_t> adjacencylistBFS;
+
     public:
         // constructor with unique id generation
         AdjacencyListVertex(){
@@ -54,11 +57,16 @@ namespace morphstore{
         // add edges to vertexs' adjacencylist
         void add_edges(const std::vector<morphstore::Edge> edges) override {
             this->adjacencylist = edges;
+
+	    // BFS OPTIMIZATION APPROACH:
+            for(auto edge : edges){
+                adjacencylistBFS.push_back(edge.getTargetId());
+            }
         }
 
         // function which returns the number of edges
         uint64_t get_number_edges() override {
-            return adjacencylist.size();
+	    return adjacencylist.size();
         }
 
         void print_neighbors() override {
@@ -70,18 +78,21 @@ namespace morphstore{
 
         // function to return a vector of neighbor ids (for BFS)
         std::vector<uint64_t> get_neighbors_ids() override {
+            /*
             std::vector<uint64_t> neighbors;
             for(auto const& edge : adjacencylist){
                 neighbors.push_back(edge.getTargetId());
             }
             return neighbors;
+             */
+            // BFS OPTIMIZATION APPROACH:
+            return adjacencylistBFS;
         }
 
-        size_t get_size_of_vertex() override {
+        size_t get_data_size_of_vertex() override {
             size_t size = 0;
             size += sizeof(uint64_t); // id
             size += sizeof(unsigned short int); // entity
-
             // properties:
             size += sizeof(std::unordered_map<std::string, std::string>);
             for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){

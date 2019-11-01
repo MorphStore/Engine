@@ -39,6 +39,9 @@ namespace morphstore{
         // TODO: free memory in destructor ?
         uint64_t* node_array = nullptr;
         Edge* edge_array = nullptr;
+	
+	// BFS OPTIMIZATION APPROACH:
+        uint64_t* edge_targetID_array = nullptr;
 
     public:
 
@@ -55,6 +58,9 @@ namespace morphstore{
 
             node_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
             edge_array = (Edge*) malloc(numberEdges * sizeof(Edge));
+
+	    // BFS OPTIMIZATION APPROACH:
+            edge_targetID_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
 
             // init node array:
             node_array[0] = 0;
@@ -89,7 +95,11 @@ namespace morphstore{
 
             for(const auto & edge : relations){
                 edge_array[offset] = edge;
-                ++offset;
+
+		// BFS OPTIMIZATION APPROACH:
+                edge_targetID_array[offset] = edge.getTargetId();
+                
+		++offset;
             }
 
             // to avoid buffer overflow:
@@ -119,8 +129,16 @@ namespace morphstore{
         // get number of edges of vertex with id
         uint64_t get_degree(uint64_t id) override {
             uint64_t offset = node_array[id];
-            uint64_t nextOffset = node_array[id+1];
+            // special case: last vertex id has no next offset
+            uint64_t nextOffset;
+            if(id == getNumberVertices() -1){
+                nextOffset = getNumberEdges();
+            }else{
+                nextOffset = node_array[id+1];
+            }
+	    if(offset == nextOffset) return 0;
             uint64_t numberEdges = nextOffset - offset;
+	    //if(id == 1030169) std::cout << "edges: " << numberEdges << " - offset: " << offset << " - nextOffset: " << nextOffset << std::endl;
             return numberEdges;
         }
 
@@ -135,32 +153,57 @@ namespace morphstore{
 
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-            std::vector<uint64_t> neighbors;
-            uint64_t offset = node_array[id];
-            uint64_t numberEdges = get_degree(id);
-
-            for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                neighbors.push_back(edge_array[i].getTargetId());
-            }
-            return neighbors;
+             std::vector<uint64_t> neighbors;
+             uint64_t offset = node_array[id];
+             uint64_t numberEdges = get_degree(id);
+             /*
+             for(uint64_t i = offset; i < offset+numberEdges; ++i){
+                 neighbors.push_back(edge_array[i].getTargetId());
+             }*/
+	     
+             // BFS OPTIMIZATION APPROACH:
+	     /*Problem is that it does not put the second element into the vector -> alternative to insert()  ???*/
+             if( offset < getNumberEdges()){
+	       neighbors.insert(neighbors.end(), edge_targetID_array+offset, edge_targetID_array+offset+numberEdges);
+	     }
+	     //std::vector<uint64_t> neighbors(edge_targetID_array+offset, edge_targetID_array+offset+numberEdges-1);
+             return neighbors;
         }
 
-        size_t get_size_of_graph() override {
-            size_t  size = 0;
-            // pointer to arrays:
-            size += sizeof(uint64_t*) + sizeof(Edge*);
-            // vertices:
-            size += sizeof(uint64_t) * getNumberVertices();
-            // edges:
-            for(uint64_t i = 0; i < getNumberEdges(); i++){
-                size += edge_array[i].size_in_bytes();
+        std::pair<size_t, size_t> get_size_of_graph() override {
+            std::pair<size_t, size_t> index_data_size;
+            size_t data_size = 0;
+            size_t index_size = 0;
+
+            // lookup dicts: entity dict  + relation dict.
+            index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
+            for(auto& ent : entityDictionary){
+                index_size += sizeof(unsigned short int);
+                index_size += sizeof(char)*(ent.second.length());
             }
-            // vertex map wth actual data:
-            for(auto& it : vertices){
-                size += it.second->get_size_of_vertex();
+            for(auto& rel : relationDictionary){
+                index_size += sizeof(unsigned short int);
+                index_size += sizeof(char)*(rel.second.length());
             }
 
-            return size;
+            // container for indexes:
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::CSRVertex>>);
+            for(auto& it : vertices){
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::CSRVertex>);
+                data_size += it.second->get_data_size_of_vertex();
+            }
+
+            // pointer to arrays:
+            index_size += sizeof(uint64_t*) * 2 + sizeof(Edge*);
+            // edges array values:
+            for(uint64_t i = 0; i < getNumberEdges(); i++){
+		index_size += sizeof(uint64_t); // node_array with offsets
+                data_size += edge_array[i].size_in_bytes(); // edge value arrray with object
+            }
+
+            index_data_size = {index_size, data_size};
+
+            return index_data_size;
         }
 
     };
