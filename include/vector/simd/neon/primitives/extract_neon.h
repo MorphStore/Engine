@@ -34,7 +34,8 @@ namespace vectorlib {
       extract_value( neon< v128< uint64_t > >::vector_t p_vec, int idx) {
          trace( "[VECTOR] - extract value from neon register." );
         
-         return vgetq_lane_u64(p_vec, idx);
+         if (idx == 0) return vgetq_lane_u64(p_vec, 0);
+         return vgetq_lane_u64(p_vec, 1);
       }
    };
    

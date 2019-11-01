@@ -66,6 +66,47 @@ namespace vectorlib{
    };
    
    template<>
+   struct min<avx512<v512<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint64_t>>::vector_t
+      apply(
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Minimum of 64 bit integer values from two registers (avx512)" );
+         return _mm512_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct min<avx512<v256<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v256<uint64_t>>::vector_t
+      apply(
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm256_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct min<avx512<v128<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v128<uint64_t>>::vector_t
+      apply(
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint64_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
+         return _mm_min_epi64( p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
    struct sub<avx512<v512<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
@@ -151,6 +192,12 @@ namespace vectorlib{
             _mm512_xor_si512(
                _mm512_castpd_si512(
                   _mm512_add_pd(
+                     // @todo This rounds the result to the nearest integer,
+                     // but we want it to be rounded down, since this would be
+                     // the expected outcome of an integer division. There is
+                     // no _mm512_floor_pd (like in SSE and AVX). I tried
+                     // _mm512_div_round_pd with all possible rounding modes,
+                     // but none of them worked...
                      _mm512_div_pd(
                         _mm512_castsi512_pd(p_vec1),
                         _mm512_castsi512_pd(p_vec2)

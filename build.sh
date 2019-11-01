@@ -4,6 +4,16 @@ function is_power_of_two () {
     (( n > 0 && (n & (n - 1)) == 0 ))
 }
 
+function is_int () {
+    re="^[0-9]+$"
+    if [[ $1 =~ $re ]]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
 function printHelp {
 	echo "build.sh -buildMode [-loggerControl] [-memory] [-jN]"
 	echo "buildMode:"
@@ -53,10 +63,24 @@ function printHelp {
 	echo "	     Runs CTest for some utilities"
 	echo "	-tVt|--testVectoring"
 	echo "	     Runs CTest for vectorized "
-  echo "	-tQ|--testQueries"
-	echo "	     Runs CTest for example queries "
+        echo ""
+        echo "targets:"
+        echo "	-bA|--buildAll"
+        echo "	     Builds all targets in the src directory"
+        echo "	-bCa|--buildCalibration"
+        echo "	     Builds all calibration micro-benchmarks"
+        echo "	-bEx|--buildExamples"
+        echo "	     Builds all examples"
+        echo "	-bMbm|--buildMicroBms"
+        echo "	     Builds all micro-benchmarks"
+        echo "	-bSSB sf|--buildSSB sf"
+        echo "	     Builds all SSB queries for scale factor sf (if the generated sources are available)"
+        echo "	--target TARGETNAME"
+        echo "	     Builds only the target TARGETNAME, which must be included in one of the target groups selected using the above \"-b\"-arguments"
+        echo "	     It is possible to specify multiple target names by providing a quoted white-space-separated list for TARGETNAME"
+        echo "	     Defaults to \"all\", i.e., if omited, all targets of the selected target groups will be built"
 	echo ""
-  echo "features:"
+        echo "features:"
 	echo "	-avx512"
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
@@ -66,11 +90,15 @@ function printHelp {
         echo "	-armneon"
 	echo "	     Builds with neon support (for ARM)"
         echo ""
-        echo " Energy:"
-        echo " -rapl "
-        echo "       Builds with RAPL support"
-        echo " -odroid"
-        echo "       Builds with support for the Odroid-XU3 sensors"
+        echo "energy:"
+        echo "	-rapl"
+        echo "	     Builds with RAPL support"
+        echo "	-odroid"
+        echo "	     Builds with support for the Odroid-XU3 sensors"
+        echo ""
+        echo "compression:"
+        echo "	--vbpLimitRoutinesForSSBSF1"
+        echo "	     Build the vertical bit-packing routines only for the bit widths required for executing SSB at scale factor 1, to speed up the build."
 }
 
 buildType=""
@@ -93,13 +121,19 @@ testPers="-DCTEST_PERSISTENCE=False"
 testStorage="-DCTEST_STORAGE=False"
 testUtils="-DCTEST_UTILS=False"
 testVectors="-DCTEST_VECTOR=False"
-testQueries="-DCTEST_QUERIES=False"
+buildAll="-DBUILD_ALL=False"
+buildCalibration="-DBUILD_CALIB=False"
+buildExamples="-DBUILD_EXAMPLES=False"
+buildMicroBms="-DBUILD_MICROBMS=False"
+buildSSB="-DBUILD_SSB=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
 rapl="DCRAPL=False"
 odroid="DCODROID=False"
 neon="DCNEON=False"
+target="all"
+vbpLimitRoutinesForSSBSF1="-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -205,9 +239,29 @@ case $key in
 	testUtils="-DCTEST_UTILS=True"
 	shift # past argument
 	;;
-        -tQ|--testQueries)
-	runCtest=true
-	testQueries="-DCTEST_QUERIES=True"
+        -bA|--buildAll)
+	buildAll="-DBUILD_ALL=True"
+	shift # past argument
+	;;
+        -bCa|--buildCalibration)
+	buildCalibration="-DBUILD_CALIB=True"
+	shift # past argument
+	;;
+        -bEx|--buildExamples)
+	buildExamples="-DBUILD_EXAMPLES=True"
+	shift # past argument
+	;;
+        -bMbm|--buildMicroBms)
+	buildMicroBms="-DBUILD_MICROBMS=True"
+	shift # past argument
+	;;
+	-bSSB|--buildSSB)
+	if ! is_int $2; then
+		echo "-bSSB or --buildSSB must be followed by the scale factor as an integer"
+		exit -1
+	fi
+	buildSSB="-DBUILD_SSB=$2"
+	shift
 	shift # past argument
 	;;
 	-avx512)
@@ -240,6 +294,15 @@ case $key in
         odroid="-DCODROID=True"
 	shift # past argument
 	;;
+	--target)
+	target=$2
+	shift
+	shift
+        ;;
+        --vbpLimitRoutinesForSSBSF1)
+        vbpLimitRoutinesForSSBSF1="-DVBP_LIMIT_ROUTINES_FOR_SSB_SF1=True"
+        shift # past argument
+        ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -270,18 +333,21 @@ then
 	exit 1
 fi
 
-printf "Using buildMode: $buildMode and make with: $makeParallel\n"
+printf "Using buildMode: $buildMode and make with: $makeParallel $target\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $testQueries $avx512 $avxtwo $odroid $rapl $neon"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
 fi
+addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
+set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $avx512 $avxtwo $sse4 $odroid $rapl $neon-G "Unix Makefiles" ../
-make -C build/ VERBOSE=1 $makeParallel
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
+make -C build/ VERBOSE=1 $makeParallel $target
+set +e
 
 if [ "$runCtest" = true ] ; then
 	cd build && ctest --output-on-failure #--extra-verbose

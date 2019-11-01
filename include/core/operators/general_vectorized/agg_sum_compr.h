@@ -87,9 +87,6 @@ namespace morphstore {
 //         size_t  const           inDataCountLog       = p_InDataCol->get_count_values();
          size_t  const           inDataSizeComprByte  = p_InDataCol->get_size_compr_byte();
          size_t  const           inDataSizeUsedByte   = p_InDataCol->get_size_used_byte();
-//         uint8_t const * const   inDataRest8          = create_aligned_ptr(
-//            inDataPtr + inDataSizeComprByte
-//         );
 //         size_t  const           inCountLogRest       = convert_size<uint8_t, uint64_t>(
 //            inDataSizeUsedByte - ( inDataRest8 - inDataPtr )
 //         );
@@ -108,12 +105,12 @@ namespace morphstore {
             InFormatCol,
             agg_sum_processing_unit_wit
          >::apply(
-            inDataPtr, inDataSizeComprByte, witState
+            inDataPtr, p_InDataCol->get_count_values_compr(), witState
          );
          if(inDataSizeComprByte == inDataSizeUsedByte ) {
             *outPtr = agg_sum_processing_unit_wit<VectorExtension>::finalize( witState );
          } else {
-            inDataPtr = create_aligned_ptr( inDataPtr );
+            inDataPtr = p_InDataCol->get_data_uncompr_start();
             size_t const inSizeRestByte = startDataPtr + inDataSizeUsedByte - inDataPtr;
             size_t const inDataSizeUncomprVecByte = round_down_to_multiple(
                inSizeRestByte, vector_size_byte::value
@@ -123,7 +120,9 @@ namespace morphstore {
                uncompr_f,
                agg_sum_processing_unit_wit
             >::apply(
-               inDataPtr, inDataSizeUncomprVecByte, witState
+               inDataPtr,
+               convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte),
+               witState
             );
             size_t const inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             base_t result = agg_sum_processing_unit_wit<VectorExtension>::finalize( witState );
@@ -138,7 +137,9 @@ namespace morphstore {
                   uncompr_f,
                   agg_sum_processing_unit_wit
                >::apply(
-                  inDataPtr, inSizeScalarRemainderByte, witUncomprState
+                  inDataPtr,
+                  convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
+                  witUncomprState
                );
                result = agg_sum_processing_unit_wit<scalar<v64<uint64_t>>>::finalize( witUncomprState );
             }

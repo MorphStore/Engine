@@ -173,12 +173,19 @@ namespace vectorlib {
          return ;
       }
       
+   };
+
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<sse<v128<T>>, IOGranularity, Scale> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
-      gather( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
+      apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-         return _mm_set_epi64x(*(( uint64_t const * const )p_DataPtr + _mm_extract_epi64(p_vec,1)),*(( uint64_t const * const )p_DataPtr + _mm_extract_epi64(p_vec,0)));
+         return _mm_set_epi64x(
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,1) * Scale),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,0) * Scale)
+         );
         // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
          
       }

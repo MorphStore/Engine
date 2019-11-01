@@ -16,30 +16,34 @@
  **********************************************************************************************/
 
 /**
- * @file vbp_test.cpp
- * @brief Tests of the (de)compression morph operators for the formats related
- * to vertical bit-packing, i.e., `static_vbp_f` and `dynamic_vbp_f`.
+ * @file calib_bw_prof.cpp
+ * @brief Measures the bit width profiles of (physical-level) Null Suppression
+ * algorithms required for our cost model for lightweight compression
+ * algorithms.
+ * 
+ * The output is produced as a CSV table on stdout.
  */
 
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/k_wise_ns.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
-#include <core/morphing/vbp_padding.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
+#include <core/utils/math.h>
 #include <core/utils/variant_executor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
-#include <iostream>
 #include <limits>
 #include <random>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 using namespace morphstore;
@@ -47,15 +51,118 @@ using namespace vectorlib;
 
 
 // ****************************************************************************
+// Mapping from vector extensions and formats to string names
+// ****************************************************************************
+
+// ----------------------------------------------------------------------------
+// Vector extensions
+// ----------------------------------------------------------------------------
+
+template<class t_vector_extension>
+std::string veName = "(unknown vector extension)";
+
+#define MAKE_VECTOR_EXTENSION_NAME(ve) \
+    template<> std::string veName<ve> = STR_EVAL_MACROS(ve);
+
+MAKE_VECTOR_EXTENSION_NAME(scalar<v64<uint64_t>>)
+#ifdef SSE
+MAKE_VECTOR_EXTENSION_NAME(sse<v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+MAKE_VECTOR_EXTENSION_NAME(avx2<v256<uint64_t>>)
+#endif
+#ifdef AVX512
+MAKE_VECTOR_EXTENSION_NAME(avx512<v512<uint64_t>>)
+#endif
+
+// ----------------------------------------------------------------------------
+// Formats
+// ----------------------------------------------------------------------------
+// All template-specializations of a format are mapped to a name, which may or
+// may not contain the values of the template parameters.
+        
+template<class t_format>
+std::string formatName = "(unknown format)";
+
+template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks, unsigned t_Step>
+std::string formatName<
+        dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>
+> = "dynamic_vbp_f<" + std::to_string(t_BlockSizeLog) + ", " + std::to_string(t_PageSizeBlocks) + ", " + std::to_string(t_Step) + ">";
+
+template<size_t t_BlockSizeLog>
+std::string formatName<k_wise_ns_f<t_BlockSizeLog>> = "k_wise_ns_f<" + std::to_string(t_BlockSizeLog) + ">";
+
+template<unsigned t_Bw, unsigned t_Step>
+std::string formatName<
+        static_vbp_f<vbp_l<t_Bw, t_Step> >
+> = "static_vbp_f<vbp_l<bw, " + std::to_string(t_Step) + "> >";
+
+template<>
+std::string formatName<uncompr_f> = "uncompr_f";
+
+
+// ****************************************************************************
+// "Operator" to be executed by `variant_executor`
+// ****************************************************************************
+
+/**
+ * @brief Measures the compression and decompression time as well as the
+ * compressed size for the specified format.
+ * @param p_InCol The column to be compressed and decompressed.
+ * @return The decompressed-again input column.
+ */
+template<class t_vector_extension, class t_format, unsigned t_Bw>
+const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
+    const size_t countValues = p_InCol->get_count_values();
+    
+    MONITORING_START_INTERVAL_FOR(
+            "runtime compr [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+    auto comprCol = morph<t_vector_extension, t_format, uncompr_f>(p_InCol);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime compr [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+            
+    MONITORING_ADD_INT_FOR(
+            "size used [byte]",
+            comprCol->get_size_used_byte(),
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+    MONITORING_ADD_INT_FOR(
+            "size compr [byte]",
+            comprCol->get_size_compr_byte(),
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+            
+    MONITORING_START_INTERVAL_FOR(
+            "runtime decompr [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+    auto decomprCol = morph<t_vector_extension, uncompr_f, t_format>(comprCol);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime decompr [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+    
+    if(!std::is_same<t_format, uncompr_f>::value)
+        delete comprCol;
+    
+    return decomprCol;
+}
+
+
+// ****************************************************************************
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
-#define MAKE_VARIANT(vector_extension, format) { \
-    new typename t_varex_t::operator_wrapper::template for_output_formats<format>::template for_input_formats<format>( \
-        &morph<vector_extension, format, format>, true \
+#define MAKE_VARIANT(vector_extension, format, bw) { \
+    new typename t_varex_t::operator_wrapper::template for_output_formats<uncompr_f>::template for_input_formats<uncompr_f>( \
+        &measure_morphs<vector_extension, format, bw>, true \
     ), \
-    STR_EVAL_MACROS(vector_extension), \
-    STR_EVAL_MACROS(format), \
+    veName<vector_extension>, \
+    formatName<format>, \
 }
 
 template<class t_varex_t, unsigned t_Bw>
@@ -63,29 +170,27 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
         // Uncompressed reference variant, required to check the correctness of
         // the compressed variants.
-        MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f, t_Bw),
         
         // Compressed variants.
-#ifdef AVX512
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 8>>)),
-        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>), t_Bw),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>), t_Bw),
+#ifdef SSE
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>), t_Bw),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>), t_Bw),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>), t_Bw),
 #endif
 #ifdef AVXTWO
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 4>>)),
-        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>), t_Bw),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>), t_Bw),
 #endif
-#ifdef SSE
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 2>>)),
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)),
+#ifdef AVX512
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>), t_Bw),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>), t_Bw),
 #endif
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_padding_l<t_Bw, 1>>)),
-        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>))
     };
 }
+
 
 // ****************************************************************************
 // Main program.
@@ -103,6 +208,9 @@ int main(void) {
             {"vector_extension", "format"},
             {"bitwidth", "countValues"}
     );
+    
+    // @todo This could be a command line argument.
+    const size_t countValues = 128 * 1024 * 1024;
     
     for(unsigned bw = 1; bw <= std::numeric_limits<uint64_t>::digits; bw++) {
         std::vector<varex_t::variant_t> variants;
@@ -176,49 +284,19 @@ int main(void) {
             case 64: variants = make_variants<varex_t, 64>(); break;
         }
 
-        for(size_t countValues : {
-            // The following numbers of data elements represent all
-            // combinations of the following features for all vector
-            // extensions:
-            // - uncompressed rest (17)
-            // - complete pages of dynamic_vbp_f
-            //   (vector size [byte] * vector size [bit])
-            // - incomplete pages of dynamic_vbp_f (3 * vector size [bit])
-            17,
-            // for scalar
-            3 * 64,
-            3 * 64 + 17,
-            10 * 8 * 64,
-            10 * 8 * 64 + 3 * 64,
-            10 * 8 * 64 + 17,
-            10 * 8 * 64 + 3 * 64 + 17,
-            // for sse
-            3 * 128,
-            3 * 128 + 17,
-            10 * 16 * 128,
-            10 * 16 * 128 + 3 * 128,
-            10 * 16 * 128 + 3 * 128 + 17,
-            // for avx2
-            3 * 256,
-            3 * 256 + 17,
-            10 * 32 * 256,
-            10 * 32 * 256 + 3 * 256,
-            10 * 32 * 256 + 3 * 256 + 17
-        }) {
-            varex.print_datagen_started();
-            auto origCol = generate_with_distr(
-                    countValues,
-                    std::uniform_int_distribution<uint64_t>(
-                            0, bitwidth_max<uint64_t>(bw)
-                    ),
-                    false
-            );
-            varex.print_datagen_done();
+        varex.print_datagen_started();
+        auto origCol = generate_with_distr(
+                countValues,
+                std::uniform_int_distribution<uint64_t>(
+                        bitwidth_min<uint64_t>(bw), bitwidth_max<uint64_t>(bw)
+                ),
+                false
+        );
+        varex.print_datagen_done();
 
-            varex.execute_variants(variants, bw, countValues, origCol);
+        varex.execute_variants(variants, bw, countValues, origCol);
 
 //            delete origCol;
-        }
     }
     
     varex.done();

@@ -21,17 +21,19 @@
  * @todo Which headers should be included to use the memory manager here?
  */
 
-#include <core/storage/column_helper.h>
-#ifdef MSV_NO_SELFMANAGED_MEMORY
-#include <core/memory/management/utils/alignment_helper.h>
-#endif
-#include <core/morphing/format.h>
-#include <core/utils/basic_types.h>
-#include <core/utils/helper_types.h>
-
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
+#include <core/storage/column_helper.h>
+#include <core/memory/management/utils/alignment_helper.h>
+#include <core/morphing/format.h>
+#include <core/morphing/morph_batch.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/helper_types.h>
+
+#include <type_traits>
+
+#include <cstring>
 
 namespace morphstore {
 
@@ -81,6 +83,8 @@ class column {
       // own memory manager.
       storage_persistence_type m_PersistenceType;
       
+      mutable bool m_IsPreparedForRndAccess;
+      
       column(
          storage_persistence_type p_PersistenceType,
          size_t p_SizeAllocatedByte
@@ -98,7 +102,8 @@ class column {
             : malloc( p_SizeAllocatedByte )
          },
 #endif
-         m_PersistenceType{ p_PersistenceType }
+         m_PersistenceType{ p_PersistenceType },
+         m_IsPreparedForRndAccess(false)
       {
          //
       }
@@ -138,6 +143,130 @@ class column {
           set_meta_data(p_CountValues, p_SizeUsedByte, 0);
       }
       
+        // The following utility functions for working with the subdivision of
+        // a column into a compressed main part and an uncompressed rest part
+        // can definitely be simplified. However, they work and should not
+        // matter w.r.t. performance anyway.
+      
+        /**
+         * @brief Returns a pointer to the start of the uncompressed rest part
+         * of the column.
+         * 
+         * If the column's format is uncompressed or there is no compressed
+         * data in the column, then this will point to the start of the
+         * column's data buffer.
+         * 
+         * If the column does not contain any uncompressed data, then the
+         * returned pointer will point to the address where this data would
+         * start if it existed.
+         * 
+         * @return A pointer to the start of the uncompressed rest part of the
+         * column.
+         */
+        inline const voidptr_t get_data_uncompr_start() const {
+            return voidptr_t(create_data_uncompr_start(
+                    static_cast<uint8_t *>(m_Data) +
+                    m_MetaData.m_SizeComprByte
+            ));
+        }
+        
+        /**
+         * @brief Returns a pointer to the byte where the uncompressed rest
+         * part of a column would start, given the end of the compressed main
+         * part.
+         * 
+         * @param p_ComprEnd A pointer to the byte immediately behind the
+         * compressed main part.
+         * @return A pointer to the start of the uncompressed rest part.
+         */
+        inline static uint8_t * create_data_uncompr_start(uint8_t * p_ComprEnd) {
+            if(std::is_same<F, uncompr_f>::value)
+                return create_aligned_ptr(p_ComprEnd);
+            else
+                // Between the compressed main part and the uncompressed rest
+                // part, we reserve enough space for two more compressed
+                // blocks. This space is needed when the column is prepared for
+                // random access in the project-operator. We need space for two
+                // compressed blocks, since the size of the uncompressed rest
+                // can exceed the size of one block, due to the way the
+                // operators handle the scalar part of the uncompressed rest.
+                return create_aligned_ptr(
+                        p_ComprEnd + 2 * F::get_size_max_byte(F::m_BlockSize)
+                );
+        }
+        
+        /**
+         * Returns the number of logical data elements in the uncompressed rest
+         * part of the column.
+         * 
+         * @return The number of data elements in the uncompressed rest part of
+         * the column.
+         */
+        inline size_t get_count_values_uncompr() const {
+            return (m_MetaData.m_SizeComprByte == m_MetaData.m_SizeUsedByte)
+                    ? 0
+                    : convert_size<uint8_t, uint64_t>(
+                            m_MetaData.m_SizeUsedByte - (
+                                    static_cast<const uint8_t *>(get_data_uncompr_start()) -
+                                    static_cast<const uint8_t *>(m_Data.m_Ptr)
+                            )
+                    );
+        }
+        
+        /**
+         * Returns the number of logical data elements in the compressed main
+         * part of the column.
+         * 
+         * @return The number of data elements in the compressed main part of
+         * the column.
+         */
+        inline size_t get_count_values_compr() const {
+            return m_MetaData.m_CountLogicalValues - get_count_values_uncompr();
+        }
+        
+        /**
+         * @brief Prepares this column for random access.
+         * 
+         * To enable random access to any logical position *on compressed
+         * data*, the uncompressed rest part is padded with zeros and appended
+         * in compressed form to the compressed main part.
+         * 
+         * No action is taken if any of the following holds:
+         * - this column has been prepared for random access before
+         * - the format of this column is uncompressed
+         * - the uncompressed rest part is empty
+         * 
+         * @return `true` if action was taken, `false` otherwise.
+         */
+        template<class t_vector_extension>
+        bool prepare_for_random_access() const {
+            if(m_IsPreparedForRndAccess || std::is_same<F, uncompr_f>::value)
+                return false;
+            
+            const size_t countLogUncompr = get_count_values_uncompr();
+            if(!countLogUncompr)
+                return false;
+            
+            const uint8_t * rest8 = get_data_uncompr_start();
+            const size_t countLogUncomprRoundUp =
+                    round_up_to_multiple(countLogUncompr, F::m_BlockSize);
+            memset(
+                    const_cast<uint8_t *>(rest8) + convert_size<uint64_t, uint8_t>(countLogUncompr),
+                    0,
+                    convert_size<uint64_t, uint8_t>(
+                            countLogUncomprRoundUp - countLogUncompr
+                    )
+            );
+            uint8_t * comprEnd =
+                    static_cast<uint8_t *>(m_Data) + m_MetaData.m_SizeComprByte;
+            morph_batch<t_vector_extension, F, uncompr_f>(
+                    rest8, comprEnd, countLogUncomprRoundUp
+            );
+            
+            m_IsPreparedForRndAccess = true;
+            return true;
+        }
+        
       // Creates a global scoped column. Intended for base data.
       static column< F > * create_global_column(size_t p_SizeAllocByte) {
          return new

@@ -17,21 +17,55 @@
 
 /**
  * @file morph.h
- * @brief The template-based interface of the morph-operator.
- * @todo One generic column-level morph-operator for compression algorithms and
- * one such operator for decompression algorithms which handle the subdivision
- * of the data into a compressable main part and a non-compressible (too small)
- * remainder. Currently, this functionality is duplicated into the existing
- * morph-operator implementations. The current implementations should become
- * "internal" functions.
+ * @brief Interfaces and useful partial specializations of the morph-operator.
+ * 
+ * The purpose of the morph-operator is to change the physical representation
+ * of some date from a source format to a destination format. This operator
+ * exists at two levels: the column-level and the batch-level.
+ * 
+ * The column-level operator `morph_t` processes entire columns and has to care
+ * for the subdivision of a column into a compressed main part and an
+ * uncompressed rest part. Note that **there are partial template
+ * specializations for compression and decompression** at the column-level, so
+ * they do not need to be reimplemented for new formats. These specializations
+ * delegate the work to the batch-level morph-operator for the compressable
+ * part of the column and take care for the uncompressable rest as well.
+ * 
+ * The batch-level operator `morph_batch_t` processes plain buffers of data. It
+ * can assume that the number of data elements it gets is compressable without
+ * an uncompressed rest. This operator is meant to be used whenever parts of a
+ * column's data buffer must be morphed separately, e.g., within the
+ * column-level morph-operator, the write iterators, or within the batch-level
+ * morph-operator of some container format.
+ * 
+ * @todo The batch-level morph-operator was moved to a separate header
+ * (morph_batch.h) to avoid some cases of cyclic include relationships. We
+ * should solve this issue in a proper way and reinsert the batch-level
+ * morph-operator here.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_MORPH_H
 #define MORPHSTORE_CORE_MORPHING_MORPH_H
 
+#include <core/memory/management/utils/alignment_helper.h>
+#include <core/morphing/format.h>
+#include <core/morphing/morph_batch.h>
 #include <core/storage/column.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/math.h>
+
+#include <cstdint>
+#include <cstring>
 
 namespace morphstore {
+
+// ****************************************************************************
+// Column-level
+// ****************************************************************************
+    
+// ----------------------------------------------------------------------------
+// General interface
+// ----------------------------------------------------------------------------
 
 /**
  * @brief A struct wrapping the actual morph-operator.
@@ -63,24 +97,6 @@ struct morph_t {
 };
 
 /**
- * @brief A template specialization of the morph-operator handling the case
- * when the source and the destination format are the same.
- * 
- * It merely returns the given column without doing any work.
- */
-template<
-        class t_vector_extension,
-        class t_f
->
-struct morph_t<t_vector_extension, t_f, t_f> {
-    static
-    const column<t_f> *
-    apply(const column<t_f> * inCol) {
-        return inCol;
-    };
-};
-
-/**
  * A convenience function wrapping the morph-operator.
  * 
  * Changes the (compressed) format of the given column from the source format
@@ -98,6 +114,128 @@ template<
 const column<t_dst_f> * morph(const column<t_src_f> * inCol) {
     return morph_t<t_vector_extension, t_dst_f, t_src_f>::apply(inCol);
 }
+
+// ----------------------------------------------------------------------------
+// Partial specialization for morphing from a format to itself
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief A template specialization of the morph-operator handling the case
+ * when the source and the destination format are the same.
+ * 
+ * It merely returns the given column without doing any work.
+ */
+template<class t_vector_extension, class t_f>
+struct morph_t<t_vector_extension, t_f, t_f> {
+    static
+    const column<t_f> *
+    apply(const column<t_f> * inCol) {
+        return inCol;
+    };
+};
+
+/**
+ * @brief A template specialization of the morph-operator handling the case
+ * when the source and the destination format are both uncompressed.
+ * 
+ * We need to make this case explicit, since otherwise, the choice of the
+ * right partial template specialization is ambiguous for the compiler.
+ */
+template<class t_vector_extension>
+struct morph_t<t_vector_extension, uncompr_f, uncompr_f> {
+    static
+    const column<uncompr_f> *
+    apply(const column<uncompr_f> * inCol) {
+        return inCol;
+    };
+};
+
+// ----------------------------------------------------------------------------
+// Partial specialization for all compressing morph operators
+// ----------------------------------------------------------------------------
+
+template<class t_vector_extension, class t_dst_f>
+struct morph_t<t_vector_extension, t_dst_f, uncompr_f> {
+    using src_f = uncompr_f;
+    
+    static
+    const column<t_dst_f> *
+    apply(const column<src_f> * inCol) {
+        const size_t countLog = inCol->get_count_values();
+        const size_t outCountLogCompr = round_down_to_multiple(
+                countLog, t_dst_f::m_BlockSize
+        );
+        const size_t outSizeRestByte = uncompr_f::get_size_max_byte(
+                countLog - outCountLogCompr
+        );
+
+        const uint8_t * in8 = inCol->get_data();
+
+        auto outCol = new column<t_dst_f>(
+                get_size_max_byte_any_len<t_dst_f>(countLog)
+        );
+        uint8_t * out8 = outCol->get_data();
+        const uint8_t * const initOut8 = out8;
+
+        morph_batch<t_vector_extension, t_dst_f, src_f>(
+                in8, out8, outCountLogCompr
+        );
+        const size_t sizeComprByte = out8 - initOut8;
+
+        if(outSizeRestByte) {
+            out8 = column<t_dst_f>::create_data_uncompr_start(out8);
+            memcpy(out8, in8, outSizeRestByte);
+        }
+
+        outCol->set_meta_data(
+                countLog, out8 - initOut8 + outSizeRestByte, sizeComprByte
+        );
+
+        return outCol;
+    }
+};
+
+// ----------------------------------------------------------------------------
+// Partial specialization for all decompressing morph operators
+// ----------------------------------------------------------------------------
+
+template<class t_vector_extension, class t_src_f>
+struct morph_t<t_vector_extension, uncompr_f, t_src_f> {
+    using dst_f = uncompr_f;
+
+    static
+    const column<dst_f> *
+    apply(const column<t_src_f> * inCol) {
+        const uint8_t * in8 = inCol->get_data();
+        const size_t inSizeComprByte = inCol->get_size_compr_byte();
+        const size_t inSizeUsedByte = inCol->get_size_used_byte();
+
+        const size_t countLog = inCol->get_count_values();
+        const uint8_t * const inRest8 = inCol->get_data_uncompr_start();
+        const size_t inCountLogRest = (inSizeComprByte < inSizeUsedByte)
+                ? convert_size<uint8_t, uint64_t>(
+                        inSizeUsedByte - (inRest8 - in8)
+                )
+                : 0;
+        const size_t inCountLogCompr = countLog - inCountLogRest;
+
+        const size_t outSizeByte = dst_f::get_size_max_byte(countLog);
+        auto outCol = new column<dst_f>(outSizeByte);
+        uint8_t * out8 = outCol->get_data();
+
+        morph_batch<t_vector_extension, dst_f, t_src_f>(
+                in8, out8, inCountLogCompr
+        );
+
+        memcpy(
+                out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
+        );
+
+        outCol->set_meta_data(countLog, outSizeByte);
+
+        return outCol;
+    }
+};
 
 }
 

@@ -11,6 +11,8 @@
  * Created on 28. Juni 2019, 15:31
  */
 
+// @todo This code is deprecated. Use data_properties.h instead.
+
 #ifndef COLUMN_INFO_H
 #define COLUMN_INFO_H
 

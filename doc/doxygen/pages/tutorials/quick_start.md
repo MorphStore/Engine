@@ -36,7 +36,9 @@ A complete list with all available build options can be shown by running
 For starters, the following command can be used for an initial test of the setup:
 
 ~~~{.sh}
-./build.sh -deb -tQ
+./build.sh -deb --buildExamples
+build/src/examples/select_sum_query
+build/src/examples/example_query
 ~~~
 
 This builds some example queries in debug mode and runs them. The source code of these queries can be found in the folder src/examples.
@@ -51,6 +53,7 @@ To enable the support of vector extensions, build.sh provides several flags:
 - sse4
 - avxtwo
 - avx512
+- armneon
 
 For some architectures, gcc enbales sse or even avx by default. But for others, the available extensions have to be passed explicitly. 
 If one of the above mentioned flags is set, the build script takes care of this. Every flag passes the according extension and all older 

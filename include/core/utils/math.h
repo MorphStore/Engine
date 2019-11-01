@@ -57,17 +57,17 @@ constexpr std::size_t log2( size_t n ) {
  * @param denominator
  * @return 
  */
-MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_div( unsigned numerator, unsigned denominator ) {
+MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_up_div( unsigned numerator, unsigned denominator ) {
     return ( numerator + denominator - 1 ) / denominator;
 }
 
-MSV_CXX_ATTRIBUTE_INLINE unsigned round_up_to_multiple(
+MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_up_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
     return round_up_div(p_Size, p_Factor) * p_Factor;
 }
 
-MSV_CXX_ATTRIBUTE_INLINE unsigned round_down_to_multiple(
+MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_down_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
     return p_Size / p_Factor * p_Factor;
@@ -112,6 +112,27 @@ constexpr inline unsigned effective_bitwidth(uint64_t p_Val) {
     return std::numeric_limits<uint64_t>::digits - __builtin_clzll(p_Val | 1);
 }
 
+constexpr inline unsigned zero_bytes(uint64_t p_Val) {
+    // Should we ever change the definition such that 0 has 0 effective bits,
+    // then don't forget that the return value of __builtin_clzll is undefined
+    // for 0.
+    return __builtin_clzll(p_Val | 1) / bitsPerByte;
+}
+
+/**
+ * @brief Calculates the number of effective bytes of the given 64-bit value.
+ * 
+ * This is the minimum number of bytes required to represent this value. Note
+ * that, by definition, the integer `0` has one effective byte. Thus, this
+ * function's return value is always in the range [1, 8].
+ * 
+ * @param p_Val The 64-bit value.
+ * @return The number of bytes required to represent the given value.
+ */
+constexpr inline unsigned effective_bytewidth(uint64_t p_Val) {
+    return sizeof(uint64_t) - zero_bytes(p_Val);
+}
+
 /**
  * @brief Calculates the maximum unsigned integer of the given bit width.
  * 
@@ -129,6 +150,52 @@ constexpr inline t_uintX_t bitwidth_max(unsigned p_Bw) {
     return (p_Bw == std::numeric_limits<t_uintX_t>::digits)
             ? std::numeric_limits<t_uintX_t>::max()
             : (static_cast<t_uintX_t>(1) << p_Bw) - 1;
+}
+
+/**
+ * @brief Calculates the minimum unsigned integer of the given bit width.
+ * 
+ * The template parameter `t_uintX_t` should be one of the `uint*_t` types from
+ * the header `&lt;cstdint&gt;`.
+ * 
+ * @param p_Bw The bit width.
+ * @return The lowest unsigned integer of the given bit width.
+ */
+template<typename t_uintX_t>
+constexpr inline t_uintX_t bitwidth_min(unsigned p_Bw) {
+    return static_cast<t_uintX_t>(1) << (p_Bw - 1);
+}
+
+/**
+ * @brief Calculates the bit mask that can be used for replacing a modulo
+ * operation by a bitwise AND.
+ * 
+ * `a % b` can be replaced by `a & mask_for_mod_power_of_two(b)`, if `b` is a
+ * power of two.
+ * 
+ * @param p_Divisor Must be a power of two.
+ * @return A bit mask for replacing modulo by bitwise AND.
+ */
+constexpr inline uint64_t mask_for_mod(uint64_t p_Divisor) {
+    return p_Divisor - 1;
+}
+
+/**
+ * Calculates the shift offset that can be used for replacing an integer
+ * multiplication(division) by a left(right) shift.
+ * 
+ * `a * b` can be replaced by `a << shift_for_muldiv_power_of_two(b)` and
+ * `a / b` can be replaced by `a >> shift_for_muldiv_power_of_two(b)`, if `b`
+ * is a power of two.
+ * 
+ * @param p_FactorOrDivisor Must be a power of two.
+ * @return A shift offset for replacing multiplicatio(divison) by left(right)
+ * shift.
+ */
+constexpr inline uint64_t shift_for_muldiv(uint64_t p_FactorOrDivisor) {
+    return (p_FactorOrDivisor == 1)
+        ? 0
+        : effective_bitwidth(p_FactorOrDivisor - 1);
 }
 
 }

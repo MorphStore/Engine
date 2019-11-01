@@ -40,9 +40,9 @@ The Example Query
 The SQL equivalent of the example query is the following:
 
 ~~~{sql}
-SELECT SUM(baseCol1) 
+SELECT SUM(baseCol2) 
 FROM someUnnamedTable 
-WHERE baseCol2 = 150
+WHERE baseCol1 = 150
 ~~~
 
 Obviously, we need to create two columns for this example with a numerical type: baseCol1 and baseCol2. 
@@ -235,40 +235,24 @@ also in src/examples.
 
 <div class=userCode>
 ~~~{cmake}
-if ( CTEST_ALL OR CTEST_QUERIES )
+if( BUILD_ALL OR BUILD_EXAMPLES )
 add_executable( hello_world_query <my_file>.cpp )
 target_compile_options( hello_world_query PRIVATE
                       #any special compile options needed?
                       #should only be necessary if you have some kind of freaky exotic system
                        )
 target_link_libraries( hello_world_query PRIVATE "-ldl" )
-add_test( hello_world_query_test hello_world_query )
-endif(CTEST_ALL OR CTEST_QUERIES)
+endif( BUILD_ALL OR BUILD_EXAMPLES )
 ~~~
 </div>
 
-Now the build.sh script in the root folder can be called with the -tQ flag, eg.:
+Now the build.sh script in the root folder can be called with the -bEx flag, eg.:
 
 ~~~{.sh}
-./build.sh -deb -tQ
+./build.sh -deb -bEx --target hello_world_query
 ~~~
 
-If everything works, the following lines should show after a few seconds:
-
-<pre>
-    Start 1: example_query_test
-1/3 Test #1: example_query_test ...............   Passed    2.64 sec
-    Start 2: select_sum_query_test
-2/3 Test #2: select_sum_query_test ............   Passed    8.47 sec
-    Start 3: hello_world_query_test
-3/3 Test #3: hello_world_query_test ...........   Passed    8.46 sec
-
-100% tests passed, 0 tests failed out of 3
-
-Total Test time (real) =  19.57 sec
-</pre>
-
-The binary hello_world_query has been written to build/src/examples. If it is executed directly via ./hello_world_query,
+The binary hello_world_query has been written to build/src/examples. When it is executed via ./hello_world_query,
 the following lines should be prompted:
 
 <pre>

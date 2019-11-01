@@ -24,6 +24,7 @@
 #include <core/memory/mm_glob.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
 #include <core/operators/scalar/project_compr.h>
 #include <core/operators/scalar/project_uncompr.h>
 #include <core/operators/vectorized/project_uncompr.h>
@@ -34,30 +35,8 @@
 #include <core/utils/preprocessor.h>
 #include <core/utils/variant_executor.h>
 
-#include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/primitives/calc_scalar.h>
-#include <vector/scalar/primitives/create_scalar.h>
-#include <vector/scalar/primitives/io_scalar.h>
-#include <vector/scalar/primitives/logic_scalar.h>
-#ifdef AVXTWO
-#include <vector/simd/avx2/extension_avx2.h>
-#include <vector/simd/avx2/primitives/calc_avx2.h>
-#include <vector/simd/avx2/primitives/create_avx2.h>
-#include <vector/simd/avx2/primitives/io_avx2.h>
-#include <vector/simd/avx2/primitives/logic_avx2.h>
-#endif
-#ifdef AVX512
-#include <vector/simd/avx512/extension_avx512.h>
-#include <vector/simd/avx512/primitives/calc_avx512.h>
-#include <vector/simd/avx512/primitives/create_avx512.h>
-#include <vector/simd/avx512/primitives/io_avx512.h>
-#include <vector/simd/avx512/primitives/logic_avx512.h>
-#endif
-#include <vector/simd/sse/extension_sse.h>
-#include <vector/simd/sse/primitives/calc_sse.h>
-#include <vector/simd/sse/primitives/create_sse.h>
-#include <vector/simd/sse/primitives/io_sse.h>
-#include <vector/simd/sse/primitives/logic_sse.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <iostream>
 #include <random>
@@ -113,71 +92,71 @@ int main(void) {
     std::map<unsigned, std::vector<ve_t::variant_t> > staticVPBVariantsByBw = {
         // Generated with Python:
         // for bw in range(1, 64+1):
-        //   print("{{{: >2}, {{MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<{: >2}, STEP_128>))}}}}{}".format(bw, bw, "," if bw < 64 else ""))
-        { 1, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 1, STEP_128>))}},
-//        { 2, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 2, STEP_128>))}},
-//        { 3, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 3, STEP_128>))}},
-//        { 4, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 4, STEP_128>))}},
-//        { 5, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 5, STEP_128>))}},
-//        { 6, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 6, STEP_128>))}},
-//        { 7, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 7, STEP_128>))}},
-//        { 8, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 8, STEP_128>))}},
-//        { 9, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f< 9, STEP_128>))}},
-//        {10, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<10, STEP_128>))}},
-//        {11, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<11, STEP_128>))}},
-//        {12, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<12, STEP_128>))}},
-//        {13, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<13, STEP_128>))}},
-//        {14, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<14, STEP_128>))}},
-//        {15, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<15, STEP_128>))}},
-//        {16, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<16, STEP_128>))}},
-//        {17, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<17, STEP_128>))}},
-//        {18, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<18, STEP_128>))}},
-//        {19, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<19, STEP_128>))}},
-//        {20, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<20, STEP_128>))}},
-//        {21, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<21, STEP_128>))}},
-//        {22, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<22, STEP_128>))}},
-//        {23, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<23, STEP_128>))}},
-//        {24, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<24, STEP_128>))}},
-//        {25, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<25, STEP_128>))}},
-//        {26, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<26, STEP_128>))}},
-//        {27, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<27, STEP_128>))}},
-//        {28, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<28, STEP_128>))}},
-//        {29, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<29, STEP_128>))}},
-//        {30, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<30, STEP_128>))}},
-//        {31, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<31, STEP_128>))}},
-//        {32, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<32, STEP_128>))}},
-//        {33, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<33, STEP_128>))}},
-//        {34, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<34, STEP_128>))}},
-//        {35, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<35, STEP_128>))}},
-//        {36, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<36, STEP_128>))}},
-//        {37, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<37, STEP_128>))}},
-//        {38, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<38, STEP_128>))}},
-//        {39, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<39, STEP_128>))}},
-//        {40, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<40, STEP_128>))}},
-//        {41, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<41, STEP_128>))}},
-//        {42, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<42, STEP_128>))}},
-//        {43, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<43, STEP_128>))}},
-//        {44, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<44, STEP_128>))}},
-//        {45, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<45, STEP_128>))}},
-//        {46, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<46, STEP_128>))}},
-//        {47, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<47, STEP_128>))}},
-//        {48, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<48, STEP_128>))}},
-//        {49, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<49, STEP_128>))}},
-//        {50, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<50, STEP_128>))}},
-//        {51, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<51, STEP_128>))}},
-//        {52, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<52, STEP_128>))}},
-//        {53, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<53, STEP_128>))}},
-//        {54, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<54, STEP_128>))}},
-//        {55, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<55, STEP_128>))}},
-//        {56, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<56, STEP_128>))}},
-//        {57, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<57, STEP_128>))}},
-//        {58, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<58, STEP_128>))}},
-//        {59, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<59, STEP_128>))}},
-//        {60, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<60, STEP_128>))}},
-//        {61, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<61, STEP_128>))}},
-//        {62, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<62, STEP_128>))}},
-//        {63, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<63, STEP_128>))}},
-//        {64, {MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<64, STEP_128>))}}
+        //   print("{{{: >2}, {{MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<{: >2}, STEP_128>>))}}}}{}".format(bw, bw, "," if bw < 64 else ""))
+//        { 1, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 1, STEP_128>>))}},
+//        { 2, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 2, STEP_128>>))}},
+//        { 3, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 3, STEP_128>>))}},
+//        { 4, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 4, STEP_128>>))}},
+//        { 5, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 5, STEP_128>>))}},
+//        { 6, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 6, STEP_128>>))}},
+//        { 7, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 7, STEP_128>>))}},
+//        { 8, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 8, STEP_128>>))}},
+//        { 9, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l< 9, STEP_128>>))}},
+//        {10, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<10, STEP_128>>))}},
+//        {11, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<11, STEP_128>>))}},
+//        {12, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<12, STEP_128>>))}},
+//        {13, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<13, STEP_128>>))}},
+//        {14, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<14, STEP_128>>))}},
+//        {15, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<15, STEP_128>>))}},
+//        {16, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<16, STEP_128>>))}},
+//        {17, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<17, STEP_128>>))}},
+//        {18, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<18, STEP_128>>))}},
+//        {19, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<19, STEP_128>>))}},
+//        {20, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<20, STEP_128>>))}},
+//        {21, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<21, STEP_128>>))}},
+//        {22, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<22, STEP_128>>))}},
+//        {23, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<23, STEP_128>>))}},
+//        {24, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<24, STEP_128>>))}},
+//        {25, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<25, STEP_128>>))}},
+//        {26, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<26, STEP_128>>))}},
+//        {27, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<27, STEP_128>>))}},
+//        {28, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<28, STEP_128>>))}},
+//        {29, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<29, STEP_128>>))}},
+//        {30, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<30, STEP_128>>))}},
+//        {31, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<31, STEP_128>>))}},
+//        {32, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<32, STEP_128>>))}},
+//        {33, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<33, STEP_128>>))}},
+//        {34, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<34, STEP_128>>))}},
+//        {35, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<35, STEP_128>>))}},
+//        {36, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<36, STEP_128>>))}},
+//        {37, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<37, STEP_128>>))}},
+//        {38, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<38, STEP_128>>))}},
+//        {39, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<39, STEP_128>>))}},
+//        {40, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<40, STEP_128>>))}},
+//        {41, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<41, STEP_128>>))}},
+//        {42, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<42, STEP_128>>))}},
+//        {43, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<43, STEP_128>>))}},
+//        {44, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<44, STEP_128>>))}},
+//        {45, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<45, STEP_128>>))}},
+//        {46, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<46, STEP_128>>))}},
+//        {47, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<47, STEP_128>>))}},
+//        {48, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<48, STEP_128>>))}},
+//        {49, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<49, STEP_128>>))}},
+//        {50, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<50, STEP_128>>))}},
+//        {51, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<51, STEP_128>>))}},
+//        {52, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<52, STEP_128>>))}},
+//        {53, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<53, STEP_128>>))}},
+//        {54, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<54, STEP_128>>))}},
+//        {55, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<55, STEP_128>>))}},
+//        {56, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<56, STEP_128>>))}},
+//        {57, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<57, STEP_128>>))}},
+//        {58, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<58, STEP_128>>))}},
+//        {59, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<59, STEP_128>>))}},
+//        {60, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<60, STEP_128>>))}},
+//        {61, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<61, STEP_128>>))}},
+//        {62, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<62, STEP_128>>))}},
+//        {63, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<63, STEP_128>>))}},
+//        {64, {MAKE_VARIANT(scalar, SINGLE_ARG(static_vbp_f<vbp_l<64, STEP_128>>))}}
     };
     
     // Variant execution for several settings.

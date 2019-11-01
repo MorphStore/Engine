@@ -25,6 +25,7 @@
 #define MORPHSTORE_CORE_MORPHING_UNCOMPR_H
 
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
@@ -65,13 +66,12 @@ namespace morphstore {
         
         static void apply(
                 const uint8_t * & p_In8,
-                size_t p_CountIn8,
+                size_t p_CountInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
             const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
-            const size_t countInBase = convert_size<uint8_t, base_t>(p_CountIn8);
 
-            for(size_t i = 0; i < countInBase; i += vector_element_count::value)
+            for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
                         vectorlib::load<
                                 t_ve,
@@ -81,7 +81,7 @@ namespace morphstore {
                         p_State
                 );
             
-            p_In8 += p_CountIn8;
+            p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
         }
     };
 
@@ -97,6 +97,9 @@ namespace morphstore {
         const base_t * const m_Data;
                 
     public:
+        // Alias to itself, in this case.
+        using type = random_read_access<t_vector_extension, uncompr_f>;
+        
         random_read_access(const base_t * p_Data) : m_Data(p_Data) {
             //
         }
@@ -105,8 +108,8 @@ namespace morphstore {
         vector_t get(const vector_t & p_Positions) {
             return vectorlib::gather<
                     t_ve,
-                    vectorlib::iov::UNALIGNED,
-                    vector_base_t_granularity::value
+                    vector_base_t_granularity::value,
+                    sizeof(base_t)
             >(m_Data, p_Positions);
         }
     };
@@ -114,19 +117,56 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Sequential write
     // ------------------------------------------------------------------------
-
+    
+    /**
+     * @brief Partial template specialization of write_iterator_base for
+     * uncompressed data. Does not use a buffer internally.
+     */
     template<class t_vector_extension>
-    class selective_write_iterator<t_vector_extension, uncompr_f> {
-        using t_ve = t_vector_extension;
-        IMPORT_VECTOR_BOILER_PLATE(t_ve)
-
+    class write_iterator_base<t_vector_extension, uncompr_f> {
+        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+        
+    protected:
         base_t * m_OutBase;
+        
+    private:
         const base_t * const m_InitOutBase;
+        
+    protected:
+        write_iterator_base(uint8_t * p_Out) :
+                m_OutBase(reinterpret_cast<base_t *>(p_Out)),
+                m_InitOutBase(m_OutBase)
+        {
+            //
+        }
+        
+    public:
+        std::tuple<size_t, uint8_t *, uint8_t *> done() {
+            return std::make_tuple(
+                    0,
+                    reinterpret_cast<uint8_t *>(m_OutBase),
+                    reinterpret_cast<uint8_t *>(m_OutBase)
+            );
+        }
+
+        size_t get_count_values() const {
+            return m_OutBase - m_InitOutBase;
+        }
+    };
+    
+    /**
+     * @brief Partial template specialization of selective_write_iterator for
+     * uncompressed data. Does not use a buffer internally.
+     */
+    template<class t_vector_extension>
+    class selective_write_iterator<t_vector_extension, uncompr_f> :
+            public write_iterator_base<t_vector_extension, uncompr_f>
+    {
+        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
 
     public:
         selective_write_iterator(uint8_t * p_Out) :
-                m_OutBase(reinterpret_cast<base_t *>(p_Out)),
-                m_InitOutBase(m_OutBase)
+                write_iterator_base<t_vector_extension, uncompr_f>(p_Out)
         {
             //
         }
@@ -135,11 +175,11 @@ namespace morphstore {
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
             vectorlib::compressstore<
-                    t_ve,
+                    t_vector_extension,
                     vectorlib::iov::UNALIGNED,
                     vector_base_t_granularity::value
-            >(m_OutBase, p_Data, p_Mask);
-            m_OutBase += p_MaskPopCount;
+            >(this->m_OutBase, p_Data, p_Mask);
+            this->m_OutBase += p_MaskPopCount;
         }
         
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
@@ -151,15 +191,32 @@ namespace morphstore {
                     vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
             );
         }
+    };
+    
+    /**
+     * @brief Partial template specialization of nonselective_write_iterator
+     * for uncompressed data. Does not use a buffer internally.
+     */
+    template<class t_vector_extension>
+    class nonselective_write_iterator<t_vector_extension, uncompr_f> :
+            public write_iterator_base<t_vector_extension, uncompr_f>
+    {
+        IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
 
-        std::tuple<size_t, bool, uint8_t *> done() {
-            return std::make_tuple(
-                    0, true, reinterpret_cast<uint8_t *>(m_OutBase)
-            );
+    public:
+        nonselective_write_iterator(uint8_t * p_Out) :
+                write_iterator_base<t_vector_extension, uncompr_f>(p_Out)
+        {
+            //
         }
 
-        size_t get_count_values() const {
-            return m_OutBase - m_InitOutBase;
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data) {
+            vectorlib::store<
+                    t_vector_extension,
+                    vectorlib::iov::ALIGNED,
+                    vector_base_t_granularity::value
+            >(this->m_OutBase, p_Data);
+            this->m_OutBase += vector_element_count::value;
         }
     };
     

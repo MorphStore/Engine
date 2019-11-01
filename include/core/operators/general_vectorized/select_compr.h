@@ -28,6 +28,7 @@
 //#include <core/operators/interfaces/select.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -117,14 +118,7 @@ struct my_select_wit_t {
         const size_t inDataSizeComprByte = inDataCol->get_size_compr_byte();
         const size_t inDataSizeUsedByte = inDataCol->get_size_used_byte();
         
-        // @todo Simplify this.
-        const uint8_t * const inDataRest8 = create_aligned_ptr(
-                inData + inDataSizeComprByte
-        );
-        const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
-                inDataSizeUsedByte - (inDataRest8 - inData)
-        );
-        const size_t inCountLogCompr = inDataCountLog - inCountLogRest;
+        const size_t inCountLogCompr = inDataCol->get_count_values_compr();
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
@@ -166,7 +160,7 @@ struct my_select_wit_t {
 #endif
                 t_out_pos_f
         >::apply(
-                inData, inDataSizeComprByte, witComprState
+                inData, inCountLogCompr, witComprState
         );
         
         if(inDataSizeComprByte == inDataSizeUsedByte) {
@@ -181,7 +175,7 @@ struct my_select_wit_t {
             
             // Pad the input pointer such that it points to the beginning of
             // the input column's uncompressed rest part.
-            inData = create_aligned_ptr(inData);
+            inData = inDataCol->get_data_uncompr_start();
             // The size of the input column's uncompressed rest part.
             const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
             
@@ -201,14 +195,14 @@ struct my_select_wit_t {
 #endif
                     t_out_pos_f
             >::apply(
-                    inData, inDataSizeUncomprVecByte, witComprState
+                    inData, convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte), witComprState
             );
             
             // Finish the compressed output. This might already initialize the
             // output column's uncompressed rest part.
-            bool outAddedPadding;
+            uint8_t * outAppendUncompr;
             std::tie(
-                    outSizeComprByte, outAddedPadding, outPos
+                    outSizeComprByte, outAppendUncompr, outPos
             ) = witComprState.m_Wit.done();
             outCountLog = witComprState.m_Wit.get_count_values();
             
@@ -217,13 +211,6 @@ struct my_select_wit_t {
             const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
                 // If there is such an uncompressed scalar rest.
-                
-                // Pad the output pointer such that it points to the beginning
-                // of the output column's uncompressed rest, if this has not
-                // already been done when finishing the output column's
-                // compressed part.
-                if(!outAddedPadding)
-                    outPos = create_aligned_ptr(outPos);
                 
                 // The state of the selective write_iterator for the
                 // uncompressed output.
@@ -235,7 +222,7 @@ struct my_select_wit_t {
 #endif
                 >::state_t witUncomprState(
                         val,
-                        outPos,
+                        outAppendUncompr,
                         inCountLogCompr + inDataSizeUncomprVecByte / sizeof(base_t)
                 );
 
@@ -252,7 +239,7 @@ struct my_select_wit_t {
 #endif
                         uncompr_f
                 >::apply(
-                        inData, inSizeScalarRemainderByte, witUncomprState
+                        inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState
                 );
                 
                 // Finish the output column's uncompressed rest part.

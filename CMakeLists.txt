@@ -93,8 +93,8 @@ morph_flag(-Wall)
 morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)
 morph_flag(-Wno-comment)
-morph_flag(-pedantic)
 morph_flag(-fstack-protector-all)
+morph_flag(-fno-tree-vectorize)
 
 ########### <Checking Defines
 set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
@@ -162,6 +162,15 @@ else ( DEFINED ENABLE_MONITORING )
 	morph_flag("-UMSV_USE_MONITORING")
 endif ( DEFINED ENABLE_MONITORING )
 
+if ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to to TRUE\n" )
+	morph_flag("-DVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
+	set( ignoreMe ${VBP_LIMIT_ROUTINES_FOR_SSB_SF1} )
+else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to FALSE\n" )
+	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
+endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
+
 MESSAGE( ${MorphStoreProjectConf} )
 file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
@@ -177,20 +186,27 @@ configure_file(
    ${CMAKE_BINARY_DIR}/generated/cmake_template.h
 )
 
+execute_process(
+        COMMAND python3 vbp_routine_gen.py
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/morphing
+        OUTPUT_FILE vbp_routines.h
+        RESULT_VARIABLE retValVBPRoutineGen
+)
+if(retValVBPRoutineGen EQUAL "1")
+    message( FATAL_ERROR "Generation of the routines for vertical bit packing (vbp_l) failed.")
+endif()
+
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 include_directories( include )
 
-#########add_subdirectory( src )
+if( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
+    add_subdirectory( src )
+endif( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
 
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTest has been enabled" )
 	enable_testing()
-  if ( CTEST_ALL )
-      add_subdirectory( src )
-  elseif ( CTEST_QUERIES )
-          add_subdirectory( src/examples )
-  endif( CTEST_ALL OR CTEST_QUERIES )
   if ( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )
       add_subdirectory( test )
   endif( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )

@@ -8,6 +8,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
+#include <core/morphing/write_iterator.h>
 
 #include <vector/general_vector_extension.h>
 #include <vector/vector_primitives.h>
@@ -118,9 +119,6 @@ namespace morphstore {
 
          DataStructure ds( inDataCountLog );
 
-//         const uint8_t * const inDataRest8 = create_aligned_ptr(
-//            inData + inDataSizeComprByte
-//         );
 //         const size_t inCountLogRest = convert_size<uint8_t, uint64_t>(
 //            inDataSizeUsedByte - (inDataRest8 - inData)
 //         );
@@ -165,7 +163,7 @@ namespace morphstore {
             OutFormatGroupExtents,
             DataStructure
          >::apply(
-            inData, inDataSizeComprByte, witComprState
+            inData, p_InDataCol->get_count_values_compr(), witComprState
          );
 
          size_t outSizeGroupIdComprByte, outSizeGroupExtentsComprByte;
@@ -183,7 +181,7 @@ namespace morphstore {
             ) = witComprState.m_WitGroupExtents.done();
             groupExtentsCount = witComprState.m_CurrentGroupId;
          } else {
-            inData = create_aligned_ptr(inData);
+            inData = p_InDataCol->get_data_uncompr_start();
             // The size of the input column's uncompressed rest part.
             const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
 
@@ -200,26 +198,24 @@ namespace morphstore {
                OutFormatGroupExtents,
                DataStructure
             >::apply(
-               inData, inDataSizeUncomprVecByte, witComprState
+               inData,
+               convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte),
+               witComprState
             );
 
-            bool outAddedPaddingGroupIds, outAddedPaddingGroupExtents;
+            uint8_t * outAppendUncomprGroupIds;
+            uint8_t * outAppendUncomprGroupExtents;
 
             std::tie(
-               outSizeGroupIdComprByte, outAddedPaddingGroupIds, outPosGroupId
+               outSizeGroupIdComprByte, outAppendUncomprGroupIds, outPosGroupId
             ) = witComprState.m_WitGroupIds.done();
             std::tie(
-               outSizeGroupExtentsComprByte, outAddedPaddingGroupExtents, outPosGroupExtents
+               outSizeGroupExtentsComprByte, outAppendUncomprGroupExtents, outPosGroupExtents
             ) = witComprState.m_WitGroupExtents.done();
 
 
             const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
-               if(!outAddedPaddingGroupIds)
-                  outPosGroupId = create_aligned_ptr(outPosGroupId);
-               if(!outAddedPaddingGroupExtents)
-                  outPosGroupExtents = create_aligned_ptr(outPosGroupExtents);
-
                typename group_processing_unit_wit<
                   scalar<v64<uint64_t>>,
                   uncompr_f,
@@ -227,8 +223,8 @@ namespace morphstore {
                   DataStructure
                >::state_t witUncomprState(
                   ds,
-                  outPosGroupId,
-                  outPosGroupExtents,
+                  outAppendUncomprGroupIds,
+                  outAppendUncomprGroupExtents,
                   witComprState.m_CurrentDataInPosition,
                   witComprState.m_CurrentGroupId
                );
@@ -244,7 +240,9 @@ namespace morphstore {
                   uncompr_f,
                   DataStructure
                >::apply(
-                  inData, inSizeScalarRemainderByte, witUncomprState
+                  inData,
+                  convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
+                  witUncomprState
                );
 
                // Finish the output column's uncompressed rest part.

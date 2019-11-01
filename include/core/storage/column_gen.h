@@ -79,7 +79,8 @@ const column<uncompr_f> * make_column(uint64_t const * const vec, size_t count) 
 
 /**
  * @brief Creates an uncompressed column and fills its data buffer with sorted
- * unique data elements. Can be used to generate primary key columns.
+ * unique data elements according to an arithmetic sequence. Can be used to
+ * generate primary key columns.
  * 
  * @param countValues The number of data elements to generate.
  * @param start The first data element.
@@ -99,6 +100,67 @@ const column<uncompr_f> * generate_sorted_unique(
         res[i] = start + i * step;
     
     resCol->set_meta_data(countValues, allocationSize);
+    
+    return resCol;
+}
+
+/**
+ * @brief Creates an uncompressed column and fills its data buffer with sorted
+ * unique data elements extracted uniformly from some population. Can be used
+ * to generate position columns like those output by selective query operators.
+ * 
+ * @param p_CountValues The number of data elements to generate, i.e., to draw
+ * from the population.
+ * @param p_CountPopulation The size of the underlying population, must not be
+ * less than p_CountValues.
+ * @return A sorted column containing p_CountValues uniques data elements from
+ * the range [0, p_CountPopulation - 1].
+ */
+const column<uncompr_f> * generate_sorted_unique_extraction(
+        size_t p_CountValues,
+        size_t p_CountPopulation
+) {
+    const size_t allocationSize = p_CountValues * sizeof(uint64_t);
+    auto resCol = new column<uncompr_f>(allocationSize);
+    uint64_t * res = resCol->get_data();
+    
+    std::default_random_engine gen;
+    std::uniform_int_distribution<uint64_t> distr(0, p_CountPopulation - 1);
+    
+    // If we want to select at most half of the population, then we start with
+    // no values selected and select values until we have the specified number
+    // of unique values. If we want to select more than half of the population,
+    // then we start with all values selected and unselect values untile we
+    // have specified number.
+    bool flip = p_CountValues > p_CountPopulation / 2;
+    // If i-th bit is set, then i shall be output.
+    std::vector<bool> chosen(p_CountPopulation, flip);
+    if(!flip) { // Select values.
+        size_t countChosen = 0;
+        while(countChosen < p_CountValues) {
+            const uint64_t val = distr(gen);
+            if(!chosen[val]) {
+                chosen[val] = true;
+                countChosen++;
+            }
+        }
+    }
+    else { // Unselect values.
+        size_t countUnChosen = 0;
+        while(countUnChosen < p_CountPopulation - p_CountValues) {
+            const uint64_t val = distr(gen);
+            if(chosen[val]) {
+                chosen[val] = false;
+                countUnChosen++;
+            }
+        }
+    }
+    
+    for(size_t i = 0; i < p_CountValues; i++)
+        if(chosen[i])
+            *res++ = i;
+    
+    resCol->set_meta_data(p_CountValues, allocationSize);
     
     return resCol;
 }
@@ -153,7 +215,6 @@ class two_value_distribution {
  * @todo Support also the random distributions returning real values, e.g., 
  * `std::normal_distribution`.
  */
-
 template<template<typename> class t_distr>
 const column<uncompr_f> * generate_with_distr(
         size_t countValues,

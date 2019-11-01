@@ -165,15 +165,18 @@ namespace vectorlib {
       compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
           switch (mask){
-          
-                    case 0: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
-                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 0: break;
+//                    case 0: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+//                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 2: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+//                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 4: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
                     case 5: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,216)); break;
                     case 6: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+//                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
                     case 8: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,147)); break;
                     case 9: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,156)); break;
                     case 10: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,141)); break;
@@ -181,19 +184,23 @@ namespace vectorlib {
                     case 12: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,78)); break;
                     case 13: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,120)); break;
                     case 14: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 15: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,228)); break;
+                    case 15: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
                 }
          
          return ;
       }
 
+   };
+   
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<avx2<v256<T>>, IOGranularity, Scale> {
       //@todo we should actually provide a specialization (depending on the basetype) here!
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
-      gather( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+      apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
-         return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
+         return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
          
       }
             
@@ -224,15 +231,15 @@ namespace vectorlib {
    };
 
     //@todo we should actually provide a specialization (depending on the basetype) here!
-    template<typename T, int IOGranularity>
-    struct io<avx2<v128<T>>,iov::UNALIGNED, IOGranularity> {
+    template<typename T, int IOGranularity, int Scale>
+    struct gather_t<avx2<v128<T>>, IOGranularity, Scale> {
      
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v128< U > >::vector_t
-        gather( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
+        apply( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-            return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, sizeof(uint64_t));
+            return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
 
           }
     };

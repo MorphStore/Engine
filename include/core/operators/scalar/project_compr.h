@@ -29,7 +29,7 @@
 #include <core/operators/interfaces/project.h>
 #include <core/morphing/format.h>
 #include <core/morphing/static_vbp.h>
-#include <core/morphing/vbp_routines.h>
+#include <core/morphing/vbp.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/scalar/extension_scalar.h>
@@ -153,13 +153,13 @@ struct project_t<
         t_vector_extension,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<t_bw, t_step>
+        static_vbp_f<vbp_l<t_bw, t_step> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<t_bw, t_step> > * const inPosCol
+            const column<static_vbp_f<vbp_l<t_bw, t_step>>> * const inPosCol
     ) {
         const size_t inPosCount64 = inPosCol->get_count_values();
         const uint8_t * inData8 = inDataCol->get_data();
@@ -187,13 +187,13 @@ struct project_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<32, sizeof(__m128i) / sizeof(uint64_t)>
+        static_vbp_f<vbp_l<32, sizeof(__m128i) / sizeof(uint64_t)> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<32, sizeof(__m128i) / sizeof(uint64_t)> > * const inPosCol
+            const column<static_vbp_f<vbp_l<32, sizeof(__m128i) / sizeof(uint64_t)>>> * const inPosCol
     ) {
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
@@ -255,13 +255,13 @@ struct project_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<16, sizeof(__m128i) / sizeof(uint64_t)>
+        static_vbp_f<vbp_l<16, sizeof(__m128i) / sizeof(uint64_t)> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<16,sizeof(__m128i) / sizeof(uint64_t)> > * const inPosCol
+            const column<static_vbp_f<vbp_l<16,sizeof(__m128i) / sizeof(uint64_t)>>> * const inPosCol
     ) {
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
@@ -323,13 +323,13 @@ struct project_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)>
+        static_vbp_f<vbp_l<8, sizeof(__m128i) / sizeof(uint64_t)> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<8, sizeof(__m128i) / sizeof(uint64_t)> > * const inPosCol
+            const column<static_vbp_f<vbp_l<8, sizeof(__m128i) / sizeof(uint64_t)>>> * const inPosCol
     ) {
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
@@ -391,13 +391,13 @@ struct project_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<4, sizeof(__m128i) / sizeof(uint64_t)>
+        static_vbp_f<vbp_l<4, sizeof(__m128i) / sizeof(uint64_t)> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<4, sizeof(__m128i) / sizeof(uint64_t)> > * const inPosCol
+            const column<static_vbp_f<vbp_l<4, sizeof(__m128i) / sizeof(uint64_t)>>> * const inPosCol
     ) {
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();
@@ -431,13 +431,13 @@ struct project_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
-        static_vbp_f<2, sizeof(__m128i) / sizeof(uint64_t)>
+        static_vbp_f<vbp_l<2, sizeof(__m128i) / sizeof(uint64_t)> >
 > {
     static
     const column<uncompr_f> *
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<static_vbp_f<2, sizeof(__m128i) / sizeof(uint64_t)> > * const inPosCol
+            const column<static_vbp_f<vbp_l<2, sizeof(__m128i) / sizeof(uint64_t)>>> * const inPosCol
     ) {
         const size_t inPosCount = inPosCol->get_count_values();
         const uint64_t * const inData = inDataCol->get_data();

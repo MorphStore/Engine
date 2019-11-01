@@ -41,7 +41,7 @@ namespace vectorlib {
       set_sequence( int a, int b) {
          trace( "[VECTOR] - set_sequence sse register." );
          neon< v128< uint64_t > >::vector_t result = vmovq_n_u64(0);
-         vsetq_lane_u64(a, result, 0); 
+         result = vsetq_lane_u64(a, result, 0); 
          return vsetq_lane_u64(a+b, result, 1);
          
       }
