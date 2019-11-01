@@ -48,10 +48,10 @@ int main( void ){
     ldbcImport->import(*g1);
 
     // measure degree distribution and write to file (file path as parameter):
-    g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
+    // g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
 
     // some statistics (DEBUG)
-    // g1->statistics();
+    g1->statistics();
 
     // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
     // g1->print_vertex_by_id(1035174);
