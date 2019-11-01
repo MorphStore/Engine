@@ -16,17 +16,16 @@
  **********************************************************************************************/
 
 /**
- * @file bfs.h
- * @brief naive (simple) BFS implementation to traverse graph of type CSR OR AdjacencyList
+ * @file top_down_bfs.h
+ * @brief top down BFS implementation to traverse graph
  * @todo implement vectorized BFS (AVX2, AVX-512)
  */
 
-#ifndef MORPHSTORE_BFS_NAIVE_H
-#define MORPHSTORE_BFS_NAIVE_H
+#ifndef MORPHSTORE_TOP_DOWN_BFS
+#define MORPHSTORE_TOP_DOWN_BFS
 
 #include "../../storage/graph/graph.h"
 
-#include <queue>
 #include <chrono>
 
 namespace morphstore{
@@ -36,86 +35,66 @@ namespace morphstore{
     private:
         std::unique_ptr<morphstore::Graph> graph;
         uint64_t graphSize;
-        // Create a "visited" array (true or false) to keep track of if we visited a vertex.
-        //std::vector<bool> visited = { false };
-        //std::vector<uint64_t> layer;
-        // Create a queue for the nodes we visit.
     
-     public:
+    public:
 
-        // constructor with smart pointer to graph as parameter
+        // constructor with smart pointer to graph as parameter/reference
         BFS(std::unique_ptr<morphstore::Graph>& g) : graph(std::move(g)){
             graphSize = graph->getNumberVertices();
-            //visited.resize(graphSize);
-            //layer.resize(graphSize);
         }
 
         uint64_t get_graph_size(){
             return graphSize;
         }
 
-        // actual BFS (naive) algorithm: takes the start-node id and returns the number of explored vertices
+        // ------------------------------------------ BFS impl. ------------------------------------------
+
+        // actual BFS algorithm: takes the start-node id and returns the number of explored vertices
         uint64_t do_BFS(uint64_t startVertex){
             std::vector<uint64_t> frontier;
             std::vector<uint64_t> next;
-	    std::vector<bool> visited(graphSize, false);
-	   
-	    // debug: 
-	    //int layer = 0;
-	    //int layerVertices = 0;
-
-            // set every entry in visited array back to { false }
-            //clear_visited_array();
-
+	        std::vector<bool> visited(graphSize, false);
             uint64_t exploredVertices = 0;
 
             frontier.push_back(startVertex);
             visited[startVertex] = true;
 
-            //layer[startVertex] = 0;
-
             while(!frontier.empty()){
                 // Loop through current layer of vertices in the frontier
                 for(uint64_t i = 0; i < frontier.size(); ++i){
                     uint64_t currentVertex = frontier[i];
-		    std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);	
+                    // get list of a vertex's adjacency
+		            std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
+
                     // Loop through all of neighbors of current vertex
                     for(uint64_t j = 0; j < neighbors.size(); ++j){
-			// check if neighbor has been visited, if not -> put into queue and mark as visit = true
+			            // check if neighbor has been visited, if not -> put into frontier and mark as visit = true
                         if(!visited[neighbors[j]]){
                             next.push_back(neighbors[j]);
-                            //layer[neighbor] = layer[currentVertex] +1;
                             visited[neighbors[j]] = true;
                             ++exploredVertices;
-		            //++layerVertices;
                         }
                     }
                 }
-		//++layer;
-		//std::cout << "Explored layer " << layer << " -> " << layerVertices  << std::endl;
-        	//layerVertices = 0;
-	        // swap frontier with next
+                // swap frontier with next
                 frontier.swap(next);
-                // clear next: swap with an empty container is much faster
+                // clear next: swap with an empty container is faster
                 std::vector<uint64_t>().swap(next);
-		
-                //std::cout << "Vertex with ID " << currentVertex << "\t @ Layer " << layer[currentVertex] << std::endl;
             }
             return exploredVertices;
-  	}
+        }
 
-	// function that measures the number of explored vertices and TIME:
-        // results are written into a file
-        // parameter cycle means the ith vertex (modulo)
+        // ------------------------------------------ Measurement stuff ------------------------------------------
+
+        // function that measures the number of explored vertices and time in ms:
+        // results are written into a file; cycle determines the ith vertex from list
         void do_measurements(uint64_t cycle, std::string pathToFile){
-
             // list of measurement candidates: the parameter means the ith vertex in total
             std::vector<uint64_t> candidates = get_list_of_every_ith_vertex(cycle);
 
-            // Intermediate data structure:
-            // size = candidatesVector size*2, because we sequentially store both results (exploredVertices, needed Time) for every vertex
+            // Intermediate data structure: (explored vertices, time in ms)
             std::vector<std::pair<uint64_t, uint64_t>> results;
-	    results.reserve(candidates.size());
+            results.reserve(candidates.size());
 
 
             for(uint64_t i = 0; i < candidates.size(); ++i){
@@ -147,7 +126,7 @@ namespace morphstore{
             fs.close();
         }
 
-	// function which returns a list of every ith vertex which is sorted by degree DESC
+        // function which returns a list of every ith vertex which is sorted by degree DESC
         std::vector< uint64_t > get_list_of_every_ith_vertex(uint64_t cycle){
             std::vector< uint64_t > measurementCandidates;
             std::vector< std::pair<uint64_t, uint64_t> > totalListOfVertices = graph->get_list_of_degree_DESC();
@@ -156,9 +135,8 @@ namespace morphstore{
             }
             return measurementCandidates;
         }
-
     };
 }
 
-#endif //MORPHSTORE_BFS_NAIVE_H
+#endif //MORPHSTORE_TOP_DOWN_BFS
 
