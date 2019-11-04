@@ -807,14 +807,14 @@ public:
                 const data_properties & dp,
                 Ts ... args
         ) {
-            addBoolFor(ident + "_Sorted", dp.is_sorted_asc(), args ...);
-            addBoolFor(ident + "_Unique", dp.is_unique(), args ...);
-            addIntFor(ident + "_Min", dp.get_min(), args ...);
-            addIntFor(ident + "_Max", dp.get_max(), args ...);
-            addIntFor(ident + "_DistinctCount", dp.get_distinct_count(), args ...);
+            addBoolFor(ident + "Sorted", dp.is_sorted_asc(), args ...);
+            addBoolFor(ident + "Unique", dp.is_unique(), args ...);
+            addIntFor(ident + "Min", dp.get_min(), args ...);
+            addIntFor(ident + "Max", dp.get_max(), args ...);
+            addIntFor(ident + "DistinctCount", dp.get_distinct_count(), args ...);
             
             for(unsigned bw = 1; bw <= 64; bw++)
-                addIntFor(ident + "_bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
+                addIntFor(ident + "bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
         }
 
 	//template<typename... Ts>
