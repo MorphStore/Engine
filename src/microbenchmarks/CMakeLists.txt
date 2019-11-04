@@ -17,11 +17,19 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( select_benchmark PRIVATE "-ldl" )
 
-    add_executable( select_benchmark_2 select_benchmark_2.cpp )
-    target_compile_options( select_benchmark_2 PRIVATE
+    add_executable( select_benchmark_2_t select_benchmark_2.cpp )
+    target_compile_options( select_benchmark_2_t PRIVATE
+                            -DSELECT_BENCHMARK_2_TIME
                             $<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( select_benchmark_2 PRIVATE "-ldl" )
+    target_link_libraries( select_benchmark_2_t PRIVATE "-ldl" )
+
+    add_executable( select_benchmark_2_d select_benchmark_2.cpp )
+    target_compile_options( select_benchmark_2_d PRIVATE
+                            -USELECT_BENCHMARK_2_TIME
+                            $<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( select_benchmark_2_d PRIVATE "-ldl" )
 
     add_executable( select_uncompr_benchmark select_uncompr.cpp )
     target_compile_options( select_uncompr_benchmark PRIVATE

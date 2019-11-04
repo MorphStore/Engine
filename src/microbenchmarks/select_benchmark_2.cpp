@@ -18,26 +18,36 @@
 /**
  * @file select_benchmark_2.cpp
  * @brief Another micro benchmark of the select operator.
+ * 
+ * If the macro SELECT_BENCHMARK_2_TIME is defined, then the code will do time
+ * measurements of different variants of the select-operator. Otherwise, it
+ * will record the data characteristics of the input and output data. This is
+ * configured in the CMakeLists-file.
  */
 
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
-#include <core/morphing/delta.h>
-#include <core/morphing/dynamic_vbp.h>
-#include <core/morphing/for.h>
 #include <core/morphing/format.h>
-#include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
-#include <core/morphing/vbp.h>
-#include <core/operators/general_vectorized/select_compr.h>
-//#include <core/operators/scalar/select_uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
-#include <core/utils/variant_executor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#ifdef SELECT_BENCHMARK_2_TIME
+#include <core/morphing/delta.h>
+#include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/for.h>
+#include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
+#include <core/operators/general_vectorized/select_compr.h>
+#include <core/utils/variant_executor.h>
+#else
+#include <core/operators/scalar/select_uncompr.h>
+#include <core/utils/data_properties.h>
+#include <core/utils/monitoring.h>
+#endif
 
 #include <functional>
 #include <iostream>
@@ -50,12 +60,14 @@ using namespace morphstore;
 using namespace vectorlib;
 
 
+#ifdef SELECT_BENCHMARK_2_TIME
+
 // ----------------------------------------------------------------------------
 // Formats
 // ----------------------------------------------------------------------------
 // All template-specializations of a format are mapped to a name, which may or
 // may not contain the values of the template parameters.
-        
+
 template<class t_format>
 std::string formatName = "(unknown format)";
 
@@ -217,6 +229,8 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     };
 }
 
+#endif
+
 // ****************************************************************************
 // Main program.
 // ****************************************************************************
@@ -225,6 +239,9 @@ int main(void) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
     
+    const size_t countValues = 128 * 1024 * 1024;
+    
+#ifdef SELECT_BENCHMARK_2_TIME
     using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
         ::for_variant_params<std::string, std::string, std::string>
         ::for_setting_params<size_t, unsigned, double, uint64_t, uint64_t, uint64_t, uint64_t, double, bool, unsigned>;
@@ -234,14 +251,18 @@ int main(void) {
             {"countValues", "outMaxBw", "selectedShare", "mainMin", "mainMax", "outlierMin", "outlierMax", "outlierShare", "isSorted", "inMaxBw"}
     );
     
-    const size_t countValues = 128 * 1024 * 1024;
     const unsigned outMaxBw = effective_bitwidth(countValues - 1);
+#endif
     
+    // @todo It would be nice to use a 64-bit value, but then, some vector-lib
+    // primitives would interpret it as a negative number. This would hurt,
+    // e.g., FOR.
     const uint64_t largeVal = bitwidth_max<uint64_t>(63);
     // Looks strange, but saves us from casting in the initializer list.
     const uint64_t _0 = 0;
     const uint64_t _63 = 63;
     
+    unsigned datasetIdx = 0;
     for(float selectedShare : {
         0.00001,
         0.0001,
@@ -268,26 +289,33 @@ int main(void) {
             // Unsorted, small numbers, very rare outliers -> good for dynamic_vbp.
             std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001),
             // Unsorted, huge numbers in narrow range, no outliers -> good for for+dynamic_vbp.
-            std::make_tuple(false, bitwidth_min<uint64_t>(64), bitwidth_min<uint64_t>(64) + 63, _0, _0, 0.0),
+            std::make_tuple(false, bitwidth_min<uint64_t>(63), bitwidth_min<uint64_t>(63) + 63, _0, _0, 0.0),
             // Sorted, large numbers -> good for delta+dynamic_vbp.
             std::make_tuple(true, _0, bitwidth_max<uint64_t>(24), _0, _0, 0.0),
             // Unsorted, random numbers -> good for nothing/uncompr.
-            std::make_tuple(false, _0, std::numeric_limits<uint64_t>::max(), _0, _0, 0.0),
+            std::make_tuple(false, _0, bitwidth_min<uint64_t>(63), _0, _0, 0.0),
         }) {
+            datasetIdx++;
+            
             std::tie(isSorted, mainMin, mainMax, outlierMin, outlierMax, outlierShare) = params;
-            const unsigned inMaxBw = effective_bitwidth((outlierShare > 0) ? outlierMax : mainMax);
 
+#ifdef SELECT_BENCHMARK_2_TIME
             varex.print_datagen_started();
-            auto origCol = generate_with_outliers_and_selectivity(
+#else
+            std::cerr << "generating input data column... ";
+#endif
+            auto inDataCol = generate_with_outliers_and_selectivity(
                     countValues,
                     mainMin, mainMax,
                     selectedShare,
                     outlierMin, outlierMax, outlierShare,
                     isSorted
             );
+#ifdef SELECT_BENCHMARK_2_TIME
             varex.print_datagen_done();
             
             std::vector<varex_t::variant_t> variants;
+            const unsigned inMaxBw = effective_bitwidth((outlierShare > 0) ? outlierMax : mainMax);
             switch(inMaxBw) {
                 // Generated with python:
                 // for bw in range(1, 64+1):
@@ -357,18 +385,60 @@ int main(void) {
                 case 63: variants = make_variants<varex_t, outMaxBw, 63>(); break;
                 case 64: variants = make_variants<varex_t, outMaxBw, 64>(); break;
             }
-
+            
             varex.execute_variants(
                     variants,
                     countValues, outMaxBw, selectedShare, mainMin, mainMax, outlierMin, outlierMax, outlierShare, isSorted, inMaxBw,
-                    origCol, mainMin, 0
+                    inDataCol, mainMin, 0
             );
+#else
+            std::cerr << "done.";
+            
+            MONITORING_CREATE_MONITOR(
+                    MONITORING_MAKE_MONITOR(datasetIdx),
+                    MONITORING_KEY_IDENTS("datasetIdx")
+            );
+            
+            std::cerr << std::endl << "analyzing input data column... ";
+            MONITORING_ADD_INT_FOR(
+                    "inData_ValueCount",
+                    inDataCol->get_count_values(),
+                    datasetIdx
+            );
+            MONITORING_ADD_DATAPROPERTIES_FOR(
+                    "inData", data_properties(inDataCol, false), datasetIdx
+            );
+            std::cerr << "done." << std::endl;
+            
+            std::cerr << "executing select-operator... ";
+            auto outPosCol = select_t<
+                    std::equal_to, scalar<v64<uint64_t>>, uncompr_f, uncompr_f
+            >::apply(inDataCol, mainMin);
+            std::cerr << "done." << std::endl;
+            
+            std::cerr << "analyzing output positions column... ";
+            MONITORING_ADD_INT_FOR(
+                    "outPos_ValueCount",
+                    inDataCol->get_count_values(),
+                    datasetIdx
+            );
+            MONITORING_ADD_DATAPROPERTIES_FOR(
+                    "outPos", data_properties(inDataCol, false), datasetIdx
+            );
+            std::cerr << "done." << std::endl << std::endl;
+            
+            delete outPosCol;
+#endif
 
-            delete origCol;
+            delete inDataCol;
         }
     }
     
+#ifdef SELECT_BENCHMARK_2_TIME
     varex.done();
+#else
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
+#endif
     
     return 0;
 }
