@@ -41,6 +41,7 @@
 #include <math.h>
 #include <inttypes.h>
 
+#include <core/utils/data_properties.h>
 #include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/variadic.h>
@@ -799,6 +800,18 @@ public:
 			throw std::runtime_error("[MONITORING ERROR] Trying to add a double parameter for a non-existent monitor.");
 		}
 	}
+        
+        template<typename ... Ts>
+        void addDataPropertiesFor(const data_properties & dp, Ts ... args) {
+            addBoolFor("Sorted", dp.is_sorted_asc(), args ...);
+            addBoolFor("Unique", dp.is_unique(), args ...);
+            addIntFor("Min", dp.get_min(), args ...);
+            addIntFor("Max", dp.get_max(), args ...);
+            addIntFor("DistinctCount", dp.get_distinct_count(), args ...);
+            
+            for(unsigned bw = 1; bw <= 64; bw++)
+                addIntFor("bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
+        }
 
 	//template<typename... Ts>
 	//void incrementIntFor(std::string ident, int64_t val, Ts... args) {
@@ -849,6 +862,7 @@ public:
 	#define MONITORING_ADD_BOOL_FOR( ident, val, ... ) 			Monitoring::get_instance().addBoolFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_INT_FOR( ident, val, ... ) 			Monitoring::get_instance().addIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_DOUBLE_FOR( ident, val, ... ) 		Monitoring::get_instance().addDoubleFor( ident, val, __VA_ARGS__ )
+	#define MONITORING_ADD_DATAPROPERTIES_FOR( val, ... ) 		Monitoring::get_instance().addDataPropertiesFor( val, __VA_ARGS__ )
 	/*#define MONITORING_INCREMENT_INT_BY( ident, val, ... )		Monitoring::get_instance().incrementIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ident, val, ... )	Monitoring::get_instance().incrementDoubleFor( ident, val, __VA_ARGS__ )*/
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
@@ -873,6 +887,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(endTp_##timer - startTp_##t
 	#define MONITORING_ADD_BOOL_FOR( ... )
 	#define MONITORING_ADD_INT_FOR( ... ) 
 	#define MONITORING_ADD_DOUBLE_FOR( ... )
+	#define MONITORING_ADD_DATAPROPERTIES_FOR( ... )
 	#define MONITORING_INCREMENT_INT_BY( ... )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ... )
 	#define MONITORING_PRINT_MONITOR( ... )	
