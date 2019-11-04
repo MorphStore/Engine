@@ -866,7 +866,7 @@ public:
 	#define MONITORING_ADD_BOOL_FOR( ident, val, ... ) 			Monitoring::get_instance().addBoolFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_INT_FOR( ident, val, ... ) 			Monitoring::get_instance().addIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_DOUBLE_FOR( ident, val, ... ) 		Monitoring::get_instance().addDoubleFor( ident, val, __VA_ARGS__ )
-	#define MONITORING_ADD_DATAPROPERTIES_FOR( val, ... ) 		Monitoring::get_instance().addDataPropertiesFor( val, __VA_ARGS__ )
+	#define MONITORING_ADD_DATAPROPERTIES_FOR( ident, val, ... ) 		Monitoring::get_instance().addDataPropertiesFor( ident, val, __VA_ARGS__ )
 	/*#define MONITORING_INCREMENT_INT_BY( ident, val, ... )		Monitoring::get_instance().incrementIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ident, val, ... )	Monitoring::get_instance().incrementDoubleFor( ident, val, __VA_ARGS__ )*/
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
