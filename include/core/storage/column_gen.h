@@ -308,5 +308,72 @@ const column<uncompr_f> * generate_exact_number(
     return resCol;
 }
 
+const column<uncompr_f> * generate_with_outliers_and_selectivity(
+        size_t p_CountValues,
+        uint64_t p_MainMin, uint64_t p_MainMax,
+        double p_SelectedShare,
+        uint64_t p_OutlierMin, uint64_t p_OutlierMax, double p_OutlierShare,
+        bool p_IsSorted,
+        size_t p_Seed = 0
+) {
+    if(!(p_MainMin < p_MainMax))
+        throw std::runtime_error(
+                "p_MainMin < p_MainMax must hold"
+        );
+    if(p_OutlierShare && p_OutlierMin > p_OutlierMax)
+        throw std::runtime_error(
+                "p_OutlierMin <= p_OutlierMax must hold if p_OutlierShare > 0"
+        );
+    if(p_OutlierShare && p_MainMax >= p_OutlierMin)
+        throw std::runtime_error(
+                "p_MainMax < p_OutlierMin must hold if p_OutlierShare > 0"
+        );
+    if(p_SelectedShare < 0 || p_SelectedShare > 1)
+        throw std::runtime_error(
+                "0 <= p_SelectedShare <= 1 must hold"
+        );
+    if(p_OutlierShare < 0 || p_OutlierShare > 1)
+        throw std::runtime_error(
+                "0 <= p_OutlierShare <= 1 must hold"
+        );
+    if(p_SelectedShare + p_OutlierShare > 1)
+        throw std::runtime_error(
+                "p_SelectedShare + p_OutlierShare <= 1 must hold"
+        );
+    
+    const size_t allocationSize = p_CountValues * sizeof(uint64_t);
+    auto resCol = new column<uncompr_f>(allocationSize);
+    uint64_t * const res = resCol->get_data();
+    
+    if(p_Seed == 0)
+       p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(p_Seed);
+    
+    std::bernoulli_distribution rndIsOutlier(p_OutlierShare);
+    std::bernoulli_distribution rndIsSelected(
+            p_SelectedShare / (1 - p_OutlierShare)
+    );
+    std::uniform_int_distribution<uint64_t> rndMain(p_MainMin + 1, p_MainMax);
+    std::uniform_int_distribution<uint64_t> rndOutliers(
+            p_OutlierMin, p_OutlierMax
+    );
+    
+    for(size_t i = 0; i < p_CountValues; i++) {
+        if(rndIsOutlier(generator))
+            res[i] = rndOutliers(generator);
+        else if(rndIsSelected(generator))
+            res[i] = p_MainMin;
+        else
+            res[i] = rndMain(generator);
+    }
+    
+    resCol->set_meta_data(p_CountValues, allocationSize);
+    
+    if(p_IsSorted)
+        std::sort(res, res + p_CountValues);
+    
+    return resCol;
+}
+
 }
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_GEN_H
