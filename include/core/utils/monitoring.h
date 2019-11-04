@@ -802,15 +802,19 @@ public:
 	}
         
         template<typename ... Ts>
-        void addDataPropertiesFor(const data_properties & dp, Ts ... args) {
-            addBoolFor("Sorted", dp.is_sorted_asc(), args ...);
-            addBoolFor("Unique", dp.is_unique(), args ...);
-            addIntFor("Min", dp.get_min(), args ...);
-            addIntFor("Max", dp.get_max(), args ...);
-            addIntFor("DistinctCount", dp.get_distinct_count(), args ...);
+        void addDataPropertiesFor(
+                const std::string & ident,
+                const data_properties & dp,
+                Ts ... args
+        ) {
+            addBoolFor(ident + "_Sorted", dp.is_sorted_asc(), args ...);
+            addBoolFor(ident + "_Unique", dp.is_unique(), args ...);
+            addIntFor(ident + "_Min", dp.get_min(), args ...);
+            addIntFor(ident + "_Max", dp.get_max(), args ...);
+            addIntFor(ident + "_DistinctCount", dp.get_distinct_count(), args ...);
             
             for(unsigned bw = 1; bw <= 64; bw++)
-                addIntFor("bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
+                addIntFor(ident + "_bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
         }
 
 	//template<typename... Ts>
