@@ -62,6 +62,33 @@ using namespace vectorlib;
 
 #ifdef SELECT_BENCHMARK_2_TIME
 
+// ****************************************************************************
+// Mapping from vector extensions and formats to string names
+// ****************************************************************************
+// @todo The same thing exists in the calibration benchmark. Reduce the code
+// duplication.
+
+// ----------------------------------------------------------------------------
+// Vector extensions
+// ----------------------------------------------------------------------------
+
+template<class t_vector_extension>
+std::string veName = "(unknown vector extension)";
+
+#define MAKE_VECTOR_EXTENSION_NAME(ve) \
+    template<> std::string veName<ve> = STR_EVAL_MACROS(ve);
+
+MAKE_VECTOR_EXTENSION_NAME(scalar<v64<uint64_t>>)
+#ifdef SSE
+MAKE_VECTOR_EXTENSION_NAME(sse<v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+MAKE_VECTOR_EXTENSION_NAME(avx2<v256<uint64_t>>)
+#endif
+#ifdef AVX512
+MAKE_VECTOR_EXTENSION_NAME(avx512<v512<uint64_t>>)
+#endif
+
 // ----------------------------------------------------------------------------
 // Formats
 // ----------------------------------------------------------------------------
@@ -97,8 +124,9 @@ std::string formatName<
 template<>
 std::string formatName<uncompr_f> = "uncompr_f";
 
+
 // ****************************************************************************
-// Macros for the variants for variant_executor.
+// Macros for the formats.
 // ****************************************************************************
 
 #define STATIC_VBP_FORMAT(ve, bw) \
@@ -133,11 +161,99 @@ std::string formatName<uncompr_f> = "uncompr_f";
             > \
     >)
 
+
+// ****************************************************************************
+// Wrapper of the select-operator to be executed by `variant_executor`
+// ****************************************************************************
+
+template<class t_vector_extension, class t_out_pos_f, class t_in_data_f>
+const column<t_out_pos_f> * measure_select_and_morphs(
+        const column<t_in_data_f> * p_InDataColCompr,
+        uint64_t p_Pred,
+        unsigned p_DatasetIdx
+) {
+    // We go from compressed inDataCol to compressed outPosCol via two ways to
+    // measure both the actual select-operator and the morphs involved in it.
+    
+    
+    // 1) Select-operator on compressed data.
+    
+    MONITORING_START_INTERVAL_FOR(
+            "runtime select [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    auto outPosColCompr = my_select_wit_t<
+            equal, t_vector_extension, t_out_pos_f, t_in_data_f
+    >::apply(p_InDataColCompr, p_Pred);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime select [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    
+    
+    // 2) Decompression, select-operator on uncompressed data, recompression.
+    
+    MONITORING_START_INTERVAL_FOR(
+            "runtime decompr [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    auto inDataColUncompr =
+            morph<t_vector_extension, uncompr_f, t_in_data_f
+    >(p_InDataColCompr);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime decompr [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    
+    auto outPosColUncompr = my_select_wit_t<
+            equal, t_vector_extension, uncompr_f, uncompr_f
+    >::apply(inDataColUncompr, p_Pred);
+    
+    if(!std::is_same<t_in_data_f, uncompr_f>::value)
+        delete inDataColUncompr;
+    
+    MONITORING_START_INTERVAL_FOR(
+            "runtime recompr [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    auto outPosColRecompr =
+            morph<t_vector_extension, t_out_pos_f, uncompr_f>(outPosColUncompr);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime recompr [µs]",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    
+    if(!std::is_same<t_out_pos_f, uncompr_f>::value)
+        delete outPosColUncompr;
+    
+    MONITORING_ADD_BOOL_FOR(
+            "count-check detour",
+            outPosColCompr->get_count_values() == outPosColRecompr->get_count_values(),
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    
+    delete outPosColRecompr;
+    
+    
+    return outPosColCompr;
+}
+
+// ****************************************************************************
+// Macros for the variants for variant_executor.
+// ****************************************************************************
+
 #define MAKE_VARIANT(ve, out_pos_f, in_data_f) { \
     new typename t_varex_t::operator_wrapper::template for_output_formats<out_pos_f>::template for_input_formats<in_data_f>( \
-        &my_select_wit_t<equal, ve, out_pos_f, in_data_f>::apply \
+        &measure_select_and_morphs<ve, out_pos_f, in_data_f> \
     ), \
-    STR_EVAL_MACROS(ve), \
+    veName<ve>, \
     formatName<out_pos_f>, \
     formatName<in_data_f> \
 }
@@ -243,13 +359,16 @@ int main(void) {
     const unsigned outMaxBw = effective_bitwidth(countValues - 1);
     
 #ifdef SELECT_BENCHMARK_2_TIME
-    using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
+    // The datasetIdx is actually a setting parameter, but we need to model it
+    // as an additional parameter to be able to hand it into our variant
+    // function measure_select_and_morphs.
+    using varex_t = variant_executor_helper<1, 1, uint64_t, unsigned>::type
         ::for_variant_params<std::string, std::string, std::string>
-        ::for_setting_params<unsigned>;
+        ::for_setting_params<>;
     varex_t varex(
-            {"pred", "est"},
+            {"pred", "datasetIdx"},
             {"vector_extension", "out_pos_f", "in_data_f"},
-            {"datasetIdx"}
+            {}
     );
     
 #endif
@@ -386,7 +505,7 @@ int main(void) {
                 case 64: variants = make_variants<varex_t, outMaxBw, 64>(); break;
             }
             
-            varex.execute_variants(variants, datasetIdx, inDataCol, mainMin, 0);
+            varex.execute_variants(variants, inDataCol, mainMin, datasetIdx);
 #else
             std::cerr << "done.";
             
