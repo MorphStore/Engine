@@ -240,18 +240,18 @@ int main(void) {
     fail_if_self_managed_memory();
     
     const size_t countValues = 128 * 1024 * 1024;
+    const unsigned outMaxBw = effective_bitwidth(countValues - 1);
     
 #ifdef SELECT_BENCHMARK_2_TIME
     using varex_t = variant_executor_helper<1, 1, uint64_t, size_t>::type
         ::for_variant_params<std::string, std::string, std::string>
-        ::for_setting_params<size_t, unsigned, double, uint64_t, uint64_t, uint64_t, uint64_t, double, bool, unsigned>;
+        ::for_setting_params<unsigned>;
     varex_t varex(
             {"pred", "est"},
             {"vector_extension", "out_pos_f", "in_data_f"},
-            {"countValues", "outMaxBw", "selectedShare", "mainMin", "mainMax", "outlierMin", "outlierMax", "outlierShare", "isSorted", "inMaxBw"}
+            {"datasetIdx"}
     );
     
-    const unsigned outMaxBw = effective_bitwidth(countValues - 1);
 #endif
     
     // @todo It would be nice to use a 64-bit value, but then, some vector-lib
@@ -298,6 +298,7 @@ int main(void) {
             datasetIdx++;
             
             std::tie(isSorted, mainMin, mainMax, outlierMin, outlierMax, outlierShare) = params;
+            const unsigned inMaxBw = effective_bitwidth((outlierShare > 0) ? outlierMax : mainMax);
 
 #ifdef SELECT_BENCHMARK_2_TIME
             varex.print_datagen_started();
@@ -315,7 +316,6 @@ int main(void) {
             varex.print_datagen_done();
             
             std::vector<varex_t::variant_t> variants;
-            const unsigned inMaxBw = effective_bitwidth((outlierShare > 0) ? outlierMax : mainMax);
             switch(inMaxBw) {
                 // Generated with python:
                 // for bw in range(1, 64+1):
@@ -386,11 +386,7 @@ int main(void) {
                 case 64: variants = make_variants<varex_t, outMaxBw, 64>(); break;
             }
             
-            varex.execute_variants(
-                    variants,
-                    countValues, outMaxBw, selectedShare, mainMin, mainMax, outlierMin, outlierMax, outlierShare, isSorted, inMaxBw,
-                    inDataCol, mainMin, 0
-            );
+            varex.execute_variants(variants, datasetIdx, inDataCol, mainMin, 0);
 #else
             std::cerr << "done.";
             
@@ -399,6 +395,23 @@ int main(void) {
                     MONITORING_KEY_IDENTS("datasetIdx")
             );
             
+            // Parameters of the data generation.
+            MONITORING_ADD_DOUBLE_FOR(
+                    "param_selectedShare", selectedShare, datasetIdx
+            );
+            MONITORING_ADD_DOUBLE_FOR(
+                    "param_outlierShare", outlierShare, datasetIdx
+            );
+            MONITORING_ADD_INT_FOR("param_mainMin", mainMin, datasetIdx);
+            MONITORING_ADD_INT_FOR("param_mainMax", mainMax, datasetIdx);
+            MONITORING_ADD_INT_FOR("param_outlierMin", outlierMin, datasetIdx);
+            MONITORING_ADD_INT_FOR("param_outlierMax", outlierMax, datasetIdx);
+            
+            // The maximum bit widths as used for static_vbp_f.
+            MONITORING_ADD_INT_FOR("inMaxBw", inMaxBw, datasetIdx);
+            MONITORING_ADD_INT_FOR("outMaxBw", outMaxBw, datasetIdx);
+            
+            // Data characteristics of the input data column.
             std::cerr << std::endl << "analyzing input data column... ";
             MONITORING_ADD_INT_FOR(
                     "inData_ValueCount",
@@ -410,12 +423,14 @@ int main(void) {
             );
             std::cerr << "done." << std::endl;
             
+            // Execution of the (wrapper of the) select-operator.
             std::cerr << "executing select-operator... ";
             auto outPosCol = select_t<
                     std::equal_to, scalar<v64<uint64_t>>, uncompr_f, uncompr_f
             >::apply(inDataCol, mainMin);
             std::cerr << "done." << std::endl;
             
+            // Data characteristics of the output positions column.
             std::cerr << "analyzing output positions column... ";
             MONITORING_ADD_INT_FOR(
                     "outPos_ValueCount",
