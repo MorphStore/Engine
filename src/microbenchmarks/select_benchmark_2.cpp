@@ -553,7 +553,7 @@ int main(void) {
             std::cerr << "analyzing output positions column... ";
             MONITORING_ADD_INT_FOR(
                     "outPos_ValueCount",
-                    inDataCol->get_count_values(),
+                    outPosCol->get_count_values(),
                     datasetIdx
             );
             MONITORING_ADD_DATAPROPERTIES_FOR(
