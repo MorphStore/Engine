@@ -18,7 +18,8 @@
 /**
  * @file monitoring.h
  * @brief The monitoring interface helps to get some data out of a benchmark.
- * @todo TODOS?
+ * @todo Currently, only signed integers (int64_t) are supported, unsigned
+ * (uint64_t) would be highly desired.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_MONITORING_H_
@@ -139,7 +140,7 @@ namespace morphstore {
 
 		monitoring_parameter(const std::string name, size_t id, T value) :
 			monitoring_info(name, id),
-			maxValues(1024000),
+			maxValues(10),
 			lastValue(0)
 		{
 			values = (T*) malloc( maxValues * sizeof(T) );
@@ -192,7 +193,7 @@ namespace morphstore {
 		explicit monitoring_counter(const std::string name, size_t id) :
 			monitoring_info(name, id),
 			started(false),
-			maxValues(1024),
+			maxValues(10),
 			lastValue(0)
 		{
 			values = (uint64_t*)malloc(maxValues * sizeof(uint64_t));
@@ -691,6 +692,15 @@ public:
 	}
 
 	void clearAll() {
+                // @todo This does NOT clear everything. The monitoring_counters
+                // and monitoring_parameters in
+                // - monitorIntervalMap intervalData;
+		// - monitorBoolParameterMap boolParams;
+		// - monitorIntegerParameterMap integerParams;
+		// - monitorDoubleParameterMap doubleParams;
+                // of each SuperMon are never freed, but these allocate the
+                // actual buffers for the recorded values, i.e., the bulk of
+                // the data. Therefore, this is a memory leak.
 		for (auto m : monVec) {
 			delete m;
 		}
@@ -700,6 +710,8 @@ public:
 	template<typename... Ts>
 	SuperMon* findMonitor(Ts... args) {
 		std::tuple< Ts... > lookup(args...);
+                // @todo This segfaults, if args has another "shape" than those
+                // of existing monitors.
 		for (size_t i = 0; i < monVec.size(); ++i) {
 			std::tuple< Ts... > castedKey = static_cast<std::tuple< Ts... >>(static_cast<Monitor< Ts... >*>(monVec[i])->key);
 			if (compare::compareTuples(lookup, castedKey)) {
