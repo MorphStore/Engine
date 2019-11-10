@@ -271,8 +271,7 @@ namespace morphstore {
 			}
 		}
 
-		void stopInterval(const std::string& ident) {
-			chrono_tp stopTp = chronoHighRes::now();
+		void stopInterval(const std::string& ident, chrono_tp stopTp) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
 			if (counter != intervalData.cend()) {
 				if (counter->second->started) {
@@ -771,9 +770,10 @@ public:
 
 	template<typename... Ts>
 	void endIntervalFor(std::string ident, Ts... args) {
+                chrono_tp stopTp = chronoHighRes::now();
 		auto mon = findMonitor(args...);
 		if (mon) {
-			mon->stopInterval(ident);
+			mon->stopInterval(ident, stopTp);
 		}
 		else {
 			throw std::runtime_error("[MONITORING ERROR] Trying to stop an interval for a non-existent monitor.");
