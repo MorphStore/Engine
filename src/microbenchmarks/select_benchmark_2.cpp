@@ -25,6 +25,8 @@
  * configured in the CMakeLists-file.
  */
 
+//#define SELECT_BENCHMARK_2_TIME
+
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
@@ -41,6 +43,7 @@
 #include <core/morphing/for.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/vbp.h>
+#include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/operators/general_vectorized/select_compr.h>
 #include <core/utils/variant_executor.h>
 #else
@@ -55,6 +58,8 @@
 #include <random>
 #include <tuple>
 #include <vector>
+
+#include <cstring>
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -163,6 +168,32 @@ std::string formatName<uncompr_f> = "uncompr_f";
 
 
 // ****************************************************************************
+// A modified morph-operator.
+// ****************************************************************************
+// When morphing from uncompressed to uncompressed, it does not merely return
+// the input pointer, as the normal morph-operator, but does a memcpy. We need
+// this behavior for this micro-benchmark.
+
+template<class t_vector_extension, class t_dst_f, class t_src_f>
+struct morph_or_copy_t {
+    static const column<t_dst_f> * apply(const column<t_src_f> * p_InCol) {
+        return morph<t_vector_extension, t_dst_f>(p_InCol);
+    }
+};
+
+template<class t_vector_extension>
+struct morph_or_copy_t<t_vector_extension, uncompr_f, uncompr_f> {
+    static const column<uncompr_f> * apply(const column<uncompr_f> * p_InCol) {
+        const size_t sizeByte = p_InCol->get_size_used_byte();
+        auto outCol = new column<uncompr_f>(sizeByte);
+        memcpy(outCol->get_data(), p_InCol->get_data(), sizeByte);
+        outCol->set_meta_data(p_InCol->get_count_values(), sizeByte);
+        return outCol;
+    }
+};
+
+
+// ****************************************************************************
 // Wrapper of the select-operator to be executed by `variant_executor`
 // ****************************************************************************
 
@@ -174,12 +205,15 @@ const column<t_out_pos_f> * measure_select_and_morphs(
 ) {
     // We go from compressed inDataCol to compressed outPosCol via two ways to
     // measure both the actual select-operator and the morphs involved in it.
+    // Furthermore, we do an aggregation on the compressed input column to
+    // measure the time for decompression without the materialization of the
+    // uncompressed data.
     
     
     // 1) Select-operator on compressed data.
     
     MONITORING_START_INTERVAL_FOR(
-            "runtime select [µs]",
+            "runtime select:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
@@ -187,7 +221,7 @@ const column<t_out_pos_f> * measure_select_and_morphs(
             equal, t_vector_extension, t_out_pos_f, t_in_data_f
     >::apply(p_InDataColCompr, p_Pred);
     MONITORING_END_INTERVAL_FOR(
-            "runtime select [µs]",
+            "runtime select:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
@@ -196,15 +230,15 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     // 2) Decompression, select-operator on uncompressed data, recompression.
     
     MONITORING_START_INTERVAL_FOR(
-            "runtime decompr [µs]",
+            "runtime decompr:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
-    auto inDataColUncompr =
-            morph<t_vector_extension, uncompr_f, t_in_data_f
-    >(p_InDataColCompr);
+    auto inDataColUncompr = morph_or_copy_t<
+            t_vector_extension, uncompr_f, t_in_data_f
+    >::apply(p_InDataColCompr);
     MONITORING_END_INTERVAL_FOR(
-            "runtime decompr [µs]",
+            "runtime decompr:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
@@ -217,14 +251,15 @@ const column<t_out_pos_f> * measure_select_and_morphs(
         delete inDataColUncompr;
     
     MONITORING_START_INTERVAL_FOR(
-            "runtime recompr [µs]",
+            "runtime recompr:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
-    auto outPosColRecompr =
-            morph<t_vector_extension, t_out_pos_f, uncompr_f>(outPosColUncompr);
+    auto outPosColRecompr = morph_or_copy_t<
+            t_vector_extension, t_out_pos_f, uncompr_f
+    >::apply(outPosColUncompr);
     MONITORING_END_INTERVAL_FOR(
-            "runtime recompr [µs]",
+            "runtime recompr:µs",
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
@@ -240,6 +275,29 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     );
     
     delete outPosColRecompr;
+    
+    
+    // 3) Aggregation.
+    
+    MONITORING_START_INTERVAL_FOR(
+            "runtime agg_sum:µs",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    auto sumCol = agg_sum<t_vector_extension>(p_InDataColCompr);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime agg_sum:µs",
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
+    
+    // Record the sum to prevent the compiler from optimizing it away.
+    MONITORING_ADD_INT_FOR(
+            "sumInDataCol",
+            *static_cast<const uint64_t *>(sumCol->get_data()),
+            veName<t_vector_extension>, formatName<t_out_pos_f>,
+            formatName<t_in_data_f>, p_Pred, p_DatasetIdx
+    );
     
     
     return outPosColCompr;
