@@ -246,9 +246,10 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     auto outPosColUncompr = my_select_wit_t<
             equal, t_vector_extension, uncompr_f, uncompr_f
     >::apply(inDataColUncompr, p_Pred);
-    
-    if(!std::is_same<t_in_data_f, uncompr_f>::value)
-        delete inDataColUncompr;
+
+    // This condition would be necessary with the normal morph-operator.
+    // if(!std::is_same<t_in_data_f, uncompr_f>::value)
+    delete inDataColUncompr;
     
     MONITORING_START_INTERVAL_FOR(
             "runtime recompr:µs",
@@ -264,8 +265,9 @@ const column<t_out_pos_f> * measure_select_and_morphs(
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
     
-    if(!std::is_same<t_out_pos_f, uncompr_f>::value)
-        delete outPosColUncompr;
+    // This condition would be necessary with the normal morph-operator.
+    // if(!std::is_same<t_out_pos_f, uncompr_f>::value)
+    delete outPosColUncompr;
     
     MONITORING_ADD_BOOL_FOR(
             "count-check detour",
@@ -298,6 +300,8 @@ const column<t_out_pos_f> * measure_select_and_morphs(
             veName<t_vector_extension>, formatName<t_out_pos_f>,
             formatName<t_in_data_f>, p_Pred, p_DatasetIdx
     );
+    
+    delete sumCol;
     
     
     return outPosColCompr;
