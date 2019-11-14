@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file calib_bw_prof.cpp
+ * @file bw_prof.cpp
  * @brief Measures the bit width profiles of (physical-level) Null Suppression
  * algorithms required for our cost model for lightweight compression
  * algorithms.
