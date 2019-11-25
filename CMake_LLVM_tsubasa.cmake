@@ -40,5 +40,5 @@ function(add_optimization_compiler_flags)
 endfunction()
 
 function(add_vectorization_flags)
-
+    morph_flag(-DAURORATSUBASALLVM)
 endfunction()

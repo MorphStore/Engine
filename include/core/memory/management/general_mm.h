@@ -35,6 +35,7 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/helper.h>
 #include <core/utils/preprocessor.h>
+#include <numa.h>
 
 #include <core/memory/management/utils/memory_bin_handler.h>
 
@@ -84,6 +85,7 @@ class general_memory_manager : public abstract_memory_manager {
          m_GlobalScopeMemoryBinHandler(this),
          m_QueryScopeMemoryBinHandler(this) {
          trace( "[General Memory Manager] - IN.  ( void )." );
+         numa_available();
          if (!m_Initialized)
             handle_error();
          trace(
