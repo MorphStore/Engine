@@ -222,7 +222,7 @@ const column<uncompr_f> * generate_with_distr(
         bool sorted,
         size_t seed = 0
 ) {
-    const size_t allocationSize = countValues * sizeof(uint64_t);
+    const size_t allocationSize = countValues * sizeof(T);
     auto resCol = new column<uncompr_f>(allocationSize);
     T/*uint64_t*/ * const res = resCol->get_data();
     if( seed == 0 ) {
