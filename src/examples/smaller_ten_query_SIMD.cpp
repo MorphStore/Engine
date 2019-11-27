@@ -2,21 +2,22 @@
 //#include <core/memory/mm_glob.h>
 
 #include "../../include/core/morphing/format.h"
-#include "../../include/core/operators/scalar/agg_sum_uncompr.h"
-#include "../../include/core/operators/scalar/project_uncompr.h"
-#include "../../include/core/operators/scalar/select_uncompr.h"
-// #include <core/operators/general_vectorized/agg_sum_uncompr.h>
-// #include <core/operators/general_vectorized/project_uncompr.h>
-// #include <core/operators/general_vectorized/select_uncompr.h>
+// #include "../../include/core/operators/scalar/agg_sum_uncompr.h"
+// #include "../../include/core/operators/scalar/project_uncompr.h"
+// #include "../../include/core/operators/scalar/select_uncompr.h"
+#include <core/operators/general_vectorized/agg_sum_uncompr.h>
+#include <core/operators/general_vectorized/project_uncompr.h>
+#include <core/operators/general_vectorized/select_uncompr.h>
 
 #include "../../include/core/storage/column.h"
 #include "../../include/core/storage/column_gen.h"
 #include "../../include/core/utils/basic_types.h"
 #include "../../include/core/utils/printing.h"
 
-#include "../../include/vector/scalar/extension_scalar.h"
-// #include <vector/vector_extension_structs.h>
-// #include <vector/vector_primitives.h>
+// #include "../../include/vector/scalar/extension_scalar.h"
+
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 // #include <core/morphing/format.h>
 // #include <core/morphing/uncompr.h>
@@ -50,21 +51,23 @@ int main( void ) {
     // * Query execution
     // ************************************************************************
 
-    using ve = scalar<v64<uint64_t> >;
-    //using ve = sse<v128<uint64_t>>;
+    // using ve = scalar<v64<uint64_t> >;
+    // using ve = sse<v128<uint64_t>>;
+    using ve = avx2<v256<uint64_t>>;
+
 
     std::cout << "Query execution started... ";
     std::cout.flush();
 
     // Positions fulfilling "myNumbers < 10"
     auto i1 = morphstore::select<
-            std::less,
+            less,
             ve,
             uncompr_f,
             uncompr_f
     >(myNumbers, 10);
     // Data elements of "myNumbers" fulfilling "myNumbers < 10"
-    auto i2 = project<ve, uncompr_f>(myNumbers, i1);
+    // auto i2 = project<ve, uncompr_f>(myNumbers, i1);
 
     std::cout << "done." << std::endl << std::endl;
 
@@ -72,7 +75,12 @@ int main( void ) {
     // * Result output
     // ************************************************************************
 
-    print_columns(print_buffer_base::decimal, i2, "myNumbers<10");
+    // print_columns(print_buffer_base::decimal, myNumbers, "myNumbers");
+    print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");
+    uint8_t *mudata = i1->get_data();
+    for(int i = 0; i < 100; i++){
+      std::cout << (int)mudata[i] << std::endl;
+   }
 
     return 0;
 }
