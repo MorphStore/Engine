@@ -77,10 +77,10 @@ int main( void ) {
 
     // print_columns(print_buffer_base::decimal, myNumbers, "myNumbers");
     print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");
-    uint8_t *mudata = i1->get_data();
-    for(int i = 0; i < 100; i++){
-      std::cout << (int)mudata[i] << std::endl;
-   }
+   //  uint8_t *mudata = i1->get_data();
+   //  for(int i = 0; i < 100; i++){
+   //    std::cout << (int)mudata[i] << std::endl;
+   // }
 
     return 0;
 }
