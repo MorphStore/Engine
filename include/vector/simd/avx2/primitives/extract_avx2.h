@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   extract_avx2.h
  * Author: Annett
  *
@@ -23,11 +23,11 @@
 #include <functional>
 
 namespace vectorlib {
-    
-    
+
+
    template<typename T>
    struct extract<avx2<v256<T>>,64> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::base_t
@@ -44,14 +44,14 @@ namespace vectorlib {
 
       }
    };
-   
+
       template<typename T>
    struct extract<avx2<v256<T>>,32> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::base_t
-      extract_value( avx2< v256< uint64_t > >::vector_t p_vec, int idx) {
+      extract_value( avx2< v256< uint32_t > >::vector_t p_vec, int idx) {
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi32(p_vec,0); break;
@@ -68,11 +68,11 @@ namespace vectorlib {
    };
       template<typename T>
    struct extract<avx2<v256<T>>,16> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::base_t
-      extract_value( avx2< v256< uint64_t > >::vector_t p_vec, int idx) {
+      extract_value( avx2< v256< uint16_t > >::vector_t p_vec, int idx) {
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi16(p_vec,0); break;
@@ -95,14 +95,14 @@ namespace vectorlib {
          return (typename avx2< v256< U > >::base_t)0;
       }
    };
-   
+
       template<typename T>
    struct extract<avx2<v256<T>>,8> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::base_t
-      extract_value( avx2< v256< uint64_t > >::vector_t p_vec, int idx) {
+      extract_value( avx2< v256< uint8_t > >::vector_t p_vec, int idx) {
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi8(p_vec,0); break;
@@ -141,8 +141,7 @@ namespace vectorlib {
          return (typename avx2< v256< U > >::base_t)0;
       }
    };
-   
+
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX2_PRIMITIVES_EXTRACT_AVX2_H */
-
