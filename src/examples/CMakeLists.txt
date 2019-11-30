@@ -29,7 +29,21 @@ if( BUILD_ALL OR BUILD_EXAMPLES )
 
     add_executable( set_extract_query set_extract_query.cpp )
     target_compile_options( set_extract_query PRIVATE
-                           # $<$<CONFIG:DEBUG>:-DDEBUG>
+
+                           # $<$<CONFIG:DEBUG>:-DDEBUG> 
+                           )                           
+    target_link_libraries( set_extract_query PRIVATE "-ldl" )    
+    
+    add_executable( select_sum_32bitavx2_query select_sum_32bitavx2_query.cpp )
+    target_compile_options( select_sum_32bitavx2_query PRIVATE
+                           # $<$<CONFIG:DEBUG>:-DDEBUG> 
                            )
-    target_link_libraries( set_extract_query PRIVATE "-ldl" )
+    target_link_libraries( select_sum_32bitavx2_query PRIVATE "-ldl" )
+    
+    add_executable( test_primitives_query test_primitives_query.cpp )
+    target_compile_options( test_primitives_query PRIVATE
+                           # $<$<CONFIG:DEBUG>:-DDEBUG> 
+                           )
+    target_link_libraries( test_primitives_query PRIVATE "-ldl" )
+
 endif( BUILD_ALL OR BUILD_EXAMPLES )

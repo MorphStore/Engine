@@ -176,6 +176,61 @@ namespace vectorlib{
                _mm256_or_si256(
                   _mm256_cmpeq_epi8(p_vec1, p_vec2),
                   _mm256_cmpgt_epi8(p_vec2, p_vec1)
+=======
+   
+   
+   template<>
+   struct equal<avx2<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint32_t>>::mask_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx2)" );
+         return
+            _mm256_movemask_ps(
+               _mm256_castsi256_ps(
+                  _mm256_cmpeq_epi32(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   
+   template<>
+   struct less<avx2<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint32_t>>::mask_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (avx2)" );
+         return
+            _mm256_movemask_ps(
+               _mm256_castsi256_ps(
+                  _mm256_cmpgt_epi32(p_vec2, p_vec1)
+               )
+            );
+      }
+   };
+   
+   template<>
+   struct lessequal<avx2<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint32_t>>::mask_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (avx2)" );
+         return
+            _mm256_movemask_ps(
+               _mm256_castsi256_ps(
+                  _mm256_or_si256(
+                     _mm256_cmpeq_epi32(p_vec1, p_vec2),
+                     _mm256_cmpgt_epi32(p_vec2, p_vec1)
+                  )
                )
             );
       }
@@ -193,7 +248,6 @@ namespace vectorlib{
             _mm256_movemask_epi8(
                _mm256_cmpgt_epi8(p_vec1, p_vec2)
             );
-
       }
    };
    template<>
@@ -210,6 +264,40 @@ namespace vectorlib{
                _mm256_or_si256(
                   _mm256_cmpeq_epi8(p_vec1, p_vec2),
                   _mm256_cmpgt_epi8(p_vec1, p_vec2)
+
+   template<>
+   struct greater<avx2<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint32_t>>::mask_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (avx2)" );
+         return
+            _mm256_movemask_ps(
+               _mm256_castsi256_ps(
+                  _mm256_cmpgt_epi32(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct greaterequal<avx2<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx2<v256<uint32_t>>::mask_t
+      apply(
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (avx2)" );
+         return
+            _mm256_movemask_ps(
+               _mm256_castsi256_ps(
+                  _mm256_or_si256(
+                     _mm256_cmpeq_epi32(p_vec1, p_vec2),
+                     _mm256_cmpgt_epi32(p_vec1, p_vec2)
+                  )
                )
             );
       }
@@ -228,6 +316,21 @@ namespace vectorlib{
       }
    };
 
+   
+   template<>
+   struct count_matches<avx2<v256<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx2<v256<uint32_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
+         // @todo Which one is faster?
+          return __builtin_popcount(p_mask);
+        // return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
 /*
     template<typename T>
     struct compare<avx2<v256<T>>, 64> {
