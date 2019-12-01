@@ -240,6 +240,7 @@ namespace vectorlib{
       }
    };
 //the 16bit functions probably won't work because they use _mm256_movemask_ps (no equivalent for 16bit)
+   template<>
    struct equal<avx2<v256<uint16_t>>/*, 16*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
