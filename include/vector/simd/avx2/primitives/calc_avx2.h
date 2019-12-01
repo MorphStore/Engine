@@ -444,23 +444,6 @@ namespace vectorlib{
       }
    };
 
-
-   template<>
-   struct add<avx2<v256<uint8_t>>/*, 8*/> {
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static
-      typename avx2<v256<uint8_t>>::vector_t
-      apply(
-         typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
-         typename avx2<v256<uint8_t>>::vector_t const & p_vec2
-      ){
-         trace( "[VECTOR] - Add 8 bit integer values from two registers (avx2)" );
-         return _mm256_add_epi8( p_vec1, p_vec2);
-      }
-   };
-}
-
-
    template<>
    struct add<avx2<v256<uint16_t>>/*, 16*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
