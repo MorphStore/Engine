@@ -54,7 +54,7 @@ int main( void ) {
     //  }
     // }
 
-    // { //test had, doesn't work yet
+    // { //test hadd, doesn't work yet
     // using ps1 = avx2<v256<uint32_t>>;
     // IMPORT_VECTOR_BOILER_PLATE(ps1)
 
@@ -125,6 +125,35 @@ int main( void ) {
    //       number1 = extract_value<ps1,vector_base_t_granularity::value>(inversed, i); 
    //       std::cout << number1 << std::endl; //4294967295, 4294967294, 4294967293, 4294967292, 4294967291, 4294967290
    //       //4294967299, 4294967298
+   //   }
+   //  }
+
+    // { //test equal, error
+    // using ps1 = avx2<v256<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(2,2); //2,4,6,...,
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(4);     //4,4,...,4
+    //  std::cout<< "using avx2, 32bit" << std::endl;  
+    //  vector_t equalnum = equal<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); 
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 8; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(equalnum, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+   // { //test manipulate, error
+   //  using ps1 = avx2<v256<uint32_t>>;
+   //  IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+   //   vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,...,8
+   //   std::cout<< "using avx2, 32bit" << std::endl;  
+   //   vector_t manipulated = manipulate<ps1, vector_base_t_granularity::value>::rotate(sequence1); 
+   //   uint32_t number1 = 0;
+   //   for(int i=0; i < 8; i++){
+   //       number1 = extract_value<ps1,vector_base_t_granularity::value>(manipulated, i); 
+   //       std::cout << number1 << std::endl; 
    //   }
    //  }
 
@@ -265,6 +294,205 @@ int main( void ) {
   //        std::cout << unsigned(number1) << std::endl; 
   //    }
   //   }
+
+    //tests for avx2<v256<uint32_t>>:
+
+    // { //test add
+    // using ps1 = sse<v128<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,3
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,1,1
+    //  std::cout<< "using sse, 32bit" << std::endl;  
+    //  vector_t added = add<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //1,2,3,4
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(added, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    // { //test sub
+    // using ps1 = sse<v128<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,3,4
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,1,1
+    //  std::cout<< "using sse, 32bit" << std::endl;  
+    //  vector_t subtracted = sub<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,2,3,
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(subtracted, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    // { //test min
+    // using ps1 = sse<v128<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,3
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(2);     //2,2,2,2
+    //  std::cout<< "using sse, 32bit" << std::endl;  
+    //  vector_t minimum = min<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,2,2
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(minimum, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    // { //test hadd, doesn't work yet
+    // using ps1 = sse<v128<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,...,
+    //  std::cout<< "using sse, 32bit" << std::endl;  
+    //  vector_t hadded = hadd<ps1, vector_base_t_granularity::value>::apply(sequence1); 
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(hadded, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    // { //test mul
+    // using ps1 = sse<v128<uint32_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,3
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(2);     //2,2,2,2
+    //  std::cout<< "using sse, 32bit" << std::endl;  
+    //  vector_t multiplied = mul<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,2,4,6
+    //  uint32_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(multiplied, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+   // { //test manipulate
+   //  using ps1 = sse<v128<uint32_t>>;
+   //  IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+   //   vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,...,
+   //   std::cout<< "using sse, 32bit" << std::endl;  
+   //   vector_t manipulated = manipulate<ps1, vector_base_t_granularity::value>::rotate(sequence1); 
+   //   uint32_t number1 = 0;
+   //   for(int i=0; i < 4; i++){
+   //       number1 = extract_value<ps1,vector_base_t_granularity::value>(manipulated, i); 
+   //       std::cout << number1 << std::endl; 
+   //   }
+   //  }
+
+    //tests for sse<v128<uint16_t>>:
+
+    // { //test add
+    // using ps1 = sse<v128<uint16_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,...,7
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,...,1
+    //  std::cout<< "using sse, 16bit" << std::endl;  
+    //  vector_t added = add<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //1,2,...,8
+    //  uint16_t number1 = 0;
+    //  for(int i=0; i < 8; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(added, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+  // { //test min
+  //   using ps1 = sse<v128<uint16_t>>;
+  //   IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+  //    vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,...,7
+  //    vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(4);     //4,4,...,4
+  //    std::cout<< "using sse, 16bit" << std::endl;  
+  //    vector_t minimum = min<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,2,3,4,4,4,4
+  //    uint16_t number1 = 0;
+  //    for(int i=0; i < 8; i++){
+  //        number1 = extract_value<ps1,vector_base_t_granularity::value>(minimum, i);
+  //        std::cout << number1 << std::endl;
+  //    }
+  //   }
+
+    // { //test sub
+    // using ps1 = sse<v128<uint16_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,...,8
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,...,1
+    //  std::cout<< "using sse, 16bit" << std::endl;  
+    //  vector_t subtracted = sub<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,...,7
+    //  uint16_t number1 = 0;
+    //  for(int i=0; i < 8; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(subtracted, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    // { //test mul
+    // using ps1 = sse<v128<uint16_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,...,7
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(2);     //2,2,...,2
+    //  std::cout<< "using sse, 16bit" << std::endl;  
+    //  vector_t multiplied = mul<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,2,4,6,8,10,12,14
+    //  uint16_t number1 = 0;
+    //  for(int i=0; i < 8; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(multiplied, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }
+
+    //tests for sse<v128<uint8_t>>;
+
+    // { //test add
+    // using ps1 = sse<v128<uint8_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+    //  vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,...,
+    //  vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,...,1
+    //  std::cout<< "using sse, 8bit" << std::endl;  
+    //  vector_t added = add<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //1,2,...,
+    //  uint8_t number1 = 0;
+    //  for(int i=0; i < 16; i++){
+    //      number1 = extract_value<ps1,vector_base_t_granularity::value>(added, i);
+    //      std::cout << unsigned(number1) << std::endl;
+    //  }
+    // }
+
+   // { //test min
+   //  using ps1 = sse<v128<uint8_t>>;
+   //  IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+   //   vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(0,1); //0,1,2,...,
+   //   vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(4);     //4,4,...,4
+   //   std::cout<< "using sse, 8bit" << std::endl;  
+   //   vector_t minimum = min<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,2,3,4,4,4,4,..
+   //   uint8_t number1 = 0;
+   //   for(int i=0; i < 16; i++){
+   //       number1 = extract_value<ps1,vector_base_t_granularity::value>(minimum, i);
+   //       std::cout << unsigned(number1) << std::endl;
+   //   }
+   //  }
+
+    { //test sub
+    using ps1 = sse<v128<uint8_t>>;
+    IMPORT_VECTOR_BOILER_PLATE(ps1)
+
+     vector_t sequence1 = set_sequence<ps1, vector_base_t_granularity::value>(1,1); //1,2,...,
+     vector_t sequence2 = set1<ps1, vector_base_t_granularity::value>(1);     //1,1,...,1
+     std::cout<< "using sse, 8bit" << std::endl;  
+     vector_t subtracted = sub<ps1, vector_base_t_granularity::value>::apply(sequence1, sequence2); //0,1,...,
+     uint8_t number1 = 0;
+     for(int i=0; i < 16; i++){
+         number1 = extract_value<ps1,vector_base_t_granularity::value>(subtracted, i);
+         std::cout << unsigned(number1) << std::endl;
+     }
+    }
 
 }
  

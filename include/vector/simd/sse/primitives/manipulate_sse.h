@@ -35,6 +35,21 @@ namespace vectorlib{
 
         }
     };
+    //doesn't work yet
+    // template<typename T>
+    // struct manipulate<sse<v128<T>>, 32> {
+        
+    //     template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+    //     MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    //     static typename sse< v128< U > >::vector_t
+    //     rotate( sse< v128< uint32_t > >::vector_t p_vec ) {
+    //         trace( "[VECTOR] - Rotate vector (sse)" );
+             
+    //         return (__m128i)(_mm_permute_ps((__m128)p_vec,1));
+
+    //     }
+    // };
+
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_MANIPULATE_SSE_H */

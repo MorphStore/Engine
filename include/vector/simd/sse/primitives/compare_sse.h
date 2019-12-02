@@ -128,6 +128,109 @@ namespace vectorlib{
       }
    };
 
+
+//no 32 and 16 bit equivalents for _mm_movemask_pd
+//all of the functions below are not tested
+
+   template<>
+   struct equal<sse<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint8_t>>::mask_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (sse)" );
+         return
+            _mm_movemask_epi8(
+                  _mm_cmpeq_epi8(p_vec1, p_vec2)
+               
+            );
+      }
+   };
+   template<>
+   struct less<sse<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint8_t>>::mask_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (sse)" );
+         return
+            _mm_movemask_epi8(
+                  _mm_cmpgt_epi8(p_vec2, p_vec1)               
+            );
+      }
+   };
+   template<>
+   struct lessequal<sse<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint8_t>>::mask_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (sse)" );
+         return
+            _mm_movemask_epi8(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi8(p_vec1, p_vec2),
+                     _mm_cmpgt_epi8(p_vec2, p_vec1)
+               )
+            );
+      }
+   };
+
+   template<>
+   struct greater<sse<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint8_t>>::mask_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (sse)" );
+         return
+            _mm_movemask_epi8(
+                  _mm_cmpgt_epi8(p_vec1, p_vec2)
+               
+            );
+      }
+   };
+   template<>
+   struct greaterequal<sse<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint8_t>>::mask_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (sse)" );
+         return
+            _mm_movemask_epi8(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi8(p_vec1, p_vec2),
+                     _mm_cmpgt_epi8(p_vec1, p_vec2)
+                  
+               )
+            );
+      }
+   };
+   template<>
+   struct count_matches<sse<v128<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename sse<v128<uint8_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+
    /*
     template<typename T>
     struct compare<sse<v128<T>>, 64> {
