@@ -153,6 +153,397 @@ namespace vectorlib{
       }
    };
    
+   //the functions below are not tested
+
+   template<>
+   struct equal<avx512<v512<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint32_t>>::mask_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
+         return _mm512_cmpeq_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v256<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v256<uint32_t>>::mask_t
+      apply(
+         typename avx512<v256<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
+         return _mm256_cmpeq_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v128<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v128<uint32_t>>::mask_t
+      apply(
+         typename avx512<v128<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
+         return _mm_cmpeq_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct less<avx512<v512<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint32_t>>::mask_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (avx512)" );
+         return _mm512_cmplt_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct lessequal<avx512<v512<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint32_t>>::mask_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (avx512)" );
+         return _mm512_cmple_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+
+   template<>
+   struct greater<avx512<v512<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint32_t>>::mask_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (avx512)" );
+         return _mm512_cmpgt_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct greaterequal<avx512<v512<uint32_t>>/*, 32*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint32_t>>::mask_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (avx512)" );
+         return _mm512_cmpge_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct count_matches<avx512<v512<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v512<uint32_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v256<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v256<uint32_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v128<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v128<uint64_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+
+   template<>
+   struct equal<avx512<v512<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint16_t>>::mask_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
+         return _mm512_cmpeq_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v256<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v256<uint16_t>>::mask_t
+      apply(
+         typename avx512<v256<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
+         return _mm256_cmpeq_epi32_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v128<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v128<uint16_t>>::mask_t
+      apply(
+         typename avx512<v128<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
+         return _mm_cmpeq_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct less<avx512<v512<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint16_t>>::mask_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (avx512)" );
+         return _mm512_cmplt_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct lessequal<avx512<v512<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint16_t>>::mask_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (avx512)" );
+         return _mm512_cmple_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+
+   template<>
+   struct greater<avx512<v512<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint16_t>>::mask_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (avx512)" );
+         return _mm512_cmpgt_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct greaterequal<avx512<v512<uint16_t>>/*, 16*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint16_t>>::mask_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (avx512)" );
+         return _mm512_cmpge_epi16_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct count_matches<avx512<v512<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v512<uint16_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v256<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v256<uint16_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v128<uint16_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v128<uint16_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+
+   template<>
+   struct equal<avx512<v512<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint8_t>>::mask_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
+         return _mm512_cmpeq_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v256<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v256<uint8_t>>::mask_t
+      apply(
+         typename avx512<v256<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v256<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
+         return _mm256_cmpeq_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct equal<avx512<v128<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v128<uint8_t>>::mask_t
+      apply(
+         typename avx512<v128<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v128<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
+         return _mm_cmpeq_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   
+   template<>
+   struct less<avx512<v512<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint8_t>>::mask_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (avx512)" );
+         return _mm512_cmplt_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct lessequal<avx512<v512<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint8_t>>::mask_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (avx512)" );
+         return _mm512_cmple_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+
+   template<>
+   struct greater<avx512<v512<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint8_t>>::mask_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (avx512)" );
+         return _mm512_cmpgt_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct greaterequal<avx512<v512<uint8_t>>/*, 8*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512<v512<uint8_t>>::mask_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (avx512)" );
+         return _mm512_cmpge_epi8_mask(p_vec1, p_vec2);
+      }
+   };
+   template<>
+   struct count_matches<avx512<v512<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v512<uint8_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v256<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v256<uint8_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+   
+   template<>
+   struct count_matches<avx512<v128<uint8_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v128<uint8_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
    /*
     template<typename T>
     struct compare<avx512<v512<T>>, 64> {

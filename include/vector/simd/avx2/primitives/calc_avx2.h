@@ -615,7 +615,7 @@ namespace vectorlib{
          return _mm256_slli_epi16(p_vec1, p_distance);
       }
    };
-   //doesn't work, no easy 16bit intrinsic to replace _mm256_sllv_epi32
+   // _mm256_sllv_epi32 can be replaced with _mm256_sllv_epi16, but this intrinsic uses AVX512VL + AVX512BW
    // template<>
    // struct shift_left_individual<avx2<v256<uint16_t>>/*, 32*/> {
    //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -643,7 +643,7 @@ namespace vectorlib{
          return _mm256_srli_epi16(p_vec1, p_distance);
       }
    };
-   //doesn't work, no easy 16bit intrinsic to replace _mm256_srlv_epi32
+   // _mm256_srlv_epi32 can be replaced with _mm256_srlv_epi16, but this intrinsic uses AVX512VL + AVX512BW
    // template<>
    // struct shift_right_individual<avx2<v256<uint16_t>>/*, 16*/> {
    //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
