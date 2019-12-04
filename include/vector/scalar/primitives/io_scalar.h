@@ -39,7 +39,7 @@ namespace vectorlib {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U *& p_DataPtr, vectorlib::scalar<v64< uint64_t > >::vector_t & p_vec ) {
+      store( U *& p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t & p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;
@@ -73,7 +73,7 @@ namespace vectorlib {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< U > >::vector_t
-      apply( U const * const p_DataPtr, vectorlib::scalar<v64< uint64_t > >::vector_t p_vec ) {
+      apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
          
@@ -106,7 +106,7 @@ namespace vectorlib {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
-      store( U * p_DataPtr, vectorlib::scalar<v64< uint64_t > >::vector_t p_vec ) {
+      store( U * p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;

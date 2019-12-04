@@ -29,7 +29,7 @@ namespace vectorlib{
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename scalar< v64< U > >::vector_t
-        rotate( scalar< v64< uint64_t > >::vector_t p_vec ) {
+        rotate( typename scalar< v64< U > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (scalar)" );
              
             return p_vec;

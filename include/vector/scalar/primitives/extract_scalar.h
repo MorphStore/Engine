@@ -30,7 +30,7 @@ namespace vectorlib {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< U > >::base_t
-      extract_value( scalar< v64< uint64_t > >::vector_t p_vec, MSV_CXX_ATTRIBUTE_PPUNUSED int idx) {
+      extract_value( typename scalar< v64< U > >::vector_t p_vec, MSV_CXX_ATTRIBUTE_PPUNUSED int idx) {
          trace( "[VECTOR] - extract value from scalar register." );
          return p_vec;
       }
