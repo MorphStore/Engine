@@ -42,7 +42,17 @@ namespace vectorlib{
       >::type;
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+      using mask_t = 
+        typename std::conditional< 
+          (bool) (sizeof(base_t) > 2), 
+          uint16_t, 
+            typename std::conditional< 
+              (bool) (sizeof(base_t) > 1), 
+              uint32_t, 
+              uint64_t
+          >::type
+        >::type;     
+       
    };
    
       template<typename T>
@@ -63,7 +73,13 @@ namespace vectorlib{
       >::type;
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+      using mask_t = 
+        typename std::conditional< 
+          (bool) (sizeof(base_t) > 1), 
+          uint16_t, 
+          uint32_t
+        >::type;     
+       
    };
    
       template<typename T>

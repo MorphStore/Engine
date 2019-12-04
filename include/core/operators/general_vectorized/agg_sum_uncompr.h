@@ -48,7 +48,7 @@ namespace morphstore {
       *outData=result;
       outDataCol->set_meta_data(1, sizeof(base_t));
       return outDataCol;
-   }*/
+   }*/  
 
    template<class VectorExtension>
    struct agg_sum_processing_unit {
@@ -113,12 +113,12 @@ namespace morphstore {
          base_t const * dataPtr = p_DataColumn->get_data( );
 
          static base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
-         typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState(
+         typename agg_sum_processing_unit<scalar<v64<base_t>>>::state_t scalarState(
          t
          );
 
         base_t result =
-            agg_sum_batch<scalar < v64 < uint64_t > >>::apply( dataPtr, remainderCount, scalarState );
+            agg_sum_batch<scalar < v64 < base_t > >>::apply( dataPtr, remainderCount, scalarState );
 
          auto outDataCol = new column<uncompr_f>(sizeof(base_t));
          base_t * const outData = outDataCol->get_data();

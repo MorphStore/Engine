@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <type_traits>
 #include "immintrin.h"
+#include <functional>
 
 #include "vector/vector_extension_structs.h"
 
@@ -35,8 +36,17 @@ namespace vectorlib {
          >::type
       >::type;
 
-      using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+     using size = std::integral_constant<size_t, sizeof(vector_t)>;
+      
+     using mask_t = 
+        typename std::conditional< 
+          (bool) (sizeof(base_t) > 1), 
+          uint16_t, 
+          uint32_t
+        >::type;     
+       
+
+        
    };
    
    template<typename T>
@@ -58,6 +68,7 @@ namespace vectorlib {
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
       using mask_t = uint16_t;
+        
    };
 
 }

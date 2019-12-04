@@ -148,7 +148,7 @@ using namespace vectorlib;
             );
 
          typename intersect_sorted_processing_unit<VectorExtension>::state_t vectorState;
-         typename intersect_sorted_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState;
+         typename intersect_sorted_processing_unit<scalar<v64<base_t>>>::state_t scalarState;
          
          auto outDataCol = new column<uncompr_f>(sizeByte);
          base_t * outDataPtr = outDataCol->get_data( );
@@ -164,7 +164,7 @@ using namespace vectorlib;
                   
          int scalar_count=0;
 
-         scalar_count=intersect_sorted_batch<scalar<v64<uint64_t>>>::apply(inData1Ptr+vectorState.m_doneLeft, inData2Ptr+vectorState.m_doneRight, outDataPtr+vec_count,inData1Count-vectorState.m_doneLeft, inData2Count-vectorState.m_doneRight,scalarState);
+         scalar_count=intersect_sorted_batch<scalar<v64<base_t>>>::apply(inData1Ptr+vectorState.m_doneLeft, inData2Ptr+vectorState.m_doneRight, outDataPtr+vec_count,inData1Count-vectorState.m_doneLeft, inData2Count-vectorState.m_doneRight,scalarState);
 
          outDataCol->set_meta_data((vec_count+scalar_count), (vec_count+scalar_count)*sizeof(base_t) );
 

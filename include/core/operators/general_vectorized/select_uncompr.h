@@ -88,7 +88,7 @@ namespace morphstore {
          
          select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
          
-         select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
+         select_batch<scalar<v64<base_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
 
          size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 

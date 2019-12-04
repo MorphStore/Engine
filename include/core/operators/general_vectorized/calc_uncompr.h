@@ -254,7 +254,7 @@ struct compare_binary_t {
          size_t const remainderCount = inData1Count % vector_element_count::value;
 
          compare_binary_batch<VectorExtension,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *)outDataPtr, vectorCount);
-         compare_binary_batch<scalar<v64<uint64_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
+         compare_binary_batch<scalar<v64<base_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
 
          outDataCol->set_meta_data(inData1Count/sizeof(base_t), sizeByte);
 

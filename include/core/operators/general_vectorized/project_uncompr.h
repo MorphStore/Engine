@@ -67,7 +67,7 @@ namespace morphstore {
          auto outDataCol = new column<uncompr_f>(inUsedBytes);
          base_t * outDataPtr = outDataCol->get_data( );
          project_t_batch<VectorExtension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
-         project_t_batch<scalar<v64<uint64_t>>>::apply(inDataPtr, inPosPtr, outDataPtr, remainderCount);
+         project_t_batch<scalar<v64<base_t>>>::apply(inDataPtr, inPosPtr, outDataPtr, remainderCount);
 
          outDataCol->set_meta_data(inPosCount, inUsedBytes);
 

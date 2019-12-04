@@ -210,7 +210,7 @@ using namespace vectorlib;
              p_Data1Column->get_size_used_byte()+p_Data2Column->get_size_used_byte();
 
          typename merge_sorted_processing_unit<VectorExtension>::state_t vectorState;
-         typename merge_sorted_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState;
+         typename merge_sorted_processing_unit<scalar<v64<base_t>>>::state_t scalarState;
          
          auto outDataCol = new column<uncompr_f>(sizeByte);
          base_t * outDataPtr = outDataCol->get_data( );
