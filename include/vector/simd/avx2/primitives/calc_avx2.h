@@ -288,7 +288,7 @@ namespace vectorlib{
                //    _mm256_castsi256_pd(p_vec1)
                // )
            //  );
-          return _mm256_extract_epi32(tmp,0)+_mm256_extract_epi32(tmp,2)+_mm256_extract_epi32(tmp,4)+_mm256_extract_epi32(tmp,6);
+          return _mm256_extract_epi32(tmp,0)+_mm256_extract_epi32(tmp,1)+_mm256_extract_epi32(tmp,4)+_mm256_extract_epi32(tmp,5);
        }
     };
 
