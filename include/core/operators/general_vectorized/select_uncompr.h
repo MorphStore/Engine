@@ -17,7 +17,7 @@ namespace morphstore {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
-      vector_mask_t 
+      vector_mask_t
       apply(
          vector_t const p_DataVector,
          vector_t const p_PredicateVector
@@ -50,7 +50,7 @@ namespace morphstore {
                   dataVector,
                   predicateVector
                );
-            vectorlib::compressstore<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
+            vectorlib::compressstore<VectorExtension, vectorlib::iov::UNALIGNED, vector_base_t_granularity::value>(p_OutPtr, positionVector, resultMask);
             positionVector = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
 
             //p_OutPtr += __builtin_popcount( resultMask );
@@ -85,9 +85,7 @@ namespace morphstore {
          size_t const vectorCount = inDataCount / vector_element_count::value;
          size_t const remainderCount = inDataCount % vector_element_count::value;
 
-         
          select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-         
          select_batch<scalar<v64<base_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
 
          size_t const outDataCount = outDataPtr - outDataPtrOrigin;
@@ -113,5 +111,3 @@ namespace morphstore {
 
 
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
-
-

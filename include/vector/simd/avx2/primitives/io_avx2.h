@@ -15,9 +15,9 @@
 
 #include <functional>
 
+#include <iostream>
+
 namespace vectorlib {
-    
-    
    template<typename T, int IOGranularity>
    struct io<avx2<v256<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -27,7 +27,6 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
          return _mm256_load_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
-      
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -53,7 +52,6 @@ namespace vectorlib {
          _mm256_store_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
-            
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
@@ -61,7 +59,6 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return _mm256_load_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -82,7 +79,6 @@ namespace vectorlib {
          trace( "[VECTOR] - Stream load integer values into 256 Bit vector register." );
          return _mm256_stream_load_si128(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
-      
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -91,9 +87,6 @@ namespace vectorlib {
          _mm256_stream_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return ;
       }
-      
-
-      
    };
 
    template<typename T, int IOGranularity>
@@ -114,9 +107,6 @@ namespace vectorlib {
           _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *> (p_DataPtr),p_vec);
           return;
       }
-
-     
-      
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
@@ -133,7 +123,6 @@ namespace vectorlib {
          _mm256_storeu_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
-            
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
@@ -141,7 +130,6 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned double values into 256 Bit vector register." );
          return _mm256_loadu_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -150,48 +138,135 @@ namespace vectorlib {
          _mm256_storeu_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
-      
-    /*! This function compresses the data in a register according to a bitmask (all values with an according set bit will be packed at the beginning of the register), and stores it at a given address.
-    * Note: This does not really compress, just shift the values we want to store to the lower bits.
-    * If you need a real compress store, copy this code and change the used store-intrinsic to _mm256_maskstore* (and provide the according mask, of course).
-    * This function will move to the vector lib someday.
-    * @param outPtr The memory address where the vector should be stored
-    * @param mask A bitmask with a bit set for every value which is goin to be stored
-    * @param vector The 256-bit vector to be comprssed and stored 
-    */
+};
+
+   template<typename T>
+   struct io<avx2<v256<T>>,iov::UNALIGNED, 64> {
+      /*! This function compresses the data in a register according to a bitmask (all values with an according set bit will be packed at the beginning of the register), and stores it at a given address.
+      * Note: This does not really compress, just shift the values we want to store to the lower bits.
+      * If you need a real compress store, copy this code and change the used store-intrinsic to _mm256_maskstore* (and provide the according mask, of course).
+      * This function will move to the vector lib someday.
+      * @param outPtr The memory address where the vector should be stored
+      * @param mask A bitmask with a bit set for every value which is goin to be stored
+      * @param vector The 256-bit vector to be comprssed and stored
+      */
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
           switch (mask){
-                    case 0: break;
-//                    case 0: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
-//                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
-                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
-                    case 2: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-//                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
-                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
-                    case 4: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
-                    case 5: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,216)); break;
-                    case 6: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
-//                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
-                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
-                    case 8: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,147)); break;
-                    case 9: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,156)); break;
-                    case 10: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,141)); break;
-                    case 11: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,180)); break;
-                    case 12: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,78)); break;
-                    case 13: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,120)); break;
-                    case 14: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,57)); break;
-                    case 15: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
-                }
-         
+            case 0: break;
+            //                    case 0: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+            //                    case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+            case 1: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
+            case 2: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
+            //                    case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+            case 3: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
+            case 4: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
+            case 5: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,216)); break;
+            case 6: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
+            //                    case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,228)); break;
+            case 7: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), p_vec); break;
+            case 8: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,147)); break;
+            case 9: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,156)); break;
+            case 10: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,141)); break;
+            case 11: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,180)); break;
+            case 12: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,78)); break;
+            case 13: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,120)); break;
+            case 14: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),_mm256_permute4x64_epi64(p_vec,57)); break;
+            case 15: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+         }
          return ;
       }
-
    };
-   
+
+   template<typename T>
+   struct io<avx2<v256<T>>,iov::UNALIGNED, 8> {
+		template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+		MSV_CXX_ATTRIBUTE_FORCE_INLINE
+		static void
+		compressstore( U * p_DataPtr,  avx2< v256< uint8_t > > ::vector_t p_vec, int mask ) {
+			trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         int matched = 1;
+         std::cout <<"WAS ZUR HOELLE?!" << std::endl;
+         std::cout << mask << std::endl;
+			switch (mask){
+            case 0x0: break;
+            case 0x00000001: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00000003: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00000007: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0000000f: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0000001f: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0000003f: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0000007f: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x000000ff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x000001ff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x000003ff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x000007ff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00000fff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00001fff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00003fff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00007fff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0000ffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0001ffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0003ffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0007ffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x000fffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x001fffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x003fffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x007fffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x00ffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x01ffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x03ffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x07ffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x0fffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x1fffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x3fffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0x7fffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            case 0xffffffff: _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec); break;
+            //1
+            case 0x0000ff00:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
+            //3
+            case 0x00ff0000:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
+            case 0x00ff00ff:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,216)); break;
+            case 0x00ffff00:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
+            //7
+            case 0xff000000:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,147)); break;
+            case 0xff0000ff:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,159)); break;
+            case 0xff00ff00:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,141)); break;
+            case 0xff00ffff:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,180)); break;
+            case 0xffff0000:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,78)); break;
+            case 0xffff00ff:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,120)); break;
+            case 0xffffff00:_mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr), _mm256_permute4x64_epi64(p_vec,57)); break;
+            
+            default: matched = 0; break;
+         }
+         if(matched == 0){
+            while(mask != 0){
+               if((mask & 0x1) == 0x1){
+                  if(matched == 0){
+                     matched = 1;
+                     _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
+                  }
+                  p_DataPtr ++;
+               }else{
+                  matched = 0;
+               }
+               mask = mask >> 1;    //shift mask
+               //shift p_vec
+               __m256i srl64_q = _mm256_permute4x64_epi64(p_vec, _MM_SHUFFLE(0,3,2,1));
+               __m256i srl64_m = _mm256_slli_epi64(srl64_q, 7*8);
+               __m256i srl8_z = _mm256_srli_epi64(p_vec, 1*8);
+               __m256i srl64 = _mm256_and_si256(srl64_m, _mm256_set_epi64x(0, ~0, ~0, ~0));
+               p_vec = _mm256_or_si256(srl64, srl8_z);
+            }
+         }
+
+			return ;
+		}
+   };
+
    template<typename T, int IOGranularity, int Scale>
    struct gather_t<avx2<v256<T>>, IOGranularity, Scale> {
       //@todo we should actually provide a specialization (depending on the basetype) here!
@@ -201,10 +276,7 @@ namespace vectorlib {
       apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
          return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
-         
       }
-            
-           
    };
 
    template<typename T, int IOGranularity>
@@ -216,7 +288,6 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned integer values into 256 Bit vector register using lddqu." );
          return _mm256_lddqu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
-      
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -225,15 +296,12 @@ namespace vectorlib {
          _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
       }
-      
 
-      
    };
 
     //@todo we should actually provide a specialization (depending on the basetype) here!
     template<typename T, int IOGranularity, int Scale>
     struct gather_t<avx2<v128<T>>, IOGranularity, Scale> {
-     
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v128< U > >::vector_t
