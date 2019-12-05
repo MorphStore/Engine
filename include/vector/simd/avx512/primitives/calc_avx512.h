@@ -25,7 +25,7 @@
 
 namespace vectorlib{
    template<>
-   struct add<avx512<v512<uint64_t>>/*, 64*/> {
+   struct add<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -39,7 +39,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct add<avx512<v256<uint64_t>>/*, 64*/> {
+   struct add<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint64_t>>::vector_t
@@ -52,7 +52,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v128<uint64_t>>/*, 64*/> {
+   struct add<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint64_t>>::vector_t
@@ -66,7 +66,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v512<uint64_t>>/*, 64*/> {
+   struct min<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -80,7 +80,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v256<uint64_t>>/*, 64*/> {
+   struct min<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint64_t>>::vector_t
@@ -93,7 +93,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct min<avx512<v128<uint64_t>>/*, 64*/> {
+   struct min<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint64_t>>::vector_t
@@ -107,7 +107,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct sub<avx512<v512<uint64_t>>/*, 64*/> {
+   struct sub<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -120,7 +120,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct hadd<avx512<v512<uint64_t>>/*, 64*/> {
+   struct hadd<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::base_t
@@ -132,7 +132,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct mul<avx512<v512<uint64_t>>/*, 64*/> {
+   struct mul<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -147,7 +147,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v256<uint64_t>>/*, 64*/> {
+   struct mul<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint64_t>>::vector_t
@@ -162,7 +162,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v128<uint64_t>>/*, 64*/> {
+   struct mul<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint64_t>>::vector_t
@@ -178,7 +178,7 @@ namespace vectorlib{
    
    
    template<>
-   struct div<avx512<v512<uint64_t>>/*, 64*/> {
+   struct div<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -212,7 +212,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct mod<avx512<v512<uint64_t>>/*, 64*/> {
+   struct mod<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -247,7 +247,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct inv<avx512<v512<uint64_t>>/*, 64*/> {
+   struct inv<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -259,7 +259,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left<avx512<v512<uint64_t>>/*, 64*/> {
+   struct shift_left<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -272,7 +272,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left_individual<avx512<v512<uint64_t>>/*, 64*/> {
+   struct shift_left_individual<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -285,7 +285,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right<avx512<v512<uint64_t>>/*, 64*/> {
+   struct shift_right<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -298,7 +298,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right_individual<avx512<v512<uint64_t>>/*, 64*/> {
+   struct shift_right_individual<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint64_t>>::vector_t
@@ -314,7 +314,7 @@ namespace vectorlib{
    
 //all of the functions below are not tested
    template<>
-   struct add<avx512<v512<uint32_t>>/*, 32*/> {
+   struct add<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -327,7 +327,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v256<uint32_t>>/*, 32*/> {
+   struct add<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint32_t>>::vector_t
@@ -340,7 +340,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v128<uint32_t>>/*, 32*/> {
+   struct add<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint32_t>>::vector_t
@@ -354,7 +354,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v512<uint32_t>>/*, 32*/> {
+   struct min<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -368,7 +368,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v256<uint32_t>>/*, 32*/> {
+   struct min<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint32_t>>::vector_t
@@ -381,7 +381,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct min<avx512<v128<uint32_t>>/*, 32*/> {
+   struct min<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint32_t>>::vector_t
@@ -395,7 +395,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct sub<avx512<v512<uint32_t>>/*, 32*/> {
+   struct sub<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -408,7 +408,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct hadd<avx512<v512<uint32_t>>/*, 32*/> {
+   struct hadd<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::base_t
@@ -420,7 +420,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct mul<avx512<v512<uint32_t>>/*, 32*/> {
+   struct mul<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -435,7 +435,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v256<uint32_t>>/*, 32*/> {
+   struct mul<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint32_t>>::vector_t
@@ -450,7 +450,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v128<uint32_t>>/*, 32*/> {
+   struct mul<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint32_t>>::vector_t

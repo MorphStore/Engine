@@ -13,73 +13,73 @@
 #include <functional>
 
 namespace vectorlib{
-   template<>
-   struct equal<scalar<v64<uint64_t>>/*, 64*/> {
+    template<typename T>
+   struct equal<scalar<v64<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64<uint64_t>>::mask_t
+      static typename scalar<v64<T>>::mask_t
       apply(
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+         typename scalar<v64<T>>::vector_t const & p_vec1,
+         typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
-         return (scalar<v64<uint64_t>>::vector_t)( p_vec1 == p_vec2 );
+         return (typename scalar<v64<uint64_t>>::mask_t)( p_vec1 == p_vec2 );
       }
    };
-   template<>
-   struct less<scalar<v64<uint64_t>>/*, 64*/> {
+    template<typename T>
+   struct less<scalar<v64<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64<uint64_t>>::mask_t
+      static typename scalar<v64<T>>::mask_t
       apply(
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+         typename scalar<v64<T>>::vector_t const & p_vec1,
+         typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
-         return (scalar<v64<uint64_t>>::vector_t)( p_vec1 < p_vec2 );
+         return (typename scalar<v64<T>>::mask_t)( p_vec1 < p_vec2 );
       }
    };
-   template<>
-   struct lessequal<scalar<v64<uint64_t>>/*, 64*/> {
+    template<typename T>
+   struct lessequal<scalar<v64<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64<uint64_t>>::mask_t
+      static typename scalar<v64<T>>::mask_t
       apply(
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+         typename scalar<v64<T>>::vector_t const & p_vec1,
+         typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
-         return (scalar<v64<uint64_t>>::vector_t)( p_vec1 <= p_vec2 );
+         return (typename scalar<v64<uint64_t>>::mask_t)( p_vec1 <= p_vec2 );
       }
    };
 
-   template<>
-   struct greater<scalar<v64<uint64_t>>/*, 64*/> {
+    template<typename T>
+   struct greater<scalar<v64<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64<uint64_t>>::mask_t
+      static typename scalar<v64<T>>::mask_t
       apply(
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+         typename scalar<v64<T>>::vector_t const & p_vec1,
+         typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
-         return (scalar<v64<uint64_t>>::vector_t)( p_vec1 > p_vec2 );
+         return (typename scalar<v64<T>>::mask_t)( p_vec1 > p_vec2 );
       }
    };
-   template<>
-   struct greaterequal<scalar<v64<uint64_t>>/*, 64*/> {
+    template<typename T>
+   struct greaterequal<scalar<v64<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64<uint64_t>>::mask_t
+      static typename scalar<v64<T>>::mask_t
       apply(
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
-         typename scalar<v64<uint64_t>>::vector_t const & p_vec2
+         typename scalar<v64<T>>::vector_t const & p_vec1,
+         typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
-         return (scalar<v64<uint64_t>>::vector_t)( p_vec1 >= p_vec2 );
+         return (typename scalar<v64<T>>::mask_t)( p_vec1 >= p_vec2 );
       }
    };
-   template<>
-   struct count_matches<scalar<v64<uint64_t>>> {
+    template<typename T>
+   struct count_matches<scalar<v64<T>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static uint8_t
       apply(
-         typename scalar<v64<uint64_t>>::mask_t const & p_mask
+         typename scalar<v64<T>>::mask_t const & p_mask
       ) {
          trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
          return p_mask;

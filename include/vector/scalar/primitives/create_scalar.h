@@ -26,27 +26,28 @@ namespace vectorlib {
     
     
    template<typename T>
-   struct create<scalar<v64<T>>,64> {
+   struct create<scalar<v64<T>>/*,64*/> {
        
                
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      //template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar<v64< U > >::vector_t
-      set1( uint64_t a0) {
+      static typename scalar<v64< T > >::vector_t
+      set1( T a0) {
          trace( "[VECTOR] - set1 sse register." );
-         return reinterpret_cast<typename scalar< v64< U > >::vector_t> (a0);
+         return (typename scalar< v64< T > >::vector_t) (a0);
       }
       
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      //template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename scalar< v64< U > >::vector_t
-      set_sequence( int a, MSV_CXX_ATTRIBUTE_PPUNUSED int b) {
+      static typename scalar< v64< T > >::vector_t
+      set_sequence( T a, MSV_CXX_ATTRIBUTE_PPUNUSED int b) {
          trace( "[VECTOR] - set_sequence sse register." );
          return a;
       }
             
    
    };
+
    
 }
 

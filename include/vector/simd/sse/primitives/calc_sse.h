@@ -24,7 +24,7 @@
 namespace vectorlib{
 
    template<>
-   struct add<sse<v128<uint64_t>>/*, 64*/> {
+   struct add<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -37,7 +37,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct sub<sse<v128<uint64_t>>/*, 64*/> {
+   struct sub<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -51,7 +51,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<sse<v128<uint64_t>>/*, 64*/> {
+   struct min<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -66,7 +66,7 @@ namespace vectorlib{
       
       
    template<>
-   struct hadd<sse<v128<uint64_t>>/*, 64*/> {
+   struct hadd<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::base_t
@@ -87,7 +87,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct mul<sse<v128<uint64_t>>/*, 64*/> {
+   struct mul<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -102,7 +102,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct div<sse<v128<uint64_t>>/*, 64*/> {
+   struct div<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -134,7 +134,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct mod<sse<v128<uint64_t>>/*, 64*/> {
+   struct mod<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -170,7 +170,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct inv<sse<v128<uint64_t>>/*, 64*/> {
+   struct inv<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -183,7 +183,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct shift_left<sse<v128<uint64_t>>/*, 64*/> {
+   struct shift_left<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -197,7 +197,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct shift_left_individual<sse<v128<uint64_t>>/*, 64*/> {
+   struct shift_left_individual<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -219,7 +219,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct shift_right<sse<v128<uint64_t>>/*, 64*/> {
+   struct shift_right<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -233,7 +233,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct shift_right_individual<sse<v128<uint64_t>>/*, 64*/> {
+   struct shift_right_individual<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint64_t>>::vector_t
@@ -258,7 +258,7 @@ namespace vectorlib{
 
 
    template<>
-   struct add<sse<v128<uint32_t>>/*, 32*/> {
+   struct add<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -272,7 +272,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct sub<sse<v128<uint32_t>>/*, 32*/> {
+   struct sub<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -286,7 +286,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<sse<v128<uint32_t>>/*, 32*/> {
+   struct min<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
