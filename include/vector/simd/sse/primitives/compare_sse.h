@@ -23,7 +23,7 @@
 
 namespace vectorlib{
    template<>
-   struct equal<sse<v128<uint64_t>>/*, 64*/> {
+   struct equal<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint64_t>>::mask_t
       apply(
@@ -40,7 +40,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct less<sse<v128<uint64_t>>/*, 64*/> {
+   struct less<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint64_t>>::mask_t
       apply(
@@ -57,7 +57,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<sse<v128<uint64_t>>/*, 64*/> {
+   struct lessequal<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint64_t>>::mask_t
       apply(
@@ -78,7 +78,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<sse<v128<uint64_t>>/*, 64*/> {
+   struct greater<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint64_t>>::mask_t
       apply(
@@ -95,7 +95,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<sse<v128<uint64_t>>/*, 64*/> {
+   struct greaterequal<sse<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint64_t>>::mask_t
       apply(
@@ -128,12 +128,118 @@ namespace vectorlib{
       }
    };
 
-
-//no 32 and 16 bit equivalents for _mm_movemask_pd
-//all of the functions below are not tested
+//error: cannot convert ‘vectorlib::sse<vectorlib::vector_view<128, unsigned int> >::mask_t’ {aka ‘short unsigned int’} 
+   //to ‘vector_t’ {aka ‘__vector(2) long long int’} in initialization
+   template<>
+   struct equal<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint32_t>>::mask_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (sse)" );
+         return
+            _mm_movemask_ps(
+               _mm_castsi128_ps(
+                  _mm_cmpeq_epi32(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct less<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint32_t>>::mask_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (sse)" );
+         return
+            _mm_movemask_ps(
+               _mm_castsi128_ps(
+                  _mm_cmpgt_epi32(p_vec2, p_vec1)
+               )
+            );
+      }
+   };
+   template<>
+   struct lessequal<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint32_t>>::mask_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (sse)" );
+         return
+            _mm_movemask_ps(
+               _mm_castsi128_ps(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi32(p_vec1, p_vec2),
+                     _mm_cmpgt_epi32(p_vec2, p_vec1)
+                  )
+               )
+            );
+      }
+   };
 
    template<>
-   struct equal<sse<v128<uint8_t>>/*, 8*/> {
+   struct greater<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint32_t>>::mask_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (sse)" );
+         return
+            _mm_movemask_ps(
+               _mm_castsi128_ps(
+                  _mm_cmpgt_epi32(p_vec1, p_vec2)
+               )
+            );
+      }
+   };
+   template<>
+   struct greaterequal<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse<v128<uint32_t>>::mask_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const & p_vec2
+      ) {
+         trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (sse)" );
+         return
+            _mm_movemask_ps(
+               _mm_castsi128_ps(
+                  _mm_or_si128(
+                     _mm_cmpeq_epi32(p_vec1, p_vec2),
+                     _mm_cmpgt_epi32(p_vec1, p_vec2)
+                  )
+               )
+            );
+      }
+   };
+   template<>
+   struct count_matches<sse<v128<uint32_t>>> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename sse<v128<uint32_t>>::mask_t const & p_mask
+      ) {
+         trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
+         // @todo Which one is faster?
+         // return __builtin_popcount(p_mask);
+         return _mm_popcnt_u64(p_mask);
+      }
+   };
+
+//no 16 bit equivalents for _mm_movemask_pd
+
+   template<>
+   struct equal<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint8_t>>::mask_t
       apply(
@@ -149,7 +255,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct less<sse<v128<uint8_t>>/*, 8*/> {
+   struct less<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint8_t>>::mask_t
       apply(
@@ -164,7 +270,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<sse<v128<uint8_t>>/*, 8*/> {
+   struct lessequal<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint8_t>>::mask_t
       apply(
@@ -183,7 +289,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<sse<v128<uint8_t>>/*, 8*/> {
+   struct greater<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint8_t>>::mask_t
       apply(
@@ -199,7 +305,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<sse<v128<uint8_t>>/*, 8*/> {
+   struct greaterequal<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse<v128<uint8_t>>::mask_t
       apply(

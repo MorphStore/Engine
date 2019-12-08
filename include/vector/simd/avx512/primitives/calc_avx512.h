@@ -464,79 +464,62 @@ namespace vectorlib{
       }
    };
    
-   //doesn't work yet
-   // template<>
-   // struct div<avx512<v512<uint32_t>>/*, 32*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx512<v512<uint32_t>>::vector_t
-   //    apply(
-   //       typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
-   //       typename avx512<v512<uint32_t>>::vector_t const & p_vec2
-   //    ){
-   //       trace( "[VECTOR] - Divide 32 bit integer values from two registers (avx512)" );
-   //       __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
-   //       return
-   //          _mm512_xor_si512(
-   //             _mm512_castpd_si512(
-   //                _mm512_add_pd(
-   //                   // @todo This rounds the result to the nearest integer,
-   //                   // but we want it to be rounded down, since this would be
-   //                   // the expected outcome of an integer division. There is
-   //                   // no _mm512_floor_pd (like in SSE and AVX). I tried
-   //                   // _mm512_div_round_pd with all possible rounding modes,
-   //                   // but none of them worked...
-   //                   _mm512_div_pd(
-   //                      _mm512_castsi512_pd(p_vec1),
-   //                      _mm512_castsi512_pd(p_vec2)
-   //                   ),
-   //                   divhelper
-   //                )
-   //             ),
-   //             _mm512_castpd_si512(
-   //                divhelper
-   //             )
-   //          );
-   //    }
-   // };
-   //doesn't work yet
-   // template<>
-   // struct mod<avx512<v512<uint32_t>>/*, 32*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx512<v512<uint32_t>>::vector_t
-   //    apply(
-   //       typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
-   //       typename avx512<v512<uint32_t>>::vector_t const & p_vec2
-   //    ){
-   //       trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (avx512)" );
-   //       info( "[VECTOR] - MODULO IS A WORKAROUND" );
-   //       __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
-   //       __m512d intermediate =
-   //          _mm512_add_pd(
-   //             _mm512_floor_pd(
-   //                _mm512_div_pd(
-   //                   _mm512_castsi512_pd(p_vec1),
-   //                   _mm512_castsi512_pd(p_vec2)
-   //                )
-   //             ),
-   //             divhelper
-   //          );
-   //       return
-   //          _mm512_sub_epi32(
-   //             p_vec1,
-   //             _mm512_mul_epi32(
-   //                _mm512_xor_si512(
-   //                   _mm512_castpd_si512(intermediate),
-   //                   _mm512_castpd_si512(divhelper)
-   //                ),
-   //                p_vec2
-   //             )
-   //          );
-   //    }
-   // };
    template<>
-   struct inv<avx512<v512<uint32_t>>/*, 32*/> {
+   struct div<avx512<v512<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint32_t>>::vector_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Divide 32 bit integer values from two registers (avx512)" );
+         return
+            _mm512_cvtps_epi32( //Convert packed single-precision (32-bit) floating-point elements in a to packed 32-bit integers
+                  _mm512_div_ps( //Divide packed single-precision (32-bit) floating-point elements  (__m512 a, __m512 b)
+                     // @todo This rounds the result to the nearest integer,
+                     // but we want it to be rounded down, since this would be
+                     // the expected outcome of an integer division. There is
+                     // no _mm512_floor_pd (like in SSE and AVX) except when using SVML.
+                     _mm512_castsi512_ps(p_vec1),
+                      _mm512_castsi512_ps(p_vec2) //Cast vector of type __m512i to type __m512
+                     )
+                  
+               );
+      }
+   };
+   template<>
+   struct mod<avx512<v512<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint32_t>>::vector_t
+      apply(
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
+         typename avx512<v512<uint32_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (avx512)" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
+         return
+            _mm512_sub_epi32(
+               p_vec1,
+               _mm512_mullo_epi32( //(__m512i a, __m512i b)
+                     _mm512_cvtps_epi32(//Convert packed single-precision (32-bit) floating-point elements in a to packed 32-bit integers
+                           _mm512_div_ps( //Divide packed single-precision (32-bit) floating-point elements (__m512 a, __m512 b)
+                              // @todo This rounds the result to the nearest integer,
+                              // but we want it to be rounded down, since this would be
+                              // the expected outcome of an integer division. There is
+                              // no _mm512_floor_ps (like in SSE and AVX) except when using SVML.
+                              _mm512_castsi512_ps(p_vec1),
+                              _mm512_castsi512_ps(p_vec2) //Cast vector of type __m512i to type __m512
+                            )
+                   ), 
+                  p_vec2
+               )
+            );
+      }
+   };
+   template<>
+   struct inv<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -548,7 +531,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left<avx512<v512<uint32_t>>/*, 32*/> {
+   struct shift_left<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -561,7 +544,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left_individual<avx512<v512<uint32_t>>/*, 32*/> {
+   struct shift_left_individual<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -574,7 +557,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right<avx512<v512<uint32_t>>/*, 32*/> {
+   struct shift_right<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -587,7 +570,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right_individual<avx512<v512<uint32_t>>/*, 32*/> {
+   struct shift_right_individual<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint32_t>>::vector_t
@@ -601,7 +584,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct add<avx512<v512<uint16_t>>/*, 16*/> {
+   struct add<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -614,7 +597,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v256<uint16_t>>/*, 16*/> {
+   struct add<avx512<v256<uint16_t>>/ 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint16_t>>::vector_t
@@ -627,7 +610,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v128<uint16_t>>/*, 16*/> {
+   struct add<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint16_t>>::vector_t
@@ -641,7 +624,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v512<uint16_t>>/*, 16*/> {
+   struct min<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -655,7 +638,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v256<uint16_t>>/*, 16*/> {
+   struct min<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint16_t>>::vector_t
@@ -668,7 +651,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct min<avx512<v128<uint16_t>>/*, 16*/> {
+   struct min<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint16_t>>::vector_t
@@ -682,7 +665,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct sub<avx512<v512<uint16_t>>/*, 16*/> {
+   struct sub<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -708,7 +691,7 @@ namespace vectorlib{
    //    }
    // };
    template<>
-   struct mul<avx512<v512<uint16_t>>/*, 16*/> {
+   struct mul<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -723,7 +706,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v256<uint16_t>>/*, 16*/> {
+   struct mul<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint16_t>>::vector_t
@@ -738,7 +721,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct mul<avx512<v128<uint16_t>>/*, 16*/> {
+   struct mul<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint16_t>>::vector_t
@@ -824,7 +807,7 @@ namespace vectorlib{
    //    }
    // };
    template<>
-   struct inv<avx512<v512<uint16_t>>/*, 16*/> {
+   struct inv<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -836,7 +819,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left<avx512<v512<uint16_t>>/*, 16*/> {
+   struct shift_left<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -849,7 +832,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_left_individual<avx512<v512<uint16_t>>/*, 16*/> {
+   struct shift_left_individual<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -862,7 +845,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right<avx512<v512<uint16_t>>/*, 16*/> {
+   struct shift_right<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -875,7 +858,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct shift_right_individual<avx512<v512<uint16_t>>/*, 16*/> {
+   struct shift_right_individual<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint16_t>>::vector_t
@@ -889,7 +872,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct add<avx512<v512<uint8_t>>/*, 8*/> {
+   struct add<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint8_t>>::vector_t
@@ -902,7 +885,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v256<uint8_t>>/*, 8*/> {
+   struct add<avx512<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint8_t>>::vector_t
@@ -915,7 +898,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v128<uint8_t>>/*, 8*/> {
+   struct add<avx512<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint8_t>>::vector_t
@@ -929,7 +912,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v512<uint8_t>>/*, 8*/> {
+   struct min<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint8_t>>::vector_t
@@ -943,7 +926,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<avx512<v256<uint8_t>>/*, 8*/> {
+   struct min<avx512<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint8_t>>::vector_t
@@ -956,7 +939,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct min<avx512<v128<uint8_t>>/*, 8*/> {
+   struct min<avx512<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v128<uint8_t>>::vector_t
@@ -970,7 +953,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct sub<avx512<v512<uint8_t>>/*, 8*/> {
+   struct sub<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint8_t>>::vector_t
@@ -1082,7 +1065,7 @@ namespace vectorlib{
    //    }
    // };
    template<>
-   struct inv<avx512<v512<uint8_t>>/*, 8*/> {
+   struct inv<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint8_t>>::vector_t

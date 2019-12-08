@@ -299,10 +299,10 @@ namespace vectorlib{
       }
    };
       
-   //doesn't work yet, error: cannot convert ‘vectorlib::sse<vectorlib::vector_view<128, unsigned int> >::base_t’ {aka ‘unsigned int’} 
-   //to ‘vector_t’ {aka ‘__vector(2) long long int’} in initialization   
+   //doesn't work yet, error: cannot convert ‘vectorlib::sse<vectorlib::vector_view<128, unsigned int> >::base_t’ 
+   //{aka ‘unsigned int’} to ‘vector_t’ {aka ‘__vector(2) long long int’} in initialization
    // template<>
-   // struct hadd<sse<v128<uint32_t>>/*, 32*/> {
+   // struct hadd<sse<v128<uint32_t>>, 32> {
    //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    //    static
    //    typename sse<v128<uint32_t>>::base_t
@@ -311,11 +311,11 @@ namespace vectorlib{
    //    ){
    //       trace( "[VECTOR] - Horizontally add 32 bit integer values one register (sse)" );
    //       return
-   //          _mm_extract_epi32(
-   //             _mm_castpd_si128(
-   //                _mm_hadd_pd(
-   //                   _mm_castsi128_pd(p_vec1),
-   //                   _mm_castsi128_pd(p_vec1)
+   //          _mm_extract_epi32( //int _mm_extract_epi32 (__m128i a, const int imm8)
+   //             _mm_castps_si128( //Cast vector of type __m128 to type __m128i
+   //                _mm_hadd_ps(  //(__m128 a, __m128 b)
+   //                   _mm_castsi128_ps(p_vec1), //Cast vector of type __m128i to type __m128
+   //                   _mm_castsi128_ps(p_vec1)
    //                )
    //             ),
    //             0
@@ -324,7 +324,7 @@ namespace vectorlib{
    // };
 
    template<>
-   struct mul<sse<v128<uint32_t>>/*, 32*/> {
+   struct mul<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -337,77 +337,59 @@ namespace vectorlib{
          return _mm_mullo_epi32( p_vec1, p_vec2);
       }
    };
-   //doesn't work yet
-   // template<>
-   // struct div<sse<v128<uint32_t>>/*, 32*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint32_t>>::vector_t
-   //    apply(
-   //       typename sse<v128<uint32_t>>::vector_t const &p_vec1,
-   //       typename sse<v128<uint32_t>>::vector_t const &p_vec2
-   //    ) {
-   //       trace("[VECTOR] - Divide 32 bit integer values from two registers (sse)");
-   //       __m128d divhelper=_mm_set1_pd(0x0010000000000000);
+   template<>
+   struct div<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint32_t>>::vector_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const &p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const &p_vec2
+      ) {
+         trace("[VECTOR] - Divide 32 bit integer values from two registers (sse)");
+         return
+            _mm_cvtps_epi32( //(__m128 a)
+               _mm_floor_ps( //Round the packed single-precision (32-bit) floating-point elements in a down to an integer value
+                  _mm_div_ps( //Divide packed single-precision (32-bit) floating-point elements (__m128 a, __m128 b)
+                     _mm_castsi128_ps(p_vec1),
+                      _mm_castsi128_ps(p_vec2) //Cast vector of type __m128i to type __m128
+                     )
+                  )
+               );
+      }
+   };
+   template<>
+   struct mod<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint32_t>>::vector_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint32_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (sse)" );
+         info( "[VECTOR] - MODULO IS A WORKAROUND" );
+         return
+            _mm_sub_epi32(
+               p_vec1,
+               _mm_mullo_epi32( //(__m128i a, __m128i b)
+                     _mm_cvtps_epi32(//(__m128 a)
+                        _mm_floor_ps( //Round the packed single-precision (32-bit) floating-point elements in a down to an integer value
+                           _mm_div_ps( //Divide packed single-precision (32-bit) floating-point elements (__m128 a, __m128 b)
+                              _mm_castsi128_ps(p_vec1),
+                              _mm_castsi128_ps(p_vec2) //Cast vector of type __m128i to type __m128
+                            )
+                      )
+                   ), 
+                  p_vec2
+               )
+            );
+      }
+   };
 
-   //       return
-   //          _mm_xor_si128(
-   //             _mm_castpd_si128(
-   //                _mm_add_pd(
-   //                   _mm_floor_pd(
-   //                      _mm_div_pd(
-   //                         _mm_castsi128_pd(p_vec1),
-   //                         _mm_castsi128_pd(p_vec2)
-   //                      )
-   //                   ),
-   //                   divhelper
-   //                )
-   //             ),
-   //             _mm_castpd_si128(
-   //                divhelper
-   //             )
-   //          );
-   //    }
-   // };
-   //doesn't work yet
-   // template<>
-   // struct mod<sse<v128<uint32_t>>/*, 32*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint32_t>>::vector_t
-   //    apply(
-   //       typename sse<v128<uint32_t>>::vector_t const & p_vec1,
-   //       typename sse<v128<uint32_t>>::vector_t const & p_vec2
-   //    ){
-   //       trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (sse)" );
-   //       info( "[VECTOR] - MODULO IS A WORKAROUND" );
-   //       __m128d divhelper = _mm_set1_pd(0x0010000000000000);
-   //       __m128d intermediate =
-   //          _mm_add_pd(
-   //             _mm_floor_pd(
-   //                _mm_div_pd(
-   //                   _mm_castsi128_pd(p_vec1),
-   //                   _mm_castsi128_pd(p_vec2)
-   //                )
-   //             ),
-   //             divhelper
-   //          );
-   //       return
-   //          _mm_sub_epi32(
-   //             p_vec1,
-   //             _mm_mul_epi32(
-   //                _mm_xor_si128(
-   //                   _mm_castpd_si128(intermediate),
-   //                   _mm_castpd_si128(divhelper)
-   //                ),
-   //                p_vec2
-   //             )
-   //          );
-   //    }
-   // };
    //not tested
    template<>
-   struct inv<sse<v128<uint32_t>>/*, 32*/> {
+   struct inv<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -420,7 +402,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_left<sse<v128<uint32_t>>/*, 32*/> {
+   struct shift_left<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -434,7 +416,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_left_individual<sse<v128<uint32_t>>/*, 32*/> {
+   struct shift_left_individual<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -460,7 +442,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_right<sse<v128<uint32_t>>/*, 32*/> {
+   struct shift_right<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -474,7 +456,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_right_individual<sse<v128<uint32_t>>/*, 32*/> {
+   struct shift_right_individual<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint32_t>>::vector_t
@@ -501,7 +483,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct add<sse<v128<uint16_t>>/*, 16*/> {
+   struct add<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -515,7 +497,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct sub<sse<v128<uint16_t>>/*, 16*/> {
+   struct sub<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -529,7 +511,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<sse<v128<uint16_t>>/*, 16*/> {
+   struct min<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -566,7 +548,7 @@ namespace vectorlib{
    // };
 
    template<>
-   struct mul<sse<v128<uint16_t>>/*, 16*/> {
+   struct mul<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -649,7 +631,7 @@ namespace vectorlib{
    // };
    //not tested
    template<>
-   struct inv<sse<v128<uint16_t>>/*, 16*/> {
+   struct inv<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -662,7 +644,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_left<sse<v128<uint16_t>>/*, 16*/> {
+   struct shift_left<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -676,7 +658,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_left_individual<sse<v128<uint16_t>>/*, 16*/> {
+   struct shift_left_individual<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -710,7 +692,7 @@ namespace vectorlib{
    };
    //not tested
    template<>
-   struct shift_right<sse<v128<uint16_t>>/*, 16*/> {
+   struct shift_right<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -724,7 +706,7 @@ namespace vectorlib{
    };
    // //not tested
    template<>
-   struct shift_right_individual<sse<v128<uint16_t>>/*, 16*/> {
+   struct shift_right_individual<sse<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint16_t>>::vector_t
@@ -746,10 +728,10 @@ namespace vectorlib{
          uint16_t distance6 = _mm_extract_epi16(p_distance, 6);
          uint16_t distance7 = _mm_extract_epi16(p_distance, 7);
          return _mm_set_epi16(
-                 (distance7 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 3)) >> distance7),
-                 (distance6 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 2)) >> distance6),
-                 (distance5 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 1)) >> distance5),
-                 (distance4 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 0)) >> distance4),
+                 (distance7 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 7)) >> distance7),
+                 (distance6 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 6)) >> distance6),
+                 (distance5 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 5)) >> distance5),
+                 (distance4 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 4)) >> distance4),
                  (distance3 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 3)) >> distance3),
                  (distance2 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 2)) >> distance2),
                  (distance1 == 16) ? 0 : (static_cast<uint16_t>(_mm_extract_epi16(p_data, 1)) >> distance1),
@@ -760,7 +742,7 @@ namespace vectorlib{
 
 
    template<>
-   struct add<sse<v128<uint8_t>>/*, 8*/> {
+   struct add<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -774,7 +756,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct sub<sse<v128<uint8_t>>/*, 8*/> {
+   struct sub<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -788,7 +770,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct min<sse<v128<uint8_t>>/*, 8*/> {
+   struct min<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -908,7 +890,7 @@ namespace vectorlib{
    // };
    //not tested
    template<>
-   struct inv<sse<v128<uint8_t>>/*, 8*/> {
+   struct inv<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -919,23 +901,40 @@ namespace vectorlib{
          return _mm_sub_epi8( _mm_set1_epi8(0), p_vec1);
       }
    };
-   //doesn't work, no easy 8bit intrinsic to replace _mm_slli_epi16
-   // template<>
-   // struct shift_left<sse<v128<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint8_t>>::vector_t
-   //    apply(
-   //       typename sse<v128<uint8_t>>::vector_t const & p_vec1,
-   //       int const & p_distance
-   //    ){
-   //       trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
-   //       return _mm_slli_epi16(p_vec1, p_distance);
-   //    }
-   // };
+   template<>
+   struct shift_left<sse<v128<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint8_t>>::vector_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
+         return _mm_set_epi8(
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 15) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 14) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 13) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 12) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 11) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 10) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 9) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 8) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 7) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 6) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 5) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 4) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 3) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 2) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 1) << p_distance),
+                 (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 0) << p_distance)
+
+         );
+      }
+   };
    //not tested
    template<>
-   struct shift_left_individual<sse<v128<uint8_t>>/*, 8*/> {
+   struct shift_left_individual<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -983,23 +982,39 @@ namespace vectorlib{
          );
       }
    };
-   //doesn't work, no easy 8bit intrinsic to replace _mm_srli_epi16
-   // template<>
-   // struct shift_right<sse<v128<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint8_t>>::vector_t
-   //    apply(
-   //       typename sse<v128<uint8_t>>::vector_t const & p_vec1,
-   //       int const & p_distance
-   //    ){
-   //       trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
-   //       return _mm_srli_epi16(p_vec1, p_distance);
-   //    }
-   // };
+   template<>
+   struct shift_right<sse<v128<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint8_t>>::vector_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         int const & p_distance
+      ){
+         trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
+         return _mm_set_epi8(
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 15)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 14)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 13)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 12)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 11)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 10)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 9)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 8)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 7)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 6)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 5)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 4)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 3)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 2)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 1)) >> p_distance),
+                 (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 0)) >> p_distance)
+         );
+      }
+   };
    // //not tested
    template<>
-   struct shift_right_individual<sse<v128<uint8_t>>/*, 8*/> {
+   struct shift_right_individual<sse<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<uint8_t>>::vector_t
@@ -1029,22 +1044,22 @@ namespace vectorlib{
          uint8_t distance14 = _mm_extract_epi8(p_distance, 14);
          uint8_t distance15 = _mm_extract_epi8(p_distance, 15);
          return _mm_set_epi8(
-                 (distance15 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 15)) << distance15),
-                 (distance14 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 14)) << distance14),
-                 (distance13 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 13)) << distance13),
-                 (distance12 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 12)) << distance12),
-                 (distance11 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 11)) << distance11),
-                 (distance10 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 10)) << distance10),
-                 (distance9 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 9)) << distance9),
-                 (distance8 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 8)) << distance8),
-                 (distance7 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 7)) << distance7),
-                 (distance6 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 6)) << distance6),
-                 (distance5 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 5)) << distance5),
-                 (distance4 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 4)) << distance4),
-                 (distance3 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 3)) << distance3),
-                 (distance2 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 2)) << distance2),
-                 (distance1 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 1)) << distance1),
-                 (distance0 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 0)) << distance0)
+                 (distance15 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 15)) >> distance15),
+                 (distance14 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 14)) >> distance14),
+                 (distance13 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 13)) >> distance13),
+                 (distance12 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 12)) >> distance12),
+                 (distance11 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 11)) >> distance11),
+                 (distance10 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 10)) >> distance10),
+                 (distance9 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 9)) >> distance9),
+                 (distance8 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 8)) >> distance8),
+                 (distance7 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 7)) >> distance7),
+                 (distance6 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 6)) >> distance6),
+                 (distance5 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 5)) >> distance5),
+                 (distance4 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 4)) >> distance4),
+                 (distance3 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 3)) >> distance3),
+                 (distance2 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 2)) >> distance2),
+                 (distance1 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 1)) >> distance1),
+                 (distance0 == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_data, 0)) >> distance0)
          );
       }
    };
