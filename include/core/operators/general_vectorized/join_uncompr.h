@@ -76,7 +76,7 @@ namespace morphstore {
          for( size_t i = 0; i < p_Count; ++i ) {
             std::tie( lookupResultMask, hitResultCount ) =
                hs.template lookup<VectorExtension>(
-                  load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InProbeDataPtr ),
+                  load<VectorExtension, iov::ALIGNED, vector_base_t_granularity::value>( p_InProbeDataPtr ),
                   state
                );
             compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
