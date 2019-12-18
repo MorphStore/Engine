@@ -271,8 +271,6 @@ namespace vectorlib{
          return _mm256_sub_epi32( p_vec1, p_vec2);
       }
    };
-   //when testing: error: cannot convert ‘vectorlib::avx2<vectorlib::vector_view<256, unsigned int> >::base_t’ {aka ‘unsigned int’} 
-   //to ‘vector_t’ {aka ‘__vector(4) long long int’} in initialization
     template<>
     struct hadd<avx2<v256<uint32_t>>, 32> {
        MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -282,11 +280,17 @@ namespace vectorlib{
           typename avx2<v256<uint32_t>>::vector_t const & p_vec1
        ){
           trace( "[VECTOR] - Horizontally add 32 bit integer values one register (avx2)" );
-          __m256i tmp =
-               _mm256_hadd_epi32(p_vec1, p_vec1);  
+             __m256i tmp =
+            _mm256_castps_si256(
+               _mm256_hadd_ps(
+                  _mm256_castsi256_ps(p_vec1),
+                  _mm256_castsi256_ps(p_vec1)
+               )
+            );
           return _mm256_extract_epi32(tmp,0)+_mm256_extract_epi32(tmp,1)+_mm256_extract_epi32(tmp,4)+_mm256_extract_epi32(tmp,5);
        }
     };
+
 
    template<>
    struct mul<avx2<v256<uint32_t>>, 32> {
@@ -462,26 +466,22 @@ namespace vectorlib{
          return _mm256_sub_epi16( p_vec1, p_vec2);
       }
    };
-   //doesn't work yet
-   // template<>
-   // struct hadd<avx2<v256<uint16_t>>/*, 16*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx2<v256<uint16_t>>::base_t
-   //    apply(
-   //       typename avx2<v256<uint16_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx2)" );
-   //       __m256i tmp =
-   //          _mm256_castpd_si256(  
-   //             _mm256_hadd_epi16(  
-   //                _mm256_castsi256_pd(p_vec1),
-   //                _mm256_castsi256_pd(p_vec1)
-   //             )
-   //          );
-   //       return _mm256_extract_epi16(tmp,0)+_mm256_extract_epi16(tmp,2);
-   //    }
-   // };
+
+   template<>
+   struct hadd<avx2<v256<uint16_t>>, 16> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint16_t>>::base_t
+      apply(
+         typename avx2<v256<uint16_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx2)" );
+         return _mm256_extract_epi16(p_vec1,0)+_mm256_extract_epi16(p_vec1,1)+_mm256_extract_epi16(p_vec1,2)+_mm256_extract_epi16(p_vec1,3)
+         +_mm256_extract_epi16(p_vec1,4)+_mm256_extract_epi16(p_vec1,5)+_mm256_extract_epi16(p_vec1,6)+_mm256_extract_epi16(p_vec1,7)+
+         _mm256_extract_epi16(p_vec1,8)+_mm256_extract_epi16(p_vec1,9)+_mm256_extract_epi16(p_vec1,10)+_mm256_extract_epi16(p_vec1,11)
+         +_mm256_extract_epi16(p_vec1,12)+_mm256_extract_epi16(p_vec1,13)+_mm256_extract_epi16(p_vec1,14)+_mm256_extract_epi16(p_vec1,15);
+      }
+   };
 
    template<>
    struct mul<avx2<v256<uint16_t>>, 16> {
@@ -497,7 +497,6 @@ namespace vectorlib{
          return _mm256_mullo_epi16( p_vec1, p_vec2);  
       }
    };
-   //this would need to use SVML, otherwise there is no easy div intrinsic for 16bit
    // template<>
    // struct div<avx2<v256<uint16_t>>, 16> {
    //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -507,12 +506,16 @@ namespace vectorlib{
    //       typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
    //       typename avx2<v256<uint16_t>>::vector_t const & p_vec2
    //    ){
-   //       trace( "[VECTOR] - Divide 16 bit integer values from two registers (avx2)" );
+   //       trace( "[VECTOR] - Divide 32 bit integer values from two registers (avx2)" );
    //       return
-   //          _mm256_div_epi16( //Divide packed 16-bit integers in a by packed elements in b _mm256_div_epi16 (__m256i a, __m256i b)
-   //             _mm256_castsi256_ps(p_vec1),
-   //             _mm256_castsi256_ps(p_vec2) 
-   //          );
+   //          _mm256_cvtps_epi32( //_mm256_cvtps_epi32 (__m256 a)
+   //             _mm256_floor_ps( //Round the packed single-precision (32-bit) floating-point elements in a down to an integer value
+   //                _mm256_div_ps( //Divide packed single-precision (32-bit) floating-point elements (__m256 a, __m256 b)
+   //                   _mm256_castsi256_ps(p_vec1),
+   //                    _mm256_castsi256_ps(p_vec2) //Casts vector of type __m256i to type __m256
+   //                   )
+   //                )
+   //             );
    //    }
    // };
    //doesn't work yet, would need a 16bit div intrinsic 
@@ -723,36 +726,50 @@ namespace vectorlib{
          return _mm256_sub_epi8( p_vec1, p_vec2);
       }
    };
-   //doesn't work yet
-   // template<>
-   // struct hadd<avx2<v256<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx2<v256<uint8_t>>::base_t
-   //    apply(
-   //       typename avx2<v256<uint8_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx2)" );
-          // __m256i tmp =
-          //      _mm256_hadd_epi32(p_vec1, p_vec1);  
-   //       return _mm256_extract_epi16(tmp,0)+_mm256_extract_epi16(tmp,2);
-   //    }
-   // };
-   //doesn't work, no easy 8bit intrinsic to replace _mm256_mullo_epi16
-   // template<>
-   // struct mul<avx2<v256<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx2<v256<uint8_t>>::vector_t
-   //    apply(
-   //       typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
-   //       typename avx2<v256<uint8_t>>::vector_t const & p_vec2
-   //    ){
-   //       trace( "[VECTOR] - Multiply 8 bit integer values from two registers (avx2)" );
-   //       info( "[VECTOR] - _mm256_mul_epu16 is called " );
-   //       return _mm256_mullo_epi16( p_vec1, p_vec2);  
-   //    }
-   // };
+   template<>
+   struct hadd<avx2<v256<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint8_t>>::base_t
+      apply(
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx2)" );
+         return _mm256_extract_epi8(p_vec1,0)+_mm256_extract_epi8(p_vec1,1)+_mm256_extract_epi8(p_vec1,2)+_mm256_extract_epi8(p_vec1,3)
+         +_mm256_extract_epi8(p_vec1,4)+_mm256_extract_epi8(p_vec1,5)+_mm256_extract_epi8(p_vec1,6)+_mm256_extract_epi8(p_vec1,7)+
+         _mm256_extract_epi8(p_vec1,8)+_mm256_extract_epi8(p_vec1,9)+_mm256_extract_epi8(p_vec1,10)+_mm256_extract_epi8(p_vec1,11)
+         +_mm256_extract_epi8(p_vec1,12)+_mm256_extract_epi8(p_vec1,13)+_mm256_extract_epi8(p_vec1,14)+_mm256_extract_epi8(p_vec1,15)+
+         _mm256_extract_epi8(p_vec1,16)+_mm256_extract_epi8(p_vec1,17)+_mm256_extract_epi8(p_vec1,18)+_mm256_extract_epi8(p_vec1,19)
+         +_mm256_extract_epi8(p_vec1,20)+_mm256_extract_epi8(p_vec1,21)+_mm256_extract_epi8(p_vec1,22)+_mm256_extract_epi8(p_vec1,23)+
+         _mm256_extract_epi8(p_vec1,24)+_mm256_extract_epi8(p_vec1,25)+_mm256_extract_epi8(p_vec1,26)+_mm256_extract_epi8(p_vec1,27)
+         +_mm256_extract_epi8(p_vec1,28)+_mm256_extract_epi8(p_vec1,29)+_mm256_extract_epi8(p_vec1,30)+_mm256_extract_epi8(p_vec1,31);
+      }
+   };   
+   template<>
+   struct mul<avx2<v256<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx2<v256<uint8_t>>::vector_t
+      apply(
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
+         typename avx2<v256<uint8_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 8 bit integer values from two registers (avx2)" );
+         info( "[VECTOR] - _mm256_mul_epu16 is called " );
+          // unpack and multiply
+          __m256i dst_even = _mm256_mullo_epi16(p_vec1, p_vec2);
+          __m256i dst_odd = _mm256_mullo_epi16(_mm256_srli_epi16(p_vec1, 8),_mm256_srli_epi16(p_vec2, 8));
+          // repack
+          return _mm256_or_si256(
+            _mm256_slli_epi16(dst_odd, 8), 
+            _mm256_srli_epi16(
+               _mm256_slli_epi16(dst_even, 8),
+               8
+            )
+         );
+   
+      }
+   };
    //doesn't work yet
    // template<>
    // struct div<avx2<v256<uint16_t>>/*, 8*/> {

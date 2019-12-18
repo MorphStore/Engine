@@ -24,8 +24,6 @@
 
 namespace vectorlib{
 
-  //when testing the functions I got "cannot convert..." errors (cannot convert ‘vectorlib::avx2<vectorlib::vector_view<256, unsigned int> >::mask_t’ 
-   //{aka ‘short unsigned int’} to ‘vector_t’ {aka ‘__vector(4) long long int’} in initialization)
 
   //64bit
    template<>

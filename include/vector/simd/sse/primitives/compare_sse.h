@@ -128,8 +128,6 @@ namespace vectorlib{
       }
    };
 
-//error: cannot convert ‘vectorlib::sse<vectorlib::vector_view<128, unsigned int> >::mask_t’ {aka ‘short unsigned int’} 
-   //to ‘vector_t’ {aka ‘__vector(2) long long int’} in initialization
    template<>
    struct equal<sse<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE

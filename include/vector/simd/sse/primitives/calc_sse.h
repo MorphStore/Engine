@@ -299,29 +299,26 @@ namespace vectorlib{
       }
    };
       
-   //doesn't work yet, error: cannot convert ‘vectorlib::sse<vectorlib::vector_view<128, unsigned int> >::base_t’ 
-   //{aka ‘unsigned int’} to ‘vector_t’ {aka ‘__vector(2) long long int’} in initialization
-   // template<>
-   // struct hadd<sse<v128<uint32_t>>, 32> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint32_t>>::base_t
-   //    apply(
-   //       typename sse<v128<uint32_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 32 bit integer values one register (sse)" );
-   //       return
-   //          _mm_extract_epi32( //int _mm_extract_epi32 (__m128i a, const int imm8)
-   //             _mm_castps_si128( //Cast vector of type __m128 to type __m128i
-   //                _mm_hadd_ps(  //(__m128 a, __m128 b)
-   //                   _mm_castsi128_ps(p_vec1), //Cast vector of type __m128i to type __m128
-   //                   _mm_castsi128_ps(p_vec1)
-   //                )
-   //             ),
-   //             0
-   //          );
-   //    }
-   // };
+   template<>
+   struct hadd<sse<v128<uint32_t>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint32_t>>::base_t
+      apply(
+         typename sse<v128<uint32_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 32 bit integer values one register (sse)" );
+         __m128i tmp =
+            _mm_castps_si128(
+               _mm_hadd_ps(
+                  _mm_castsi128_ps(p_vec1),
+                  _mm_castsi128_ps(p_vec1)
+               )
+            );
+         return _mm_extract_epi32(tmp,0)+_mm_extract_epi32(tmp,1);
+      }
+   };
+
 
    template<>
    struct mul<sse<v128<uint32_t>>, 32> {
@@ -524,28 +521,20 @@ namespace vectorlib{
       }
    };
       
-   //doesn't work yet
-   // template<>
-   // struct hadd<sse<v128<uint16_t>>/*, 16*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint16_t>>::base_t
-   //    apply(
-   //       typename sse<v128<uint16_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 16 bit integer values one register (sse)" );
-   //       return
-   //          _mm_extract_epi16(
-   //             _mm_castpd_si128(
-   //                _mm_hadd_pd(
-   //                   _mm_castsi128_pd(p_vec1),
-   //                   _mm_castsi128_pd(p_vec1)
-   //                )
-   //             ),
-   //             0
-   //          );
-   //    }
-   // };
+   template<>
+   struct hadd<sse<v128<uint16_t>>, 16> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint16_t>>::base_t
+      apply(
+         typename sse<v128<uint16_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 16 bit integer values one register (sse)" );
+         return _mm_extract_epi16(p_vec1,0)+_mm_extract_epi16(p_vec1,1)+_mm_extract_epi16(p_vec1,2)+_mm_extract_epi16(p_vec1,3)
+         +_mm_extract_epi16(p_vec1,4)+_mm_extract_epi16(p_vec1,5)+_mm_extract_epi16(p_vec1,6)+_mm_extract_epi16(p_vec1,7);
+      }
+   };
+
 
    template<>
    struct mul<sse<v128<uint16_t>>, 16> {
@@ -563,7 +552,7 @@ namespace vectorlib{
    };
    //doesn't work yet
    // template<>
-   // struct div<sse<v128<uint16_t>>/*, 16*/> {
+   // struct div<sse<v128<uint16_t>>, 16> {
    //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    //    static
    //    typename sse<v128<uint16_t>>::vector_t
@@ -572,27 +561,38 @@ namespace vectorlib{
    //       typename sse<v128<uint16_t>>::vector_t const &p_vec2
    //    ) {
    //       trace("[VECTOR] - Divide 16 bit integer values from two registers (sse)");
-   //       __m128d divhelper=_mm_set1_pd(0x0010000000000000);
-
-   //       return
-   //          _mm_xor_si128(
-   //             _mm_castpd_si128(
-   //                _mm_add_pd(
-   //                   _mm_floor_pd(
-   //                      _mm_div_pd(
-   //                         _mm_castsi128_pd(p_vec1),
-   //                         _mm_castsi128_pd(p_vec2)
-   //                      )
-   //                   ),
-   //                   divhelper
+   //        // unpack and divide
+   //        __m128i dst_even = _mm_cvtps_epi32(
+   //          _mm_floor_ps(
+   //             _mm_div_ps(
+   //                _mm_castsi128_ps(p_vec1), 
+   //                _mm_castsi128_ps(p_vec2)
    //                )
-   //             ),
-   //             _mm_castpd_si128(
-   //                divhelper
    //             )
    //          );
+   //        __m128i dst_odd = _mm_cvtps_epi32(
+   //          _mm_floor_ps(
+   //             _mm_div_ps(
+   //                _mm_castsi128_ps(
+   //                   _mm_srli_epi32(p_vec1, 16)
+   //                   ),
+   //                _mm_castsi128_ps(
+   //                   _mm_srli_epi32(p_vec2, 16))
+   //                )
+   //             )
+   //          );
+   //        // repack
+   //        return  _mm_or_si128(
+   //         _mm_slli_epi32(dst_odd, 16), 
+   //         _mm_srli_epi32(
+   //            _mm_slli_epi32(dst_even, 16),
+   //            16
+   //         )
+   //      );
    //    }
    // };
+
+
    //doesn't work yet
    // template<>
    // struct mod<sse<v128<uint16_t>>/*, 16*/> {
@@ -667,7 +667,6 @@ namespace vectorlib{
          typename sse<v128<uint16_t>>::vector_t const & p_distance
       ){
          // SSE does not have an intrinsic for this.
-         //is the comparison with 16 necessary?
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (each by its individual distance) (sse)" );
          uint16_t distance0 = _mm_extract_epi16(p_distance, 0);
          uint16_t distance1 = _mm_extract_epi16(p_distance, 1);
@@ -715,7 +714,6 @@ namespace vectorlib{
          typename sse<v128<uint16_t>>::vector_t const & p_distance
       ){
          // SSE does not have an intrinsic for this.
-         // is the comparison with 16 necessary?
          // The static_cast to an unsigned type is necessary, since the scalar
          // shift shifts in sign-bits otherwise.
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (each by its individual distance) (sse)" );
@@ -783,43 +781,46 @@ namespace vectorlib{
       }
    };
       
-   //doesn't work yet
-   // template<>
-   // struct hadd<sse<v128<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint8_t>>::base_t
-   //    apply(
-   //       typename sse<v128<uint8_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 8 bit integer values one register (sse)" );
-   //       return
-   //          _mm_extract_epi8(
-   //             _mm_castpd_si128(
-   //                _mm_hadd_pd(
-   //                   _mm_castsi128_pd(p_vec1),
-   //                   _mm_castsi128_pd(p_vec1)
-   //                )
-   //             ),
-   //             0
-   //          );
-   //    }
-   // };
-   //doesn't work, no easy 8bit intrinsic to replace _mm_mullo_epi16
-   // template<>
-   // struct mul<sse<v128<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename sse<v128<uint8_t>>::vector_t
-   //    apply(
-   //       typename sse<v128<uint8_t>>::vector_t const & p_vec1,
-   //       typename sse<v128<uint8_t>>::vector_t const & p_vec2
-   //    ){
-   //       trace( "[VECTOR] - Multiply 8 bit integer values from two registers (sse)" );
-   //       info( "[VECTOR] - _mm_mullo_epi16 is called" );
-   //       return _mm_mullo_epi16( p_vec1, p_vec2);
-   //    }
-   // };
+   template<>
+   struct hadd<sse<v128<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint8_t>>::base_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 8 bit integer values one register (sse)" );
+         return _mm_extract_epi8(p_vec1,0)+_mm_extract_epi8(p_vec1,1)+_mm_extract_epi8(p_vec1,2)+_mm_extract_epi8(p_vec1,3)
+         +_mm_extract_epi8(p_vec1,4)+_mm_extract_epi8(p_vec1,5)+_mm_extract_epi8(p_vec1,6)+_mm_extract_epi8(p_vec1,7)+
+         _mm_extract_epi8(p_vec1,8)+_mm_extract_epi8(p_vec1,9)+_mm_extract_epi8(p_vec1,10)+_mm_extract_epi8(p_vec1,11)
+         +_mm_extract_epi8(p_vec1,12)+_mm_extract_epi8(p_vec1,13)+_mm_extract_epi8(p_vec1,14)+_mm_extract_epi8(p_vec1,15);
+      }
+   };
+   template<>
+   struct mul<sse<v128<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint8_t>>::vector_t
+      apply(
+         typename sse<v128<uint8_t>>::vector_t const & p_vec1,
+         typename sse<v128<uint8_t>>::vector_t const & p_vec2
+      ){
+         trace( "[VECTOR] - Multiply 8 bit integer values from two registers (sse)" );
+         info( "[VECTOR] - _mm_mullo_epi16 is called" );
+          // unpack and multiply
+          __m128i dst_even = _mm_mullo_epi16(p_vec1, p_vec2);
+          __m128i dst_odd = _mm_mullo_epi16(_mm_srli_epi16(p_vec1, 8),_mm_srli_epi16(p_vec2, 8));
+          // repack
+          return _mm_or_si128(
+            _mm_slli_epi16(dst_odd, 8), 
+            _mm_srli_epi16(
+               _mm_slli_epi16(dst_even, 8),
+               8
+            )
+         );
+   
+      }
+   };
    //doesn't work yet
    // template<>
    // struct div<sse<v128<uint8_t>>/*, 8*/> {
@@ -943,7 +944,6 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_distance
       ){
          // SSE does not have an intrinsic for this.
-         //is the comparison with 8 necessary?
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (each by its individual distance) (sse)" );
          uint8_t distance0 = _mm_extract_epi8(p_distance, 0);
          uint8_t distance1 = _mm_extract_epi8(p_distance, 1);
@@ -1023,7 +1023,6 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_distance
       ){
          // SSE does not have an intrinsic for this.
-         // is the comparison with 8 necessary?
          // The static_cast to an unsigned type is necessary, since the scalar
          // shift shifts in sign-bits otherwise.
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (each by its individual distance) (sse)" );
