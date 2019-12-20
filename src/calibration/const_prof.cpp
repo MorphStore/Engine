@@ -241,5 +241,5 @@ int main(void) {
     varex.done();
     std::cerr << "Failed checks are ok in this microbenchmark" << std::endl;
     
-    return !varex.good();
+    return 0; // Failed checks are ok in this microbenchmark
 }
