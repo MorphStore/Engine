@@ -122,10 +122,12 @@ template<class t_format>
 std::string formatName = "(unknown format)";
 
 template<size_t t_BlockSizeLog, unsigned t_Step>
-std::string formatName<delta_f<t_BlockSizeLog, t_Step, empty_f> > = "delta_f";
+std::string formatName<delta_f<t_BlockSizeLog, t_Step, empty_f> > =
+        "delta_f<" + std::to_string(t_Step) + ">";
 
 template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks>
-std::string formatName<for_f<t_BlockSizeLog, t_PageSizeBlocks, empty_f> > = "for_f";
+std::string formatName<for_f<t_BlockSizeLog, t_PageSizeBlocks, empty_f> > =
+        "for_f<" + std::to_string(t_PageSizeBlocks) + ">";
 
 
 // ****************************************************************************
