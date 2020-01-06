@@ -37,11 +37,12 @@ int main( void ) {
     std::cout << "Base data generation started... ";
     std::cout.flush();
 
-    const size_t countValues = 100; // generate 100 numbers
+    const size_t countValues = 128*4; // generate 100 numbers
     const column<uncompr_f> * const myNumbers = generate_with_distr(
             countValues,
-            std::uniform_int_distribution<uint8_t>(1, 50), //range between 1 and 50
-            true //numbers are sorted
+            std::uniform_int_distribution<uint64_t>(1, 20), //range between 1 and 50
+            false //numbers are sorted
+            // true
     );
 
     std::cout << "done." << std::endl;
@@ -52,11 +53,14 @@ int main( void ) {
     // ************************************************************************
 
     // using ve = scalar<v64<uint64_t> >;
-    // using ve = sse<v128<uint64_t>>;
-    using ve = avx2<v256<uint8_t>>;
+    // using ve = sse<v128<uint8_t>>;
+    // using ve = avx2<v256<uint8_t>>;
+    // using ve = avx2<v256<uint64_t>>;
+    using ve = avx512<v512<uint64_t>>;
 
 
-    std::cout << "Query execution started... ";
+
+    std::cout << "Query execution started...\t";
     std::cout.flush();
 
     // Positions fulfilling "myNumbers < 10"
@@ -68,8 +72,10 @@ int main( void ) {
     >(myNumbers, 10);
     // Data elements of "myNumbers" fulfilling "myNumbers < 10"
     // auto i2 = project<ve, uncompr_f>(myNumbers, i1);
-
-    std::cout << "done." << std::endl << std::endl;
+    std::cout << "done select...\t";
+    std::cout.flush();
+    auto i2 = morphstore::project<ve, uncompr_f, uncompr_f, uncompr_f>(myNumbers, i1);
+    std::cout << "done project..." << std::endl << std::endl;
 
     // ************************************************************************
     // * Result output
@@ -77,28 +83,34 @@ int main( void ) {
 
     print_columns(print_buffer_base::decimal, myNumbers, "myNumbers");
     print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");
+    print_columns(print_buffer_base::decimal, i2, "myNumbers<10");
 
-    // uint8_t *mudata1 = myNumbers->get_data();
-    // uint8_t *mudata2 = i1->get_data();
-    // uint8_t show = 0;
-    // uint8_t k = 0;
-    // std::cout << "IDX\tmyNumbers\tErgebnis IDX myNumbers <10"<<std::endl;
-    // for(uint64_t i = 0; i < (100/32)*32; i++){
-    //   if(i%16 == 0){
-    //      if(show == 0){
-    //         show = 1;
-    //      }else{
-    //         show = 0;
-    //      }
-    //   }
-    //   if(show == 1){
-    //      std::cout <<i<<"\t" << (int)mudata1[i] << "\t\t";
-    //      if(k < i1->get_count_values()){
-    //         std::cout << (uint16_t) mudata2[k];
-    //      }
-    //      std::cout << std::endl;
-    //      k++;
-    //   }
-    // }
-    // return 0;
+    uint64_t *mudata1 = myNumbers->get_data(), *mudata2 = i1->get_data(), *mudata3 = i2->get_data();
+    uint32_t k = 0;
+    std::cout << "IDX\tmyNumbers\tErgebnis IDX myNumbers <10\tErgebnis"<<std::endl;
+    for(uint64_t i = 0; i < (countValues/32)*32; i++){
+         std::cout <<i<<"\t" << (int)mudata1[i] << "\t";
+         for(uint64_t w = 0; w <= i && w < i1->get_count_values();w++){
+            if(mudata2[w] == i){
+               std::cout <<"x";
+               break;
+            }
+         }
+         std::cout << "\t";
+         if(k < i1->get_count_values()){
+            std::cout << (uint64_t) mudata2[k] << "\t\t\t\t";
+            std::cout << (uint64_t) mudata3[k] << "\t";
+            if(mudata1[mudata2[k]] == mudata3[k]){
+               std::cout << "ok";
+            }
+         }
+         std::cout << std::endl;
+         k++;
+         if(k%(64/8) == 0){
+            std::cout << "-------------------\n";
+         }
+
+    }
+
+    return 0;
 }

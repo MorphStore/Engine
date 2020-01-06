@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   io_avx512.h
  * Author: Annett
  *
@@ -22,7 +22,7 @@
 #include <functional>
 
 namespace vectorlib {
-  
+
    template<typename T, int IOGranularity>
    struct io<avx512<v512<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -40,7 +40,7 @@ namespace vectorlib {
          _mm512_store_si512(/*reinterpret_cast<typename avx512< v512< U > >::vector_t const *>*/( void * )(p_DataPtr),p_vec);
          return;
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
@@ -48,7 +48,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned float values into 512 Bit vector register." );
          return _mm512_load_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -65,7 +65,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned double values into 512 Bit vector register." );
          return _mm512_load_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -74,9 +74,9 @@ namespace vectorlib {
          _mm512_store_pd(( void * )(p_DataPtr), p_vec);
          return;
       }
-      
-    
-      
+
+
+
    };
 
    template<typename T, int IOGranularity>
@@ -88,7 +88,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Stream load integer values into 512 Bit vector register." );
          return _mm512_stream_load_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -97,8 +97,8 @@ namespace vectorlib {
          _mm512_stream_si512((void *)p_DataPtr, p_vec);
          return ;
       }
-      
-   
+
+
    };
 
    template<typename T, int IOGranularity>
@@ -110,7 +110,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned integer values into 512 Bit vector register." );
          return _mm512_loadu_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -119,7 +119,7 @@ namespace vectorlib {
          _mm512_storeu_si512((void *)p_DataPtr, p_vec);
          return ;
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -136,7 +136,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned float values into 512 Bit vector register." );
          return _mm_loadu_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -153,7 +153,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned double values into 512 Bit vector register." );
          return _mm_loadu_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -162,18 +162,28 @@ namespace vectorlib {
          _mm512_storeu_pd((void *)p_DataPtr, p_vec);
          return ;
       }
-      
+
    };
-   
-   template<typename T, int IOGranularity, int Scale>
-   struct gather_t<avx512<v512<T>>, IOGranularity, Scale> {
+
+   template<typename T>
+   struct gather_t<avx512<v512<T>>, 64, 8> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
-         return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), Scale );
-         
+         return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 8);
+      }
+   };
+
+   template<typename T>
+   struct gather_t<avx512<v512<T>>, 32, 4> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v512< U > >::vector_t
+      apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
+         trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
+         return _mm512_i32gather_epi3( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 4);
       }
    };
 
@@ -187,7 +197,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned integer values into 512 Bit vector register using lddqu." );
          return _mm512_loadu_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -196,12 +206,12 @@ namespace vectorlib {
          _mm512_storeu_si512((void *)p_DataPtr, p_vec);
          return ;
       }
-      
- 
+
+
    };
-   
-    template<typename T, int IOGranularity>
-    struct io<avx512<v256<T>>,iov::UNALIGNED, IOGranularity> {
+
+    template<typename T>
+    struct io<avx512<v256<T>>,iov::UNALIGNED, 64> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -211,7 +221,41 @@ namespace vectorlib {
          return ;
       }
     };
-    
+    template<typename T>
+    struct io<avx512<v256<T>>,iov::UNALIGNED, 32> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm256_mask_compressstoreu_epi32((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+    template<typename T>
+    struct io<avx512<v256<T>>,iov::UNALIGNED, 16> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm256_mask_compressstoreu_epi16((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+    template<typename T>
+    struct io<avx512<v256<T>>,iov::UNALIGNED, 8> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm256_mask_compressstoreu_epi8((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+
+
     template<typename T, int IOGranularity>
     struct io<avx512<v256<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -221,7 +265,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned integer values into 512 Bit vector register." );
          return _mm256_load_si256(reinterpret_cast<typename avx512< v256< U > >::vector_t const *>(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -231,9 +275,9 @@ namespace vectorlib {
          return;
       }
     };
-    
+
     template<typename T, int IOGranularity>
-    struct io<avx512<v128<T>>,iov::UNALIGNED, IOGranularity> {
+    struct io<avx512<v128<T>>,iov::UNALIGNED, 64> {
     template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -243,7 +287,40 @@ namespace vectorlib {
          return ;
       }
     };
-    
+    template<typename T, int IOGranularity>
+    struct io<avx512<v128<T>>,iov::UNALIGNED, 32> {
+    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm_mask_compressstoreu_epi32((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+    template<typename T, int IOGranularity>
+    struct io<avx512<v128<T>>,iov::UNALIGNED, 16> {
+    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm_mask_compressstoreu_epi16((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+    template<typename T, int IOGranularity>
+    struct io<avx512<v128<T>>,iov::UNALIGNED, 8> {
+    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+         _mm_mask_compressstoreu_epi8((void *)p_DataPtr,mask, p_vec);
+         return ;
+      }
+    };
+
     template<typename T, int IOGranularity>
     struct io<avx512<v128<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -253,7 +330,7 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading aligned integer values into 512 Bit vector register." );
          return _mm_load_si128(reinterpret_cast<typename avx512< v128< U > >::vector_t const *>(p_DataPtr));
       }
-      
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
@@ -263,9 +340,8 @@ namespace vectorlib {
          return;
       }
     };
-  
+
 
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_IO_AVX512_H */
-
