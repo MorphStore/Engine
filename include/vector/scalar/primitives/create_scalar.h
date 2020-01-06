@@ -33,6 +33,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< T > >::vector_t
       set1( T a0) {
+#if tally
+create_scalar += 1;
+#endif
          trace( "[VECTOR] - set1 sse register." );
          return (typename scalar< v64< T > >::vector_t) (a0);
       }
@@ -41,6 +44,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< T > >::vector_t
       set_sequence( T a, MSV_CXX_ATTRIBUTE_PPUNUSED int b) {
+#if tally
+create_scalar += 1;
+#endif
          trace( "[VECTOR] - set_sequence sse register." );
          return a;
       }

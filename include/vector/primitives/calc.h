@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   calc.h
  * Author: Annett
  *
@@ -15,6 +15,10 @@
 #define CALC_H
 
 #include <vector/vector_extension_structs.h>
+
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
 
 namespace vectorlib{
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
@@ -37,7 +41,7 @@ namespace vectorlib{
          typename VectorExtension::vector_t const & p_vec2
       ) = delete;
    };
-   
+
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    struct min {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -48,7 +52,7 @@ namespace vectorlib{
          typename VectorExtension::vector_t const & p_vec2
       ) = delete;
    };
-   
+
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
    struct hadd {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -138,8 +142,7 @@ namespace vectorlib{
       ) = delete;
    };
 
-   
-      
+
+
 }
 #endif /* CALC_H */
-

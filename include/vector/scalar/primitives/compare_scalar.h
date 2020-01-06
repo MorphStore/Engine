@@ -21,6 +21,9 @@ namespace vectorlib{
          typename scalar<v64<T>>::vector_t const & p_vec1,
          typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
          return (typename scalar<v64<uint64_t>>::mask_t)( p_vec1 == p_vec2 );
       }
@@ -33,6 +36,9 @@ namespace vectorlib{
          typename scalar<v64<T>>::vector_t const & p_vec1,
          typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
          return (typename scalar<v64<T>>::mask_t)( p_vec1 < p_vec2 );
       }
@@ -45,6 +51,9 @@ namespace vectorlib{
          typename scalar<v64<T>>::vector_t const & p_vec1,
          typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
          return (typename scalar<v64<uint64_t>>::mask_t)( p_vec1 <= p_vec2 );
       }
@@ -58,6 +67,9 @@ namespace vectorlib{
          typename scalar<v64<T>>::vector_t const & p_vec1,
          typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
          return (typename scalar<v64<T>>::mask_t)( p_vec1 > p_vec2 );
       }
@@ -70,6 +82,9 @@ namespace vectorlib{
          typename scalar<v64<T>>::vector_t const & p_vec1,
          typename scalar<v64<T>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
          return (typename scalar<v64<T>>::mask_t)( p_vec1 >= p_vec2 );
       }
@@ -81,6 +96,9 @@ namespace vectorlib{
       apply(
          typename scalar<v64<T>>::mask_t const & p_mask
       ) {
+#if tally
+compare_scalar += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
          return p_mask;
       }
@@ -90,4 +108,3 @@ namespace vectorlib{
 }
 
 #endif /* MORPHSTORE_VECTOR_SCALAR_PRIMITIVE_COMPARE_SCALAR_H */
-

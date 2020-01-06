@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   manipulate.h
  * Author: Annett
  *
@@ -16,9 +16,13 @@
 
 #include <vector/vector_extension_structs.h>
 
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
+
 namespace vectorlib{
-    
-   
+
+
    template<class VectorExtension, int IOGranularity>
    struct manipulate;
 
@@ -34,4 +38,3 @@ namespace vectorlib{
 }
 
 #endif /* MANIPULATE_H */
-

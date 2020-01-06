@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   extract.h
  * Author: Annett
  *
@@ -16,13 +16,17 @@
 
 #include <vector/vector_extension_structs.h>
 
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
+
 namespace vectorlib{
-    
-   
+
+
    template<class VectorExtension, int IOGranularity>
    struct extract;
 
-   
+
     /*! Extract a value from a vector
      * @param a the vector to extract the value from
      * @param b index
@@ -30,9 +34,8 @@ namespace vectorlib{
    template<class VectorExtension,  int IOGranularity>
    typename VectorExtension::base_t
    extract_value(typename VectorExtension::vector_t a, int b){
-      return extract<VectorExtension, IOGranularity>::extract_value(a, b); 
+      return extract<VectorExtension, IOGranularity>::extract_value(a, b);
    }
 }
 
 #endif /* EXTRACT_H */
-

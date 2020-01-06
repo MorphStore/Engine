@@ -16,6 +16,10 @@
 
 #include <vector/vector_extension_structs.h>
 
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
+
 namespace vectorlib{
 
 

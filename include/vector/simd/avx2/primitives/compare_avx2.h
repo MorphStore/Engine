@@ -34,6 +34,9 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -51,6 +54,9 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -68,6 +74,9 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -88,6 +97,9 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -105,6 +117,9 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -124,6 +139,9 @@ namespace vectorlib{
       apply(
          typename avx2<v256<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -139,6 +157,9 @@ namespace vectorlib{
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_ps( //mm256
@@ -148,7 +169,7 @@ namespace vectorlib{
             );
       }
    };
-   
+
    template<>
    struct less<avx2<v256<uint32_t>>/*, 32*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -157,6 +178,9 @@ namespace vectorlib{
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -166,7 +190,7 @@ namespace vectorlib{
             );
       }
    };
-   
+
    template<>
    struct lessequal<avx2<v256<uint32_t>>/*, 32*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -175,6 +199,9 @@ namespace vectorlib{
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -196,6 +223,9 @@ namespace vectorlib{
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -213,6 +243,9 @@ namespace vectorlib{
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -232,6 +265,9 @@ namespace vectorlib{
       apply(
          typename avx2<v256<uint32_t>>::mask_t const & p_mask
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
           return __builtin_popcount(p_mask);
@@ -247,6 +283,9 @@ namespace vectorlib{
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_ps( //mm256
@@ -256,7 +295,7 @@ namespace vectorlib{
             );
       }
    };
-   
+
    template<>
    struct less<avx2<v256<uint16_t>>/*, 16*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -265,6 +304,9 @@ namespace vectorlib{
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -274,7 +316,7 @@ namespace vectorlib{
             );
       }
    };
-   
+
    template<>
    struct lessequal<avx2<v256<uint16_t>>/*, 16*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -283,6 +325,9 @@ namespace vectorlib{
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -304,6 +349,9 @@ namespace vectorlib{
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -321,6 +369,9 @@ namespace vectorlib{
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -340,6 +391,9 @@ namespace vectorlib{
       apply(
          typename avx2<v256<uint16_t>>::mask_t const & p_mask
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
           return __builtin_popcount(p_mask);
@@ -355,6 +409,9 @@ namespace vectorlib{
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -370,6 +427,9 @@ namespace vectorlib{
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -386,6 +446,9 @@ namespace vectorlib{
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -396,7 +459,7 @@ namespace vectorlib{
             );
       }
    };
-   
+
 
    template<>
    struct greater<avx2<v256<uint8_t>>/*, 8*/> {
@@ -406,6 +469,9 @@ namespace vectorlib{
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -421,6 +487,9 @@ namespace vectorlib{
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -439,6 +508,9 @@ namespace vectorlib{
       apply(
          typename avx2<v256<uint8_t>>::mask_t const & p_mask
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -446,7 +518,7 @@ namespace vectorlib{
       }
    };
 
-   
+
 
 /*
     template<typename T>

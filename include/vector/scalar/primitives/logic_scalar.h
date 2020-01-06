@@ -21,6 +21,9 @@ namespace vectorlib {
       static
       typename scalar<v64<T>>::vector_t
       bitwise_and( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
+#if tally
+logic_scalar += 1;
+#endif
          return (p_In1 & p_In2 );
       }
 
@@ -28,6 +31,9 @@ namespace vectorlib {
       static
       typename scalar<v64<T>>::vector_t
       bitwise_or( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
+#if tally
+logic_scalar += 1;
+#endif
          return (p_In1 | p_In2 );
       }
    };

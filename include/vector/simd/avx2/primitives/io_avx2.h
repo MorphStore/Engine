@@ -24,6 +24,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
          return _mm256_load_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
@@ -31,6 +34,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store aligned integer values to memory" );
          _mm256_store_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -40,6 +46,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading aligned float values into 256 Bit vector register." );
          return _mm256_load_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -48,6 +57,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< float > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store aligned float values to memory" );
          _mm256_store_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -56,6 +68,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return _mm256_load_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -63,6 +78,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< double > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store aligned double values to memory" );
          _mm256_store_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -76,6 +94,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Stream load integer values into 256 Bit vector register." );
          return _mm256_stream_load_si128(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
@@ -83,6 +104,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Stream store integer values to memory" );
          _mm256_stream_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return ;
@@ -95,6 +119,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading unaligned integer values into 256 Bit vector register." );
          return _mm256_loadu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
@@ -103,6 +130,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store unaligned integer values to memory" );
           _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *> (p_DataPtr),p_vec);
           return;
@@ -111,6 +141,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading unaligned float values into 256 Bit vector register." );
          return _mm256_loadu_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -119,6 +152,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< float > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store unaligned float values to memory" );
          _mm256_storeu_ps(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -127,6 +163,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading unaligned double values into 256 Bit vector register." );
          return _mm256_loadu_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -134,6 +173,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< double > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store unaligned double values to memory" );
          _mm256_storeu_pd(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -150,6 +192,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
           switch (mask){
             case 0: break;
@@ -191,6 +236,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
           switch (mask){
             case 0: break;
@@ -224,6 +272,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          int matched = 1;
 
@@ -278,6 +329,9 @@ namespace vectorlib {
          MSV_CXX_ATTRIBUTE_FORCE_INLINE
          static void
          compressstore( U * p_DataPtr,  avx2< v256< int > > ::vector_t p_vec, int mask ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
             trace( "[VECTOR] - Store masked unaligned integer values to memory" );
             int matched = 1;
             //mask error AGAIN?!
@@ -344,6 +398,9 @@ namespace vectorlib {
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
 		static void
 		compressstore( U * p_DataPtr,  avx2< v256< uint8_t > > ::vector_t p_vec, int mask ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
 			trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          int matched = 1;
          // std::cout <<"WAS ZUR HOELLE?!" << std::endl;
@@ -440,6 +497,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
          return _mm256_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, 8 );
       }
@@ -451,6 +511,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
          return _mm256_i32gather_epi32( reinterpret_cast<const int *> (p_DataPtr), p_vec, 4 );
       }
@@ -462,6 +525,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
          __m256i p_vec_1 = _mm256_srli_epi32(p_vec, 16);
          __m256i p_vec_2 = _mm256_srli_epi32(_mm256_slli_epi32(p_vec, 16),16);
@@ -481,6 +547,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       apply( U const * const p_DataPtr,  avx2< v256< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Gather integer values into 256 Bit vector register." );
          __m256i p_vec_1 = _mm256_srli_epi32(p_vec, 24);
          __m256i p_vec_2 = _mm256_srli_epi32(_mm256_slli_epi32(p_vec, 8),24);
@@ -512,6 +581,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Loading unaligned integer values into 256 Bit vector register using lddqu." );
          return _mm256_lddqu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t const *>(p_DataPtr));
       }
@@ -519,6 +591,9 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
          trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -533,6 +608,9 @@ namespace vectorlib {
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v128< U > >::vector_t
         apply( U const * const p_DataPtr,  avx2< v128< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_simd = io_simd + 1;
+#endif
             trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
             return _mm_i64gather_epi64( reinterpret_cast<const long long int *> (p_DataPtr), p_vec, Scale );
 

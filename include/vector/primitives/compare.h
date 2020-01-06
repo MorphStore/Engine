@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   compare.h
  * Author: Annett
  *
@@ -15,6 +15,10 @@
 #define COMPARE_H
 
 #include <vector/vector_extension_structs.h>
+
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
 
 namespace vectorlib{
 
@@ -83,7 +87,7 @@ namespace vectorlib{
       ) = delete;
    };
 
-   
+
 //   template<class VectorExtension, int IOGranularity>
 //   struct compare;
 //
@@ -96,7 +100,7 @@ namespace vectorlib{
 //   equality(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
 //       return compare<VectorExtension,  Granularity>::equality( a, b );
 //   }
-//   
+//
 //    /*!
 //    * Compares two vectors element wise for less-than property
 //    * @return a bitmask with an (un)set bit for every comparison result
@@ -106,7 +110,7 @@ namespace vectorlib{
 //   lessthan(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
 //       return compare<VectorExtension,  Granularity>::lessthan( a, b );
 //   }
-//   
+//
 //    /*!
 //    * Compares two vectors element wise for greater-than property
 //    * @return a bitmask with an (un)set bit for every comparison result
@@ -116,7 +120,7 @@ namespace vectorlib{
 //   greaterthan(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
 //       return compare<VectorExtension,  Granularity>::greaterthan( a, b );
 //   }
-//   
+//
 //    /*!
 //    * Compares two vectors element wise for greater-or-equal property
 //    * @return a bitmask with an (un)set bit for every comparison result
@@ -126,7 +130,7 @@ namespace vectorlib{
 //   greaterequal(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
 //       return compare<VectorExtension,  Granularity>::greaterequal( a, b );
 //   }
-//   
+//
 //   /*!
 //    * Compares two vectors element wise for less-or-equal property
 //    * @return a bitmask with an (un)set bit for every comparison result
@@ -136,8 +140,7 @@ namespace vectorlib{
 //   lessequal(typename VectorExtension::vector_t a, typename VectorExtension::vector_t b ) {
 //       return compare<VectorExtension,  Granularity>::lessequal( a, b );
 //   }
-   
+
 }
 
 #endif /* COMPARE_H */
-

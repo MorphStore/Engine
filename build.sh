@@ -200,6 +200,11 @@ case $key in
 	buildMode="-DCMAKE_BUILD_TYPE=HighPerf"
 	shift # past argument
 	;;
+   -tal|--tally)
+   buildModeSet=$((buildModeSet + 1))
+   buildMode="-DCMAKE_BUILD_TYPE=Tally"
+   shift # past argument
+   ;;
 	-mon|--enable-monitoring)
 	enableMonitoring="-DENABLE_MONITORING=True"
 	shift # past argument

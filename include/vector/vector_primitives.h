@@ -53,6 +53,11 @@
 #  include <vector/simd/neon/primitives/manipulate_neon.h>
 #endif
 
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
+
+
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/create_scalar.h>

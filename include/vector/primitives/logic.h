@@ -8,6 +8,10 @@
 #include <vector/vector_extension_structs.h>
 #include <core/utils/preprocessor.h>
 
+#ifdef tally
+#	include <core/utils/tally.h>
+#endif
+
 namespace vectorlib {
 
    template<class VectorExtension, int Granularity>
@@ -20,7 +24,7 @@ namespace vectorlib {
    bitwise_and(typename VectorExtension::vector_t const & p_In1, typename VectorExtension::vector_t const & p_In2){
       return logic<VectorExtension, Granularity>::bitwise_and( p_In1, p_In2 );
    }
-   
+
    template<class VectorExtension,  int Granularity = VectorExtension::vector_helper_t::size_bit::value>
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    typename VectorExtension::vector_t
