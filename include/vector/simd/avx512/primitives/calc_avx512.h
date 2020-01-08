@@ -22,7 +22,6 @@
 #include <vector/primitives/calc.h>
 
 #include <functional>
-
 namespace vectorlib{
    template<>
    struct add<avx512<v512<uint64_t>>, 64> {
@@ -597,7 +596,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct add<avx512<v256<uint16_t>>/ 16> {
+   struct add<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v256<uint16_t>>::vector_t
@@ -677,19 +676,28 @@ namespace vectorlib{
          return _mm512_sub_epi16( p_vec1, p_vec2);
       }
    };
-   //doesn't work, no easy 16bit intrinsic to replace _mm512_reduce_add_epi32
-   // template<>
-   // struct hadd<avx512<v512<uint16_t>>/*, 16*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx512<v512<uint16_t>>::base_t
-   //    apply(
-   //       typename avx512<v512<uint16_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx512)" );
-   //       return _mm512_reduce_add_epi32(p_vec1);
-   //    }
-   // };
+   template<>
+   struct hadd<avx512<v512<uint16_t>>, 16> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint16_t>>::base_t
+      apply(
+         typename avx512<v512<uint16_t>>::vector_t const & p_vec
+      ){
+         trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx512)" );
+         return _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),0)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),1)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),2)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),3)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),4)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),5)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),6)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),7)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),8)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),9)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),10)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),11)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),12)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),13)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),14)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),15)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),0)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),1)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),2)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),3)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),4)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),5)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),6)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),7)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),8)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),9)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),10)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),11)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),12)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),13)+
+         _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),14)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,1),15);
+      }
+   };
    template<>
    struct mul<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -965,22 +973,36 @@ namespace vectorlib{
          return _mm512_sub_epi8( p_vec1, p_vec2);
       }
    };
-   //doesn't work, no easy 8bit intrinsic to replace _mm512_reduce_add_epi32
-   // template<>
-   // struct hadd<avx512<v512<uint8_t>>/*, 8*/> {
-   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
-   //    static
-   //    typename avx512<v512<uint8_t>>::base_t
-   //    apply(
-   //       typename avx512<v512<uint8_t>>::vector_t const & p_vec1
-   //    ){
-   //       trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx512)" );
-   //       return _mm512_reduce_add_epi32(p_vec1);
-   //    }
-   // };
-   //doesn't work, no easy 8bit intrinsic to replace _mm512_mullo_epi16
    template<>
-   struct mul<avx512<v512<uint8_t>>/*, 8*/> {
+   struct hadd<avx512<v512<uint8_t>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename avx512<v512<uint8_t>>::base_t
+      apply(
+         typename avx512<v512<uint8_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx512)" );
+         return _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),0)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),1)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),2)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),3)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),4)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),5)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),6)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),7)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),8)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),9)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),10)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),11)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),12)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),13)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),14)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),15)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),16)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),17)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),18)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),19)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),20)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),21)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),22)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),23)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),24)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),25)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),26)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),27)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),28)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),29)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),30)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),31)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),0)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),1)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),2)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),3)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),4)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),5)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),6)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),7)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),8)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),9)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),10)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),11)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),12)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),13)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),14)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),15)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),16)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),17)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),18)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),19)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),20)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),21)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),22)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),23)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),24)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),25)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),26)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),27)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),28)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),29)+
+         _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),30)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,1),31);
+      }
+   };
+   template<>
+   struct mul<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename avx512<v512<uint8_t>>::vector_t
@@ -994,7 +1016,7 @@ namespace vectorlib{
           __m512i dst_even = _mm512_mullo_epi16(p_vec1, p_vec2);
           __m512i dst_odd = _mm512_mullo_epi16(_mm512_srli_epi16(p_vec1, 8),_mm512_srli_epi16(p_vec2, 8));
           // repack
-          return _mm256_or_si256(
+          return _mm512_or_si512(
             _mm512_slli_epi16(dst_odd, 8), 
             _mm512_srli_epi16(
                _mm512_slli_epi16(dst_even, 8),
@@ -1528,5 +1550,6 @@ namespace vectorlib{
          );
       }
    };
+}
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H */
 

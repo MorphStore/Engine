@@ -27,7 +27,7 @@ namespace vectorlib{
 
   //64bit
    template<>
-   struct equal<avx2<v256<uint64_t>>/*, 64*/> {
+   struct equal<avx2<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint64_t>>::mask_t
       apply(
@@ -47,7 +47,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct less<avx2<v256<uint64_t>>/*, 64*/> {
+   struct less<avx2<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint64_t>>::mask_t
       apply(
@@ -67,7 +67,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct lessequal<avx2<v256<uint64_t>>/*, 64*/> {
+   struct lessequal<avx2<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint64_t>>::mask_t
       apply(
@@ -90,7 +90,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct greater<avx2<v256<uint64_t>>/*, 64*/> {
+   struct greater<avx2<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint64_t>>::mask_t
       apply(
@@ -110,7 +110,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct greaterequal<avx2<v256<uint64_t>>/*, 64*/> {
+   struct greaterequal<avx2<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint64_t>>::mask_t
       apply(
@@ -150,7 +150,7 @@ compare_simd += 1;
    };
    //32bit
    template<>
-   struct equal<avx2<v256<uint32_t>>/*, 32*/> {
+   struct equal<avx2<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint32_t>>::mask_t
       apply(
@@ -171,7 +171,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct less<avx2<v256<uint32_t>>/*, 32*/> {
+   struct less<avx2<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint32_t>>::mask_t
       apply(
@@ -192,7 +192,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct lessequal<avx2<v256<uint32_t>>/*, 32*/> {
+   struct lessequal<avx2<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint32_t>>::mask_t
       apply(
@@ -216,7 +216,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct greater<avx2<v256<uint32_t>>/*, 32*/> {
+   struct greater<avx2<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint32_t>>::mask_t
       apply(
@@ -236,7 +236,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct greaterequal<avx2<v256<uint32_t>>/*, 32*/> {
+   struct greaterequal<avx2<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint32_t>>::mask_t
       apply(
@@ -276,7 +276,7 @@ compare_simd += 1;
    };
 //the 16bit functions probably won't work because they use _mm256_movemask_ps (no equivalent for 16bit)
    template<>
-   struct equal<avx2<v256<uint16_t>>/*, 16*/> {
+   struct equal<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
       apply(
@@ -297,7 +297,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct less<avx2<v256<uint16_t>>/*, 16*/> {
+   struct less<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
       apply(
@@ -318,7 +318,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct lessequal<avx2<v256<uint16_t>>/*, 16*/> {
+   struct lessequal<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
       apply(
@@ -342,7 +342,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct greater<avx2<v256<uint16_t>>/*, 16*/> {
+   struct greater<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
       apply(
@@ -362,7 +362,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct greaterequal<avx2<v256<uint16_t>>/*, 16*/> {
+   struct greaterequal<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint16_t>>::mask_t
       apply(
@@ -402,7 +402,7 @@ compare_simd += 1;
    };
 //8 Bit
 	template<>
-   struct equal<avx2<v256<uint8_t>>/*, 8*/> {
+   struct equal<avx2<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint8_t>>::mask_t
       apply(
@@ -420,7 +420,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct less<avx2<v256<uint8_t>>/*, 8*/> {
+   struct less<avx2<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint8_t>>::mask_t
       apply(
@@ -439,7 +439,7 @@ compare_simd += 1;
    };
 
    template<>
-   struct lessequal<avx2<v256<uint8_t>>/*, 8*/> {
+   struct lessequal<avx2<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint8_t>>::mask_t
       apply(
@@ -462,7 +462,7 @@ compare_simd += 1;
 
 
    template<>
-   struct greater<avx2<v256<uint8_t>>/*, 8*/> {
+   struct greater<avx2<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint8_t>>::mask_t
       apply(
@@ -480,7 +480,7 @@ compare_simd += 1;
       }
    };
    template<>
-   struct greaterequal<avx2<v256<uint8_t>>/*, 8*/> {
+   struct greaterequal<avx2<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx2<v256<uint8_t>>::mask_t
       apply(

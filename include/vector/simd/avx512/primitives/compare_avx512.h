@@ -24,7 +24,7 @@
 
 namespace vectorlib{
    template<>
-   struct equal<avx512<v512<uint64_t>>/*, 64*/> {
+   struct equal<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint64_t>>::mask_t
       apply(
@@ -37,7 +37,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v256<uint64_t>>/*, 64*/> {
+   struct equal<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v256<uint64_t>>::mask_t
       apply(
@@ -50,7 +50,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v128<uint64_t>>/*, 64*/> {
+   struct equal<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v128<uint64_t>>::mask_t
       apply(
@@ -63,7 +63,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct less<avx512<v512<uint64_t>>/*, 64*/> {
+   struct less<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint64_t>>::mask_t
       apply(
@@ -75,7 +75,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<avx512<v512<uint64_t>>/*, 64*/> {
+   struct lessequal<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint64_t>>::mask_t
       apply(
@@ -88,7 +88,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<avx512<v512<uint64_t>>/*, 64*/> {
+   struct greater<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint64_t>>::mask_t
       apply(
@@ -100,7 +100,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<avx512<v512<uint64_t>>/*, 64*/> {
+   struct greaterequal<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint64_t>>::mask_t
       apply(
@@ -156,7 +156,7 @@ namespace vectorlib{
    //the functions below are not tested
 
    template<>
-   struct equal<avx512<v512<uint32_t>>/*, 32*/> {
+   struct equal<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint32_t>>::mask_t
       apply(
@@ -169,7 +169,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v256<uint32_t>>/*, 32*/> {
+   struct equal<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v256<uint32_t>>::mask_t
       apply(
@@ -182,7 +182,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v128<uint32_t>>/*, 32*/> {
+   struct equal<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v128<uint32_t>>::mask_t
       apply(
@@ -195,7 +195,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct less<avx512<v512<uint32_t>>/*, 32*/> {
+   struct less<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint32_t>>::mask_t
       apply(
@@ -207,7 +207,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<avx512<v512<uint32_t>>/*, 32*/> {
+   struct lessequal<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint32_t>>::mask_t
       apply(
@@ -220,7 +220,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<avx512<v512<uint32_t>>/*, 32*/> {
+   struct greater<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint32_t>>::mask_t
       apply(
@@ -232,7 +232,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<avx512<v512<uint32_t>>/*, 32*/> {
+   struct greaterequal<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint32_t>>::mask_t
       apply(
@@ -286,7 +286,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct equal<avx512<v512<uint16_t>>/*, 16*/> {
+   struct equal<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint16_t>>::mask_t
       apply(
@@ -299,7 +299,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v256<uint16_t>>/*, 16*/> {
+   struct equal<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v256<uint16_t>>::mask_t
       apply(
@@ -312,7 +312,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v128<uint16_t>>/*, 16*/> {
+   struct equal<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v128<uint16_t>>::mask_t
       apply(
@@ -325,7 +325,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct less<avx512<v512<uint16_t>>/*, 16*/> {
+   struct less<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint16_t>>::mask_t
       apply(
@@ -337,7 +337,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<avx512<v512<uint16_t>>/*, 16*/> {
+   struct lessequal<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint16_t>>::mask_t
       apply(
@@ -350,7 +350,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<avx512<v512<uint16_t>>/*, 16*/> {
+   struct greater<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint16_t>>::mask_t
       apply(
@@ -362,7 +362,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<avx512<v512<uint16_t>>/*, 16*/> {
+   struct greaterequal<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint16_t>>::mask_t
       apply(
@@ -416,7 +416,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct equal<avx512<v512<uint8_t>>/*, 8*/> {
+   struct equal<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint8_t>>::mask_t
       apply(
@@ -429,7 +429,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v256<uint8_t>>/*, 8*/> {
+   struct equal<avx512<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v256<uint8_t>>::mask_t
       apply(
@@ -442,7 +442,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct equal<avx512<v128<uint8_t>>/*, 8*/> {
+   struct equal<avx512<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v128<uint8_t>>::mask_t
       apply(
@@ -455,7 +455,7 @@ namespace vectorlib{
    };
    
    template<>
-   struct less<avx512<v512<uint8_t>>/*, 8*/> {
+   struct less<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint8_t>>::mask_t
       apply(
@@ -467,7 +467,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct lessequal<avx512<v512<uint8_t>>/*, 8*/> {
+   struct lessequal<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint8_t>>::mask_t
       apply(
@@ -480,7 +480,7 @@ namespace vectorlib{
    };
 
    template<>
-   struct greater<avx512<v512<uint8_t>>/*, 8*/> {
+   struct greater<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint8_t>>::mask_t
       apply(
@@ -492,7 +492,7 @@ namespace vectorlib{
       }
    };
    template<>
-   struct greaterequal<avx512<v512<uint8_t>>/*, 8*/> {
+   struct greaterequal<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512<v512<uint8_t>>::mask_t
       apply(
@@ -867,7 +867,7 @@ namespace vectorlib{
 
         }
     };*/
-}
+ } 
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_COMPARE_AVX512_H */
 
