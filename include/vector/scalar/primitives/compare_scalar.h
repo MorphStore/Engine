@@ -97,7 +97,7 @@ compare_scalar += 1;
          typename scalar<v64<T>>::mask_t const & p_mask
       ) {
 #if tally
-compare_scalar += 1;
+calc_unary_scalar += 1;
 #endif
          trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
          return p_mask;

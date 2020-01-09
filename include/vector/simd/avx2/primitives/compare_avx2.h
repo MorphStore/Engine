@@ -140,7 +140,7 @@ compare_simd += 1;
          typename avx2<v256<uint64_t>>::mask_t const & p_mask
       ) {
 #if tally
-compare_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
@@ -266,7 +266,7 @@ compare_simd += 1;
          typename avx2<v256<uint32_t>>::mask_t const & p_mask
       ) {
 #if tally
-compare_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
@@ -392,7 +392,7 @@ compare_simd += 1;
          typename avx2<v256<uint16_t>>::mask_t const & p_mask
       ) {
 #if tally
-compare_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
@@ -509,7 +509,7 @@ compare_simd += 1;
          typename avx2<v256<uint8_t>>::mask_t const & p_mask
       ) {
 #if tally
-compare_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?

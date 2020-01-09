@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   compare_sse.h
  * Author: Annett
  *
@@ -30,6 +30,9 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const p_vec1,
          typename sse<v128<uint64_t>>::vector_t const p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (sse)" );
          return
             _mm_movemask_pd(
@@ -47,6 +50,9 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (sse)" );
          return
             _mm_movemask_pd(
@@ -64,6 +70,9 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (sse)" );
          return
             _mm_movemask_pd(
@@ -85,6 +94,9 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (sse)" );
          return
             _mm_movemask_pd(
@@ -102,6 +114,9 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (sse)" );
          return
             _mm_movemask_pd(
@@ -121,6 +136,9 @@ namespace vectorlib{
       apply(
          typename sse<v128<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -136,6 +154,9 @@ namespace vectorlib{
          typename sse<v128<uint32_t>>::vector_t const p_vec1,
          typename sse<v128<uint32_t>>::vector_t const p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (sse)" );
          return
             _mm_movemask_ps(
@@ -153,6 +174,9 @@ namespace vectorlib{
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (sse)" );
          return
             _mm_movemask_ps(
@@ -170,6 +194,9 @@ namespace vectorlib{
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (sse)" );
          return
             _mm_movemask_ps(
@@ -191,6 +218,9 @@ namespace vectorlib{
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (sse)" );
          return
             _mm_movemask_ps(
@@ -208,6 +238,9 @@ namespace vectorlib{
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (sse)" );
          return
             _mm_movemask_ps(
@@ -227,6 +260,9 @@ namespace vectorlib{
       apply(
          typename sse<v128<uint32_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -244,11 +280,14 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const p_vec1,
          typename sse<v128<uint8_t>>::vector_t const p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (sse)" );
          return
             _mm_movemask_epi8(
                   _mm_cmpeq_epi8(p_vec1, p_vec2)
-               
+
             );
       }
    };
@@ -260,10 +299,13 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (sse)" );
          return
             _mm_movemask_epi8(
-                  _mm_cmpgt_epi8(p_vec2, p_vec1)               
+                  _mm_cmpgt_epi8(p_vec2, p_vec1)
             );
       }
    };
@@ -275,6 +317,9 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (sse)" );
          return
             _mm_movemask_epi8(
@@ -294,11 +339,14 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (sse)" );
          return
             _mm_movemask_epi8(
                   _mm_cmpgt_epi8(p_vec1, p_vec2)
-               
+
             );
       }
    };
@@ -310,13 +358,16 @@ namespace vectorlib{
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (sse)" );
          return
             _mm_movemask_epi8(
                   _mm_or_si128(
                      _mm_cmpeq_epi8(p_vec1, p_vec2),
                      _mm_cmpgt_epi8(p_vec1, p_vec2)
-                  
+
                )
             );
       }
@@ -328,6 +379,9 @@ namespace vectorlib{
       apply(
          typename sse<v128<uint8_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (sse)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -338,108 +392,108 @@ namespace vectorlib{
    /*
     template<typename T>
     struct compare<sse<v128<T>>, 64> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         equality( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_pd((__m128d)_mm_cmpeq_epi64(p_vec1,p_vec2));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_pd((__m128d)_mm_cmpgt_epi64(p_vec2,p_vec1));
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_pd((__m128d)_mm_cmpgt_epi64(p_vec1,p_vec2));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_pd((__m128d)(_mm_or_si128(_mm_cmpeq_epi64(p_vec1,p_vec2),_mm_cmpgt_epi64(p_vec1,p_vec2))));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_pd((__m128d)(_mm_or_si128(_mm_cmpeq_epi64(p_vec1,p_vec2),_mm_cmpgt_epi64(p_vec2,p_vec1))));
 
         }
-        
+
     };
-    
+
     template<typename T>
     struct compare<sse<v128<T>>, 32> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         equality( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_ps((__m128)_mm_cmpeq_epi32(p_vec1,p_vec2));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_ps((__m128)_mm_cmpgt_epi64(p_vec2,p_vec1));
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_ps((__m128)_mm_cmpgt_epi64(p_vec1,p_vec2));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_ps((__m128)(_mm_or_si128(_mm_cmpeq_epi32(p_vec1,p_vec2),_mm_cmpgt_epi32(p_vec1,p_vec2))));
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( sse< v128< uint64_t > >::vector_t p_vec1,  sse< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_movemask_ps((__m128)(_mm_or_si128(_mm_cmpeq_epi32(p_vec1,p_vec2),_mm_cmpgt_epi32(p_vec2,p_vec1))));
 
         }
@@ -447,4 +501,3 @@ namespace vectorlib{
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_COMPARE_SSE_H */
-

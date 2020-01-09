@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   manipulate_sse.h
  * Author: Annett
  *
@@ -24,39 +24,45 @@
 namespace vectorlib{
     template<typename T>
     struct manipulate<sse<v128<T>>, 64> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename sse< v128< U > >::vector_t
         rotate( sse< v128< uint64_t > >::vector_t p_vec ) {
-            trace( "[VECTOR] - Rotate vector (sse)" );
-             
-            return (__m128i)(_mm_permute_pd((__m128d)p_vec,1)); 
+#if tally
+manipulate_simd += 1;
+#endif
+         trace( "[VECTOR] - Rotate vector (sse)" );
+            return (__m128i)(_mm_permute_pd((__m128d)p_vec,1));
         }
     };
 
     template<typename T>
     struct manipulate<sse<v128<T>>, 32> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename sse< v128< U > >::vector_t
         rotate( sse< v128< uint32_t > >::vector_t p_vec ) {
-            trace( "[VECTOR] - Rotate vector (sse)" );
-             
-            return (__m128i)(_mm_permute_ps((__m128)p_vec,57)); 
+#if tally
+manipulate_simd += 1;
+#endif
+         trace( "[VECTOR] - Rotate vector (sse)" );
+            return (__m128i)(_mm_permute_ps((__m128)p_vec,57));
         }
     };
 
     template<typename T>
     struct manipulate<sse<v128<T>>, 16> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename sse< v128< U > >::vector_t
         rotate( sse< v128< uint16_t > >::vector_t p_vec ) {
-            trace( "[VECTOR] - Rotate vector (sse)" );
-             
+#if tally
+manipulate_simd += 1;
+#endif
+         trace( "[VECTOR] - Rotate vector (sse)" );
             return _mm_set_epi16(
                 _mm_extract_epi16(p_vec, 0),
                 _mm_extract_epi16(p_vec, 7),
@@ -69,16 +75,18 @@ namespace vectorlib{
                 );
         }
     };
-         
+
     template<typename T>
     struct manipulate<sse<v128<T>>, 8> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename sse< v128< U > >::vector_t
         rotate( sse< v128< uint8_t > >::vector_t p_vec ) {
-            trace( "[VECTOR] - Rotate vector (sse)" );
-             
+#if tally
+manipulate_simd += 1;
+#endif
+         trace( "[VECTOR] - Rotate vector (sse)" );
             return _mm_set_epi8(
                 _mm_extract_epi8(p_vec, 0),
                 _mm_extract_epi8(p_vec, 15),
@@ -104,4 +112,3 @@ namespace vectorlib{
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_MANIPULATE_SSE_H */
-

@@ -33,7 +33,7 @@ namespace vectorlib {
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
 #if tally
-io_scalar += 1;
+io_load_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
          return *p_DataPtr;
@@ -44,7 +44,7 @@ io_scalar += 1;
       static void
       store( U *& p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t & p_vec ) {
 #if tally
-io_scalar += 1;
+io_write_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
@@ -60,7 +60,7 @@ io_scalar += 1;
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
 #if tally
-io_scalar += 1;
+io_load_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return *p_DataPtr;
@@ -71,7 +71,7 @@ io_scalar += 1;
       static void
       store( U * p_DataPtr, vectorlib::scalar<v64< double > >::vector_t p_vec ) {
 #if tally
-io_scalar += 1;
+io_write_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Store aligned double values to memory" );
          *p_DataPtr=p_vec;
@@ -87,7 +87,7 @@ io_scalar += 1;
       static typename scalar< v64< U > >::vector_t
       apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
 #if tally
-io_scalar += 1;
+io_load_ran_scalar += 1;
 #endif
          trace( "[VECTOR] - Store aligned integer values to memory" );
          return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
@@ -104,7 +104,7 @@ io_scalar += 1;
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
 #if tally
-io_scalar += 1;
+io_load_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Loading unaligned double value (scalar)" );
          return *p_DataPtr;
@@ -115,7 +115,7 @@ io_scalar += 1;
       static void
       compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
 #if tally
-io_scalar += 1;
+io_write_ran_scalar += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
 
@@ -129,7 +129,7 @@ io_scalar += 1;
       static void
       store( U * p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
 #if tally
-io_scalar += 1;
+io_write_seq_scalar += 1;
 #endif
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;

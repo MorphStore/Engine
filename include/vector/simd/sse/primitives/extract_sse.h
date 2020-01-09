@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   extract_sse.h
  * Author: Annett
  *
@@ -22,15 +22,18 @@
 #include <functional>
 
 namespace vectorlib {
-    
-    
+
+
    template<typename T>
    struct extract<sse<v128<T>>,64> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi64(p_vec,0); break;
@@ -39,14 +42,17 @@ namespace vectorlib {
          return (typename sse< v128< U > >::base_t)0;
       }
    };
-   
+
       template<typename T>
    struct extract<sse<v128<T>>,32> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi32(p_vec,0); break;
@@ -60,11 +66,14 @@ namespace vectorlib {
 
       template<typename T>
    struct extract<sse<v128<T>>,16> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi16(p_vec,0); break;
@@ -74,18 +83,21 @@ namespace vectorlib {
              case 4: return _mm_extract_epi16(p_vec,4); break;
              case 5: return _mm_extract_epi16(p_vec,5); break;
              case 6: return _mm_extract_epi16(p_vec,6); break;
-             case 7: return _mm_extract_epi16(p_vec,7); break;             
+             case 7: return _mm_extract_epi16(p_vec,7); break;
          }
          return (typename sse< v128< U > >::base_t)0;
       }
    };
       template<typename T>
    struct extract<sse<v128<T>>,8> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi8(p_vec,0); break;
@@ -95,7 +107,7 @@ namespace vectorlib {
              case 4: return _mm_extract_epi8(p_vec,4); break;
              case 5: return _mm_extract_epi8(p_vec,5); break;
              case 6: return _mm_extract_epi8(p_vec,6); break;
-             case 7: return _mm_extract_epi8(p_vec,7); break; 
+             case 7: return _mm_extract_epi8(p_vec,7); break;
              case 8: return _mm_extract_epi8(p_vec,8); break;
              case 9: return _mm_extract_epi8(p_vec,9); break;
              case 10: return _mm_extract_epi8(p_vec,10); break;
@@ -103,12 +115,11 @@ namespace vectorlib {
              case 12: return _mm_extract_epi8(p_vec,12); break;
              case 13: return _mm_extract_epi8(p_vec,13); break;
              case 14: return _mm_extract_epi8(p_vec,14); break;
-             case 15: return _mm_extract_epi8(p_vec,15); break;              
+             case 15: return _mm_extract_epi8(p_vec,15); break;
          }
          return (typename sse< v128< U > >::base_t)0;
       }
-   };   
+   };
 
 }
 #endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_EXTRACT_SSE_H */
-

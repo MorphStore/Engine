@@ -34,16 +34,16 @@ int main( void ) {
     // * Generation of the synthetic base data
     // ************************************************************************
 
-    #ifdef tally
-      std::cout << "nice" << std::endl;
-      output_tally();
-    #endif
+    // #ifdef tally
+    //   std::cout << "nice" << std::endl;
+    //   output_tally();
+    // #endif
 
 
     std::cout << "Base data generation started... ";
     std::cout.flush();
 
-    const size_t countValues = 100;//128/4; // generate 100 numbers
+    const size_t countValues = 4;//100;//128/4; // generate 100 numbers
     const column<uncompr_f> * const myNumbers = generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(1, 20), //range between 1 and 50
@@ -59,21 +59,21 @@ int main( void ) {
     // ************************************************************************
 
     // using ve = scalar<v64<uint64_t> >;
-    // using ve = sse<v128<uint8_t>>;
+    using ve = sse<v128<uint64_t>>;
     // using ve = avx2<v256<uint8_t>>;
-    using ve = avx2<v256<uint64_t>>;
+    // using ve = avx2<v256<uint64_t>>;
     // using ve = avx512<v512<uint64_t>>;
 
 
-
+    std::cout << "Numbers of Elements: " << countValues << std::endl;
     std::cout << "Query execution started...\t";
     std::cout.flush();
 
-    #ifdef tally
-      std::cout << std::endl<< "before i1" << std::endl;
-      output_tally();
-      reset_tally();
-    #endif
+    // #ifdef tally
+    //   std::cout << std::endl<< "before i1" << std::endl;
+    //   output_tally();
+    //   reset_tally();
+    // #endif
 
     // Positions fulfilling "myNumbers < 10"
     auto i1 = morphstore::select<
@@ -84,25 +84,36 @@ int main( void ) {
     >(myNumbers, 10);
 
     #ifdef tally
-      std::cout << std::endl<< "after i1" << std::endl;
+      std::cout << std::endl << std::endl << "SELECT" << std::endl;
       output_tally();
       reset_tally();
     #endif
     // Data elements of "myNumbers" fulfilling "myNumbers < 10"
     // auto i2 = project<ve, uncompr_f>(myNumbers, i1);
-    std::cout << "done select...\t";
-    std::cout.flush();
-    auto i2 = morphstore::project<ve, uncompr_f, uncompr_f, uncompr_f>(myNumbers, i1);
-    std::cout << "done project..." << std::endl << std::endl;
+    // std::cout << "done select...\t";
+    // std::cout.flush();
+
+    auto i2 = morphstore::project<
+            ve,
+            uncompr_f,
+            uncompr_f,
+            uncompr_f
+      >(myNumbers, i1);
+    // std::cout << "done project..." << std::endl << std::endl;
 
     #ifdef tally
-      std::cout << std::endl<< "after i2" << std::endl;
+      std::cout << std::endl << std::endl << "PROJECT" << std::endl;
       output_tally();
       reset_tally();
+      std::cout << std::endl << std::endl;
     #endif
     // ************************************************************************
     // * Result output
     // ************************************************************************
+
+    std::cout << "Element Count my NUmbers:\t"<< myNumbers->get_count_values()<<std::endl;
+    std::cout << "Element Count Select:\t\t" << i1->get_count_values()<<std::endl;
+    std::cout << "Element Count Project:\t\t" << i2->get_count_values()<<std::endl<<std::endl;
 
     print_columns(print_buffer_base::decimal, myNumbers, "myNumbers");
     print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");

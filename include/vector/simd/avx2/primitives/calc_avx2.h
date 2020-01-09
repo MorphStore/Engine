@@ -34,7 +34,7 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx2)" );
          return _mm256_add_epi64( p_vec1, p_vec2);
@@ -51,7 +51,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - build minimum of 64 bit integer values from two registers (sse)" );
          return _mm256_blendv_epi8(p_vec2, p_vec1, _mm256_cmpgt_epi64(p_vec2, p_vec1));
@@ -68,7 +68,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Subtract 64 bit integer values from two registers (avx2)" );
          return _mm256_sub_epi64( p_vec1, p_vec2);
@@ -83,7 +83,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Horizontally add 64 bit integer values one register (avx2)" );
          __m256i tmp =
@@ -106,7 +106,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
@@ -123,7 +123,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Divide 64 bit integer values from two registers (avx2)" );
          __m256d divhelper = _mm256_set1_pd(0x0010000000000000);
@@ -157,7 +157,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
@@ -194,7 +194,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Additive inverting 64 bit integer values of one register (avx2)" );
          return _mm256_sub_epi64( _mm256_set1_epi64x(0), p_vec1);
@@ -210,7 +210,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;  //HELP
 #endif
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_slli_epi64(p_vec1, p_distance);
@@ -226,7 +226,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (avx2)" );
          return _mm256_sllv_epi64(p_data, p_distance);
@@ -242,7 +242,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;        //HELP! Is this really binary?!
 #endif
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_srli_epi64(p_vec1, p_distance);
@@ -258,7 +258,7 @@ calc_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (avx2)" );
          return _mm256_srlv_epi64(p_data, p_distance);
@@ -276,7 +276,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx2)" );
          return _mm256_add_epi32( p_vec1, p_vec2);
@@ -293,7 +293,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - build minimum of 32 bit integer values from two registers (avx)" );
          return _mm256_blendv_epi8(p_vec2, p_vec1, _mm256_cmpgt_epi32(p_vec2, p_vec1));
@@ -310,7 +310,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Subtract 32 bit integer values from two registers (avx2)" );
          return _mm256_sub_epi32( p_vec1, p_vec2);
@@ -325,7 +325,7 @@ calc_simd += 1;
           typename avx2<v256<uint32_t>>::vector_t const & p_vec1
        ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
           trace( "[VECTOR] - Horizontally add 32 bit integer values one register (avx2)" );
              __m256i tmp =
@@ -350,7 +350,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Multiply 32 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - _mm256_mul_epu32 is called " );
@@ -367,7 +367,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Divide 32 bit integer values from two registers (avx2)" );
          return
@@ -391,7 +391,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
@@ -422,7 +422,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Additive inverting 32 bit integer values of one register (avx2)" );
          return _mm256_sub_epi32( _mm256_set1_epi32(0), p_vec1);
@@ -439,7 +439,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;   //HELP
 #endif
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_slli_epi32(p_vec1, p_distance);
@@ -456,7 +456,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (each by its individual distance) (avx2)" );
          return _mm256_sllv_epi32(p_data, p_distance);
@@ -473,7 +473,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;  //HELP
 #endif
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_srli_epi32(p_vec1, p_distance);
@@ -490,7 +490,7 @@ calc_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (each by its individual distance) (avx2)" );
          return _mm256_srlv_epi32(p_data, p_distance);
@@ -507,7 +507,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx2)" );
          return _mm256_add_epi16( p_vec1, p_vec2);
@@ -524,7 +524,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - build minimum of 16 bit integer values from two registers (avx)" );
          return _mm256_blendv_epi8(p_vec2, p_vec1, _mm256_cmpgt_epi16(p_vec2, p_vec1));
@@ -541,7 +541,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Subtract 16 bit integer values from two registers (avx2)" );
          return _mm256_sub_epi16( p_vec1, p_vec2);
@@ -557,7 +557,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx2)" );
          return _mm256_extract_epi16(p_vec1,0)+_mm256_extract_epi16(p_vec1,1)+_mm256_extract_epi16(p_vec1,2)+_mm256_extract_epi16(p_vec1,3)
@@ -577,7 +577,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Multiply 16 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - _mm256_mul_epu16 is called " );
@@ -644,7 +644,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Additive inverting 16 bit integer values of one register (avx2)" );
          return _mm256_sub_epi16( _mm256_set1_epi16(0), p_vec1);
@@ -661,7 +661,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;  //HELP
 #endif
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_slli_epi16(p_vec1, p_distance);
@@ -677,7 +677,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (each by its individual distance) (avx2)" );
          uint16_t distance0 = _mm256_extract_epi16(p_distance, 0);
@@ -730,7 +730,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;   //HELP
 #endif
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_srli_epi16(p_vec1, p_distance);
@@ -746,7 +746,7 @@ calc_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (each by its individual distance) (avx2)" );
          uint16_t distance0 = _mm256_extract_epi16(p_distance, 0);
@@ -797,7 +797,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx2)" );
          return _mm256_add_epi8( p_vec1, p_vec2);
@@ -814,7 +814,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - build minimum of 8 bit integer values from two registers (avx)" );
          return _mm256_blendv_epi8(p_vec2, p_vec1, _mm256_cmpgt_epi8(p_vec2, p_vec1));
@@ -831,7 +831,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Subtract 8 bit integer values from two registers (avx2)" );
          return _mm256_sub_epi8( p_vec1, p_vec2);
@@ -846,7 +846,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx2)" );
          return _mm256_extract_epi8(p_vec1,0)+_mm256_extract_epi8(p_vec1,1)+_mm256_extract_epi8(p_vec1,2)+_mm256_extract_epi8(p_vec1,3)
@@ -869,7 +869,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Multiply 8 bit integer values from two registers (avx2)" );
          info( "[VECTOR] - _mm256_mul_epu16 is called " );
@@ -965,7 +965,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1
       ){
 #if tally
-calc_simd += 1;
+calc_unary_simd += 1;
 #endif
          trace( "[VECTOR] - Additive inverting 8 bit integer values of one register (avx2)" );
          return _mm256_sub_epi8( _mm256_set1_epi8(0), p_vec1);
@@ -981,7 +981,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;  //HELP
 #endif
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_set_epi8(
@@ -1031,7 +1031,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (each by its individual distance) (avx2)" );
          uint8_t distance0 = _mm256_extract_epi8(p_distance, 0);
@@ -1113,7 +1113,7 @@ calc_simd += 1;
          int const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;   //HELP
 #endif
          trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (avx2)" );
          return _mm256_set_epi8(
@@ -1162,7 +1162,7 @@ calc_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_distance
       ){
 #if tally
-calc_simd += 1;
+calc_binary_simd += 1;
 #endif
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (each by its individual distance) (avx2)" );
          uint8_t distance0 = _mm256_extract_epi8(p_distance, 0);

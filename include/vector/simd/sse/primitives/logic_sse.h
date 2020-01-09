@@ -19,13 +19,19 @@ namespace vectorlib {
       static
       typename sse<v128<T>>::vector_t
       bitwise_and( typename sse<v128<T>>::vector_t const & p_In1, typename sse<v128<T>>::vector_t const & p_In2) {
+#if tally
+logic_simd += 1;
+#endif
          return _mm_and_si128( p_In1, p_In2 );
       }
-      
+
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename sse<v128<T>>::vector_t
       bitwise_or( typename sse<v128<T>>::vector_t const & p_In1, typename sse<v128<T>>::vector_t const & p_In2) {
+#if tally
+logic_simd += 1;
+#endif
          return _mm_or_si128( p_In1, p_In2 );
       }
    };
