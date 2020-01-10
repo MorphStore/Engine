@@ -131,18 +131,21 @@ class query_memory_manager : public abstract_memory_manager {
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
          }
          void * tmp = m_CurrentPtr;
+         size_t orig_ptr_size_t = reinterpret_cast< size_t >( tmp );
          if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
             trace( "[Query Memory Manager] - Move current head ", sizeof( size_t ), " byte forward, to hold the datasize." );
             tmp = static_cast< void * >(static_cast< char * >(tmp) + sizeof(size_t));
             trace( "[Query Memory Manager] - Creating extended aligned ptr (current = ", tmp, ". Size = ", p_AllocSize, " Bytes." );
             void * result_ptr = create_extended_aligned_ptr(tmp, p_AllocSize);
-            size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
+/*            size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
             trace(
                "[Query Memory Manager] - Set new Head to aligned ptr ( ", result_ptr, " ) + size ( ", p_AllocSize, " ). ",
                "Bytes lost through Alignment: ",
                bytes_lost, ".");
+               */
             m_CurrentPtr = static_cast< char * >( result_ptr ) + p_AllocSize;
-            m_SpaceLeft -= ( p_AllocSize + bytes_lost );
+            m_SpaceLeft -= ((reinterpret_cast< size_t >( m_CurrentPtr ) ) - orig_ptr_size_t);
+//            m_SpaceLeft -= ( p_AllocSize + bytes_lost );
             trace( "[Query Memory Manager] - OUT. ( pointer: ", result_ptr, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
             return result_ptr;
          } else {
