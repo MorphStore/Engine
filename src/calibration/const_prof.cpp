@@ -142,7 +142,9 @@ std::string formatName<for_f<t_BlockSizeLog, t_PageSizeBlocks, empty_f> > =
  */
 template<class t_vector_extension, class t_format>
 const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
-    const size_t countValues = p_InCol->get_count_values();
+    // This is unused iff monitoring is disabled.
+    MSV_CXX_ATTRIBUTE_PPUNUSED const size_t countValues =
+        p_InCol->get_count_values();
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr [µs]",

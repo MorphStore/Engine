@@ -36,6 +36,7 @@
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
+#include <core/utils/preprocessor.h>
 #include <core/utils/variant_executor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
@@ -113,7 +114,9 @@ std::string formatName<uncompr_f> = "uncompr_f";
  */
 template<class t_vector_extension, class t_format, unsigned t_Bw>
 const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
-    const size_t countValues = p_InCol->get_count_values();
+    // This is unused iff monitoring is disabled.
+    MSV_CXX_ATTRIBUTE_PPUNUSED const size_t countValues =
+        p_InCol->get_count_values();
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr [µs]",
