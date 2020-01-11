@@ -37,6 +37,7 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/variant_executor.h>
+#include <vector/vector_extension_names.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
@@ -52,34 +53,9 @@ using namespace vectorlib;
 
 
 // ****************************************************************************
-// Mapping from vector extensions and formats to string names
+// Mapping from formats to string names
 // ****************************************************************************
-// @todo Do not repeat these in multiple source files.
 
-// ----------------------------------------------------------------------------
-// Vector extensions
-// ----------------------------------------------------------------------------
-
-template<class t_vector_extension>
-std::string veName = "(unknown vector extension)";
-
-#define MAKE_VECTOR_EXTENSION_NAME(ve) \
-    template<> std::string veName<ve> = STR_EVAL_MACROS(ve);
-
-MAKE_VECTOR_EXTENSION_NAME(scalar<v64<uint64_t>>)
-#ifdef SSE
-MAKE_VECTOR_EXTENSION_NAME(sse<v128<uint64_t>>)
-#endif
-#ifdef AVXTWO
-MAKE_VECTOR_EXTENSION_NAME(avx2<v256<uint64_t>>)
-#endif
-#ifdef AVX512
-MAKE_VECTOR_EXTENSION_NAME(avx512<v512<uint64_t>>)
-#endif
-
-// ----------------------------------------------------------------------------
-// Formats
-// ----------------------------------------------------------------------------
 // All template-specializations of a format are mapped to a name, which may or
 // may not contain the values of the template parameters.
         
