@@ -39,6 +39,7 @@
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 #ifdef SELECT_BENCHMARK_2_TIME
+#include <core/morphing/default_formats.h>
 #include <core/morphing/delta.h>
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/for.h>
@@ -68,43 +69,6 @@ using namespace vectorlib;
 
 
 #ifdef SELECT_BENCHMARK_2_TIME
-
-// ****************************************************************************
-// Macros for the formats.
-// ****************************************************************************
-
-#define STATIC_VBP_FORMAT(ve, bw) \
-    SINGLE_ARG(static_vbp_f<vbp_l<bw, ve::vector_helper_t::element_count::value>>)
-
-#define DYNAMIC_VBP_FORMAT(ve) \
-    SINGLE_ARG(dynamic_vbp_f< \
-            ve::vector_helper_t::size_bit::value, \
-            ve::vector_helper_t::size_byte::value, \
-            ve::vector_helper_t::element_count::value \
-    >)
-
-#define DELTA_DYNAMIC_VBP_FORMAT(ve) \
-    SINGLE_ARG(delta_f< \
-            1024, \
-            ve::vector_helper_t::element_count::value, \
-            dynamic_vbp_f< \
-                    ve::vector_helper_t::size_bit::value, \
-                    ve::vector_helper_t::size_byte::value, \
-                    ve::vector_helper_t::element_count::value \
-            > \
-    >)
-
-#define FOR_DYNAMIC_VBP_FORMAT(ve) \
-    SINGLE_ARG(for_f< \
-            1024, \
-            ve::vector_helper_t::element_count::value, \
-            dynamic_vbp_f< \
-                    ve::vector_helper_t::size_bit::value, \
-                    ve::vector_helper_t::size_byte::value, \
-                    ve::vector_helper_t::element_count::value \
-            > \
-    >)
-
 
 // ****************************************************************************
 // A modified morph-operator.
@@ -270,22 +234,22 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     MAKE_VARIANT( \
             ve, \
             SINGLE_ARG(out_pos_f), \
-            STATIC_VBP_FORMAT(ve, inBw) \
+            DEFAULT_STATIC_VBP_F(ve, inBw) \
     ), \
     MAKE_VARIANT( \
             ve, \
             SINGLE_ARG(out_pos_f), \
-            DYNAMIC_VBP_FORMAT(ve) \
+            DEFAULT_DYNAMIC_VBP_F(ve) \
     ), \
     MAKE_VARIANT( \
             ve, \
             SINGLE_ARG(out_pos_f), \
-            DELTA_DYNAMIC_VBP_FORMAT(ve) \
+            DEFAULT_DELTA_DYNAMIC_VBP_F(ve) \
     ), \
     MAKE_VARIANT( \
             ve, \
             SINGLE_ARG(out_pos_f), \
-            FOR_DYNAMIC_VBP_FORMAT(ve) \
+            DEFAULT_FOR_DYNAMIC_VBP_F(ve) \
     )
 
 #define MAKE_VARIANTS_VE(ve, outBw, inBw) \
@@ -296,22 +260,22 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     ), \
     MAKE_VARIANTS_VE_OUT( \
             ve, \
-            STATIC_VBP_FORMAT(ve, outBw), \
+            DEFAULT_STATIC_VBP_F(ve, outBw), \
             inBw \
     ), \
     MAKE_VARIANTS_VE_OUT( \
             ve, \
-            DYNAMIC_VBP_FORMAT(ve), \
+            DEFAULT_DYNAMIC_VBP_F(ve), \
             inBw \
     ), \
     MAKE_VARIANTS_VE_OUT( \
             ve, \
-            DELTA_DYNAMIC_VBP_FORMAT(ve), \
+            DEFAULT_DELTA_DYNAMIC_VBP_F(ve), \
             inBw \
     ), \
     MAKE_VARIANTS_VE_OUT( \
             ve, \
-            FOR_DYNAMIC_VBP_FORMAT(ve), \
+            DEFAULT_FOR_DYNAMIC_VBP_F(ve), \
             inBw \
     )
 #else
