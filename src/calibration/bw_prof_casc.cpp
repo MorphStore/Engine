@@ -32,6 +32,7 @@
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/k_wise_ns.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/format_names.h> // Must be included after all formats.
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -50,28 +51,6 @@
 
 using namespace morphstore;
 using namespace vectorlib;
-
-
-// ****************************************************************************
-// Mapping from formats to string names
-// ****************************************************************************
-
-// All template-specializations of a format are mapped to a name, which may or
-// may not contain the values of the template parameters.
-        
-template<class t_format>
-std::string formatName = "(unknown format)";
-
-template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks, unsigned t_Step>
-std::string formatName<
-        dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>
-> = "dynamic_vbp_f<" + std::to_string(t_BlockSizeLog) + ", " + std::to_string(t_PageSizeBlocks) + ", " + std::to_string(t_Step) + ">";
-
-template<size_t t_BlockSizeLog>
-std::string formatName<k_wise_ns_f<t_BlockSizeLog>> = "k_wise_ns_f<" + std::to_string(t_BlockSizeLog) + ">";
-
-template<>
-std::string formatName<uncompr_f> = "uncompr_f";
 
 
 // ****************************************************************************

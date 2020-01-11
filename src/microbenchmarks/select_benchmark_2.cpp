@@ -52,6 +52,7 @@
 #include <core/utils/data_properties.h>
 #include <core/utils/monitoring.h>
 #endif
+#include <core/morphing/format_names.h> // Must be included after all formats.
 
 #include <functional>
 #include <iostream>
@@ -67,43 +68,6 @@ using namespace vectorlib;
 
 
 #ifdef SELECT_BENCHMARK_2_TIME
-
-// ****************************************************************************
-// Mapping from formats to string names
-// ****************************************************************************
-
-// All template-specializations of a format are mapped to a name, which may or
-// may not contain the values of the template parameters.
-
-template<class t_format>
-std::string formatName = "(unknown format)";
-
-template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks, unsigned t_Step>
-std::string formatName<
-        dynamic_vbp_f<t_BlockSizeLog, t_PageSizeBlocks, t_Step>
-> = "dynamic_vbp_f<" + std::to_string(t_BlockSizeLog) + ", " + std::to_string(t_PageSizeBlocks) + ", " + std::to_string(t_Step) + ">";
-
-//template<size_t t_BlockSizeLog>
-//std::string formatName<k_wise_ns_f<t_BlockSizeLog>> = "k_wise_ns_f<" + std::to_string(t_BlockSizeLog) + ">";
-
-template<unsigned t_Bw, unsigned t_Step>
-std::string formatName<
-        static_vbp_f<vbp_l<t_Bw, t_Step> >
-> = "static_vbp_f<vbp_l<bw, " + std::to_string(t_Step) + "> >";
-
-template<size_t t_BlockSizeLog, unsigned t_Step, class t_inner_f>
-std::string formatName<
-        delta_f<t_BlockSizeLog, t_Step, t_inner_f>
-> = "delta_f<" + std::to_string(t_BlockSizeLog) + ", " + std::to_string(t_Step) + ", " + formatName<t_inner_f> + ">";
-
-template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks, class t_inner_f>
-std::string formatName<
-        for_f<t_BlockSizeLog, t_PageSizeBlocks, t_inner_f>
-> = "for_f<" + std::to_string(t_BlockSizeLog) + ", " + std::to_string(t_PageSizeBlocks) + ", " + formatName<t_inner_f> + ">";
-
-template<>
-std::string formatName<uncompr_f> = "uncompr_f";
-
 
 // ****************************************************************************
 // Macros for the formats.

@@ -92,6 +92,10 @@ struct morph_batch_t<t_vector_extension, uncompr_f, empty_f> {
 // Mapping from formats to string names
 // ****************************************************************************
 
+// These name mappings are so specific to this micro benchmark that they are
+// not included in <core/morphing/format_names.h>, but the mechanism is the
+// same.
+
 // All template-specializations of a format are mapped to a name, which may or
 // may not contain the values of the template parameters.
         
