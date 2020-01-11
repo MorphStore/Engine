@@ -140,7 +140,8 @@ template<class t_vector_extension, class t_out_pos_f, class t_in_data_f>
 const column<t_out_pos_f> * measure_select_and_morphs(
         const column<t_in_data_f> * p_InDataColCompr,
         uint64_t p_Pred,
-        unsigned p_DatasetIdx
+        // Unused iff monitoring is disabled.
+        MSV_CXX_ATTRIBUTE_PPUNUSED unsigned p_DatasetIdx
 ) {
     // We go from compressed inDataCol to compressed outPosCol via two ways to
     // measure both the actual select-operator and the morphs involved in it.
