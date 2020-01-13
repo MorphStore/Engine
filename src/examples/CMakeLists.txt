@@ -14,4 +14,9 @@ if( BUILD_ALL OR BUILD_EXAMPLES )
     target_compile_options( variant_executor_usage PRIVATE
                             $<$<CONFIG:DEBUG>:-DDEBUG> )
     target_link_libraries( variant_executor_usage PRIVATE "-ldl" )
+
+    add_executable( superoperator_example superoperator_example.cpp )
+    target_compile_options( superoperator_example PRIVATE
+                            $<$<CONFIG:DEBUG>:-DDEBUG> )
+    target_link_libraries( superoperator_example PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_EXAMPLES )
