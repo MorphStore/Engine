@@ -79,7 +79,7 @@ namespace morphstore {
                   load<VectorExtension, iov::ALIGNED, vector_base_t_granularity::value>( p_InProbeDataPtr ),
                   state
                );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
+            compressstore<VectorExtension, iov::UNALIGNED, vector_base_t_granularity::value>(
                p_OutPosCol, positionVector, lookupResultMask);
             p_OutPosCol += hitResultCount;
             resultCount += hitResultCount;
@@ -200,9 +200,9 @@ namespace morphstore {
                   load<VectorExtension, iov::ALIGNED, vector_size_bit::value>( p_InProbeDataPtr ),
                   state
                );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
+            compressstore<VectorExtension, iov::UNALIGNED, vector_base_t_granularity::value>(
                p_OutPosLCol, lookupResultValuesVector, lookupResultMask);
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
+            compressstore<VectorExtension, iov::UNALIGNED, vector_base_t_granularity::value>(
                p_OutPosRCol, positionVector, lookupResultMask);
             p_OutPosRCol += hitResultCount;
             p_OutPosLCol += hitResultCount;

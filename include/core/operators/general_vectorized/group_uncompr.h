@@ -62,7 +62,7 @@ namespace morphstore {
                p_OutGroupIdPtr,
                groupIdVector
             );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
+            vectorlib::compressstore<VectorExtension, iov::UNALIGNED, vector_base_t_granularity::value>(
                p_OutGroupExtPtr, groupExtVector, activeGroupExtMask);
             p_InDataPtr += vector_element_count::value;
             p_OutGroupIdPtr += vector_element_count::value;
@@ -101,7 +101,7 @@ namespace morphstore {
                p_OutGroupIdPtr,
                groupIdVector
             );
-            compressstore<VectorExtension, iov::UNALIGNED, vector_size_bit::value>(
+            compressstore<VectorExtension, iov::UNALIGNED, vector_base_t_granularity::value>(
                p_OutGroupExtPtr, groupExtVector, activeGroupExtMask);
             p_InDataPtr += vector_element_count::value;
             p_InGrPtr += vector_element_count::value;
@@ -175,8 +175,8 @@ namespace morphstore {
          return std::make_tuple(outGrCol, outExtCol);
       }
 
-       
-      
+
+
       static
       const std::tuple<
          const column<uncompr_f> *,
@@ -242,8 +242,8 @@ namespace morphstore {
       }
    };
 
-   
-   
+
+
    template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
    static
       const std::tuple<
@@ -253,7 +253,7 @@ namespace morphstore {
          column<uncompr_f> const * const  p_InDataCol,
          size_t const outCountEstimate = 0
       ) {
-       return group1_t<VectorExtension, 
+       return group1_t<VectorExtension,
                 hash_map<
                 VectorExtension,
                 multiply_mod_hash,
@@ -262,7 +262,7 @@ namespace morphstore {
                 60>
                 >::apply(p_InDataCol,outCountEstimate);
       }
-     
+
 
       template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
    static
