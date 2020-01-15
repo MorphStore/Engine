@@ -15,6 +15,7 @@
 
 #include <functional>
 
+#include <iostream>
 
 namespace vectorlib {
 
@@ -85,7 +86,7 @@ io_load_seq_simd += 1;
       static void
       store( U * p_DataPtr, sse< v128< double > >::vector_t p_vec ) {
 #if tally
-io_store_seq_simd += 1;
+io_write_seq_simd += 1;
 #endif
          trace( "[VECTOR] - Store aligned double values to memory" );
          _mm_store_pd(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
@@ -205,7 +206,6 @@ io_write_seq_simd += 1;
 io_write_ran_simd += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
-
          switch (mask){
             case 0:    return; //store nothing
             case 1:    _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
@@ -231,7 +231,6 @@ io_write_ran_simd += 1;
 io_write_ran_simd += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
-
          switch (mask){
             case 0b0000: return;
             case 0b0001: _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec); return;                   //Store everything
@@ -250,6 +249,27 @@ io_write_ran_simd += 1;
             case 0b1110: _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),_mm_srli_si128(p_vec,4)); return;
             case 0b1111: _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec); return;
          }
+         // int8_t matched = 0;
+         // std::cout<<"Mask:\n";
+         // while(mask != 0){
+         //    std::cout << (mask & 0x1) << "\t";
+         //    if((mask & 0x1) == 0x1){
+         //       std::cout << "match\t";
+         //       if(matched == 0){
+         //          _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
+         //          matched = 1;
+         //          std::cout << "write";
+         //       }
+         //       p_DataPtr ++;
+         //    }else{
+         //       matched = 0;
+         //    }
+         //    std::cout << std::endl;
+         //
+         //    mask = (mask >> 1) & 0x7FFF;
+         //    p_vec = _mm_srli_si128(p_vec,4);
+         // }
+         // std::cout << std::endl;
          return ;
       }
    };
@@ -264,19 +284,19 @@ io_write_ran_simd += 1;
 io_write_ran_simd += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
-
          int8_t matched = 0;
          while(mask != 0){
             if((mask & 0x1) == 0x1){
                if(matched == 0){
                   _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
+                  matched = 1;
                }
                p_DataPtr ++;
             }else{
                matched = 0;
             }
             mask = (mask >> 1) & 0x7FFF;
-            p_vec = _mm_srli_si128(p_vec,1);
+            p_vec = _mm_srli_si128(p_vec,2);
          }
          return ;
       }
@@ -293,41 +313,49 @@ io_write_ran_simd += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          int8_t matched = 0;
+         std::cout<<"Mask:\n";
          while(mask != 0){
+            std::cout << (mask & 0x1) << "\t";
             if((mask & 0x1) == 0x1){
+               std::cout << "match\t";
                if(matched == 0){
                   _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
+                  matched = 1;
+                  std::cout << "write";
                }
                p_DataPtr ++;
             }else{
                matched = 0;
             }
+            std::cout << std::endl;
+
             mask = (mask >> 1) & 0x7FFF;
-            p_vec = _mm_srli_si128(p_vec,2);
+            p_vec = _mm_srli_si128(p_vec,1);
          }
+         std::cout << std::endl;
          return ;
       }
    };
 
-   template<typename T, int IOGranularity, int Scale>
-   struct gather_t<sse<v128<T>>, IOGranularity, Scale> {
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
-#if tally
-io_load_ran_simd += 1;
-#endif
-         trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
-         return _mm_set_epi64x(
-               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,1) * Scale),
-               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,0) * Scale)
-         );
-        // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
-
-      }
-
-   };
+//    template<typename T, int IOGranularity, int Scale>
+//    struct gather_t<sse<v128<T>>, IOGranularity, Scale> {
+//       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+//       MSV_CXX_ATTRIBUTE_FORCE_INLINE
+//       static typename sse< v128< U > >::vector_t
+//       apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
+// #if tally
+// io_load_ran_simd += 1;
+// #endif
+//          trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
+//          return _mm_set_epi64x(
+//                *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,1) * Scale),
+//                *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,0) * Scale)
+//          );
+//         // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+//
+//       }
+//
+//    };
 
 
    template<typename T>
@@ -343,6 +371,83 @@ io_load_ran_simd += 1;
          return _mm_set_epi64x(
                *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,1) * 8),
                *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi64(p_vec,0) * 8)
+         );
+        // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+      }
+   };
+
+   template<typename T>
+   struct gather_t<sse<v128<T>>, 32, 4> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse< v128< U > >::vector_t
+      apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_load_ran_simd += 1;
+#endif
+         std::cout << "\nGATHER 32bit\n\n";
+         trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
+         return _mm_set_epi32(
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi32(p_vec,3) * 4),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi32(p_vec,2) * 4),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi32(p_vec,1) * 4),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi32(p_vec,0) * 4)
+         );
+        // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+      }
+   };
+
+   template<typename T>
+   struct gather_t<sse<v128<T>>, 16, 2> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse< v128< U > >::vector_t
+      apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_load_ran_simd += 1;
+#endif
+         trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
+         return _mm_set_epi16(
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,7) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,6) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,5) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,4) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,3) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,2) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,1) * 2),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi16(p_vec,0) * 2)
+         );
+        // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
+      }
+   };
+
+   template<typename T>
+   struct gather_t<sse<v128<T>>, 8, 1> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename sse< v128< U > >::vector_t
+      apply( U const * const p_DataPtr,  sse< v128< uint64_t > >::vector_t p_vec ) {
+#if tally
+io_load_ran_simd += 1;
+#endif
+         trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
+         return _mm_set_epi8(
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,15) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,14) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,13) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,12) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,11) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,10) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,9) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,8) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,7) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,6) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,5) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,4) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,3) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,2) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,1) * 1),
+               *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi8(p_vec,0) * 1)
          );
         // return _mm256_i64gather_epi64( reinterpret_cast<typename avx2< v256< int > >::vector_t const *> (p_DataPtr), p_vec, sizeof(uint64_t));
       }
