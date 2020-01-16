@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   extract_avx512.h
  * Author: Annett
  *
@@ -23,15 +23,18 @@
 #include <functional>
 
 namespace vectorlib {
-    
-    
+
+
    template<typename T>
    struct extract<avx512<v512<T>>,64> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -46,14 +49,17 @@ namespace vectorlib {
          return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,0),0);
       }
    };
-   
+
    template<typename T>
    struct extract<avx512<v512<T>>,32> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi32(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -79,11 +85,14 @@ namespace vectorlib {
    //not tested
    template<typename T>
    struct extract<avx512<v512<T>>,16> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -126,11 +135,14 @@ namespace vectorlib {
    //not tested
    template<typename T>
    struct extract<avx512<v512<T>>,8> {
-       
+
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
+#if tally
+extract_simd += 1;
+#endif
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -204,4 +216,3 @@ namespace vectorlib {
 }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVIES_EXTRACT_AVX512_H */
-

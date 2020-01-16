@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   compare_avx512.h
  * Author: Annett
  *
@@ -31,11 +31,14 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx512)" );
          return _mm512_cmpeq_epi64_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -44,11 +47,14 @@ namespace vectorlib{
          typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx512)" );
          return _mm256_cmpeq_epi64_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -57,11 +63,14 @@ namespace vectorlib{
          typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx512)" );
          return _mm_cmpeq_epi64_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct less<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -70,6 +79,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (avx512)" );
          return _mm512_cmplt_epi64_mask(p_vec1, p_vec2);
       }
@@ -82,6 +94,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (avx512)" );
          return _mm512_cmple_epi64_mask(p_vec1, p_vec2);
       }
@@ -95,6 +110,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (avx512)" );
          return _mm512_cmpgt_epi64_mask(p_vec1, p_vec2);
       }
@@ -107,6 +125,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (avx512)" );
          return _mm512_cmpge_epi64_mask(p_vec1, p_vec2);
       }
@@ -118,13 +139,16 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v256<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -132,13 +156,16 @@ namespace vectorlib{
       apply(
          typename avx512<v256<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v128<uint64_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -146,13 +173,16 @@ namespace vectorlib{
       apply(
          typename avx512<v128<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    //the functions below are not tested
 
    template<>
@@ -163,11 +193,14 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
          return _mm512_cmpeq_epi32_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -176,11 +209,14 @@ namespace vectorlib{
          typename avx512<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
          return _mm256_cmpeq_epi32_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -189,11 +225,14 @@ namespace vectorlib{
          typename avx512<v128<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx512)" );
          return _mm_cmpeq_epi32_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct less<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -202,6 +241,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (avx512)" );
          return _mm512_cmplt_epi32_mask(p_vec1, p_vec2);
       }
@@ -214,6 +256,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (avx512)" );
          return _mm512_cmple_epi32_mask(p_vec1, p_vec2);
       }
@@ -227,6 +272,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (avx512)" );
          return _mm512_cmpgt_epi32_mask(p_vec1, p_vec2);
       }
@@ -239,6 +287,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (avx512)" );
          return _mm512_cmpge_epi32_mask(p_vec1, p_vec2);
       }
@@ -250,13 +301,16 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint32_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v256<uint32_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -264,13 +318,16 @@ namespace vectorlib{
       apply(
          typename avx512<v256<uint32_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v128<uint32_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -278,6 +335,9 @@ namespace vectorlib{
       apply(
          typename avx512<v128<uint64_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -293,11 +353,14 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
          return _mm512_cmpeq_epi16_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -306,11 +369,14 @@ namespace vectorlib{
          typename avx512<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
          return _mm256_cmpeq_epi32_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -319,11 +385,14 @@ namespace vectorlib{
          typename avx512<v128<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx512)" );
          return _mm_cmpeq_epi16_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct less<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -332,6 +401,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (avx512)" );
          return _mm512_cmplt_epi16_mask(p_vec1, p_vec2);
       }
@@ -344,6 +416,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (avx512)" );
          return _mm512_cmple_epi16_mask(p_vec1, p_vec2);
       }
@@ -357,6 +432,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (avx512)" );
          return _mm512_cmpgt_epi16_mask(p_vec1, p_vec2);
       }
@@ -369,6 +447,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (avx512)" );
          return _mm512_cmpge_epi16_mask(p_vec1, p_vec2);
       }
@@ -380,13 +461,16 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint16_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v256<uint16_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -394,13 +478,16 @@ namespace vectorlib{
       apply(
          typename avx512<v256<uint16_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v128<uint16_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -408,6 +495,9 @@ namespace vectorlib{
       apply(
          typename avx512<v128<uint16_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -423,11 +513,14 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
          return _mm512_cmpeq_epi8_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -436,11 +529,14 @@ namespace vectorlib{
          typename avx512<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
          return _mm256_cmpeq_epi8_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct equal<avx512<v128<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -449,11 +545,14 @@ namespace vectorlib{
          typename avx512<v128<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx512)" );
          return _mm_cmpeq_epi8_mask(p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct less<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -462,6 +561,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (avx512)" );
          return _mm512_cmplt_epi8_mask(p_vec1, p_vec2);
       }
@@ -474,6 +576,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (avx512)" );
          return _mm512_cmple_epi8_mask(p_vec1, p_vec2);
       }
@@ -487,6 +592,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (avx512)" );
          return _mm512_cmpgt_epi8_mask(p_vec1, p_vec2);
       }
@@ -499,6 +607,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ) {
+#if tally
+compare_simd += 1;
+#endif
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (avx512)" );
          return _mm512_cmpge_epi8_mask(p_vec1, p_vec2);
       }
@@ -510,13 +621,16 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint8_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v256<uint8_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -524,13 +638,16 @@ namespace vectorlib{
       apply(
          typename avx512<v256<uint8_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
          return _mm_popcnt_u64(p_mask);
       }
    };
-   
+
    template<>
    struct count_matches<avx512<v128<uint8_t>>> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -538,6 +655,9 @@ namespace vectorlib{
       apply(
          typename avx512<v128<uint8_t>>::mask_t const & p_mask
       ) {
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Count matches in a comparison mask (avx512)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -547,114 +667,114 @@ namespace vectorlib{
    /*
     template<typename T>
     struct compare<avx512<v512<T>>, 64> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         equality( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx512)" );
-             
+
             return _mm512_cmpeq_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmplt_epi64_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmpgt_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmpge_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmple_epi64_mask(p_vec1,p_vec2);
 
         }
-                
-        
+
+
     };
-    
+
     template<typename T>
     struct compare<avx512<v512<T>>, 32> {
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         equality( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
-             
+
             return _mm512_cmpeq_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmplt_epi32_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmpgt_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmpge_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v512< uint64_t > >::vector_t p_vec1,  avx512< v512< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm512_cmple_epi32_mask(p_vec1,p_vec2);
 
         }
     };
-    
+
     template<typename T>
     struct compare<avx512<v256<T>>, 64> {
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -662,52 +782,52 @@ namespace vectorlib{
         static int
         equality( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx512)" );
-             
+
             return _mm256_cmpeq_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmplt_epi64_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmpgt_epi64_mask(p_vec1,p_vec2);
 
-        } 
-        
+        }
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmpge_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmple_epi64_mask(p_vec1,p_vec2);
 
         }
     };
-     
+
     template<typename T>
     struct compare<avx512<v128<T>>, 64> {
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -715,53 +835,53 @@ namespace vectorlib{
         static int
         equality( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (avx512)" );
-             
+
             return _mm_cmpeq_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmplt_epi64_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmpgt_epi64_mask(p_vec1,p_vec2);
 
-        } 
-        
+        }
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmpge_epi64_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 64 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmple_epi64_mask(p_vec1,p_vec2);
 
         }
     };
-    
-    
+
+
     template<typename T>
     struct compare<avx512<v256<T>>, 32> {
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -769,52 +889,52 @@ namespace vectorlib{
         static int
         equality( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
-             
+
             return _mm256_cmpeq_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmplt_epi32_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmpgt_epi32_mask(p_vec1,p_vec2);
 
-        } 
-        
+        }
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmpge_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v256< uint64_t > >::vector_t p_vec1,  avx512< v256< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm256_cmple_epi32_mask(p_vec1,p_vec2);
 
         }
     };
-     
+
     template<typename T>
     struct compare<avx512<v128<T>>, 32> {
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -822,52 +942,51 @@ namespace vectorlib{
         static int
         equality( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (avx512)" );
-             
+
             return _mm_cmpeq_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmplt_epi32_mask(p_vec1,p_vec2);
 
         }
-                
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterthan( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmpgt_epi32_mask(p_vec1,p_vec2);
 
-        } 
-                
+        }
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         greaterequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmpge_epi32_mask(p_vec1,p_vec2);
 
         }
-        
+
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_INLINE
         static int
         lessequal( avx512< v128< uint64_t > >::vector_t p_vec1,  avx512< v128< uint64_t > >::vector_t p_vec2 ) {
             trace( "[VECTOR] - Compare 32 bit integer values from two registers (sse)" );
-             
+
             return _mm_cmple_epi32_mask(p_vec1,p_vec2);
 
         }
     };*/
- } 
+ }
 
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_COMPARE_AVX512_H */
-

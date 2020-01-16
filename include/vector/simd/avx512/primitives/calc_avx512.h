@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   calc_avx512.h
  * Author: Annett
  *
@@ -32,11 +32,14 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm512_add_epi64( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct add<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -46,6 +49,9 @@ namespace vectorlib{
          typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm256_add_epi64( p_vec1, p_vec2);
       }
@@ -59,11 +65,14 @@ namespace vectorlib{
          typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm_add_epi64( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -73,11 +82,14 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Minimum of 64 bit integer values from two registers (avx512)" );
          return _mm512_min_epi64( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -87,6 +99,9 @@ namespace vectorlib{
          typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm256_min_epi64( p_vec1, p_vec2);
       }
@@ -100,11 +115,14 @@ namespace vectorlib{
          typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 64 bit integer values from two registers (avx512)" );
          return _mm_min_epi64( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct sub<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -114,6 +132,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Subtract 64 bit integer values from two registers (avx512)" );
          return _mm512_sub_epi64( p_vec1, p_vec2);
       }
@@ -126,6 +147,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Horizontally add 64 bit integer values one register (avx512)" );
          return _mm512_reduce_add_epi64(p_vec1);
       }
@@ -139,12 +163,15 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm512_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm512_mul_epu32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v256<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -154,12 +181,15 @@ namespace vectorlib{
          typename avx512<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm256_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm256_mul_epu32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v128<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -169,13 +199,16 @@ namespace vectorlib{
          typename avx512<v128<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm_mul_epu32( p_vec1, p_vec2);
       }
    };
-   
-   
+
+
    template<>
    struct div<avx512<v512<uint64_t>>, 64> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -185,6 +218,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Divide 64 bit integer values from two registers (avx512)" );
          __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
          return
@@ -219,6 +255,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint64_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m512d divhelper = _mm512_set1_pd(0x0010000000000000);
@@ -253,6 +292,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Additive inverting 64 bit integer values of one register (avx512)" );
          return _mm512_sub_epi64( _mm512_set1_epi64(0), p_vec1);
       }
@@ -266,6 +308,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi64(p_vec1, p_distance);
       }
@@ -279,6 +324,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_data,
          typename avx512<v512<uint64_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_sllv_epi64(p_data, p_distance);
       }
@@ -292,6 +340,9 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi64(p_vec1, p_distance);
       }
@@ -305,12 +356,15 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_data,
          typename avx512<v512<uint64_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_srlv_epi64(p_data, p_distance);
       }
    };
 
-   
+
 //all of the functions below are not tested
    template<>
    struct add<avx512<v512<uint32_t>>, 32> {
@@ -321,6 +375,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx512)" );
          return _mm512_add_epi32( p_vec1, p_vec2);
       }
@@ -334,6 +391,9 @@ namespace vectorlib{
          typename avx512<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx512)" );
          return _mm256_add_epi32( p_vec1, p_vec2);
       }
@@ -347,11 +407,14 @@ namespace vectorlib{
          typename avx512<v128<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx512)" );
          return _mm_add_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -361,11 +424,14 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Minimum of 32 bit integer values from two registers (avx512)" );
          return _mm512_min_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -375,6 +441,9 @@ namespace vectorlib{
          typename avx512<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx512)" );
          return _mm256_min_epi32( p_vec1, p_vec2);
       }
@@ -388,11 +457,14 @@ namespace vectorlib{
          typename avx512<v128<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 32 bit integer values from two registers (avx512)" );
          return _mm_min_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct sub<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -402,6 +474,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Subtract 32 bit integer values from two registers (avx512)" );
          return _mm512_sub_epi32( p_vec1, p_vec2);
       }
@@ -414,6 +489,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Horizontally add 32 bit integer values one register (avx512)" );
          return _mm512_reduce_add_epi32(p_vec1);
       }
@@ -427,12 +505,15 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 32 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm512_mullo_epi32 is called" );
          return _mm512_mullo_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v256<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -442,12 +523,15 @@ namespace vectorlib{
          typename avx512<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 32 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm256_mullo_epi32 is called" );
          return _mm256_mullo_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v128<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -457,12 +541,15 @@ namespace vectorlib{
          typename avx512<v128<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 32 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm_mullo_epi32 is called (only the lower 32 bit are actually processed" );
          return _mm_mullo_epi32( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct div<avx512<v512<uint32_t>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -472,6 +559,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Divide 32 bit integer values from two registers (avx512)" );
          return
             _mm512_cvtps_epi32( //Convert packed single-precision (32-bit) floating-point elements in a to packed 32-bit integers
@@ -483,7 +573,7 @@ namespace vectorlib{
                      _mm512_castsi512_ps(p_vec1),
                       _mm512_castsi512_ps(p_vec2) //Cast vector of type __m512i to type __m512
                      )
-                  
+
                );
       }
    };
@@ -496,6 +586,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint32_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
          return
@@ -511,7 +604,7 @@ namespace vectorlib{
                               _mm512_castsi512_ps(p_vec1),
                               _mm512_castsi512_ps(p_vec2) //Cast vector of type __m512i to type __m512
                             )
-                   ), 
+                   ),
                   p_vec2
                )
             );
@@ -525,6 +618,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Additive inverting 32 bit integer values of one register (avx512)" );
          return _mm512_sub_epi32( _mm512_set1_epi32(0), p_vec1);
       }
@@ -538,6 +634,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi32(p_vec1, p_distance);
       }
@@ -551,6 +650,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_data,
          typename avx512<v512<uint32_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_sllv_epi32(p_data, p_distance);
       }
@@ -564,6 +666,9 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi32(p_vec1, p_distance);
       }
@@ -577,11 +682,14 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_data,
          typename avx512<v512<uint32_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_srlv_epi32(p_data, p_distance);
       }
    };
-   
+
    template<>
    struct add<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -591,6 +699,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx512)" );
          return _mm512_add_epi16( p_vec1, p_vec2);
       }
@@ -604,6 +715,9 @@ namespace vectorlib{
          typename avx512<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx512)" );
          return _mm256_add_epi16( p_vec1, p_vec2);
       }
@@ -617,11 +731,14 @@ namespace vectorlib{
          typename avx512<v128<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx512)" );
          return _mm_add_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -631,11 +748,14 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Minimum of 16 bit integer values from two registers (avx512)" );
          return _mm512_min_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -645,6 +765,9 @@ namespace vectorlib{
          typename avx512<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx512)" );
          return _mm256_min_epi16( p_vec1, p_vec2);
       }
@@ -658,11 +781,14 @@ namespace vectorlib{
          typename avx512<v128<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 16 bit integer values from two registers (avx512)" );
          return _mm_min_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct sub<avx512<v512<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -672,6 +798,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Subtract 16 bit integer values from two registers (avx512)" );
          return _mm512_sub_epi16( p_vec1, p_vec2);
       }
@@ -684,6 +813,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint16_t>>::vector_t const & p_vec
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Horizontally add 16 bit integer values one register (avx512)" );
          return _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),0)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),1)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),2)+
          _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),3)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),4)+_mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),5)+
@@ -707,12 +839,15 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 16 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm512_mullo_epi16 is called" );
          return _mm512_mullo_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -722,12 +857,15 @@ namespace vectorlib{
          typename avx512<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 16 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm256_mullo_epi16 is called" );
          return _mm256_mullo_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct mul<avx512<v128<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -737,12 +875,15 @@ namespace vectorlib{
          typename avx512<v128<uint16_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint16_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 16 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm_mullo_epi16 is called" );
          return _mm_mullo_epi16( p_vec1, p_vec2);
       }
    };
-   
+
    //doesn't work yet
    // template<>
    // struct div<avx512<v512<uint16_t>>/*, 16*/> {
@@ -822,6 +963,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Additive inverting 16 bit integer values of one register (avx512)" );
          return _mm512_sub_epi16( _mm512_set1_epi16(0), p_vec1);
       }
@@ -835,6 +979,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi16(p_vec1, p_distance);
       }
@@ -848,6 +995,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_data,
          typename avx512<v512<uint16_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_sllv_epi16(p_data, p_distance);
       }
@@ -861,6 +1011,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi16(p_vec1, p_distance);
       }
@@ -874,6 +1027,9 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_data,
          typename avx512<v512<uint16_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (each by its individual distance) (avx512)" );
          return _mm512_srlv_epi16(p_data, p_distance);
       }
@@ -888,6 +1044,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx512)" );
          return _mm512_add_epi8( p_vec1, p_vec2);
       }
@@ -901,6 +1060,9 @@ namespace vectorlib{
          typename avx512<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx512)" );
          return _mm256_add_epi8( p_vec1, p_vec2);
       }
@@ -914,11 +1076,14 @@ namespace vectorlib{
          typename avx512<v128<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx512)" );
          return _mm_add_epi8( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -928,11 +1093,14 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Minimum of 8 bit integer values from two registers (avx512)" );
          return _mm512_min_epi8( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct min<avx512<v256<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -942,6 +1110,9 @@ namespace vectorlib{
          typename avx512<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v256<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx512)" );
          return _mm256_min_epi8( p_vec1, p_vec2);
       }
@@ -955,11 +1126,14 @@ namespace vectorlib{
          typename avx512<v128<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v128<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Add 8 bit integer values from two registers (avx512)" );
          return _mm_min_epi8( p_vec1, p_vec2);
       }
    };
-   
+
    template<>
    struct sub<avx512<v512<uint8_t>>, 8> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -969,6 +1143,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Subtract 8 bit integer values from two registers (avx512)" );
          return _mm512_sub_epi8( p_vec1, p_vec2);
       }
@@ -981,6 +1158,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Horizontally add 8 bit integer values one register (avx512)" );
          return _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),0)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),1)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),2)+
          _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),3)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),4)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),5)+_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec1,0),6)+
@@ -1010,6 +1190,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1,
          typename avx512<v512<uint8_t>>::vector_t const & p_vec2
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Multiply 8 bit integer values from two registers (avx512)" );
          info( "[VECTOR] - _mm512_mullo_epi16 is called" );
           // unpack and multiply
@@ -1017,13 +1200,13 @@ namespace vectorlib{
           __m512i dst_odd = _mm512_mullo_epi16(_mm512_srli_epi16(p_vec1, 8),_mm512_srli_epi16(p_vec2, 8));
           // repack
           return _mm512_or_si512(
-            _mm512_slli_epi16(dst_odd, 8), 
+            _mm512_slli_epi16(dst_odd, 8),
             _mm512_srli_epi16(
                _mm512_slli_epi16(dst_even, 8),
                8
             )
          );
-   
+
       }
    };
    //doesn't work yet
@@ -1105,6 +1288,9 @@ namespace vectorlib{
       apply(
          typename avx512<v512<uint8_t>>::vector_t const & p_vec1
       ){
+#if tally
+calc_unary_simd += 1;
+#endif
          trace( "[VECTOR] - Additive inverting 8 bit integer values of one register (avx512)" );
          return _mm512_sub_epi8( _mm512_set1_epi8(0), p_vec1);
       }
@@ -1118,6 +1304,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_set_epi8(
                  (p_distance == 8) ? 0 : (_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,1),31) << p_distance),
@@ -1197,6 +1386,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          typename avx512<v512<uint8_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (each by its individual distance) (avx512)" );
          uint8_t distance0 = _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_distance,0),0);
          uint8_t distance1 = _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_distance,0),1);
@@ -1339,6 +1531,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          int const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (avx512)" );
           return _mm512_set_epi8(
                  (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,1),31)) >> p_distance),
@@ -1417,6 +1612,9 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          typename avx512<v512<uint8_t>>::vector_t const & p_distance
       ){
+#if tally
+calc_binary_simd += 1;
+#endif
          trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (each by its individual distance) (avx512)" );
          uint8_t distance0 = _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_distance,0),0);
          uint8_t distance1 = _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_distance,0),1);
@@ -1552,4 +1750,3 @@ namespace vectorlib{
    };
 }
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H */
-
