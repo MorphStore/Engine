@@ -46,7 +46,7 @@ int main( void ) {
     const size_t countValues = 60;//100;//128/4; // generate 100 numbers
     const column<uncompr_f> * const myNumbers = generate_with_distr(
             countValues,
-            std::uniform_int_distribution<uint8_t>(1, 20), //range between 1 and 50
+            std::uniform_int_distribution<uint64_t>(1, 20), //range between 1 and 50
             false //numbers are sorted
             // true
     );
@@ -59,7 +59,7 @@ int main( void ) {
     // ************************************************************************
 
     // using ve = scalar<v64<uint64_t> >;
-    using ve = sse<v128<uint8_t>>;
+    using ve = sse<v128<uint64_t>>;
     // using ve = avx2<v256<uint8_t>>;
     // using ve = avx2<v256<uint64_t>>;
     // using ve = avx512<v512<uint64_t>>;
@@ -120,7 +120,7 @@ int main( void ) {
     // print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");
     // print_columns(print_buffer_base::decimal, i2, "myNumbers<10");
 
-    uint8_t *mudata1 = myNumbers->get_data(), *mudata2 = i1->get_data(), *mudata3 = i2->get_data();
+    uint64_t *mudata1 = myNumbers->get_data(), *mudata2 = i1->get_data(), *mudata3 = i2->get_data();
     uint32_t k = 0;
 
     std::cout << "IDX\tmyNumbers\tErgebnis IDX myNumbers <10\tErgebnis"<<std::endl;
