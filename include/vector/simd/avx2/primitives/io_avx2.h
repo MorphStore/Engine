@@ -540,7 +540,7 @@ io_load_ran_simd += 1;
          __m256i d_vec_2 = _mm256_i32gather_epi32(reinterpret_cast<const int *> (p_DataPtr), p_vec_2, 2);
          return _mm256_or_si256(
                _mm256_slli_epi32(d_vec_1, 16),
-               _mm256_srli_epi32(_mm256_slli_epi64(d_vec_2, 16), 16)
+               _mm256_srli_epi32(_mm256_slli_epi64(d_vec_2, 16), 16)//ERROR?!
          );
       }
    };

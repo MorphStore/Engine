@@ -166,6 +166,47 @@ namespace vectorlib {
    };
 
    template<typename T>
+   struct io<avx512<v512<T>>,iov::UNALIGNED, 64> {
+   template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+   MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   static void
+   compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
+      trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+      _mm512_mask_compressstoreu_epi64((void *)p_DataPtr, mask,p_vec);
+      return ;
+   }
+   template<typename T>
+   struct io<avx512<v512<T>>,iov::UNALIGNED, 32> {
+   template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+   MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   static void
+   compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
+      trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+      _mm512_mask_compressstoreu_epi32((void *)p_DataPtr, mask,p_vec);
+      return ;
+   }
+   template<typename T>
+   struct io<avx512<v512<T>>,iov::UNALIGNED, 16> {
+   template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+   MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   static void
+   compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
+      trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+      _mm512_mask_compressstoreu_epi16((void *)p_DataPtr, mask,p_vec);
+      return ;
+   }
+   template<typename T>
+   struct io<avx512<v512<T>>,iov::UNALIGNED, 8> {
+   template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+   MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   static void
+   compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
+      trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+      _mm512_mask_compressstoreu_epi8((void *)p_DataPtr, mask,p_vec);
+      return ;
+   }
+
+   template<typename T>
    struct gather_t<avx512<v512<T>>, 64, 8> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -183,7 +224,60 @@ namespace vectorlib {
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
-         return _mm512_i32gather_epi3( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 4);
+         return _mm512_i32gather_epi32( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 4);
+      }
+   };
+
+//Needs more WORK
+   template<typename T>
+   struct gather_t<avx512<v512<T>>, 16, 2> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v512< U > >::vector_t
+      apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
+         trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
+         __m512i p_vec_1 = _mm512_srli_epi32(p_vec, 16);
+         __m512i p_vec_2 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 16), 16);
+
+         __m512i d_vec_1 = _mm512_i32gather_epi32( p_vec_1, reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 2);
+         __m512i d_vec_2 = _mm512_i32gather_epi32( p_vec_2, reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 2);
+
+         return _mm512_or_si512(
+            _mm512_slli_epi32(d_vec_1, 16),
+            _mm521_srli_epi32(_mm512_slli_epi32(d_vec_2, 16), 16)
+         );
+      }
+   };
+
+   template<typename T>
+   struct gather_t<avx512<v512<T>>, 8, 1> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename avx512< v512< U > >::vector_t
+      apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
+         trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
+         __m512i p_vec_1 = _mm512_srli_epi32(p_vec, 24);
+         __m512i p_vec_2 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 8),24);
+         __m512i p_vec_3 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 16),24);
+         __m512i p_vec_4 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 24),24);
+
+         __m512i d_vec_1 = _mm512_i32gather_epi32(reinterpret_cast<const int *> (p_DataPtr), p_vec_1, 1);
+         __m512i d_vec_2 = _mm512_i32gather_epi32(reinterpret_cast<const int *> (p_DataPtr), p_vec_2, 1);
+         __m512i d_vec_3 = _mm512_i32gather_epi32(reinterpret_cast<const int *> (p_DataPtr), p_vec_3, 1);
+         __m512i d_vec_4 = _mm512_i32gather_epi32(reinterpret_cast<const int *> (p_DataPtr), p_vec_4, 1);
+
+         return
+         _mm512_or_si512(
+            _mm512_or_si512(
+               _mm512_slli_epi32(d_vec_1, 24),
+               _mm512_srli_epi32(_mm512_slli_epi32(d_vec_2, 24), 8)
+            ),
+            _mm512_or_si512(
+               _mm512_srli_epi32(_mm512_slli_epi32(d_vec_3, 24), 16),
+               _mm512_srli_epi32(_mm512_slli_epi32(d_vec_4, 24), 24)
+            )
+         );
+
       }
    };
 
