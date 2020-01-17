@@ -11,7 +11,7 @@ The binary can be found in build/src/examples/.
 Call *./build.sh -h* for more options.
 
 ~~See if it works by calling ./build.sh -deb -tQ from the root folder.~~
--> **Returning users** We changed the build script a few times in the last quarter of 2019, so this old call won't work anymore after checking out the current version.
+-> **Returning users:** We changed the build script a few times in the last quarter of 2019, so this old call won't work anymore after checking out the current version.
 
 
 ## Documentation
