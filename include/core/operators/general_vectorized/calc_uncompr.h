@@ -128,6 +128,37 @@ struct calc_binary_batch {
       }
    };
 
+
+template<int granularity, typename T, template< class, int > class Operator>
+struct call_scalar_batch_calc_binary;
+
+template<typename T, template< class, int > class Operator>
+struct call_scalar_batch_calc_binary<64, T, Operator>{
+  IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
+  MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+  static void call(  base_t const *& p_Data1Ptr,
+         base_t  const *& p_Data2Ptr,
+         base_t *& p_OutPtr,
+         size_t const p_Count){
+      calc_binary_batch<scalar<v64<T>>,64,Operator>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_Count); 
+  }
+};
+
+
+template<typename T, template< class, int > class Operator>
+struct call_scalar_batch_calc_binary<32, T, Operator>{
+  IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
+
+  MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+  static void call( base_t const *& p_Data1Ptr,
+         base_t  const *& p_Data2Ptr,
+         base_t *& p_OutPtr,
+         size_t const p_Count){
+      calc_binary_batch<scalar<v32<T>>,32,Operator>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_Count); 
+  }
+};
+
+
 template<class VectorExtension, template< class, int > class Operator>
 struct calc_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -157,8 +188,9 @@ struct calc_binary_t {
          size_t const remainderCount = inData1Count % vector_element_count::value;
 
          calc_binary_batch<VectorExtension,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, vectorCount);
-         calc_binary_batch<scalar<v64<uint64_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, outDataPtr, remainderCount);
 
+         call_scalar_batch_calc_binary<vector_base_t_granularity::value,typename VectorExtension::base_t, Operator>::call(inData1Ptr, inData2Ptr, outDataPtr, remainderCount);
+         
          outDataCol->set_meta_data(inData1Count, sizeByte);
 
          return outDataCol;
@@ -225,6 +257,36 @@ struct compare_binary_batch {
       }
    };
 
+
+template<int granularity, typename T, template< class, int > class Operator>
+struct call_scalar_batch_compare;
+
+template<typename T, template< class, int > class Operator>
+struct call_scalar_batch_compare<64, T, Operator>{
+  IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
+  MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+  static void call(  base_t const *& p_Data1Ptr,
+         base_t  const *& p_Data2Ptr,
+         vector_mask_t *  p_OutPtr,
+         size_t const p_Count){
+      compare_binary_batch<scalar<v64<T>>,64,Operator>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_Count); 
+  }
+};
+
+
+template<typename T, template< class, int > class Operator>
+struct call_scalar_batch_compare<32, T, Operator>{
+  IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
+
+  MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+  static void call( base_t const *& p_Data1Ptr,
+         base_t  const *& p_Data2Ptr,
+          vector_mask_t *& p_OutPtr,
+         size_t const p_Count){
+      compare_binary_batch<scalar<v32<T>>,32,Operator>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_Count); 
+  }
+};
+
 template<class VectorExtension, template< class, int > class Operator>
 struct compare_binary_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -254,7 +316,8 @@ struct compare_binary_t {
          size_t const remainderCount = inData1Count % vector_element_count::value;
 
          compare_binary_batch<VectorExtension,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *)outDataPtr, vectorCount);
-         compare_binary_batch<scalar<v64<base_t>>,vector_base_t_granularity::value,Operator>::apply(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
+                   
+         call_scalar_batch_compare<vector_base_t_granularity::value,typename VectorExtension::base_t, Operator>::call(inData1Ptr, inData2Ptr, (vector_mask_t *) outDataPtr, remainderCount);
 
          outDataCol->set_meta_data(inData1Count/sizeof(base_t), sizeByte);
 

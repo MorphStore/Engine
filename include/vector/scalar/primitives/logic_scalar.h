@@ -21,9 +21,6 @@ namespace vectorlib {
       static
       typename scalar<v64<T>>::vector_t
       bitwise_and( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
-#if tally
-logic_scalar += 1;
-#endif
          return (p_In1 & p_In2 );
       }
 
@@ -31,9 +28,23 @@ logic_scalar += 1;
       static
       typename scalar<v64<T>>::vector_t
       bitwise_or( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
-#if tally
-logic_scalar += 1;
-#endif
+         return (p_In1 | p_In2 );
+      }                   
+   };
+   
+   template<typename T>
+   struct logic<scalar<v32<T>>, 32> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v32<T>>::vector_t
+      bitwise_and( typename scalar<v32<T>>::vector_t const & p_In1, typename scalar<v32<T>>::vector_t const & p_In2) {
+         return (p_In1 & p_In2 );
+      }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v32<T>>::vector_t
+      bitwise_or( typename scalar<v32<T>>::vector_t const & p_In1, typename scalar<v32<T>>::vector_t const & p_In2) {
          return (p_In1 | p_In2 );
       }
    };

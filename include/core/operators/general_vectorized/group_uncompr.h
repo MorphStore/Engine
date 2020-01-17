@@ -224,17 +224,19 @@ namespace morphstore {
             currentGrId,
             hs
          );
-         resultCount += group_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
-            inDataPtr,
-            inGrPtr,
-            outGr,
-            outExt,
-            dataRemainderCount,
-            currentPos,
-            currentGrId,
-            hs
-         );
+         
 
+               resultCount += group_batch<scalar<v64<base_t>>, DataStructure>::apply(
+                  inDataPtr,
+                  inGrPtr,
+                  outGr,
+                  outExt,
+                  dataRemainderCount,
+                  currentPos,
+                  currentGrId,
+                  hs
+               ); 
+               
          outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
          outExtCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
 

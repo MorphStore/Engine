@@ -99,6 +99,39 @@ namespace morphstore {
       }
    };
 
+
+  template<int granularity, typename T>
+  struct call_scalar_batch_agg_sum;
+  
+  template<typename T>
+  struct call_scalar_batch_agg_sum<64, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static base_t call(     base_t const *& p_DataPtr,
+         size_t const p_Count,
+         base_t t){
+         typename agg_sum_processing_unit<scalar<v64<T>>>::state_t scalarState(
+         t
+         );
+         return agg_sum_batch<scalar<v64<T>>>::apply(p_DataPtr, p_Count, scalarState ); 
+    }
+  };
+  
+  
+  template<typename T>
+  struct call_scalar_batch_agg_sum<32, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static base_t call(    base_t const *& p_DataPtr,
+         size_t const p_Count,
+         base_t t){
+         typename agg_sum_processing_unit<scalar<v32<T>>>::state_t scalarState(
+         t
+         );
+         return agg_sum_batch<scalar<v32<T>>>::apply(p_DataPtr, p_Count, scalarState ); 
+    }
+  };
+  
    template<class VectorExtension>
    struct agg_sum_t<VectorExtension, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -113,13 +146,12 @@ namespace morphstore {
          base_t const * dataPtr = p_DataColumn->get_data( );
 
          static base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
-         typename agg_sum_processing_unit<scalar<v64<base_t>>>::state_t scalarState(
-         t
-         );
 
-        base_t result =
-            agg_sum_batch<scalar < v64 < base_t > >>::apply( dataPtr, remainderCount, scalarState );
 
+         base_t result;
+        
+         result = call_scalar_batch_agg_sum<vector_base_t_granularity::value,typename VectorExtension::base_t>::call(dataPtr, remainderCount, t );
+         
          auto outDataCol = new column<uncompr_f>(sizeof(base_t));
          base_t * const outData = outDataCol->get_data();
          *outData = result;

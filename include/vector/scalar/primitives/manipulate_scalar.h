@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/*
+/* 
  * File:   manipulate_scalar.h
  * Author: Annett
  *
@@ -25,16 +25,27 @@
 namespace vectorlib{
     template<typename T>
     struct manipulate<scalar<v64<T>>, 64> {
-
+        
         template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename scalar< v64< U > >::vector_t
-        rotate( typename scalar< v64< U > >::vector_t p_vec ) {
-#if tally
-manipulate_scalar += 1;
-#endif
+        rotate( scalar< v64< uint64_t > >::vector_t p_vec ) {
             trace( "[VECTOR] - Rotate vector (scalar)" );
+             
+            return p_vec;
 
+        }
+    };
+    
+        template<typename T>
+    struct manipulate<scalar<v32<T>>, 32> {
+        
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        static typename scalar< v32< U > >::vector_t
+        rotate( scalar< v32< uint32_t > >::vector_t p_vec ) {
+            trace( "[VECTOR] - Rotate vector (scalar)" );
+             
             return p_vec;
 
         }
@@ -43,3 +54,4 @@ manipulate_scalar += 1;
 
 
 #endif /* MANIPULATE_SCALAR_H */
+

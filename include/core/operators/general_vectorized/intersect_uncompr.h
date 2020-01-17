@@ -121,6 +121,39 @@ using namespace vectorlib;
          return (p_OutPtr-out_init);
       }
    };
+   
+  template<int granularity, typename T>
+  struct call_scalar_batch_intersect_sorted;
+  
+  template<typename T>
+  struct call_scalar_batch_intersect_sorted<64, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(    base_t  const * p_Data1Ptr,//left
+         base_t  const * p_Data2Ptr,//right
+         base_t       * p_OutPtr,
+         size_t const    p_CountData1,
+         size_t const    p_CountData2
+        ){
+        typename intersect_sorted_processing_unit<scalar<v64<T>>>::state_t scalarState;
+        return intersect_sorted_batch<scalar<v64<T>>>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_CountData1,p_CountData2, scalarState); 
+    }
+  };
+  
+  
+  template<typename T>
+  struct call_scalar_batch_intersect_sorted<32, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(  base_t  const * p_Data1Ptr,//left
+         base_t  const * p_Data2Ptr,//right
+         base_t       * p_OutPtr,
+         size_t const    p_CountData1,
+         size_t const    p_CountData2){
+         typename intersect_sorted_processing_unit<scalar<v32<T>>>::state_t scalarState;
+         return intersect_sorted_batch<scalar<v32<T>>>::apply(p_Data1Ptr, p_Data2Ptr, p_OutPtr, p_CountData1,p_CountData2, scalarState); 
+    }
+  };
 
    template<class VectorExtension>
    struct intersect_sorted_t {
@@ -148,7 +181,7 @@ using namespace vectorlib;
             );
 
          typename intersect_sorted_processing_unit<VectorExtension>::state_t vectorState;
-         typename intersect_sorted_processing_unit<scalar<v64<base_t>>>::state_t scalarState;
+         
          
          auto outDataCol = new column<uncompr_f>(sizeByte);
          base_t * outDataPtr = outDataCol->get_data( );
@@ -164,8 +197,11 @@ using namespace vectorlib;
                   
          int scalar_count=0;
 
-         scalar_count=intersect_sorted_batch<scalar<v64<base_t>>>::apply(inData1Ptr+vectorState.m_doneLeft, inData2Ptr+vectorState.m_doneRight, outDataPtr+vec_count,inData1Count-vectorState.m_doneLeft, inData2Count-vectorState.m_doneRight,scalarState);
-
+     
+  //          typename intersect_sorted_processing_unit<scalar<v64<base_t>>>::state_t scalarState64;
+                
+         scalar_count = call_scalar_batch_intersect_sorted<vector_base_t_granularity::value,typename VectorExtension::base_t>::call(inData1Ptr+vectorState.m_doneLeft, inData2Ptr+vectorState.m_doneRight, outDataPtr+vec_count,inData1Count-vectorState.m_doneLeft, inData2Count-vectorState.m_doneRight );
+         
          outDataCol->set_meta_data((vec_count+scalar_count), (vec_count+scalar_count)*sizeof(base_t) );
 
          return outDataCol;
