@@ -27,4 +27,4 @@ Dear Sigmod'19 visitors, the morphing operators and compression formats can be f
 
 ### Template Vector Library (TVL)
 Dear Cidr'20 visitors, the TVL is currently an integrated part of morphstore. We are working on a stand-alone version. Until then, you can find the TVL in include/vector. 
-You are also welcome to check out the branch TVLtesting, which contains more (but probably unstable) functionality.
+You are also welcome to check out the branch *TVLtesting*, which contains more (but probably unstable) functionality/processing styles.
