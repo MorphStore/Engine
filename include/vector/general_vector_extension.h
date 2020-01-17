@@ -27,8 +27,8 @@ namespace vectorlib {
    };
 
    template<uint16_t BitWidth, typename T>
-   struct vector_view_2 {
-      vector_view_2() = delete;
+   struct scalar_view {
+      scalar_view() = delete;
 
       using base_t          = T;
       using size_bit        = std::integral_constant<uint16_t, BitWidth>;
@@ -40,9 +40,9 @@ namespace vectorlib {
 
    template<typename T>
    //using v1 = vector_view<(sizeof(T)<<3), T>;
-   using v64 = vector_view_2<64, T>;
+   using v64 = scalar_view<64, T>;
    template<typename T>
-   using v32 = vector_view_2<32, T>;
+   using v32 = scalar_view<32, T>;
    template<typename T>
    // using v16 = vector_view<16, T>;
    // template<typename T>

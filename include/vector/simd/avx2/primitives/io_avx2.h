@@ -596,7 +596,7 @@ io_load_seq_simd += 1;
       static void
       store( U * p_DataPtr, avx2< v256< int > >::vector_t p_vec ) {
 #if tally
-io_write_ran_simd += 1;
+io_write_seq_simd += 1;
 #endif
          trace( "[VECTOR] - Store unaligned integer values to memory" );
          _mm256_storeu_si256(reinterpret_cast<typename avx2< v256< U > >::vector_t *>(p_DataPtr),p_vec);
