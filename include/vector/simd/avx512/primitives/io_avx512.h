@@ -222,7 +222,7 @@ io_write_ran_simd += 1;
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi64((void *)p_DataPtr, mask,p_vec);
       return ;
-   }
+   }};
    template<typename T>
    struct io<avx512<v512<T>>,iov::UNALIGNED, 32> {
    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -235,7 +235,7 @@ io_write_ran_simd += 1;
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi32((void *)p_DataPtr, mask,p_vec);
       return ;
-   }
+   }};
    template<typename T>
    struct io<avx512<v512<T>>,iov::UNALIGNED, 16> {
    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -248,7 +248,7 @@ io_write_ran_simd += 1;
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi16((void *)p_DataPtr, mask,p_vec);
       return ;
-   }
+   }};
    template<typename T>
    struct io<avx512<v512<T>>,iov::UNALIGNED, 8> {
    template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
@@ -261,7 +261,7 @@ io_write_ran_simd += 1;
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi8((void *)p_DataPtr, mask,p_vec);
       return ;
-   }
+   }};
 
    template<typename T>
    struct gather_t<avx512<v512<T>>, 64, 8> {
@@ -309,7 +309,7 @@ io_load_ran_simd += 1;
 
          return _mm512_or_si512(
             _mm512_slli_epi32(d_vec_1, 16),
-            _mm521_srli_epi32(_mm512_slli_epi32(d_vec_2, 16), 16)
+            _mm512_srli_epi32(_mm512_slli_epi32(d_vec_2, 16), 16)
          );
       }
    };
@@ -462,7 +462,7 @@ io_write_seq_simd += 1;
       }
     };
 
-    template<typename T, int IOGranularity>
+/*    template<typename T, int IOGranularity>
     struct io<avx512<v128<T>>,iov::UNALIGNED, 64> {
     template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -518,7 +518,7 @@ io_write_ran_simd += 1;
          return ;
       }
     };
-
+*/
     template<typename T, int IOGranularity>
     struct io<avx512<v128<T>>,iov::ALIGNED, IOGranularity> {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
