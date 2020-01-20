@@ -15,8 +15,6 @@
 
 #include <functional>
 
-#include <iostream>
-
 namespace vectorlib {
 
 
@@ -313,26 +311,20 @@ io_write_ran_simd += 1;
 #endif
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          int8_t matched = 0;
-         std::cout<<"Mask:\n";
          while(mask != 0){
-            std::cout << (mask & 0x1) << "\t";
             if((mask & 0x1) == 0x1){
-               std::cout << "match\t";
                if(matched == 0){
                   _mm_storeu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t  *>(p_DataPtr),p_vec);
                   matched = 1;
-                  std::cout << "write";
                }
                p_DataPtr ++;
             }else{
                matched = 0;
             }
-            std::cout << std::endl;
 
             mask = (mask >> 1) & 0x7FFF;
             p_vec = _mm_srli_si128(p_vec,1);
          }
-         std::cout << std::endl;
          return ;
       }
    };
@@ -385,7 +377,6 @@ io_load_ran_simd += 1;
 #if tally
 io_load_ran_simd += 1;
 #endif
-         std::cout << "\nGATHER 32bit\n\n";
          trace( "[VECTOR] - Gather integer values into 128 Bit vector register." );
          return _mm_set_epi32(
                *reinterpret_cast<uint64_t const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + _mm_extract_epi32(p_vec,3) * 4),

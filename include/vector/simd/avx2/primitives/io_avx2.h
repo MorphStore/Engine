@@ -15,12 +15,6 @@
 
 #include <functional>
 
-// #include <iostream>
-
-// #if tally
-// io_load_seq_simd += 1;
-// #endif
-
 namespace vectorlib {
    template<typename T, int IOGranularity>
    struct io<avx2<v256<T>>,iov::ALIGNED, IOGranularity> {
