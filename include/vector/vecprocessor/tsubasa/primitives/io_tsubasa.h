@@ -12,6 +12,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
 #include <vector/simd/sse/extension_sse.h>
+#include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
 #include <vector/primitives/io.h>
 
 
@@ -92,6 +93,17 @@ namespace vectorlib {
          trace( "[VECTOR] - Loading unaligned integer values into 128 Bit vector register using lddqu." );
          return _mm_lddqu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
       }
+   };
+
+   template<typename T, int IOGranularity>
+   struct load<tsubasa<v16384<T>>, iov::ALIGNED, IOGranularity>{
+      template<typename U = T>
+      MSV_CXX_ATTRIBUTE_INLINE
+      static typename tsubasa<v16384<U>>::vector_t
+      apply( U const * const p_DataPtr , int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value ) {
+         return _vel_vld_vssl(8, reinterpret_cast< U const * >(p_DataPtr), element_count);
+      }
+
    };
 
 
