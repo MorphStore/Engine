@@ -68,4 +68,10 @@ if( BUILD_ALL OR BUILD_MICROBMS )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( join_benchmark PRIVATE "-ldl" )
+
+    add_executable( semi_join_benchmark semi_join_benchmark.cpp )
+    target_compile_options( semi_join_benchmark PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( semi_join_benchmark PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )
