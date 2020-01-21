@@ -179,7 +179,7 @@ namespace morphstore {
          base_t * const startProbeDataPrt = inProbeDataPtr;
          DataStructure hs( inBuildDataCount );
          auto outPosCol = new column<uncompr_f>(
-            (inProbeDataCount * sizeof(uint64_t))
+            (inProbeDataCount * sizeof(base_t))
          );
          base_t * outPtr = outPosCol->get_data( );
 
@@ -201,7 +201,7 @@ namespace morphstore {
          /*   semi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
                inProbeDataPtr, probeRemainderCount, outPtr, (inProbeDataPtr-startProbeDataPrt), hs
             );*/
-         outPosCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
+         outPosCol->set_meta_data(resultCount, resultCount * sizeof(base_t));
 
          return outPosCol;
       }
@@ -318,10 +318,10 @@ namespace morphstore {
          base_t * const startProbeDataPtr = inProbeDataPtr;
          DataStructure hs( inBuildDataCount );
          auto outPosLCol = new column<uncompr_f>(
-            (outCount * sizeof(uint64_t))
+            (outCount * sizeof(base_t))
          );
          auto outPosRCol = new column<uncompr_f>(
-            (outCount * sizeof(uint64_t))
+            (outCount * sizeof(base_t))
          );
          base_t * outLPtr = outPosLCol->get_data( );
          base_t * outRPtr = outPosRCol->get_data( );
@@ -347,8 +347,8 @@ namespace morphstore {
             equi_join_probe_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
                inProbeDataPtr, probeRemainderCount, outLPtr, outRPtr, (inProbeDataPtr-startProbeDataPtr), hs
          );
-         outPosLCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
-         outPosRCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
+         outPosLCol->set_meta_data(resultCount, resultCount * sizeof(base_t));
+         outPosRCol->set_meta_data(resultCount, resultCount * sizeof(base_t));
 
          return std::make_tuple(outPosLCol, outPosRCol);
       }
