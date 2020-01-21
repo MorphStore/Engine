@@ -118,13 +118,16 @@ const column<uncompr_f> * generate_sorted_unique(
  */
 const column<uncompr_f> * generate_sorted_unique_extraction(
         size_t p_CountValues,
-        size_t p_CountPopulation
+        size_t p_CountPopulation,
+        size_t p_Seed = 0
 ) {
     const size_t allocationSize = p_CountValues * sizeof(uint64_t);
     auto resCol = new column<uncompr_f>(allocationSize);
     uint64_t * res = resCol->get_data();
     
-    std::default_random_engine gen;
+    if(p_Seed == 0)
+       p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::default_random_engine gen(p_Seed);
     std::uniform_int_distribution<uint64_t> distr(0, p_CountPopulation - 1);
     
     // If we want to select at most half of the population, then we start with
