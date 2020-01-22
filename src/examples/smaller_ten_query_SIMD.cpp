@@ -43,10 +43,10 @@ int main( void ) {
     std::cout << "Base data generation started... ";
     std::cout.flush();
 
-    const size_t countValues = 60;//100;//128/4; // generate 100 numbers
+    const size_t countValues = 32;//100;//128/4; // generate 100 numbers
     const column<uncompr_f> * const myNumbers = generate_with_distr(
             countValues,
-            std::uniform_int_distribution<uint64_t>(1, 20), //range between 1 and 50
+            std::uniform_int_distribution<uint16_t>(1, 16), //range between 1 and 50
             false //numbers are sorted
             // true
     );
@@ -59,14 +59,14 @@ int main( void ) {
     // ************************************************************************
 
     // using ve = scalar<v64<uint64_t> >;
-    using ve = sse<v128<uint64_t>>;
+    using ve = sse<v128<uint16_t>>;
     // using ve = avx2<v256<uint8_t>>;
-    // using ve = avx2<v256<uint64_t>>;
+    // using ve = avx2<v256<uint16_t>>;
     // using ve = avx512<v512<uint64_t>>;
 
 
     std::cout << "Numbers of Elements: " << countValues << std::endl;
-    std::cout << "Query execution started...\t";
+    std::cout << "Query execution started...\n";
     std::cout.flush();
 
     // #ifdef tally
@@ -76,7 +76,7 @@ int main( void ) {
     // #endif
 
     // Positions fulfilling "myNumbers < 10"
-    int sel_nr = 14;
+    int sel_nr = 10;
     auto i1 = morphstore::select<
             less,
             ve,
@@ -84,11 +84,8 @@ int main( void ) {
             uncompr_f
     >(myNumbers, sel_nr);
 
-    #ifdef tally
-      std::cout << std::endl << std::endl << "SELECT" << std::endl;
-      output_tally();
-      reset_tally();
-    #endif
+    TALLY_OUTPUT()
+    TALLY_RESET
     // Data elements of "myNumbers" fulfilling "myNumbers < 10"
     // auto i2 = project<ve, uncompr_f>(myNumbers, i1);
     // std::cout << "done select...\t";
@@ -102,12 +99,8 @@ int main( void ) {
       >(myNumbers, i1);
     // std::cout << "done project..." << std::endl << std::endl;
 
-    #ifdef tally
-      std::cout << std::endl << std::endl << "PROJECT" << std::endl;
-      output_tally();
-      reset_tally();
-      std::cout << std::endl << std::endl;
-    #endif
+   TALLY_OUTPUT()
+   TALLY_RESET
     // ************************************************************************
     // * Result output
     // ************************************************************************
@@ -120,7 +113,7 @@ int main( void ) {
     // print_columns(print_buffer_base::decimal, i1, "Idx myNumbers<10");
     // print_columns(print_buffer_base::decimal, i2, "myNumbers<10");
 
-    uint64_t *mudata1 = myNumbers->get_data(), *mudata2 = i1->get_data(), *mudata3 = i2->get_data();
+    uint16_t *mudata1 = myNumbers->get_data(), *mudata2 = i1->get_data(), *mudata3 = i2->get_data();
     uint32_t k = 0;
 
     std::cout << "IDX\tmyNumbers\tErgebnis IDX myNumbers <10\tErgebnis"<<std::endl;

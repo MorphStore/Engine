@@ -19,9 +19,7 @@ namespace vectorlib {
       static
       typename avx2<v256<T>>::vector_t
       bitwise_and( typename avx2<v256<T>>::vector_t const & p_In1, typename avx2<v256<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm256_and_si256( p_In1, p_In2 );
       }
 
@@ -29,9 +27,7 @@ logic_simd += 1;
       static
       typename avx2<v256<T>>::vector_t
       bitwise_or( typename avx2<v256<T>>::vector_t const & p_In1, typename avx2<v256<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm256_or_si256( p_In1, p_In2 );
       }
    };

@@ -32,9 +32,7 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
          return *p_DataPtr;
       }
@@ -43,25 +41,17 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U *& p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t & p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;
       }
 
-
-
-
-
       template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return *p_DataPtr;
       }
@@ -70,9 +60,7 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, vectorlib::scalar<v64< double > >::vector_t p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned double values to memory" );
          *p_DataPtr=p_vec;
          return;
@@ -86,9 +74,7 @@ io_write_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v64< U > >::vector_t
       apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
-#if tally
-io_load_ran_scalar += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
 
@@ -103,9 +89,7 @@ io_load_ran_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v64< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading unaligned double value (scalar)" );
          return *p_DataPtr;
       }
@@ -114,9 +98,7 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_scalar += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SCALAR
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
 
          if (mask!=0)  *p_DataPtr=p_vec;
@@ -128,15 +110,14 @@ io_write_ran_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;
       }
 
    };
+
 
 
 
@@ -148,9 +129,7 @@ io_write_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v32< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
          return *p_DataPtr;
       }
@@ -159,25 +138,17 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U *& p_DataPtr, typename vectorlib::scalar<v32< U > >::vector_t & p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;
       }
 
-
-
-
-
       template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v32< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
          return *p_DataPtr;
       }
@@ -186,9 +157,7 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, vectorlib::scalar<v32< double > >::vector_t p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned double values to memory" );
          *p_DataPtr=p_vec;
          return;
@@ -202,12 +171,9 @@ io_write_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar< v32< U > >::vector_t
       apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
-#if tally
-io_load_ran_scalar += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
-
       }
 
    };
@@ -219,9 +185,7 @@ io_load_ran_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename scalar<v32< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_scalar += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SCALAR
          trace( "[VECTOR] - Loading unaligned double value (scalar)" );
          return *p_DataPtr;
       }
@@ -230,9 +194,7 @@ io_load_seq_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_scalar += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SCALAR
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
 
          if (mask!=0)  *p_DataPtr=p_vec;
@@ -244,9 +206,198 @@ io_write_ran_scalar += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, typename vectorlib::scalar<v32< U > >::vector_t p_vec ) {
-#if tally
-io_write_seq_scalar += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+   };
+
+
+
+
+///Start 16 bit
+
+   template<typename T, int IOGranularity>
+   struct io<scalar<v16<T>>,iov::ALIGNED, IOGranularity> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v16< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
+         return *p_DataPtr;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U *& p_DataPtr, typename vectorlib::scalar<v16< U > >::vector_t & p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v16< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
+         return *p_DataPtr;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U * p_DataPtr, vectorlib::scalar<v16< double > >::vector_t p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned double values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+   };
+
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<scalar<v16<T>>, IOGranularity, Scale> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar< v16< U > >::vector_t
+      apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
+         TALLY_IO_LOAD_RAN_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
+      }
+
+   };
+
+   template<typename T, int IOGranularity>
+   struct io<scalar<v16<T>>,iov::UNALIGNED, IOGranularity> {
+
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v16< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading unaligned double value (scalar)" );
+         return *p_DataPtr;
+      }
+
+       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
+         TALLY_IO_WRITE_RAN_SCALAR
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+
+         if (mask!=0)  *p_DataPtr=p_vec;
+
+         return ;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U * p_DataPtr, typename vectorlib::scalar<v16< U > >::vector_t p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+   };
+
+
+
+///Start 8 bit
+
+   template<typename T, int IOGranularity>
+   struct io<scalar<v8<T>>,iov::ALIGNED, IOGranularity> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v8< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading aligned integer values into 256 Bit vector register." );
+         return *p_DataPtr;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U *& p_DataPtr, typename vectorlib::scalar<v8< U > >::vector_t & p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v8< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading aligned double values into 256 Bit vector register." );
+         return *p_DataPtr;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U * p_DataPtr, vectorlib::scalar<v8< double > >::vector_t p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
+         trace( "[VECTOR] - Store aligned double values to memory" );
+         *p_DataPtr=p_vec;
+         return;
+      }
+
+   };
+
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t<scalar<v8<T>>, IOGranularity, Scale> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar< v8< U > >::vector_t
+      apply( U const * const p_DataPtr, typename vectorlib::scalar<v64< U > >::vector_t p_vec ) {
+         TALLY_IO_LOAD_RAN_SCALAR
+         trace( "[VECTOR] - Store aligned integer values to memory" );
+         return *reinterpret_cast<U const *>(reinterpret_cast<uint8_t const *>(p_DataPtr) + p_vec * Scale);
+      }
+
+   };
+
+   template<typename T, int IOGranularity>
+   struct io<scalar<v8<T>>,iov::UNALIGNED, IOGranularity> {
+
+        template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename scalar<v8< U > >::vector_t
+      load( U const * const p_DataPtr ) {
+         TALLY_IO_LOAD_SEQ_SCALAR
+         trace( "[VECTOR] - Loading unaligned double value (scalar)" );
+         return *p_DataPtr;
+      }
+
+       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      compressstore( U * p_DataPtr,  typename scalar< v64< U > >::vector_t p_vec, int mask ) {
+         TALLY_IO_WRITE_RAN_SCALAR
+         trace( "[VECTOR] - Store masked unaligned integer values to memory" );
+
+         if (mask!=0)  *p_DataPtr=p_vec;
+
+         return ;
+      }
+
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void
+      store( U * p_DataPtr, typename vectorlib::scalar<v8< U > >::vector_t p_vec ) {
+         TALLY_IO_WRITE_SEQ_SCALAR
          trace( "[VECTOR] - Store aligned integer values to memory" );
          *p_DataPtr=p_vec;
          return;

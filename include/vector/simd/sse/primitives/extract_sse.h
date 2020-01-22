@@ -31,9 +31,7 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi64(p_vec,0); break;
@@ -50,9 +48,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi32(p_vec,0); break;
@@ -71,9 +67,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi16(p_vec,0); break;
@@ -95,9 +89,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::base_t
       extract_value( sse< v128< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm_extract_epi8(p_vec,0); break;

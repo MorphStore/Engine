@@ -12,6 +12,7 @@
 #include <vector/primitives/logic.h>
 #include <vector/primitives/manipulate.h>
 //#  undef EXTDIR
+#include <core/utils/tally.h>
 
 #ifdef AVX512
 #  include <vector/simd/avx512/primitives/calc_avx512.h>
@@ -53,9 +54,6 @@
 #  include <vector/simd/neon/primitives/manipulate_neon.h>
 #endif
 
-#ifdef tally
-#	include <core/utils/tally.h>
-#endif
 
 
 #include <vector/scalar/primitives/calc_scalar.h>

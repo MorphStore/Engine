@@ -32,9 +32,7 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Add 64 bit integer values from two registers (sse)" );
          return _mm_add_epi64( p_vec1, p_vec2);
       }
@@ -48,9 +46,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Subtract 64 bit integer values from two registers (sse)" );
          return _mm_sub_epi64( p_vec1, p_vec2);
       }
@@ -65,9 +61,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - build minimum of 64 bit integer values from two registers (sse)" );
          return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi64(p_vec2, p_vec1));
       }
@@ -82,9 +76,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint64_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Horizontally add 64 bit integer values one register (sse)" );
          return
             _mm_extract_epi64(
@@ -107,9 +99,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (sse)" );
          info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm_mul_epu32( p_vec1, p_vec2);
@@ -125,9 +115,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const &p_vec1,
          typename sse<v128<uint64_t>>::vector_t const &p_vec2
       ) {
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace("[VECTOR] - Divide 64 bit integer values from two registers (sse)");
          __m128d divhelper=_mm_set1_pd(0x0010000000000000);
 
@@ -160,9 +148,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Modulo divide 64 bit integer values from two registers (sse)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
          __m128d divhelper = _mm_set1_pd(0x0010000000000000);
@@ -198,9 +184,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint64_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Additive inverting 64 bit integer values of one register (sse)" );
          return _mm_sub_epi64( _mm_set1_epi64x(0), p_vec1);
       }
@@ -215,9 +199,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;  //HELP
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_slli_epi64(p_vec1, p_distance);
       }
@@ -232,9 +214,7 @@ calc_binary_simd += 1;  //HELP
          typename sse<v128<uint64_t>>::vector_t const & p_data,
          typename sse<v128<uint64_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          // The comparison with 64 is necessary, since the scalar shift behaves
          // strangely in that case.
@@ -257,9 +237,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;     //HELP
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_srli_epi64(p_vec1, p_distance);
       }
@@ -274,9 +252,7 @@ calc_binary_simd += 1;     //HELP
          typename sse<v128<uint64_t>>::vector_t const & p_data,
          typename sse<v128<uint64_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          // The comparison with 64 is necessary, since the scalar shift behaves
          // strangely in that case.
@@ -302,9 +278,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Add 32 bit integer values from two registers (sse)" );
          return _mm_add_epi32( p_vec1, p_vec2);
       }
@@ -319,9 +293,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Subtract 32 bit integer values from two registers (sse)" );
          return _mm_sub_epi32( p_vec1, p_vec2);
       }
@@ -336,9 +308,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - build minimum of 32 bit integer values from two registers (sse)" );
          return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi32(p_vec2, p_vec1));
       }
@@ -352,9 +322,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint32_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Horizontally add 32 bit integer values one register (sse)" );
          __m128i tmp =
             _mm_castps_si128(
@@ -377,9 +345,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Multiply 32 bit integer values from two registers (sse)" );
          info( "[VECTOR] - _mm_mullo_epi32 is called" );
          return _mm_mullo_epi32( p_vec1, p_vec2);
@@ -394,9 +360,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const &p_vec1,
          typename sse<v128<uint32_t>>::vector_t const &p_vec2
       ) {
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace("[VECTOR] - Divide 32 bit integer values from two registers (sse)");
          return
             _mm_cvtps_epi32( //(__m128 a)
@@ -418,9 +382,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          typename sse<v128<uint32_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Modulo divide 32 bit integer values from two registers (sse)" );
          info( "[VECTOR] - MODULO IS A WORKAROUND" );
          return
@@ -450,9 +412,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint32_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Additive inverting 32 bit integer values of one register (sse)" );
          return _mm_sub_epi32( _mm_set1_epi32(0), p_vec1);
       }
@@ -467,9 +427,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;  //HELP
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_slli_epi32(p_vec1, p_distance);
       }
@@ -484,9 +442,7 @@ calc_binary_simd += 1;  //HELP
          typename sse<v128<uint32_t>>::vector_t const & p_data,
          typename sse<v128<uint32_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          //is the comparison with 32 necessary?
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (each by its individual distance) (sse)" );
@@ -513,9 +469,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_srli_epi32(p_vec1, p_distance);
       }
@@ -530,9 +484,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint32_t>>::vector_t const & p_data,
          typename sse<v128<uint32_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          // is the comparison with 32 necessary?
          // The static_cast to an unsigned type is necessary, since the scalar
@@ -560,9 +512,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          typename sse<v128<uint16_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Add 16 bit integer values from two registers (sse)" );
          return _mm_add_epi16( p_vec1, p_vec2);
       }
@@ -577,9 +527,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          typename sse<v128<uint16_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Subtract 16 bit integer values from two registers (sse)" );
          return _mm_sub_epi16( p_vec1, p_vec2);
       }
@@ -594,9 +542,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          typename sse<v128<uint16_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - build minimum of 16 bit integer values from two registers (sse)" );
          return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi16(p_vec2, p_vec1));
       }
@@ -610,9 +556,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint16_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Horizontally add 16 bit integer values one register (sse)" );
          return _mm_extract_epi16(p_vec1,0)+_mm_extract_epi16(p_vec1,1)+_mm_extract_epi16(p_vec1,2)+_mm_extract_epi16(p_vec1,3)
          +_mm_extract_epi16(p_vec1,4)+_mm_extract_epi16(p_vec1,5)+_mm_extract_epi16(p_vec1,6)+_mm_extract_epi16(p_vec1,7);
@@ -629,9 +573,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          typename sse<v128<uint16_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Multiply 16 bit integer values from two registers (sse)" );
          info( "[VECTOR] - _mm_mullo_epi16 is called" );
          return _mm_mullo_epi16( p_vec1, p_vec2);
@@ -725,9 +667,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint16_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Additive inverting 16 bit integer values of one register (sse)" );
          return _mm_sub_epi16( _mm_set1_epi16(0), p_vec1);
       }
@@ -742,9 +682,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;     //HELP
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_slli_epi16(p_vec1, p_distance);
       }
@@ -759,9 +697,7 @@ calc_binary_simd += 1;     //HELP
          typename sse<v128<uint16_t>>::vector_t const & p_data,
          typename sse<v128<uint16_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (each by its individual distance) (sse)" );
          uint16_t distance0 = _mm_extract_epi16(p_distance, 0);
@@ -795,9 +731,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;  //HELP
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_srli_epi16(p_vec1, p_distance);
       }
@@ -812,9 +746,7 @@ calc_binary_simd += 1;  //HELP
          typename sse<v128<uint16_t>>::vector_t const & p_data,
          typename sse<v128<uint16_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          // The static_cast to an unsigned type is necessary, since the scalar
          // shift shifts in sign-bits otherwise.
@@ -850,9 +782,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Add 16 bit integer values from two registers (sse)" );
          return _mm_add_epi8( p_vec1, p_vec2);
       }
@@ -867,9 +797,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Subtract 8 bit integer values from two registers (sse)" );
          return _mm_sub_epi8( p_vec1, p_vec2);
       }
@@ -884,9 +812,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - build minimum of 8 bit integer values from two registers (sse)" );
          return _mm_blendv_epi8(p_vec2, p_vec1, _mm_cmpgt_epi8(p_vec2, p_vec1));
       }
@@ -900,9 +826,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint8_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Horizontally add 8 bit integer values one register (sse)" );
          return _mm_extract_epi8(p_vec1,0)+_mm_extract_epi8(p_vec1,1)+_mm_extract_epi8(p_vec1,2)+_mm_extract_epi8(p_vec1,3)
          +_mm_extract_epi8(p_vec1,4)+_mm_extract_epi8(p_vec1,5)+_mm_extract_epi8(p_vec1,6)+_mm_extract_epi8(p_vec1,7)+
@@ -919,9 +843,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          typename sse<v128<uint8_t>>::vector_t const & p_vec2
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          trace( "[VECTOR] - Multiply 8 bit integer values from two registers (sse)" );
          info( "[VECTOR] - _mm_mullo_epi16 is called" );
           // unpack and multiply
@@ -1015,9 +937,7 @@ calc_binary_simd += 1;
       apply(
          typename sse<v128<uint8_t>>::vector_t const & p_vec1
       ){
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Additive inverting 8 bit integer values of one register (sse)" );
          return _mm_sub_epi8( _mm_set1_epi8(0), p_vec1);
       }
@@ -1031,9 +951,7 @@ calc_unary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_set_epi8(
                  (p_distance == 8) ? 0 : (_mm_extract_epi8(p_vec1, 15) << p_distance),
@@ -1066,9 +984,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_data,
          typename sse<v128<uint8_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (each by its individual distance) (sse)" );
          uint8_t distance0 = _mm_extract_epi8(p_distance, 0);
@@ -1117,9 +1033,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (sse)" );
          return _mm_set_epi8(
                  (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm_extract_epi8(p_vec1, 15)) >> p_distance),
@@ -1151,9 +1065,7 @@ calc_binary_simd += 1;
          typename sse<v128<uint8_t>>::vector_t const & p_data,
          typename sse<v128<uint8_t>>::vector_t const & p_distance
       ){
-#if tally
-calc_binary_simd += 1;
-#endif
+         TALLY_CALC_BINARY_SIMD
          // SSE does not have an intrinsic for this.
          // The static_cast to an unsigned type is necessary, since the scalar
          // shift shifts in sign-bits otherwise.

@@ -44,10 +44,10 @@ namespace vectorlib {
    template<typename T>
    using v32 = scalar_view<32, T>;
    template<typename T>
-   // using v16 = vector_view<16, T>;
-   // template<typename T>
-   // using v8 = vector_view<8, T>;
-   // template<typename T>
+   using v16 = vector_view<16, T>;
+   template<typename T>
+   using v8 = vector_view<8, T>;
+   template<typename T>
    using v128 = vector_view<128, T>;
    template<typename T>
    using v256 = vector_view<256, T>;

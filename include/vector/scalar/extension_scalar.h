@@ -14,7 +14,7 @@
 #include "vector/vector_extension_structs.h"
 
 namespace vectorlib {
-    
+
    template<class VectorReg>
    struct scalar;
    template<typename T>
@@ -32,6 +32,26 @@ namespace vectorlib {
    struct scalar<v32 <T>> {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v32<T>;
+      using base_t = typename vector_helper_t::base_t;
+      using vector_t = T;
+      using size = std::integral_constant<size_t, sizeof(vector_t)>;
+      using mask_t = uint16_t;
+   };
+
+   template<typename T>
+   struct scalar<v16 <T>> {
+      static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
+      using vector_helper_t = v16<T>;
+      using base_t = typename vector_helper_t::base_t;
+      using vector_t = T;
+      using size = std::integral_constant<size_t, sizeof(vector_t)>;
+      using mask_t = uint16_t;
+   };
+
+   template<typename T>
+   struct scalar<v8 <T>> {
+      static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
+      using vector_helper_t = v8<T>;
       using base_t = typename vector_helper_t::base_t;
       using vector_t = T;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;

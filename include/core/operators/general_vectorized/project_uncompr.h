@@ -51,32 +51,56 @@ namespace morphstore {
 
   template<int granularity, typename T>
   struct call_scalar_batch_project;
-  
+
   template<typename T>
   struct call_scalar_batch_project<64, T>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(    base_t const *& p_DataPtr,
          base_t const *& p_PosPtr,
          base_t *& p_OutPtr,
          size_t const p_Count){
-         project_t_batch<scalar<v64<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count); 
+         project_t_batch<scalar<v64<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count);
     }
   };
-  
-  
+
+
   template<typename T>
   struct call_scalar_batch_project<32, T>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(  base_t const *& p_DataPtr,
          base_t const *& p_PosPtr,
          base_t *& p_OutPtr,
          size_t const p_Count){
-        project_t_batch<scalar<v32<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count); 
+        project_t_batch<scalar<v32<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count);
     }
   };
-  
+
+  template<typename T>
+  struct call_scalar_batch_project<16, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(  base_t const *& p_DataPtr,
+         base_t const *& p_PosPtr,
+         base_t *& p_OutPtr,
+         size_t const p_Count){
+        project_t_batch<scalar<v16<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count);
+    }
+  };
+
+  template<typename T>
+  struct call_scalar_batch_project<8, T>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(  base_t const *& p_DataPtr,
+         base_t const *& p_PosPtr,
+         base_t *& p_OutPtr,
+         size_t const p_Count){
+        project_t_batch<scalar<v8<T>>>::apply(p_DataPtr, p_PosPtr, p_OutPtr, p_Count); 
+    }
+  };
+
    template<class VectorExtension>
    struct project_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -97,7 +121,7 @@ namespace morphstore {
          project_t_batch<VectorExtension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
 
          call_scalar_batch_project<vector_base_t_granularity::value,typename VectorExtension::base_t>::call(inDataPtr, inPosPtr, outDataPtr, remainderCount );
-          
+
          outDataCol->set_meta_data(inPosCount, inUsedBytes);
 
          return outDataCol;

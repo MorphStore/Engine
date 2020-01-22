@@ -53,34 +53,62 @@ namespace morphstore {
 
   template<int granularity, typename T, class DataStructure>
   struct call_scalar_batch_semi_join_build;
-  
+
   template<typename T, class DataStructure>
   struct call_scalar_batch_semi_join_build<64, T, DataStructure>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(      base_t *& p_InBuildDataPtr,
          size_t const p_Count,
          DataStructure & hs
         ){
-        
-        semi_join_build_batch<scalar<v64<T>>, DataStructure>::apply(p_InBuildDataPtr, p_Count, hs);  
+
+        semi_join_build_batch<scalar<v64<T>>, DataStructure>::apply(p_InBuildDataPtr, p_Count, hs);
     }
   };
-  
-  
+
+
   template<typename T, class DataStructure>
   struct call_scalar_batch_semi_join_build<32, T, DataStructure>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(   base_t *& p_InBuildDataPtr,
          size_t const p_Count,
          DataStructure & hs){
-         
+
          semi_join_build_batch<scalar<v32<T>>, DataStructure>::apply(
-               p_InBuildDataPtr, p_Count, hs); 
+               p_InBuildDataPtr, p_Count, hs);
     }
   };
-  
+
+  template<typename T, class DataStructure>
+  struct call_scalar_batch_semi_join_build<16, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(   base_t *& p_InBuildDataPtr,
+         size_t const p_Count,
+         DataStructure & hs){
+
+         semi_join_build_batch<scalar<v16<T>>, DataStructure>::apply(
+               p_InBuildDataPtr, p_Count, hs);
+    }
+  };
+
+
+  template<typename T, class DataStructure>
+  struct call_scalar_batch_semi_join_build<8, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(   base_t *& p_InBuildDataPtr,
+         size_t const p_Count,
+         DataStructure & hs){
+
+         semi_join_build_batch<scalar<v8<T>>, DataStructure>::apply(
+               p_InBuildDataPtr, p_Count, hs);
+    }
+  };
+
+
    template<
       class VectorExtension,
       class DataStructure
@@ -125,38 +153,68 @@ namespace morphstore {
 
   template<int granularity, typename T, class DataStructure>
   struct call_scalar_batch_semi_join_probe;
-  
+
   template<typename T, class DataStructure>
   struct call_scalar_batch_semi_join_probe<64, T, DataStructure>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static size_t call(     base_t *& p_InProbeDataPtr,
          size_t const p_Count,
          base_t *& p_OutPosCol,
          base_t const p_InPositionIn,
          DataStructure & hs
         ){
-        
-        return semi_join_probe_batch<scalar<v64<T>>, DataStructure>::apply(p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs);  
+
+        return semi_join_probe_batch<scalar<v64<T>>, DataStructure>::apply(p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs);
     }
   };
-  
-  
+
+
   template<typename T, class DataStructure>
   struct call_scalar_batch_semi_join_probe<32, T, DataStructure>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static size_t call(   base_t *& p_InProbeDataPtr,
          size_t const p_Count,
          base_t *& p_OutPosCol,
          base_t const p_InPositionIn,
          DataStructure & hs){
-         
+
          return semi_join_probe_batch<scalar<v32<T>>, DataStructure>::apply(
-               p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs); 
+               p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs);
     }
   };
-  
+
+   template<typename T, class DataStructure>
+   struct call_scalar_batch_semi_join_probe<16, T, DataStructure>{
+      IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static size_t call(   base_t *& p_InProbeDataPtr,
+         size_t const p_Count,
+         base_t *& p_OutPosCol,
+         base_t const p_InPositionIn,
+         DataStructure & hs){
+
+         return semi_join_probe_batch<scalar<v16<T>>, DataStructure>::apply(
+         p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs);
+      }
+   };
+
+   template<typename T, class DataStructure>
+   struct call_scalar_batch_semi_join_probe<8, T, DataStructure>{
+      IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static size_t call(   base_t *& p_InProbeDataPtr,
+         size_t const p_Count,
+         base_t *& p_OutPosCol,
+         base_t const p_InPositionIn,
+         DataStructure & hs){
+
+         return semi_join_probe_batch<scalar<v8<T>>, DataStructure>::apply(
+         p_InProbeDataPtr, p_Count, p_OutPosCol, p_InPositionIn, hs);
+      }
+   };
+
    template<
       class VectorExtension,
       class DataStructure
@@ -191,7 +249,7 @@ namespace morphstore {
          semi_join_build_batch<VectorExtension, DataStructure >::apply( inBuildDataPtr, buildVectorCount, hs );
          //semi_join_build_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply( inBuildDataPtr, buildRemainderCount, hs );
          call_scalar_batch_semi_join_build<vector_base_t_granularity::value,typename VectorExtension::base_t,DataStructure>::call(inBuildDataPtr, buildRemainderCount, hs );
-         
+
          size_t resultCount =
             semi_join_probe_batch<VectorExtension, DataStructure>::apply(
                inProbeDataPtr, probeVectorCount, outPtr, 0, hs
@@ -332,7 +390,7 @@ namespace morphstore {
          size_t const probeRemainderCount = inProbeDataCount % vector_element_count::value;
 
          equi_join_build_batch<VectorExtension, DataStructure >::apply( inBuildDataPtr, buildVectorCount, 0, hs );
-         
+
         switch (vector_base_t_granularity::value)    {
           case 64:  equi_join_build_batch<scalar<v64<base_t>>, DataStructure>::apply(
             inBuildDataPtr, buildRemainderCount, (inBuildDataPtr-startBuildDataPtr), hs);   break;

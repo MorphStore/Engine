@@ -34,9 +34,7 @@ namespace vectorlib{
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -54,9 +52,7 @@ compare_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -74,9 +70,7 @@ compare_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -97,9 +91,7 @@ compare_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -117,9 +109,7 @@ compare_simd += 1;
          typename avx2<v256<uint64_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint64_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_pd(
@@ -139,9 +129,7 @@ compare_simd += 1;
       apply(
          typename avx2<v256<uint64_t>>::mask_t const & p_mask
       ) {
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);
@@ -157,9 +145,7 @@ calc_unary_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_ps( //mm256
@@ -178,9 +164,7 @@ compare_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -199,9 +183,7 @@ compare_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -223,9 +205,7 @@ compare_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -243,9 +223,7 @@ compare_simd += 1;
          typename avx2<v256<uint32_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint32_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 32 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_ps(
@@ -265,15 +243,58 @@ compare_simd += 1;
       apply(
          typename avx2<v256<uint32_t>>::mask_t const & p_mask
       ) {
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
           return __builtin_popcount(p_mask);
         // return _mm_popcnt_u64(p_mask);
       }
    };
+
+
+///16bit
+
+   uint32_t fix_avx2_16bit_mask(uint32_t mask){
+      uint32_t realmask = 0;
+      for(int8_t x = 3; x >= 0; x--){
+         switch((mask >> 8*x)&0xff){
+            case 0x00:
+               realmask = (realmask << 4 | 0b0000); break;
+            case 0x03:
+               realmask = (realmask << 4 | 0b0001); break;
+            case 0x0C:
+               realmask = (realmask << 4 | 0b0010); break;
+            case 0x0F:
+               realmask = (realmask << 4 | 0b0011); break;
+            case 0x30:
+               realmask = (realmask << 4 | 0b0100); break;
+            case 0x33:
+               realmask = (realmask << 4 | 0b0101); break;
+            case 0x3C:
+               realmask = (realmask << 4 | 0b0110); break;
+            case 0x3F:
+               realmask = (realmask << 4 | 0b0111); break;
+            case 0xC0:
+               realmask = (realmask << 4 | 0b1000); break;
+            case 0xC3:
+               realmask = (realmask << 4 | 0b1001); break;
+            case 0xCC:
+               realmask = (realmask << 4 | 0b1010); break;
+            case 0xCF:
+               realmask = (realmask << 4 | 0b1011); break;
+            case 0xF0:
+               realmask = (realmask << 4 | 0b1100); break;
+            case 0xF3:
+               realmask = (realmask << 4 | 0b1101); break;
+            case 0xFC:
+               realmask = (realmask << 4 | 0b1110); break;
+            case 0xFF:
+               realmask = (realmask << 4 | 0b1111); break;
+         }
+      }
+      return realmask;
+   }
+
 //the 16bit functions probably won't work because they use _mm256_movemask_ps (no equivalent for 16bit)
    template<>
    struct equal<avx2<v256<uint16_t>>, 16> {
@@ -283,13 +304,11 @@ calc_unary_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx2)" );
          return
-            _mm256_movemask_ps( //mm256
-               _mm256_castsi256_ps( //Casts vector of type __m256i to type __m256
+            fix_avx2_16bit_mask(
+               _mm256_movemask_epi8( //Casts vector of type __m256i to type __m256
                   _mm256_cmpeq_epi16(p_vec1, p_vec2) //mm256i
                )
             );
@@ -304,16 +323,15 @@ compare_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (avx2)" );
          return
-            _mm256_movemask_ps(
-               _mm256_castsi256_ps(
+            fix_avx2_16bit_mask(
+               _mm256_movemask_epi8(
                   _mm256_cmpgt_epi16(p_vec2, p_vec1)
                )
             );
+
       }
    };
 
@@ -325,13 +343,11 @@ compare_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (avx2)" );
          return
-            _mm256_movemask_ps(
-               _mm256_castsi256_ps(
+            fix_avx2_16bit_mask(
+               _mm256_movemask_epi8(
                   _mm256_or_si256(
                      _mm256_cmpeq_epi16(p_vec1, p_vec2),
                      _mm256_cmpgt_epi16(p_vec2, p_vec1)
@@ -349,13 +365,11 @@ compare_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (avx2)" );
          return
-            _mm256_movemask_ps(
-               _mm256_castsi256_ps(
+            fix_avx2_16bit_mask(
+               _mm256_movemask_epi8(
                   _mm256_cmpgt_epi16(p_vec1, p_vec2)
                )
             );
@@ -369,13 +383,11 @@ compare_simd += 1;
          typename avx2<v256<uint16_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint16_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (avx2)" );
          return
-            _mm256_movemask_ps(
-               _mm256_castsi256_ps(
+            fix_avx2_16bit_mask(
+               _mm256_movemask_epi8(
                   _mm256_or_si256(
                      _mm256_cmpeq_epi16(p_vec1, p_vec2),
                      _mm256_cmpgt_epi16(p_vec1, p_vec2)
@@ -391,9 +403,7 @@ compare_simd += 1;
       apply(
          typename avx2<v256<uint16_t>>::mask_t const & p_mask
       ) {
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
           return __builtin_popcount(p_mask);
@@ -409,9 +419,7 @@ calc_unary_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: == ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -427,9 +435,7 @@ compare_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: < ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -446,9 +452,7 @@ compare_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: <= ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -469,9 +473,7 @@ compare_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: > ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -487,9 +489,7 @@ compare_simd += 1;
          typename avx2<v256<uint8_t>>::vector_t const & p_vec1,
          typename avx2<v256<uint8_t>>::vector_t const & p_vec2
       ) {
-#if tally
-compare_simd += 1;
-#endif
+         TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 8 bit integer values from two registers: >= ? (avx2)" );
          return
             _mm256_movemask_epi8(
@@ -508,9 +508,7 @@ compare_simd += 1;
       apply(
          typename avx2<v256<uint8_t>>::mask_t const & p_mask
       ) {
-#if tally
-calc_unary_simd += 1;
-#endif
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Count matches in a comparison mask (avx2)" );
          // @todo Which one is faster?
          // return __builtin_popcount(p_mask);

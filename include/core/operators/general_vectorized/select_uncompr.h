@@ -63,32 +63,60 @@ namespace morphstore {
 
   template<int granularity, typename T, template< class, int > class Operator>
   struct call_scalar_batch_select;
-  
+
   template<typename T, template< class, int > class Operator>
   struct call_scalar_batch_select<64, T, Operator>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(     base_t const *& p_DataPtr,
          base_t const p_Predicate,
          base_t *& p_OutPtr,
          size_t const p_Count,
          int startid = 0){
-         select_batch<scalar<v64<T>>, Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid); 
+         select_batch<scalar<v64<T>>, Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid);
     }
   };
-  
-  
+
+
   template<typename T, template< class, int > class Operator>
   struct call_scalar_batch_select<32, T, Operator>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
-  
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static void call(    base_t const *& p_DataPtr,
          base_t const p_Predicate,
          base_t *& p_OutPtr,
          size_t const p_Count,
          int startid = 0){
-        select_batch<scalar<v32<T>>,Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid); 
+        select_batch<scalar<v32<T>>,Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid);
+    }
+  };
+
+  template<typename T, template< class, int > class Operator>
+  struct call_scalar_batch_select<16, T, Operator>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(    base_t const *& p_DataPtr,
+         base_t const p_Predicate,
+         base_t *& p_OutPtr,
+         size_t const p_Count,
+         int startid = 0){
+        select_batch<scalar<v16<T>>,Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid);
+    }
+  };
+
+  template<typename T, template< class, int > class Operator>
+  struct call_scalar_batch_select<8, T, Operator>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    static void call(    base_t const *& p_DataPtr,
+         base_t const p_Predicate,
+         base_t *& p_OutPtr,
+         size_t const p_Count,
+         int startid = 0){
+        select_batch<scalar<v8<T>>,Operator>::apply(p_DataPtr, p_Predicate, p_OutPtr, p_Count,startid);
     }
   };
 
@@ -118,10 +146,10 @@ namespace morphstore {
          size_t const remainderCount = inDataCount % vector_element_count::value;
 
          select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-         
-                  
+
+
         call_scalar_batch_select<vector_base_t_granularity::value,typename VectorExtension::base_t, Operator>::call(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
-        
+
         size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 
          outDataCol->set_meta_data(outDataCount, outDataCount*sizeof(base_t));

@@ -29,9 +29,7 @@ namespace vectorlib{
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v256< U > >::vector_t
         rotate( avx2< v256< uint64_t > >::vector_t p_vec ) {
-#if tally
-manipulate_simd += 1;
-#endif
+            TALLY_MANIPULATE_SIMD
             trace( "[VECTOR] - Rotate vector (avx2)" );
 
             return _mm256_permute4x64_epi64(p_vec,57);
@@ -46,9 +44,7 @@ manipulate_simd += 1;
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v256< U > >::vector_t
         rotate( avx2< v256< uint32_t > >::vector_t p_vec ) {
-#if tally
-manipulate_simd += 1;
-#endif
+         TALLY_MANIPULATE_SIMD
             trace( "[VECTOR] - Rotate vector (avx2)" );
 
             return _mm256_permutevar8x32_epi32(p_vec,_mm256_set_epi32(0,7,6,5,4,3,2,1));
@@ -62,9 +58,7 @@ manipulate_simd += 1;
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v256< U > >::vector_t
         rotate( avx2< v256< uint16_t > >::vector_t p_vec ) {
-#if tally
-manipulate_simd += 1;
-#endif
+            TALLY_MANIPULATE_SIMD
             trace( "[VECTOR] - Rotate vector (avx2)" );
 
             return _mm256_set_epi16(
@@ -95,9 +89,7 @@ manipulate_simd += 1;
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename avx2< v256< U > >::vector_t
         rotate( avx2< v256< uint8_t > >::vector_t p_vec ) {
-#if tally
-manipulate_simd += 1;
-#endif
+            TALLY_MANIPULATE_SIMD
             trace( "[VECTOR] - Rotate vector (avx2)" );
 
             return _mm256_set_epi8(

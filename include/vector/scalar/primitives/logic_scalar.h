@@ -21,6 +21,7 @@ namespace vectorlib {
       static
       typename scalar<v64<T>>::vector_t
       bitwise_and( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
          return (p_In1 & p_In2 );
       }
 
@@ -28,16 +29,18 @@ namespace vectorlib {
       static
       typename scalar<v64<T>>::vector_t
       bitwise_or( typename scalar<v64<T>>::vector_t const & p_In1, typename scalar<v64<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
          return (p_In1 | p_In2 );
-      }                   
+      }
    };
-   
+
    template<typename T>
    struct logic<scalar<v32<T>>, 32> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
       typename scalar<v32<T>>::vector_t
       bitwise_and( typename scalar<v32<T>>::vector_t const & p_In1, typename scalar<v32<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
          return (p_In1 & p_In2 );
       }
 
@@ -45,6 +48,46 @@ namespace vectorlib {
       static
       typename scalar<v32<T>>::vector_t
       bitwise_or( typename scalar<v32<T>>::vector_t const & p_In1, typename scalar<v32<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
+         return (p_In1 | p_In2 );
+      }
+   };
+
+   template<typename T>
+   struct logic<scalar<v16<T>>, 16> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v16<T>>::vector_t
+      bitwise_and( typename scalar<v16<T>>::vector_t const & p_In1, typename scalar<v16<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
+         return (p_In1 & p_In2 );
+      }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v16<T>>::vector_t
+      bitwise_or( typename scalar<v16<T>>::vector_t const & p_In1, typename scalar<v16<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
+         return (p_In1 | p_In2 );
+      }
+   };
+
+
+   template<typename T>
+   struct logic<scalar<v8<T>>, 8> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v8<T>>::vector_t
+      bitwise_and( typename scalar<v8<T>>::vector_t const & p_In1, typename scalar<v8<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
+         return (p_In1 & p_In2 );
+      }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v8<T>>::vector_t
+      bitwise_or( typename scalar<v8<T>>::vector_t const & p_In1, typename scalar<v8<T>>::vector_t const & p_In2) {
+         TALLY_LOGIC_SCALAR
          return (p_In1 | p_In2 );
       }
    };

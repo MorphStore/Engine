@@ -21,6 +21,7 @@ namespace vectorlib{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 == p_vec2 );
       }
@@ -33,6 +34,7 @@ namespace vectorlib{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 < p_vec2 );
       }
@@ -45,6 +47,7 @@ namespace vectorlib{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 <= p_vec2 );
       }
@@ -58,6 +61,7 @@ namespace vectorlib{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 > p_vec2 );
       }
@@ -70,6 +74,7 @@ namespace vectorlib{
          typename scalar<v64<uint64_t>>::vector_t const & p_vec1,
          typename scalar<v64<uint64_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
          return (scalar<v64<uint64_t>>::vector_t)( p_vec1 >= p_vec2 );
       }
@@ -81,13 +86,14 @@ namespace vectorlib{
       apply(
          typename scalar<v64<uint64_t>>::mask_t const & p_mask
       ) {
+         TALLY_CALC_UNARY_SCALAR
          trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
          return p_mask;
       }
    };
 
     //start 32 bit
-    
+
   template<typename T>
    struct equal<scalar<v32<T>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -96,6 +102,7 @@ namespace vectorlib{
          typename scalar<v32<T>>::vector_t const & p_vec1,
          typename scalar<v32<T>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
          return (scalar<v32<uint32_t>>::vector_t)( p_vec1 == p_vec2 );
       }
@@ -108,6 +115,7 @@ namespace vectorlib{
          typename scalar<v32<uint32_t>>::vector_t const & p_vec1,
          typename scalar<v32<uint32_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
          return (scalar<v32<uint32_t>>::vector_t)( p_vec1 < p_vec2 );
       }
@@ -120,11 +128,11 @@ namespace vectorlib{
          typename scalar<v32<uint32_t>>::vector_t const & p_vec1,
          typename scalar<v32<uint32_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
          return (scalar<v32<uint32_t>>::vector_t)( p_vec1 <= p_vec2 );
       }
    };
-
    template<>
    struct greater<scalar<v32<uint32_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -133,6 +141,7 @@ namespace vectorlib{
          typename scalar<v32<uint32_t>>::vector_t const & p_vec1,
          typename scalar<v32<uint32_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
          return (scalar<v32<uint32_t>>::vector_t)( p_vec1 > p_vec2 );
       }
@@ -145,6 +154,7 @@ namespace vectorlib{
          typename scalar<v32<uint32_t>>::vector_t const & p_vec1,
          typename scalar<v32<uint32_t>>::vector_t const & p_vec2
       ) {
+         TALLY_COMPARE_SCALAR
          trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
          return (scalar<v32<uint32_t>>::vector_t)( p_vec1 >= p_vec2 );
       }
@@ -156,11 +166,171 @@ namespace vectorlib{
       apply(
          typename scalar<v32<T>>::mask_t const & p_mask
       ) {
+         TALLY_CALC_UNARY_SCALAR
          trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
          return p_mask;
       }
    };
+
+       //start 16 bit
+
+     template<typename T>
+      struct equal<scalar<v16<T>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v16<T>>::mask_t
+         apply(
+            typename scalar<v16<T>>::vector_t const & p_vec1,
+            typename scalar<v16<T>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
+            return (scalar<v16<uint16_t>>::vector_t)( p_vec1 == p_vec2 );
+         }
+      };
+      template<>
+      struct less<scalar<v16<uint16_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v16<uint16_t>>::mask_t
+         apply(
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec1,
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
+            return (scalar<v16<uint16_t>>::vector_t)( p_vec1 < p_vec2 );
+         }
+      };
+      template<>
+      struct lessequal<scalar<v16<uint16_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v16<uint16_t>>::mask_t
+         apply(
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec1,
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
+            return (scalar<v16<uint16_t>>::vector_t)( p_vec1 <= p_vec2 );
+         }
+      };
+      template<>
+      struct greater<scalar<v16<uint16_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v16<uint16_t>>::mask_t
+         apply(
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec1,
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
+            return (scalar<v16<uint16_t>>::vector_t)( p_vec1 > p_vec2 );
+         }
+      };
+      template<>
+      struct greaterequal<scalar<v16<uint16_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v16<uint16_t>>::mask_t
+         apply(
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec1,
+            typename scalar<v16<uint16_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
+            return (scalar<v16<uint16_t>>::vector_t)( p_vec1 >= p_vec2 );
+         }
+      };
+      template<typename T>
+      struct count_matches<scalar<v16<T>>> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static uint8_t
+         apply(
+            typename scalar<v16<T>>::mask_t const & p_mask
+         ) {
+            TALLY_CALC_UNARY_SCALAR
+            trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
+            return p_mask;
+         }
+      };
+
+      //start 8 bit
+
+      template<typename T>
+      struct equal<scalar<v8<T>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v8<T>>::mask_t
+         apply(
+            typename scalar<v8<T>>::vector_t const & p_vec1,
+            typename scalar<v8<T>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: == ? (scalar)" );
+            return (scalar<v8<uint8_t>>::vector_t)( p_vec1 == p_vec2 );
+         }
+      };
+      template<>
+      struct less<scalar<v8<uint8_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v8<uint8_t>>::mask_t
+         apply(
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec1,
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: < ? (scalar)" );
+            return (scalar<v8<uint8_t>>::vector_t)( p_vec1 < p_vec2 );
+         }
+      };
+      template<>
+      struct lessequal<scalar<v8<uint8_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v8<uint8_t>>::mask_t
+         apply(
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec1,
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: <= ? (scalar)" );
+            return (scalar<v8<uint8_t>>::vector_t)( p_vec1 <= p_vec2 );
+         }
+      };
+      template<>
+      struct greater<scalar<v8<uint8_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v8<uint8_t>>::mask_t
+         apply(
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec1,
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: > ? (scalar)" );
+            return (scalar<v8<uint8_t>>::vector_t)( p_vec1 > p_vec2 );
+         }
+      };
+      template<>
+      struct greaterequal<scalar<v8<uint8_t>>/*, 64*/> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static typename scalar<v8<uint8_t>>::mask_t
+         apply(
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec1,
+            typename scalar<v8<uint8_t>>::vector_t const & p_vec2
+         ) {
+            TALLY_COMPARE_SCALAR
+            trace( "[VECTOR] - Compare 64 bit integer values from two registers: >= ? (scalar)" );
+            return (scalar<v8<uint8_t>>::vector_t)( p_vec1 >= p_vec2 );
+         }
+      };
+      template<typename T>
+      struct count_matches<scalar<v8<T>>> {
+         MSV_CXX_ATTRIBUTE_FORCE_INLINE
+         static uint8_t
+         apply(
+            typename scalar<v8<T>>::mask_t const & p_mask
+         ) {
+            TALLY_CALC_UNARY_SCALAR
+            trace( "[VECTOR] - Count matches in a comparison mask (scalar)" );
+            return p_mask;
+         }
+      };
 }
 
 #endif /* MORPHSTORE_VECTOR_SCALAR_PRIMITIVE_COMPARE_SCALAR_H */
-

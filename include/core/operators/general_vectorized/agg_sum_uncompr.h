@@ -13,7 +13,7 @@
 namespace morphstore {
 
    using namespace vectorlib;
-   
+
    /*template<class VectorExtension>
    const column<uncompr_f> *
       agg_sum(
@@ -48,7 +48,7 @@ namespace morphstore {
       *outData=result;
       outDataCol->set_meta_data(1, sizeof(base_t));
       return outDataCol;
-   }*/  
+   }*/
 
    template<class VectorExtension>
    struct agg_sum_processing_unit {
@@ -60,7 +60,7 @@ namespace morphstore {
          state_t(base_t p_Data): resultVec(vectorlib::set1<scalar<v64<uint64_t>>,64>(p_Data)){}
          //TODO replace by set
       };
-      
+
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
          vector_t const & p_DataVector,
          state_t & p_State
@@ -72,7 +72,7 @@ namespace morphstore {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static base_t finalize(
          typename agg_sum_processing_unit<VectorExtension>::state_t & p_State
       ) {
-          
+
          return vectorlib::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
@@ -102,36 +102,60 @@ namespace morphstore {
 
   template<int granularity, typename T>
   struct call_scalar_batch_agg_sum;
-  
+
   template<typename T>
   struct call_scalar_batch_agg_sum<64, T>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static base_t call(     base_t const *& p_DataPtr,
          size_t const p_Count,
          base_t t){
          typename agg_sum_processing_unit<scalar<v64<T>>>::state_t scalarState(
          t
          );
-         return agg_sum_batch<scalar<v64<T>>>::apply(p_DataPtr, p_Count, scalarState ); 
+         return agg_sum_batch<scalar<v64<T>>>::apply(p_DataPtr, p_Count, scalarState );
     }
   };
-  
-  
+
+
   template<typename T>
   struct call_scalar_batch_agg_sum<32, T>{
     IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
-    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE
     static base_t call(    base_t const *& p_DataPtr,
          size_t const p_Count,
          base_t t){
          typename agg_sum_processing_unit<scalar<v32<T>>>::state_t scalarState(
          t
          );
-         return agg_sum_batch<scalar<v32<T>>>::apply(p_DataPtr, p_Count, scalarState ); 
+         return agg_sum_batch<scalar<v32<T>>>::apply(p_DataPtr, p_Count, scalarState );
     }
   };
-  
+
+   template<typename T>
+   struct call_scalar_batch_agg_sum<16, T>{
+      IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static base_t call(    base_t const *& p_DataPtr,
+            size_t const p_Count,
+            base_t t){
+         typename agg_sum_processing_unit<scalar<v16<T>>>::state_t scalarState(t);
+         return agg_sum_batch<scalar<v16<T>>>::apply(p_DataPtr, p_Count, scalarState );
+      }
+   };
+
+   template<typename T>
+   struct call_scalar_batch_agg_sum<8, T>{
+      IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static base_t call(    base_t const *& p_DataPtr,
+            size_t const p_Count,
+            base_t t){
+         typename agg_sum_processing_unit<scalar<v8<T>>>::state_t scalarState(t);
+         return agg_sum_batch<scalar<v8<T>>>::apply(p_DataPtr, p_Count, scalarState );
+      }
+   };
+
    template<class VectorExtension>
    struct agg_sum_t<VectorExtension, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -149,9 +173,9 @@ namespace morphstore {
 
 
          base_t result;
-        
+
          result = call_scalar_batch_agg_sum<vector_base_t_granularity::value,typename VectorExtension::base_t>::call(dataPtr, remainderCount, t );
-         
+
          auto outDataCol = new column<uncompr_f>(sizeof(base_t));
          base_t * const outData = outDataCol->get_data();
          *outData = result;
@@ -159,11 +183,10 @@ namespace morphstore {
          return outDataCol;
       }
    };
-   
- 
+
+
 }
 
 
 
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_UNCOMPR_H
-
