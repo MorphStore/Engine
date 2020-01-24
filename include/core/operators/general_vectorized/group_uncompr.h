@@ -113,6 +113,122 @@ namespace morphstore {
       }
    };
 
+   
+  template<int granularity, typename T, class DataStructure>
+  struct call_scalar_batch_group;
+  
+  template<typename T, class DataStructure>
+  struct call_scalar_batch_group<64, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v64<uint64_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v64<T>>, DataStructure>::apply(p_InDataPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_InGrPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v64<T>>, DataStructure>::apply(p_InDataPtr, p_InGrPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+  };
+  
+  template<typename T, class DataStructure>
+  struct call_scalar_batch_group<32, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v32<uint32_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v32<T>>, DataStructure>::apply(p_InDataPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_InGrPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v32<T>>, DataStructure>::apply(p_InDataPtr, p_InGrPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+  };
+  
+    template<typename T, class DataStructure>
+  struct call_scalar_batch_group<16, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v16<uint16_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v16<T>>, DataStructure>::apply(p_InDataPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_InGrPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v16<T>>, DataStructure>::apply(p_InDataPtr, p_InGrPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+  };
+  
+      template<typename T, class DataStructure>
+  struct call_scalar_batch_group<8, T, DataStructure>{
+    IMPORT_VECTOR_BOILER_PLATE(scalar<v8<uint8_t>>)
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v8<T>>, DataStructure>::apply(p_InDataPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+    MSV_CXX_ATTRIBUTE_FORCE_INLINE 
+    static size_t call(      
+         base_t *& p_InDataPtr,
+         base_t *& p_InGrPtr,
+         base_t *& p_OutGroupIdPtr,
+         base_t *& p_OutGroupExtPtr,
+         size_t const p_Count,
+         base_t & p_InPositionIn,
+         base_t & p_GroupIdIn,
+         DataStructure & hs){
+         return group_batch<scalar<v8<T>>, DataStructure>::apply(p_InDataPtr, p_InGrPtr, p_OutGroupIdPtr, p_OutGroupExtPtr, p_Count, p_InPositionIn, p_GroupIdIn, hs ); 
+    }
+  };
+  
    template<
       class VectorExtension,
       class DataStructure
@@ -159,7 +275,7 @@ namespace morphstore {
             currentGrId,
             hs
          );
-         resultCount += group_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
+         /*resultCount += group_batch<scalar<scalar_vector_view<base_t>>, DataStructure>::apply(
             inDataPtr,
             outGr,
             outExt,
@@ -167,8 +283,17 @@ namespace morphstore {
             currentPos,
             currentGrId,
             hs
-         );
+         );   */
 
+           resultCount += call_scalar_batch_group<vector_base_t_granularity::value, typename VectorExtension::base_t,DataStructure>::call( 
+            inDataPtr,
+            outGr,
+            outExt,
+            dataRemainderCount,
+            currentPos,
+            currentGrId,
+            hs);
+            
          outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
          outExtCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
 
@@ -226,7 +351,7 @@ namespace morphstore {
          );
          
 
-               resultCount += group_batch<scalar<v64<base_t>>, DataStructure>::apply(
+              /* resultCount += group_batch<scalar<v64<base_t>>, DataStructure>::apply(
                   inDataPtr,
                   inGrPtr,
                   outGr,
@@ -235,7 +360,17 @@ namespace morphstore {
                   currentPos,
                   currentGrId,
                   hs
-               ); 
+               );         */
+               
+              resultCount += call_scalar_batch_group<vector_base_t_granularity::value, typename VectorExtension::base_t,DataStructure>::call( 
+              inDataPtr,
+                  inGrPtr,
+                  outGr,
+                  outExt,
+                  dataRemainderCount,
+                  currentPos,
+                  currentGrId,
+                  hs);
                
          outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
          outExtCol->set_meta_data(resultCount, resultCount * sizeof(uint64_t));
