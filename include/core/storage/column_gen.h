@@ -133,8 +133,8 @@ const column<uncompr_f> * generate_sorted_unique_extraction(
     // If we want to select at most half of the population, then we start with
     // no values selected and select values until we have the specified number
     // of unique values. If we want to select more than half of the population,
-    // then we start with all values selected and unselect values untile we
-    // have specified number.
+    // then we start with all values selected and unselect values until we have
+    // the specified number.
     bool flip = p_CountValues > p_CountPopulation / 2;
     // If i-th bit is set, then i shall be output.
     std::vector<bool> chosen(p_CountPopulation, flip);
@@ -159,7 +159,7 @@ const column<uncompr_f> * generate_sorted_unique_extraction(
         }
     }
     
-    for(size_t i = 0; i < p_CountValues; i++)
+    for(size_t i = 0; i < p_CountPopulation; i++)
         if(chosen[i])
             *res++ = i;
     
