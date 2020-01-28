@@ -71,6 +71,87 @@ namespace morphstore {
       }
    };
 
+// Variante 1
+   //    template<
+   //    class VectorExtension
+   // >
+   // struct agg_sum_processing_unit_wit {
+   //    IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+   //    struct state_t {
+   //       vector_t m_Aggregate;
+   //       state_t(
+   //          base_t      const p_Aggregate,
+   //          size_t elements = 0
+   //       ):
+   //          m_Aggregate{ elements == 0 ? set1<VectorExtension, vector_base_t_granularity::value>( p_Aggregate ) : set1<VectorExtension, vector_base_t_granularity::value>( p_Aggregate, elements )} { }
+   //    };
+
+   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   //    static void apply(
+   //       vector_t const & p_DataVector,
+   //       state_t        & p_State,
+   //       size_t elements =  0
+   //    ) {
+   //       if(elements == 0){
+   //          p_State.m_Aggregate = add< VectorExtension, vector_base_t_granularity::value >::apply(
+   //          p_State.m_Aggregate, p_DataVector
+   //       );
+   //       } else{
+   //          p_State.m_Aggregate = add< VectorExtension, vector_base_t_granularity::value >::apply(
+   //          p_State.m_Aggregate, p_DataVector, elements
+   //       );
+   //       }
+         
+   //    }
+   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   //    static base_t finalize(
+   //       state_t        & p_State,
+   //       size_t elements
+   //    ) {
+   //       if(elements == 0){
+   //          return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate );
+   //       } else {
+   //          return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate , elements);
+
+   //       }
+   //    }
+   // };
+
+
+// Variante 2
+   //    template<
+   //    class VectorExtension
+   // >
+   // struct agg_sum_processing_unit_wit {
+   //    IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+   //    struct state_t {
+   //       vector_t m_Aggregate;
+   //       state_t(
+   //          base_t      const p_Aggregate,
+   //          size_t elements
+   //       ):
+   //          m_Aggregate{ set1<VectorExtension, vector_base_t_granularity::value>( p_Aggregate, elements ) } { }
+   //    };
+
+   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   //    static void apply(
+   //       vector_t const & p_DataVector,
+   //       state_t        & p_State,
+   //       size_t elements
+   //    ) {
+   //       p_State.m_Aggregate = add< VectorExtension, vector_base_t_granularity::value >::apply(
+   //          p_State.m_Aggregate, p_DataVector, elements
+   //       );
+   //    }
+   //    MSV_CXX_ATTRIBUTE_FORCE_INLINE
+   //    static base_t finalize(
+   //       state_t        & p_State,
+   //       size_t elements
+   //    ) {
+   //       return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate, elements );
+   //    }
+   // };
+
    template<
       class VectorExtension,
       class InFormatCol
