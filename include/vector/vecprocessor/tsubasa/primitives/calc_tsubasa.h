@@ -15,8 +15,8 @@
 #include <vector/primitives/calc.h>
 
 namespace vectorlib {
-    template<typename T>
-    struct add <tsubasa<v16384<T>> {
+    template<>
+    struct add <tsubasa<v16384<uint64_t>>> {
         template<typename T>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename tsubasa< v16384< T > >::vector_t
@@ -40,7 +40,7 @@ namespace vectorlib {
             int element_count = tsubasa<v16384<T>>::vector_helper_t::element_count::value
             )
             {
-        // TODO
+            return _vel_vsuml_vvl(p_vec1, element_count)
         }
     };
 }

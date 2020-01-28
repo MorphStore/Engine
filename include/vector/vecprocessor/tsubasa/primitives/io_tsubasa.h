@@ -18,90 +18,15 @@
 
 namespace vectorlib {
 
-
    template<typename T, int IOGranularity>
-   struct load<sse<v128<T>>,iov::ALIGNED, IOGranularity> {
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading aligned integer values into 128 Bit vector register." );
-         return _mm_load_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
-      }
-
-      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading aligned float values into 128 Bit vector register." );
-         return _mm_load_ps(reinterpret_cast< U const * >(p_DataPtr));
-      }
-
-      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading aligned double values into 128 Bit vector register." );
-         return _mm_load_pd(reinterpret_cast< U const * >(p_DataPtr));
-      }
-   };
-
-   template<typename T, int IOGranularity>
-   struct load<sse<v128<T>>,iov::STREAM, IOGranularity> {
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Stream load integer values into 128 Bit vector register." );
-         return _mm_stream_load_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
-      }
-   };
-
-   template<typename T, int IOGranularity>
-   struct load<sse<v128<T>>,iov::UNALIGNED, IOGranularity> {
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading unaligned integer values into 128 Bit vector register." );
-         return _mm_loadu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
-      }
-
-      template< typename U = T, typename std::enable_if< std::is_same< float, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading unaligned float values into 128 Bit vector register." );
-         return _mm_loadu_ps(reinterpret_cast< U const * >(p_DataPtr));
-      }
-
-      template< typename U = T, typename std::enable_if< std::is_same< double, U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading unaligned double values into 128 Bit vector register." );
-         return _mm_loadu_pd(reinterpret_cast< U const * >(p_DataPtr));
-      }
-   };
-
-   template<typename T, int IOGranularity>
-   struct load<sse<v128<T>>,iov::UNALIGNEDX, IOGranularity> {
-      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
-      MSV_CXX_ATTRIBUTE_INLINE
-      static typename sse< v128< U > >::vector_t
-      apply( U const * const p_DataPtr ) {
-         trace( "[VECTOR] - Loading unaligned integer values into 128 Bit vector register using lddqu." );
-         return _mm_lddqu_si128(reinterpret_cast<typename sse< v128< U > >::vector_t const *>(p_DataPtr));
-      }
-   };
-
-   template<typename T, int IOGranularity>
-   struct load<tsubasa<v16384<T>>, iov::ALIGNED, IOGranularity>{
+   struct io<tsubasa<v16384<T>>, iov::ALIGNED, IOGranularity>{
+      /* 64 Bit
+      */
       template<typename U = T>
       MSV_CXX_ATTRIBUTE_INLINE
       static typename tsubasa<v16384<U>>::vector_t
-      apply( U const * const p_DataPtr , int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value ) {
-         return _vel_vld_vssl(8, reinterpret_cast< U const * >(p_DataPtr), element_count);
+      load( U const * const p_DataPtr , int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value ) {
+         return _vel_vld_vssl(8, reinterpret_cast< void const * >(p_DataPtr), element_count);
       }
 
    };

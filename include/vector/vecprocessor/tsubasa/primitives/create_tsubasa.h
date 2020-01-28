@@ -16,14 +16,14 @@
 
 namespace vectorlib {
     template<typename T>
-    struct create <tsubasa<v16384<T>> {
-        template<typename T>
+    struct create <tsubasa<v16384<T>>, 64> {
+        template<typename U = T>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
-        static typename tsubasa< v16384< T > >::vector_t
-        set1(int number, int element_count = tsubasa<v16384<T>>::vector_helper_t::element_count::value){
+        static typename tsubasa< v16384< U > >::vector_t
+        set1(int number, int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value){
             return _vel_vld_vssl(0, reinterpret_cast<void*>(&number), element_count);
         }
-    }
+    };
 }
 
 
