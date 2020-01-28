@@ -39,7 +39,8 @@ namespace vectorlib{
    using vector_t MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_t; \
    using vector_size MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::size; \
    using vector_mask_t MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::mask_t; \
-   using vector_base_t_granularity MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::granularity;
+   using vector_base_t_granularity MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::vector_helper_t::granularity; \
+   using is_scalable MSV_CXX_ATTRIBUTE_PPUNUSED = typename VectorExtension::is_scalable;
 
 
 }

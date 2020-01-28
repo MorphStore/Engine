@@ -31,6 +31,8 @@
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
+
 
 #include <tuple>
 
@@ -64,6 +66,8 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
+                
+        template<typename T = t_ve, typename std::enable_if<!T::is_scalable::value, T>::type* = nullptr >
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountInLog,
@@ -83,7 +87,46 @@ namespace morphstore {
             
             p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
         }
+
+        /*Scalable
+        */
+        template<typename T = t_ve, typename std::enable_if<T::is_scalable::value, T>::type* = nullptr >
+        static void apply(
+                const uint8_t * & p_In8,
+                size_t p_CountInLog,
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
+        ) {
+            const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
+
+            if(p_CountInLog < vector_element_count::value){
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        vectorlib::load<
+                                t_ve,
+                                vectorlib::iov::ALIGNED,
+                                vector_base_t_granularity::value
+                        >(inBase, p_CountInLog),
+                        p_State,
+                        p_CountInLog
+                );
+            }
+            else {
+                for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
+                    t_op_vector<t_ve, t_extra_args ...>::apply(
+                            vectorlib::load<
+                                    t_ve,
+                                    vectorlib::iov::ALIGNED,
+                                    vector_base_t_granularity::value
+                            >(inBase + i),
+                            p_State
+                    );
+            }
+            
+            p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
+        }
     };
+
+
+
 
     // ------------------------------------------------------------------------
     // Random read

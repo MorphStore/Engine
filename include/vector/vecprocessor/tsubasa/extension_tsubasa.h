@@ -26,7 +26,7 @@ namespace vectorlib {
       using vector_t = __vr;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
       using mask_t = typename std::conditional< sizeof(T) == sizeof(int32_t) , __vm512,  __vm256>::type;
-
+      using is_scalable = std::integral_constant<bool, true>;
 
    };
 
