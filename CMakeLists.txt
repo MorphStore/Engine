@@ -87,9 +87,9 @@ IF(CTSUBASA)
 #    morph_flag(-save-temps)
 #    morph_flag(-target ve-linux)
 morph_flag(-DTSUBASA)
-#-Werror
+
 #disable for debugging	set(OPTIMIZER_FLAGS "-O3")
-	set(ANALYZE_FLAGS " -Wall -Wextra -Wno-ignored-attributes -Wno-unused-parameter -pedantic")
+	set(ANALYZE_FLAGS "-Werror -Wall -Wextra -Wno-ignored-attributes -Wno-unused-parameter -pedantic ")
 	message("Platform SX-Aurora TSUBASA")
 	set(PLATFORM "-DSXAURORA")
 	message("--- Using LLVM-VE")
@@ -109,19 +109,19 @@ morph_flag(-DTSUBASA)
 
 ENDIF(CTSUBASA)
 
-#morph_flag(-march=native)
+#disabled for tsubasa morph_flag(-march=native)
 
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
 
 # general compiler settings, meant for all subdirectories and tests
-#morph_flag(-Werror)
+morph_flag(-Werror)
 morph_flag(-pedantic)
 morph_flag(-Wall)
 morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)
 morph_flag(-Wno-comment)
-#morph_flag(-fstack-protector-all)
+#disabled for tsubasa morph_flag(-fstack-protector-all)
 morph_flag(-fno-tree-vectorize)
 
 ########### <Checking Defines
