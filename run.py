@@ -39,6 +39,7 @@ cmake_compiler_flags=[]
 cmake_compiler_flags.append("-DCMAKE_BUILD_TYPE=Debug")
 cmake_compiler_flags.append("-DNO_SELF_MANAGING=True")
 cmake_compiler_flags.append("-DCOMPILER_ID=CLANG")
+cmake_compiler_flags.append("-DCTSUBASA=True")
 compiler_dir="{}/{}".format(llvm_base_dir, llvm_version)
 cmake_clang_search_path="{}/lib/cmake/clang".format(compiler_dir)
 cmake_llvm_search_path="{}/lib/cmake/llvm".format(compiler_dir)

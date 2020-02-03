@@ -81,19 +81,47 @@ IF(CODROID)
     morph_flag(-DODROID)
 ENDIF(CODROID)
 
-morph_flag(-march=native)
+IF(CTSUBASA)
+#    morph_flag(-fno-vectorize)
+#    morph_flag(-fno-slp-vectorize)
+#    morph_flag(-save-temps)
+#    morph_flag(-target ve-linux)
+morph_flag(-DTSUBASA)
+#-Werror
+#disable for debugging	set(OPTIMIZER_FLAGS "-O3")
+	set(ANALYZE_FLAGS " -Wall -Wextra -Wno-ignored-attributes -Wno-unused-parameter -pedantic")
+	message("Platform SX-Aurora TSUBASA")
+	set(PLATFORM "-DSXAURORA")
+	message("--- Using LLVM-VE")
+	set(Clang_DIR ${CMAKE_CLANG_SEARCH_PATH})
+	set(LLVM_DIR ${CMAKE_LLVM_SEARCH_PATH})
+	message("------ Clang Dir: ${Clang_DIR}")
+	message("------ LLVM Dir : ${LLVM_DIR}")
+	find_package(LLVM REQUIRED CONFIG HINTS "${LLVM_DIR}" NO_CMAKE_FIND_ROOT_PATH)
+	find_package(Clang REQUIRED CONFIG HINTS "${Clang_DIR}" NO_CMAKE_FIND_ROOT_PATH)
+	message("------LLVM_TOOLS_BINARY_DIR : ${LLVM_TOOLS_BINARY_DIR}")
+	set(OPTIMIZER_FLAGS "${OPTIMIZER_FLAGS} -fno-vectorize -fno-slp-vectorize -save-temps")
+	set(VECTOR_PREPROCESSOR "${VECTOR_PREPROCESSOR} -DTSUBASA_LLVM")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -target ve-linux")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -target ve-linux")
+
+	add_definitions("${VECTOR_PREPROCESSOR} ${PLATFORM} ${OPTIMIZER_FLAGS} ${ANALYZE_FLAGS} -std=c++14")
+
+ENDIF(CTSUBASA)
+
+#morph_flag(-march=native)
 
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
 
 # general compiler settings, meant for all subdirectories and tests
-morph_flag(-Werror)
+#morph_flag(-Werror)
 morph_flag(-pedantic)
 morph_flag(-Wall)
 morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)
 morph_flag(-Wno-comment)
-morph_flag(-fstack-protector-all)
+#morph_flag(-fstack-protector-all)
 morph_flag(-fno-tree-vectorize)
 
 ########### <Checking Defines

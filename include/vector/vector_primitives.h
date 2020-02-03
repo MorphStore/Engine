@@ -53,6 +53,16 @@
 #  include <vector/simd/neon/primitives/manipulate_neon.h>
 #endif
 
+#ifdef TSUBASA
+#  include <vector/vecprocessor/tsubasa/primitives/calc_tsubasa.h>
+// #  include <vector/vecprocessor/tsubasa/primitives/compare_tsubasa.h>
+#  include <vector/vecprocessor/tsubasa/primitives/create_tsubasa.h>
+// #  include <vector/vecprocessor/tsubasa/primitives/extract_tsubasa.h>
+#  include <vector/vecprocessor/tsubasa/primitives/io_tsubasa.h>
+// #  include <vector/vecprocessor/tsubasa/primitives/logic_tsubasa.h>
+// #  include <vector/vecprocessor/tsubasa/primitives/manipulate_tsubasa.h>
+#endif
+
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/create_scalar.h>

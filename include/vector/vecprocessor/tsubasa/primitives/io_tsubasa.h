@@ -11,7 +11,6 @@
 
 #include <core/utils/preprocessor.h>
 #include <core/memory/mm_glob.h>
-#include <vector/simd/sse/extension_sse.h>
 #include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
 #include <vector/primitives/io.h>
 
@@ -27,6 +26,17 @@ namespace vectorlib {
       static typename tsubasa<v16384<U>>::vector_t
       load( U const * const p_DataPtr , int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value ) {
          return _vel_vld_vssl(8, reinterpret_cast< void const * >(p_DataPtr), element_count);
+      }
+
+      /* 64 Bit
+      */
+      template<typename U = T>
+      MSV_CXX_ATTRIBUTE_INLINE
+      static void
+      store( U  *  p_DataPtr , typename tsubasa<v16384<U>>::vector_t p_Vec ,int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value ) {
+
+
+         return  _vel_vst_vssl(p_Vec, 8, reinterpret_cast<void*> (p_DataPtr), element_count);
       }
 
    };

@@ -20,8 +20,8 @@ namespace vectorlib {
         template<typename U = T>
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static typename tsubasa< v16384< U > >::vector_t
-        set1(int number, int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value){
-            return _vel_vld_vssl(0, reinterpret_cast<void*>(&number), element_count);
+        set1(uint64_t number, int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value){
+            return _vel_pvbrd_vsl(number, element_count);
         }
     };
 }
