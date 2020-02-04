@@ -228,21 +228,45 @@ namespace morphstore {
             size_t const inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             base_t result = agg_sum_processing_unit_wit<VectorExtension>::finalize( witState );
             if( inSizeScalarRemainderByte ) {
+
+
                typename agg_sum_processing_unit_wit<
                   scalar<v64<uint64_t>>
                >::state_t witUncomprState(
                   result
                );
-               decompress_and_process_batch<
-                  scalar<v64<uint64_t>>,
-                  uncompr_f,
-                  agg_sum_processing_unit_wit
-               >::apply(
-                  inDataPtr,
-                  convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
-                  witUncomprState
-               );
-               result = agg_sum_processing_unit_wit<scalar<v64<uint64_t>>>::finalize( witUncomprState );
+               using extension = typename std::conditional< 
+                  std::is_same< tsubasa<v16384<base_t>> , VectorExtension >::value, VectorExtension, scalar<v64<uint64_t>>  
+                  >::type;
+
+ 
+               if(extension::is_scalable::value){
+                  decompress_and_process_batch<
+                     extension,
+                     uncompr_f,
+                     agg_sum_processing_unit_wit
+                  >::apply(
+                     inDataPtr,
+                     convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
+                     witState
+                  );
+                  result = agg_sum_processing_unit_wit<extension>::finalize( witState  );
+
+               } else {
+                  decompress_and_process_batch<
+                     scalar<v64<uint64_t>>,
+                     uncompr_f,
+                     agg_sum_processing_unit_wit
+                  >::apply(
+                     inDataPtr,
+                     convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte),
+                     witUncomprState
+                  );
+                  result = agg_sum_processing_unit_wit<scalar<v64<uint64_t>>>::finalize( witUncomprState );
+
+               }
+
+
             }
             *outPtr = result;
          }

@@ -67,7 +67,7 @@ namespace morphstore {
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
                 
-        template<typename T = t_ve, typename std::enable_if<!T::is_scalable::value, T>::type* = nullptr >
+        template<typename T = t_ve, typename std::enable_if<!(T::is_scalable::value), T>::type* = nullptr >
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountInLog,
