@@ -28,7 +28,14 @@ namespace vectorlib {
    template<class VectorExtension, iov IOVariant, int IOGranularity>
    typename VectorExtension::vector_t
    load(typename VectorExtension::base_t const * const a ) {
-       return io<VectorExtension, IOVariant, IOGranularity>::load( a );
+       return io<VectorExtension, IOVariant, IOGranularity>::load( a);
+   }
+
+   // scalable
+   template<class VectorExtension, iov IOVariant, int IOGranularity>
+   typename VectorExtension::vector_t
+   load(typename VectorExtension::base_t const * const a, int element_count  ) {
+       return io<VectorExtension, IOVariant, IOGranularity>::load( a, element_count );
    }
    
    

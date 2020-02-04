@@ -32,6 +32,8 @@
 #include <core/morphing/format.h>
 #include <core/operators/interfaces/agg_sum.h>
 
+#include <core/morphing/uncompr.h>
+
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -63,11 +65,29 @@ namespace morphstore {
             p_State.m_Aggregate, p_DataVector
          );
       }
+      // scalable
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static void apply(
+         vector_t const & p_DataVector,
+         state_t        & p_State,
+         int element_count
+      ) {
+         p_State.m_Aggregate = add< VectorExtension, vector_base_t_granularity::value >::apply(
+            p_State.m_Aggregate, p_DataVector, element_count
+         );
+      }
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static base_t finalize(
          state_t        & p_State
       ) {
          return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate );
+      }
+      // scalable
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static base_t finalize(
+         state_t        & p_State, int element_count
+      ) {
+         return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate, element_count );
       }
    };
 

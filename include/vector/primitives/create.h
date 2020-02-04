@@ -31,6 +31,13 @@ namespace vectorlib{
    set1(typename VectorExtension::base_t a){
       return create<VectorExtension, IOGranularity>::set1( a); 
    }
+
+   // scalable
+   template<class VectorExtension,  int IOGranularity>
+   typename VectorExtension::vector_t
+   set1(typename VectorExtension::base_t a, int element_count){
+      return create<VectorExtension, IOGranularity>::set1( a, element_count); 
+   }
    
     /*! Creates a vector filled with sequential numbers starting at a with step width b.
      * @todo: should be typename VectorExtension::base_t instead of int

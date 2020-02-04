@@ -1,11 +1,14 @@
 
 #include "../../include/core/memory/mm_glob.h"
 #include "../../include/core/morphing/format.h"
-#include "../../include/core/operators/scalar/agg_sum_uncompr.h"
+// #include "../../include/core/operators/scalar/agg_sum_uncompr.h"
+
 #include "../../include/core/operators/scalar/project_uncompr.h"
 #include "../../include/core/operators/scalar/select_uncompr.h"
 
 #include "../../include/core/operators/general_vectorized/agg_sum_uncompr.h"
+#include "../../include/core/operators/general_vectorized/agg_sum_compr.h"
+
 
 
 #include "../../include/core/storage/column.h"
@@ -31,7 +34,7 @@ int main( void ) {
     std::cout << "Base data generation started... ";
     std::cout.flush();
     
-    const size_t countValues = 1  * 256 + 0;
+    const size_t countValues = 1 * 1 * 1000  * 256 + 0;
     const column<uncompr_f> * const baseCol1 = generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(1, 50),
@@ -41,7 +44,7 @@ int main( void ) {
 
     std::cout << "done." << std::endl;
     std::cout.flush();
-    print_columns(print_buffer_base::decimal, baseCol1, "Test column");
+    // print_columns(print_buffer_base::decimal, baseCol1, "Test column");
     std::cout.flush();
 
 
