@@ -245,7 +245,6 @@ namespace morphstore {
    
    
    template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
-   static
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
@@ -265,7 +264,6 @@ namespace morphstore {
      
 
       template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f, class t_in_gr_f>
-   static
       const std::tuple<
          const column<uncompr_f> *,
          const column<uncompr_f> *
