@@ -22,6 +22,8 @@
 
 #include <functional>
 
+#include <iostream>
+
 namespace vectorlib{
 
 
@@ -253,49 +255,6 @@ namespace vectorlib{
 
 
 ///16bit
-
-   uint32_t fix_avx2_16bit_mask(uint32_t mask){
-      uint32_t realmask = 0;
-      for(int8_t x = 3; x >= 0; x--){
-         switch((mask >> 8*x)&0xff){
-            case 0x00:
-               realmask = (realmask << 4 | 0b0000); break;
-            case 0x03:
-               realmask = (realmask << 4 | 0b0001); break;
-            case 0x0C:
-               realmask = (realmask << 4 | 0b0010); break;
-            case 0x0F:
-               realmask = (realmask << 4 | 0b0011); break;
-            case 0x30:
-               realmask = (realmask << 4 | 0b0100); break;
-            case 0x33:
-               realmask = (realmask << 4 | 0b0101); break;
-            case 0x3C:
-               realmask = (realmask << 4 | 0b0110); break;
-            case 0x3F:
-               realmask = (realmask << 4 | 0b0111); break;
-            case 0xC0:
-               realmask = (realmask << 4 | 0b1000); break;
-            case 0xC3:
-               realmask = (realmask << 4 | 0b1001); break;
-            case 0xCC:
-               realmask = (realmask << 4 | 0b1010); break;
-            case 0xCF:
-               realmask = (realmask << 4 | 0b1011); break;
-            case 0xF0:
-               realmask = (realmask << 4 | 0b1100); break;
-            case 0xF3:
-               realmask = (realmask << 4 | 0b1101); break;
-            case 0xFC:
-               realmask = (realmask << 4 | 0b1110); break;
-            case 0xFF:
-               realmask = (realmask << 4 | 0b1111); break;
-         }
-      }
-      return realmask;
-   }
-
-//the 16bit functions probably won't work because they use _mm256_movemask_ps (no equivalent for 16bit)
    template<>
    struct equal<avx2<v256<uint16_t>>, 16> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -306,14 +265,61 @@ namespace vectorlib{
       ) {
          TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (avx2)" );
-         return
-            fix_avx2_16bit_mask(
-               _mm256_movemask_epi8( //Casts vector of type __m256i to type __m256
-                  _mm256_cmpeq_epi16(p_vec1, p_vec2) //mm256i
-               )
-            );
+         __m256i res = _mm256_cmpeq_epi16(p_vec1, p_vec2);
+
+         __m256i shift = _mm256_set_epi32(16,16,16,16,0,0,0,0);
+         __m256i vec_and = _mm256_set1_epi32(0xffff);
+         __m256i res_vec_p1 = _mm256_and_si256(
+                           _mm256_srlv_epi32(
+                              _mm256_permute4x64_epi64(res, 0b01000100)
+                              , shift
+                           ),
+                           vec_and
+                        );
+         __m256i res_vec_p2 = _mm256_and_si256(
+            _mm256_srlv_epi32(
+               _mm256_permute4x64_epi64(res, 0b11101110),
+               shift
+            ),
+            vec_and
+         );
+
+         uint16_t a = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p1, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         uint16_t b = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p2, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         return (b << 8) | a ;
       }
    };
+
 
    template<>
    struct less<avx2<v256<uint16_t>>, 16> {
@@ -325,12 +331,57 @@ namespace vectorlib{
       ) {
          TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (avx2)" );
-         return
-            fix_avx2_16bit_mask(
-               _mm256_movemask_epi8(
-                  _mm256_cmpgt_epi16(p_vec2, p_vec1)
-               )
-            );
+         __m256i shift = _mm256_set_epi32(16,16,16,16,0,0,0,0);
+         __m256i vec_and = _mm256_set1_epi32(0xffff);
+         __m256i res = _mm256_cmpgt_epi16(p_vec2, p_vec1);
+         __m256i res_vec_p1 = _mm256_and_si256(
+                           _mm256_srlv_epi32(
+                              _mm256_permute4x64_epi64(res, 0b01000100)
+                              , shift
+                           ),
+                           vec_and
+                        );
+         __m256i res_vec_p2 = _mm256_and_si256(
+            _mm256_srlv_epi32(
+               _mm256_permute4x64_epi64(res, 0b11101110),
+               shift
+            ),
+            vec_and
+         );
+
+         uint16_t a = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p1, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         uint16_t b = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p2, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         return (b << 8) | a ;
 
       }
    };
@@ -345,15 +396,61 @@ namespace vectorlib{
       ) {
          TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (avx2)" );
-         return
-            fix_avx2_16bit_mask(
-               _mm256_movemask_epi8(
-                  _mm256_or_si256(
-                     _mm256_cmpeq_epi16(p_vec1, p_vec2),
-                     _mm256_cmpgt_epi16(p_vec2, p_vec1)
-                  )
-               )
-            );
+
+         __m256i res = _mm256_or_si256(
+            _mm256_cmpeq_epi16(p_vec1, p_vec2),
+            _mm256_cmpgt_epi16(p_vec2, p_vec1)
+         );
+         __m256i shift = _mm256_set_epi32(16,16,16,16,0,0,0,0);
+         __m256i vec_and = _mm256_set1_epi32(0xffff);
+         __m256i res_vec_p1 = _mm256_and_si256(
+                           _mm256_srlv_epi32(
+                              _mm256_permute4x64_epi64(res, 0b01000100)
+                              , shift
+                           ),
+                           vec_and
+                        );
+         __m256i res_vec_p2 = _mm256_and_si256(
+            _mm256_srlv_epi32(
+               _mm256_permute4x64_epi64(res, 0b11101110),
+               shift
+            ),
+            vec_and
+         );
+
+         uint16_t a = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p1, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         uint16_t b = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p2, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         return (b << 8) | a ;
       }
    };
 
@@ -367,12 +464,58 @@ namespace vectorlib{
       ) {
          TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (avx2)" );
-         return
-            fix_avx2_16bit_mask(
-               _mm256_movemask_epi8(
-                  _mm256_cmpgt_epi16(p_vec1, p_vec2)
-               )
-            );
+
+         __m256i res = _mm256_cmpgt_epi16(p_vec1, p_vec2);
+         __m256i shift = _mm256_set_epi32(16,16,16,16,0,0,0,0);
+         __m256i vec_and = _mm256_set1_epi32(0xffff);
+         __m256i res_vec_p1 = _mm256_and_si256(
+                           _mm256_srlv_epi32(
+                              _mm256_permute4x64_epi64(res, 0b01000100)
+                              , shift
+                           ),
+                           vec_and
+                        );
+         __m256i res_vec_p2 = _mm256_and_si256(
+            _mm256_srlv_epi32(
+               _mm256_permute4x64_epi64(res, 0b11101110),
+               shift
+            ),
+            vec_and
+         );
+
+         uint16_t a = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p1, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         uint16_t b = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p2, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         return (b << 8) | a ;
       }
    };
    template<>
@@ -385,15 +528,61 @@ namespace vectorlib{
       ) {
          TALLY_COMPARE_SIMD
          trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (avx2)" );
-         return
-            fix_avx2_16bit_mask(
-               _mm256_movemask_epi8(
-                  _mm256_or_si256(
-                     _mm256_cmpeq_epi16(p_vec1, p_vec2),
-                     _mm256_cmpgt_epi16(p_vec1, p_vec2)
-                  )
-               )
-            );
+
+         __m256i res = _mm256_or_si256(
+            _mm256_cmpeq_epi16(p_vec1, p_vec2),
+            _mm256_cmpgt_epi16(p_vec1, p_vec2)
+         );
+         __m256i shift = _mm256_set_epi32(16,16,16,16,0,0,0,0);
+         __m256i vec_and = _mm256_set1_epi32(0xffff);
+         __m256i res_vec_p1 = _mm256_and_si256(
+                           _mm256_srlv_epi32(
+                              _mm256_permute4x64_epi64(res, 0b01000100)
+                              , shift
+                           ),
+                           vec_and
+                        );
+         __m256i res_vec_p2 = _mm256_and_si256(
+            _mm256_srlv_epi32(
+               _mm256_permute4x64_epi64(res, 0b11101110),
+               shift
+            ),
+            vec_and
+         );
+
+         uint16_t a = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p1, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         uint16_t b = _mm256_movemask_ps(
+                           _mm256_castsi256_ps(
+                              _mm256_slli_epi32(
+                                 _mm256_castps_si256(
+                                    _mm256_permute_ps(
+                                       _mm256_castsi256_ps(
+                                          _mm256_permute4x64_epi64(res_vec_p2, 216)
+                                       ),
+                                       216
+                                    )
+                                 ),
+                                 16
+                              )
+                           )
+                        );
+
+         return (b << 8) | a ;
       }
    };
    template<>

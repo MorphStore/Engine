@@ -21,6 +21,9 @@
 
 #include <functional>
 
+#include <iostream>
+#include <bitset>
+
 namespace vectorlib{
    template<>
    struct equal<sse<v128<uint64_t>>, 64> {
@@ -246,49 +249,7 @@ namespace vectorlib{
       }
    };
 
-//no 16 bit equivalents for _mm_movemask_pd
-uint32_t fix_sse_16bit_mask(uint32_t mask){
-   uint32_t realmask = 0;
-   for(int8_t x = 1; x >= 0; x--){
-      switch((mask >> 8*x)&0xff){
-         case 0x00:
-            realmask = (realmask << 4 | 0b0000); break;
-         case 0x03:
-            realmask = (realmask << 4 | 0b0001); break;
-         case 0x0C:
-            realmask = (realmask << 4 | 0b0010); break;
-         case 0x0F:
-            realmask = (realmask << 4 | 0b0011); break;
-         case 0x30:
-            realmask = (realmask << 4 | 0b0100); break;
-         case 0x33:
-            realmask = (realmask << 4 | 0b0101); break;
-         case 0x3C:
-            realmask = (realmask << 4 | 0b0110); break;
-         case 0x3F:
-            realmask = (realmask << 4 | 0b0111); break;
-         case 0xC0:
-            realmask = (realmask << 4 | 0b1000); break;
-         case 0xC3:
-            realmask = (realmask << 4 | 0b1001); break;
-         case 0xCC:
-            realmask = (realmask << 4 | 0b1010); break;
-         case 0xCF:
-            realmask = (realmask << 4 | 0b1011); break;
-         case 0xF0:
-            realmask = (realmask << 4 | 0b1100); break;
-         case 0xF3:
-            realmask = (realmask << 4 | 0b1101); break;
-         case 0xFC:
-            realmask = (realmask << 4 | 0b1110); break;
-         case 0xFF:
-            realmask = (realmask << 4 | 0b1111); break;
-      }
-   }
-   return realmask;
-}
 //16 bit
-
 template<>
 struct equal<sse<v128<uint16_t>>, 16> {
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -299,12 +260,22 @@ struct equal<sse<v128<uint16_t>>, 16> {
    ) {
       TALLY_COMPARE_SIMD
       trace( "[VECTOR] - Compare 16 bit integer values from two registers: == ? (sse)" );
-      return
-         fix_sse_16bit_mask(
-            _mm_movemask_epi8(
-               _mm_cmpeq_epi16(p_vec1, p_vec2)
-            )
-         );
+      __m128i res = _mm_cmpeq_epi16(p_vec1, p_vec2);
+
+       res = _mm_shuffle_epi32(res, 0b11011000);
+       res = _mm_shufflehi_epi16(res, 0b11011000);
+       res = _mm_shufflelo_epi16(res, 0b11011000);
+
+       uint16_t a = _mm_movemask_ps(
+          _mm_castsi128_ps(
+             _mm_slli_epi32(res, 16)
+          )
+       );
+       uint16_t b = _mm_movemask_ps(
+          _mm_castsi128_ps(res)
+       );
+
+       return (b<<4) | a;
    }
 };
 template<>
@@ -317,12 +288,21 @@ struct less<sse<v128<uint16_t>>, 16> {
    ) {
       TALLY_COMPARE_SIMD
       trace( "[VECTOR] - Compare 16 bit integer values from two registers: < ? (sse)" );
-      return
-         fix_sse_16bit_mask(
-            _mm_movemask_epi8(
-               _mm_cmpgt_epi16(p_vec2, p_vec1)
-            )
+         __m128i res = _mm_cmpgt_epi16(p_vec2, p_vec1);
+
+         res = _mm_shuffle_epi32(res, 0b11011000);
+         res = _mm_shufflehi_epi16(res, 0b11011000);
+         res = _mm_shufflelo_epi16(res, 0b11011000);
+
+         uint16_t a = _mm_movemask_ps(
+           _mm_castsi128_ps(
+              _mm_slli_epi32(res, 16)
+           )
          );
+         uint16_t b = _mm_movemask_ps(
+           _mm_castsi128_ps(res)
+         );
+         return (b<<4) | a;
    }
 };
 template<>
@@ -335,15 +315,25 @@ struct lessequal<sse<v128<uint16_t>>, 16> {
    ) {
       TALLY_COMPARE_SIMD
       trace( "[VECTOR] - Compare 16 bit integer values from two registers: <= ? (sse)" );
-      return
-         fix_sse_16bit_mask(
-            _mm_movemask_epi8(
-               _mm_or_si128(
-                  _mm_cmpeq_epi16(p_vec1, p_vec2),
-                  _mm_cmpgt_epi16(p_vec2, p_vec1)
-               )
-            )
-         );
+
+      __m128i res = _mm_or_si128(
+         _mm_cmpeq_epi16(p_vec1, p_vec2),
+         _mm_cmpgt_epi16(p_vec2, p_vec1)
+      );
+
+      res = _mm_shuffle_epi32(res, 0b11011000);
+      res = _mm_shufflehi_epi16(res, 0b11011000);
+      res = _mm_shufflelo_epi16(res, 0b11011000);
+
+      uint16_t a = _mm_movemask_ps(
+        _mm_castsi128_ps(
+           _mm_slli_epi32(res, 16)
+        )
+      );
+      uint16_t b = _mm_movemask_ps(
+        _mm_castsi128_ps(res)
+      );
+      return (b<<4) | a;
    }
 };
 
@@ -357,12 +347,22 @@ struct greater<sse<v128<uint16_t>>, 16> {
    ) {
       TALLY_COMPARE_SIMD
       trace( "[VECTOR] - Compare 16 bit integer values from two registers: > ? (sse)" );
-      return
-         fix_sse_16bit_mask(
-            _mm_movemask_epi8(
-               _mm_cmpgt_epi16(p_vec1, p_vec2)
-            )
-         );
+
+      __m128i res = _mm_cmpgt_epi16(p_vec1, p_vec2);
+
+      res = _mm_shuffle_epi32(res, 0b11011000);
+      res = _mm_shufflehi_epi16(res, 0b11011000);
+      res = _mm_shufflelo_epi16(res, 0b11011000);
+
+      uint16_t a = _mm_movemask_ps(
+        _mm_castsi128_ps(
+           _mm_slli_epi32(res, 16)
+        )
+      );
+      uint16_t b = _mm_movemask_ps(
+        _mm_castsi128_ps(res)
+      );
+      return (b<<4) | a;
    }
 };
 template<>
@@ -375,15 +375,24 @@ struct greaterequal<sse<v128<uint16_t>>,16> {
    ) {
       TALLY_COMPARE_SIMD
       trace( "[VECTOR] - Compare 16 bit integer values from two registers: >= ? (sse)" );
-      return
-         fix_sse_16bit_mask(
-            _mm_movemask_epi8(
-               _mm_or_si128(
-                  _mm_cmpeq_epi16(p_vec1, p_vec2),
-                  _mm_cmpgt_epi16(p_vec1, p_vec2)
-               )
-            )
-         );
+      __m128i res = _mm_or_si128(
+         _mm_cmpeq_epi16(p_vec1, p_vec2),
+         _mm_cmpgt_epi16(p_vec1, p_vec2)
+      );
+
+      res = _mm_shuffle_epi32(res, 0b11011000);
+      res = _mm_shufflehi_epi16(res, 0b11011000);
+      res = _mm_shufflelo_epi16(res, 0b11011000);
+
+      uint16_t a = _mm_movemask_ps(
+        _mm_castsi128_ps(
+           _mm_slli_epi32(res, 16)
+        )
+      );
+      uint16_t b = _mm_movemask_ps(
+        _mm_castsi128_ps(res)
+      );
+      return (b<<4) | a;
    }
 };
 template<>
