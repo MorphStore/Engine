@@ -19,6 +19,8 @@
 #include "immintrin.h"
 
 #include "vector/vector_extension_structs.h"
+#include "vector/simd/sse/extension_sse.h"
+#include "vector/simd/avx2/extension_avx2.h"
 
 namespace vectorlib{
    template<class VectorReg>
@@ -67,9 +69,9 @@ namespace vectorlib{
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v256<T>;
       using base_t = typename vector_helper_t::base_t;
-      using vector_t = typename vector_helper_t::vector_t;
+      using vector_t = typename avx2< v256< T > >::vector_t;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = typename vector_helper_t::mask_t;
+      using mask_t = typename avx2< v256< T > >::mask_t;
    };
    
    template<typename T>
@@ -77,9 +79,9 @@ namespace vectorlib{
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v128<T>;
       using base_t = typename vector_helper_t::base_t;
-      using vector_t = typename vector_helper_t::vector_t;
+      using vector_t = typename sse< v128< T > >::vector_t;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = typename vector_helper_t::mask_t;
+      using mask_t = typename sse< v128< T > >::mask_t;
    };
 }
 

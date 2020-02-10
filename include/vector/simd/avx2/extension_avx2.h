@@ -13,6 +13,7 @@
 #include "immintrin.h"
 
 #include "vector/vector_extension_structs.h"
+#include "vector/simd/sse/extension_sse.h"
 
 namespace vectorlib {
    template<class VectorReg>
@@ -61,9 +62,9 @@ namespace vectorlib {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v128<T>;
       using base_t = typename vector_helper_t::base_t;
-      using vector_t = typename vector_helper_t::vector_t;
+      using vector_t = typename sse< v128< T > >::vector_t;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = typename vector_helper_t::mask_t;
+      using mask_t = typename sse< v128< T > >::mask_t;
    };
 
 }
