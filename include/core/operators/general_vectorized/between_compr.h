@@ -107,7 +107,7 @@ namespace morphstore {
    >
 // @todo We cannot call it select or select_t at the moment, because it has
 // other requirements for t_op than the select-struct in the general interface.
-   struct my_select_wit_t {
+   struct my_between_wit_t {
       using t_ve = t_vector_extension;
       IMPORT_VECTOR_BOILER_PLATE(t_ve)
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
@@ -152,7 +152,7 @@ namespace morphstore {
          size_t outSizeComprByte;
 
          // The state of the selective_write_iterator for the compressed output.
-         typename select_processing_unit_wit<
+         typename between_processing_unit_wit<
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
             t_ve, t_compare_special_lower_ve, t_compare_special_upper_ve, t_out_pos_f
 #else
@@ -165,7 +165,7 @@ namespace morphstore {
          decompress_and_process_batch<
             t_ve,
             t_in_data_f,
-            select_processing_unit_wit,
+            between_processing_unit_wit,
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
             t_compare_special_lower_ve,
             t_compare_special_upper_ve,
@@ -201,7 +201,7 @@ namespace morphstore {
             decompress_and_process_batch<
                t_ve,
                uncompr_f,
-               select_processing_unit_wit,
+               between_processing_unit_wit,
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
                t_compare_special_lower_ve,
                t_compare_special_upper_ve,
@@ -230,14 +230,15 @@ namespace morphstore {
 
                // The state of the selective write_iterator for the
                // uncompressed output.
-               typename select_processing_unit_wit<
+               typename between_processing_unit_wit<
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
                   scalar<v64<uint64_t>>, t_compare_special_lower_sc, t_compare_special_upper_sc, uncompr_f
 #else
                   scalar<v64<uint64_t>>, t_compare_lower, t_compare_upper, uncompr_f
 #endif
                >::state_t witUncomprState(
-                  val,
+                  val_lower,
+                  val_upper,
                   outAppendUncompr,
                   inCountLogCompr + inDataSizeUncomprVecByte / sizeof(base_t)
                );
@@ -245,13 +246,13 @@ namespace morphstore {
                // Processing of the input column's uncompressed scalar rest
                // part using scalar instructions, uncompressed output.
                decompress_and_process_batch<
-               scalar<v64<uint64_t>>,
+                  scalar<v64<uint64_t>>,
                   uncompr_f,
-                  select_processing_unit_wit,
-#ifdef COMPARE_OP_AS_TEMPLATE_CLASS
+                  between_processing_unit_wit,
+#ifndef COMPARE_OP_AS_TEMPLATE_CLASS
                   t_compare_special_lower_sc, t_compare_special_upper_sc,
 #else
-                  t_compare_lower, t_compare_upper
+                  t_compare_lower, t_compare_upper,
 #endif
                   uncompr_f
                >::apply(
