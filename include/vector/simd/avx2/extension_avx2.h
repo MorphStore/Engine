@@ -36,7 +36,24 @@ namespace vectorlib {
       >::type;
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+      using mask_t =
+      typename std::conditional<
+         sizeof( T ) == 8,
+         uint8_t,
+         typename std::conditional<
+            sizeof( T ) == 4,
+            uint8_t,
+            typename std::conditional<
+               sizeof( T ) == 2,
+               uint16_t,
+               typename std::conditional<
+                  sizeof( T ) == 1,
+                  uint32_t,
+                  uint8_t
+               >::type
+            >::type
+         >::type
+      >::type;
    };
    
    template<typename T>
@@ -44,20 +61,9 @@ namespace vectorlib {
       static_assert(std::is_arithmetic<T>::value, "Base type of vector register has to be arithmetic.");
       using vector_helper_t = v128<T>;
       using base_t = typename vector_helper_t::base_t;
-	  
-      using vector_t =
-      typename std::conditional<
-         (1==1) == std::is_integral<T>::value,    // if T is integer
-         __m128i,                       //    vector register = __m128i
-         typename std::conditional<
-            (1==1) == std::is_same<float, T>::value, // else if T is float
-            __m128,                       //    vector register = __m128
-            __m128d                       // else [T == double]: vector register = __m128d
-         >::type
-      >::type;
-
+      using vector_t = typename vector_helper_t::vector_t;
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+      using mask_t = typename vector_helper_t::mask_t;
    };
 
 }

@@ -36,7 +36,24 @@ namespace vectorlib {
       >::type;
 
       using size = std::integral_constant<size_t, sizeof(vector_t)>;
-      using mask_t = uint16_t;
+      using mask_t =
+      typename std::conditional<
+         sizeof( T ) == 8,
+         uint8_t,
+         typename std::conditional<
+            sizeof( T ) == 4,
+            uint8_t,
+            typename std::conditional<
+               sizeof( T ) == 2,
+               uint8_t,
+               typename std::conditional<
+                  sizeof( T ) == 1,
+                  uint16_t,
+                  uint8_t
+               >::type
+            >::type
+         >::type
+      >::type;
    };
 
 }
