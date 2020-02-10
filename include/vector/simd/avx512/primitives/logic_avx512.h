@@ -24,6 +24,13 @@ namespace vectorlib {
 
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static
+      typename avx512<v512<uint64_t>>::mask_t
+      bitwise_and( typename avx512<v512<uint64_t>>::mask_t const & p_In1, typename avx512<v512<T>>::mask_t const & p_In2) {
+         return _kand_mask8( p_In1, p_In2 );
+      }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
       typename avx512<v512<T>>::vector_t
       bitwise_or( typename avx512<v512<T>>::vector_t const & p_In1, typename avx512<v512<T>>::vector_t const & p_In2) {
          return _mm512_or_si512( p_In1, p_In2 );
