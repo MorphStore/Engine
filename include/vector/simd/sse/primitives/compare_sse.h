@@ -21,9 +21,6 @@
 
 #include <functional>
 
-#include <iostream>
-#include <bitset>
-
 namespace vectorlib{
    template<>
    struct equal<sse<v128<uint64_t>>, 64> {

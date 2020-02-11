@@ -22,8 +22,6 @@
 
 #include <functional>
 
-#include <iostream>
-
 namespace vectorlib{
 
 
