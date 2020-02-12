@@ -319,17 +319,20 @@ const column<uncompr_f> * generate_with_outliers_and_selectivity(
         bool p_IsSorted,
         size_t p_Seed = 0
 ) {
+    const bool mainAndOutliers = p_OutlierShare > 0 && p_OutlierShare < 1;
     if(!(p_MainMin < p_MainMax))
         throw std::runtime_error(
                 "p_MainMin < p_MainMax must hold"
         );
-    if(p_OutlierShare && p_OutlierMin > p_OutlierMax)
+    if(mainAndOutliers && p_OutlierMin > p_OutlierMax)
         throw std::runtime_error(
-                "p_OutlierMin <= p_OutlierMax must hold if p_OutlierShare > 0"
+                "p_OutlierMin <= p_OutlierMax must hold if "
+                "0 < p_OutlierShare < 1"
         );
-    if(p_OutlierShare && p_MainMax >= p_OutlierMin)
+    if(mainAndOutliers && p_MainMax >= p_OutlierMin)
         throw std::runtime_error(
-                "p_MainMax < p_OutlierMin must hold if p_OutlierShare > 0"
+                "p_MainMax < p_OutlierMin must hold if"
+                "0 < p_OutlierShare < 1"
         );
     if(p_SelectedShare < 0 || p_SelectedShare > 1)
         throw std::runtime_error(

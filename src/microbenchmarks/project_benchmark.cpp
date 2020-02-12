@@ -53,6 +53,29 @@ using namespace vectorlib;
 
 
 // ****************************************************************************
+// Amendment for the format names (just for this benchmark).
+// ****************************************************************************
+// A special format name for static_vbp_f with a bit width divisible by eight
+// (byte-packing).
+
+#define SPECIALIZE_FORMATNAME_BYTEPACKING(bw) \
+    template<unsigned t_Step> \
+    std::string formatName< \
+            static_vbp_f<vbp_l<bw, t_Step> > \
+    > = "static_vbp_byte_f<vbp_l<bw, " + std::to_string(t_Step) + "> >";
+
+SPECIALIZE_FORMATNAME_BYTEPACKING( 8)
+SPECIALIZE_FORMATNAME_BYTEPACKING(16)
+SPECIALIZE_FORMATNAME_BYTEPACKING(24)
+SPECIALIZE_FORMATNAME_BYTEPACKING(32)
+SPECIALIZE_FORMATNAME_BYTEPACKING(40)
+SPECIALIZE_FORMATNAME_BYTEPACKING(48)
+SPECIALIZE_FORMATNAME_BYTEPACKING(56)
+SPECIALIZE_FORMATNAME_BYTEPACKING(64)
+
+#undef SPECIALIZE_FORMATNAME_BYTEPACKING
+
+// ****************************************************************************
 // Macros for the variants for variant_executor.
 // ****************************************************************************
 
@@ -112,6 +135,12 @@ using namespace vectorlib;
             ve, \
             SINGLE_ARG(out_data_f), \
             DEFAULT_STATIC_VBP_F(ve, inDataBw), \
+            inPosBw \
+    ), \
+    MAKE_VARIANTS_VE_OUTDATA_INDATA( \
+            ve, \
+            SINGLE_ARG(out_data_f), \
+            DEFAULT_STATIC_VBP_BYTE_F(ve, inDataBw), \
             inPosBw \
     )
 
@@ -173,6 +202,24 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     };
 }
 
+#define VG_BEGIN \
+    if(false) {/*dummy*/}
+#define VG_CASE(_inDataMaxVal, _inPosMaxVal) \
+    else if(inDataMaxVal == _inDataMaxVal && inPosMaxVal == _inPosMaxVal) \
+        variants = make_variants< \
+                varex_t, \
+                effective_bitwidth(_inDataMaxVal), \
+                effective_bitwidth(_inDataMaxVal), \
+                effective_bitwidth(_inPosMaxVal) \
+        >();
+#define VG_END \
+    else throw std::runtime_error( \
+            "unexpected combination: inDataMaxVal=" + \
+            std::to_string(inDataMaxVal) + ", inPosMaxVal=" + \
+            std::to_string(inPosMaxVal) \
+    );
+
+
 // ****************************************************************************
 // Main program.
 // ****************************************************************************
@@ -180,6 +227,10 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 int main(void) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
+    
+    // ========================================================================
+    // Creation of the variant executor.
+    // ========================================================================
     
     using varex_t = variant_executor_helper<1, 2>::type
         ::for_variant_params<std::string, std::string, std::string, std::string>
@@ -190,72 +241,174 @@ int main(void) {
             {"datasetIdx"}
     );
     
-    const size_t inDataCountFixed = 16 * 1024 * 1024;
-    const unsigned inPosMaxBwFixed = effective_bitwidth(inDataCountFixed - 1);
+    // ========================================================================
+    // Specification of the settings.
+    // ========================================================================
     
-    const uint64_t inDataMax1 = 200;
-    const uint64_t inDataMax2 = 300;
-    const uint64_t inDataMax3 = 500;
-    const unsigned inDataMaxBw1 = effective_bitwidth(inDataMax1);
-    const unsigned inDataMaxBw2 = effective_bitwidth(inDataMax2);
-    const unsigned inDataMaxBw3 = effective_bitwidth(inDataMax3);
+    const size_t inDataCountA = 128 * 1024 * 1024;
+    const size_t inDataCountB1 = 1024;
+    const size_t inDataCountB2 = 2 * 1024 * 1024;
     
-    uint64_t inDataMax;
-    double selectivity;
+    const size_t inPosCountA1 = static_cast<size_t>(inDataCountA * 0.9);
+    const size_t inPosCountA3 = static_cast<size_t>(inDataCountA * 0.01);
+    const size_t inPosCountB = 128 * 1024 * 1024;
+    
+    // @todo It would be nice to use a 64-bit value, but then, some vector-lib
+    // primitives would interpret it as a negative number. This would hurt,
+    // e.g., FOR.
+    const uint64_t largeVal = bitwidth_max<uint64_t>(63);
+    // Looks strange, but saves us from casting in the initializer list.
+    const uint64_t _0 = 0;
+    const uint64_t _7 = 7;
+    const uint64_t _63 = 63;
+    const uint64_t min47bit = bitwidth_min<uint64_t>(47);
+    const uint64_t max63bit = bitwidth_max<uint64_t>(63);
+    const uint64_t range = 100000;
+    
+    std::vector<
+            std::tuple<
+                    size_t, bool, size_t,
+                    bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+            >
+    > params;
+    
+    for(auto inCase : {
+        // Case A
+        std::make_tuple(inPosCountA1, true, inDataCountA),
+        std::make_tuple(inPosCountA3, true, inDataCountA),
+        // Case B
+        std::make_tuple(inPosCountB, false, inDataCountB1),
+        std::make_tuple(inPosCountB, false, inDataCountB2),
+    })
+        for(auto inDataCh : {
+            std::make_tuple(false, _0, _7, _0, _0, 0.0), // C0
+            std::make_tuple(false, _0, _63, _0, _0, 0.0), // C1
+            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001), // C2
+            std::make_tuple(true, min47bit, min47bit + range, _0, _0, 0.0), // C5
+            std::make_tuple(false, _0, max63bit, _0, _0, 0.0), // C6
+        }) {
+            size_t inPosCount;
+            bool inPosSorted;
+            size_t inDataCount;
+            std::tie(inPosCount, inPosSorted, inDataCount) = inCase;
+            bool inDataSorted;
+            uint64_t inDataMainMin;
+            uint64_t inDataMainMax;
+            uint64_t inDataOutlierMin;
+            uint64_t inDataOutlierMax;
+            double inDataOutlierShare;
+            std::tie(
+                    inDataSorted, inDataMainMin, inDataMainMax,
+                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+            ) = inDataCh;
+            params.push_back(std::make_tuple(
+                    inPosCount, inPosSorted,
+                    inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
+                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+            ));
+        }
+    
+    // ========================================================================
+    // Variant execution for each setting.
+    // ========================================================================
+    
+    size_t inPosCount;
+    size_t inDataCount;
+    bool inDataSorted;
+    uint64_t inDataMainMin;
+    uint64_t inDataMainMax;
+    uint64_t inDataOutlierMin;
+    uint64_t inDataOutlierMax;
+    double inDataOutlierShare;
+    bool inPosSorted;
+//    bool inPosContiguous;
     
     unsigned datasetIdx = 0;
-    for(auto params : {
-        std::make_tuple(inDataMax1, 0.9),
-        std::make_tuple(inDataMax2, 0.5),
-        std::make_tuple(inDataMax3, 0.1),
-    }) {
+    // @todo This results in a frequent regeneration of the same data (but it
+    // does not seem to be a performance issue).
+    for(auto param : params) {
         datasetIdx++;
 
-        std::tie(inDataMax, selectivity) = params;
-        size_t inPosCount = static_cast<size_t>(inDataCountFixed * selectivity);
+        std::tie(
+                inPosCount, inPosSorted, //inPosContiguous
+                inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
+                inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+        ) = param;
+        const uint64_t inDataMaxVal = std::max(inDataMainMax, inDataOutlierMax);
         
-        const unsigned inDataMaxBw = effective_bitwidth(inDataMax);
-
+        // --------------------------------------------------------------------
+        // Data generation.
+        // --------------------------------------------------------------------
+        
         varex.print_datagen_started();
-        auto inDataCol = generate_with_distr(
-                inDataCountFixed,
-                std::uniform_int_distribution<uint64_t>(0, inDataMax),
-                false
+        auto inDataCol = generate_with_outliers_and_selectivity(
+                inDataCount,
+                inDataMainMin, inDataMainMax,
+                0,
+                inDataOutlierMin, inDataOutlierMax,
+                inDataOutlierShare,
+                inDataSorted
         );
-        auto inPosCol = generate_with_distr(
-                inPosCount,
-                std::uniform_int_distribution<uint64_t>(0, inDataCountFixed - 1),
-                true
-        );
+        const column<uncompr_f> * inPosCol;
+        unsigned inPosMaxVal;
+        if(inPosSorted) {
+            // Case A
+//            if(inPosContiguous) {
+//                inPosCol = generate_sorted_unique(inPosCount);
+//                inPosMaxVal = inPosCount - 1;
+//            }
+//            else {
+                inPosCol = generate_sorted_unique_extraction(
+                        inPosCount, inDataCount
+                );
+                inPosMaxVal = inDataCount - 1;
+//            }
+        }
+        else {
+            // Case B
+            inPosCol = generate_with_distr(
+                    inPosCount,
+                    std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
+                    false
+            );
+            inPosMaxVal = inDataCount - 1;
+        }
         varex.print_datagen_done();
-
+        
+        // --------------------------------------------------------------------
+        // Variant generation.
+        // --------------------------------------------------------------------
+        
         std::vector<varex_t::variant_t> variants;
         
         // Only enumerate the maximum bit widths that might actually be
         // encountered depending on the parameters of the data generation.
         // We do not need all 64 bit widths. This greatly reduces the
         // compilation time.
-#if 0
-        switch(inDataMaxBw) {
-            case inDataMaxBw1: variants = make_variants<varex_t, inDataMaxBw1, inDataMaxBw1, inPosMaxBwFixed>(); break;
-            case inDataMaxBw2: variants = make_variants<varex_t, inDataMaxBw2, inDataMaxBw2, inPosMaxBwFixed>(); break;
-            case inDataMaxBw3: variants = make_variants<varex_t, inDataMaxBw3, inDataMaxBw3, inPosMaxBwFixed>(); break;
-            default:
-                throw std::runtime_error(
-                        "unsupported inDataMaxBw: " +
-                        std::to_string(inDataMaxBw)
-                );
-        }
-#else
-        // With if-else we do not need to think about duplicate case labels.
-             if(inDataMaxBw == inDataMaxBw1) variants = make_variants<varex_t, inDataMaxBw1, inDataMaxBw1, inPosMaxBwFixed>();
-        else if(inDataMaxBw == inDataMaxBw2) variants = make_variants<varex_t, inDataMaxBw2, inDataMaxBw2, inPosMaxBwFixed>();
-        else if(inDataMaxBw == inDataMaxBw3) variants = make_variants<varex_t, inDataMaxBw3, inDataMaxBw3, inPosMaxBwFixed>();
-        else throw std::runtime_error(
-                "unsupported inDataMaxBw: " + std::to_string(inDataMaxBw)
-        );
-#endif
-
+        VG_BEGIN
+        // Case A
+        VG_CASE(_7              , inDataCountA - 1)
+        VG_CASE(_63             , inDataCountA - 1)
+        VG_CASE(largeVal        , inDataCountA - 1)
+        VG_CASE(min47bit + range, inDataCountA - 1)
+        VG_CASE(max63bit        , inDataCountA - 1)
+        // Case B
+        VG_CASE(_7              , inDataCountB1 - 1)
+        VG_CASE(_63             , inDataCountB1 - 1)
+        VG_CASE(largeVal        , inDataCountB1 - 1)
+        VG_CASE(min47bit + range, inDataCountB1 - 1)
+        VG_CASE(max63bit        , inDataCountB1 - 1)
+        VG_CASE(_7              , inDataCountB2 - 1)
+        VG_CASE(_63             , inDataCountB2 - 1)
+        VG_CASE(largeVal        , inDataCountB2 - 1)
+        VG_CASE(min47bit + range, inDataCountB2 - 1)
+        VG_CASE(max63bit        , inDataCountB2 - 1)
+        VG_END
+        
+        // --------------------------------------------------------------------
+        // Variant execution.
+        // --------------------------------------------------------------------
+        
         varex.execute_variants(variants, datasetIdx, inDataCol, inPosCol);
 
         delete inDataCol;

@@ -189,6 +189,32 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     };
 }
 
+#define VG_BEGIN \
+    if(false) {/*dummy*/}
+#define VG_CASE(_outPosMaxVal, _inDataLKeyCount, _keyOffset, _keyFactor) \
+    else if( \
+            outPosMaxVal == _outPosMaxVal && \
+            inDataLKeyCount == _inDataLKeyCount && \
+            keyOffset == _keyOffset && \
+            keyFactor == _keyFactor \
+    ) \
+        variants = make_variants< \
+                varex_t, \
+                effective_bitwidth(_outPosMaxVal), \
+                effective_bitwidth( \
+                        _keyOffset + (_inDataLKeyCount - 1) * _keyFactor \
+                ), \
+                effective_bitwidth( \
+                        _keyOffset + (_inDataLKeyCount - 1) * _keyFactor \
+                ) \
+        >();
+#define VG_END \
+    else throw std::runtime_error( \
+            "unexpected combination: outPosMaxVal=" + \
+            std::to_string(outPosMaxVal) + ", inDataLKeyCount=" + \
+            std::to_string(inDataLKeyCount) \
+    );
+
 // ****************************************************************************
 // Main program.
 // ****************************************************************************
@@ -196,6 +222,10 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 int main(void) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
+    
+    // ========================================================================
+    // Creation of the variant executor.
+    // ========================================================================
     
     using varex_t = variant_executor_helper<1, 2, size_t>::type
         ::for_variant_params<std::string, std::string, std::string, std::string>
@@ -206,39 +236,124 @@ int main(void) {
             {"datasetIdx"}
     );
     
-    const size_t inDataRCountFixed = 16 * 1024 * 1024;
-    const unsigned outPosRMaxBwFixed = effective_bitwidth(inDataRCountFixed - 1);
+    // ========================================================================
+    // Specification of the settings.
+    // ========================================================================
     
-    const uint64_t keyCountFixed = 1024;
-    const unsigned inDataMaxBwFixed = effective_bitwidth(keyCountFixed - 1);
+    const size_t inDataRCount1 = 128 * 1024 * 1024;
+    const size_t inDataLKeyCount1 = 1024;
+    const size_t inDataLKeyCount2 = 1024 * 1024;
     
-    double selectivity;
+    const uint64_t _0 = 0;
+    const uint64_t _1 = 1;
+    const uint64_t min63bit = bitwidth_min<uint64_t>(63);
+    
+    std::vector<
+            std::tuple<size_t, double, size_t, bool, bool, uint64_t, uint64_t>
+    > params;
+    for(size_t inDataLKeyCount : {
+        inDataLKeyCount1,
+        inDataLKeyCount2,
+    })
+        for(double inDataLSel : {
+            0.01,
+            0.9,
+        })
+            for(bool inDataRSorted : {
+                false,
+//                true,
+            })
+                for(auto keyAffineTransf : {
+                    std::make_tuple(_0, _1),
+                    std::make_tuple(min63bit, _1),
+                    std::make_tuple(
+                            min63bit, (min63bit - 1) / (inDataLKeyCount - 1)
+                    ),
+                }) {
+                    uint64_t keyOffset;
+                    uint64_t keyFactor;
+                    std::tie(keyOffset, keyFactor) = keyAffineTransf;
+                    params.push_back(std::make_tuple(
+                            inDataLKeyCount, inDataLSel,
+                            inDataRCount1, inDataRSorted, false,
+                            keyOffset, keyFactor
+                    ));
+                }
+                
+    // ========================================================================
+    // Variant execution for each setting.
+    // ========================================================================
+    
+    size_t inDataLKeyCount;
+    double inDataLSel;
+    size_t inDataRCount;
+    bool inDataRSorted;
+    bool inDataRUpperHalf;
+    uint64_t keyOffset;
+    uint64_t keyFactor;
     
     unsigned datasetIdx = 0;
-    for(auto params : {
-        std::make_tuple(0.9),
-        std::make_tuple(0.5),
-        std::make_tuple(0.1),
-    }) {
+    for(auto param : params) {
         datasetIdx++;
 
-        std::tie(selectivity) = params;
-        size_t inDataLCount = static_cast<size_t>(keyCountFixed * selectivity);
+        std::tie(
+                inDataLKeyCount, inDataLSel,
+                inDataRCount, inDataRSorted, inDataRUpperHalf,
+                keyOffset, keyFactor
+        ) = param;
+        const size_t inDataLCount = static_cast<size_t>(
+                inDataLKeyCount * inDataLSel
+        );
+        const size_t outPosMaxVal = inDataRCount - 1;
+        
+        // --------------------------------------------------------------------
+        // Data generation.
+        // --------------------------------------------------------------------
 
         varex.print_datagen_started();
         auto inDataLCol = generate_sorted_unique_extraction(
-                inDataLCount, keyCountFixed
+                inDataLCount, inDataLKeyCount
         );
         auto inDataRCol = generate_with_distr(
-                inDataRCountFixed,
-                std::uniform_int_distribution<uint64_t>(0, keyCountFixed - 1),
-                false
+                inDataRCount,
+                std::uniform_int_distribution<uint64_t>(
+                        inDataRUpperHalf ? (inDataLKeyCount / 2) : 0,
+                        inDataLKeyCount - 1
+                ),
+                inDataRSorted
         );
+        if(keyOffset != 0 || keyFactor != 1) {
+            uint64_t * inDataLData = inDataLCol->get_data();
+            for(size_t i = 0; i < inDataLCount; i++)
+                inDataLData[i] = keyOffset + inDataLData[i] * keyFactor;
+            uint64_t * inDataRData = inDataRCol->get_data();
+            for(size_t i = 0; i < inDataRCount; i++)
+                inDataRData[i] = keyOffset + inDataRData[i] * keyFactor;
+        }
         varex.print_datagen_done();
+        
+        // --------------------------------------------------------------------
+        // Variant generation.
+        // --------------------------------------------------------------------
 
-        std::vector<varex_t::variant_t> variants = make_variants<
-                varex_t, outPosRMaxBwFixed, inDataMaxBwFixed, inDataMaxBwFixed
-        >();
+        std::vector<varex_t::variant_t> variants;
+        
+        // Only enumerate the maximum bit widths that might actually be
+        // encountered depending on the parameters of the data generation.
+        // We do not need all 64 bit widths. This greatly reduces the
+        // compilation time.
+        VG_BEGIN
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount1, _0, _1)
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount1, min63bit, _1)
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount1, min63bit, (min63bit - 1) / (inDataLKeyCount1 - 1))
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount2, _0, _1)
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount2, min63bit, _1)
+        VG_CASE(inDataRCount1 - 1, inDataLKeyCount2, min63bit, (min63bit - 1) / (inDataLKeyCount2 - 1))
+        VG_END
+        
+        // --------------------------------------------------------------------
+        // Variant execution.
+        // --------------------------------------------------------------------
 
         varex.execute_variants(variants, datasetIdx, inDataLCol, inDataRCol, 0);
 
