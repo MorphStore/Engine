@@ -186,5 +186,20 @@ namespace vectorlib{
              return p_data >> p_distance;
       }
    };
+   
+   /*NOTE: This primitive automatically substracts the unused bits, where a bitmask is larger than required*/
+   template<>
+   struct count_leading_zero<scalar<v64<uint64_t>>> {
+     // template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename scalar<v64<uint64_t>>::mask_t const & p_mask
+      ) {
+
+         //return __builtin_clz(p_mask)-(sizeof(p_mask)*8-scalar<v64<U>>::vector_element_count::value);
+          return __builtin_clz(p_mask)-63;
+      }
+   };
 }
 #endif //MORPHSTORE_VECTOR_SCALAR_PRIMITIVE_CALC_SCALAR_H
