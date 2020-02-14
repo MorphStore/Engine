@@ -38,6 +38,8 @@
 
 #include <cstdint>
 
+#include <iostream>
+
 namespace morphstore {
     
     // Note that the format uncompr_f is currently defined in "format.h".
@@ -98,27 +100,49 @@ namespace morphstore {
         ) {
             const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
 
-            if(p_CountInLog < vector_element_count::value){
+            std::cout << "p_CountInLog: " << p_CountInLog << std::endl;
+
+            size_t vectorCount = p_CountInLog / vector_element_count::value;
+            size_t remainderCount = p_CountInLog % vector_element_count::value;
+
+            std::cout << "vectorCount: " << vectorCount << std::endl;
+            std::cout << "remainderCount: " << remainderCount << std::endl;
+
+
+
+            for(size_t i = 0; i < vectorCount; i++)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
                         vectorlib::load<
                                 t_ve,
                                 vectorlib::iov::ALIGNED,
                                 vector_base_t_granularity::value
-                        >(inBase, p_CountInLog),
-                        p_State,
-                        p_CountInLog
+                        >(inBase + (i*vector_element_count::value) , vector_element_count::value),
+                        p_State, vector_element_count::value
                 );
-            }
-            else {
-                for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
-                    t_op_vector<t_ve, t_extra_args ...>::apply(
-                            vectorlib::load<
-                                    t_ve,
-                                    vectorlib::iov::ALIGNED,
-                                    vector_base_t_granularity::value
-                            >(inBase + i),
-                            p_State
-                    );
+
+
+            std::cout << "NachVec: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(p_State.m_Aggregate) << std::endl;
+
+
+            if(remainderCount != 0){
+                std::cout << "Rest" << std::endl;
+                for(size_t i=0; i<remainderCount; i++){
+                    std::cout << *(inBase+(vectorCount*vector_element_count::value)+i) << std::endl; 
+                }
+                vector_t reg = vectorlib::load<
+                                t_ve,
+                                vectorlib::iov::ALIGNED,
+                                vector_base_t_granularity::value
+                        >(inBase + (vectorCount*vector_element_count::value), remainderCount);
+
+
+                std::cout << "ImReg: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(reg) << std::endl;
+
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        reg,
+                        p_State,
+                        remainderCount
+                );
             }
             
             p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);

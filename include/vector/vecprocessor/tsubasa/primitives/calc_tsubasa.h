@@ -14,6 +14,8 @@
 #include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
 #include <vector/primitives/calc.h>
 
+#include <iostream>
+
 namespace vectorlib {
     template<>
     struct add <tsubasa<v16384<uint64_t>>> {
@@ -25,6 +27,7 @@ namespace vectorlib {
             int element_count = tsubasa<v16384<uint64_t>>::vector_helper_t::element_count::value
             )
             {
+            std::cout << "Addition mit: " << element_count << "Elementen" << std::endl;
             return _vel_vaddul_vvvl(p_vec1, p_vec2, element_count);
         }
     };

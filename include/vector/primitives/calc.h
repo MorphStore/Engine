@@ -56,7 +56,8 @@ namespace vectorlib{
       static
       typename VectorExtension::base_t
       apply(
-         typename VectorExtension::vector_t const & p_vec1
+         typename VectorExtension::vector_t const & p_vec1,
+         int element_count = VectorExtension::vector_helper_t::element_count::value
       ) = delete;
    };
    template<class VectorExtension, int Granularity = VectorExtension::vector_helper_t::granularity::value>
