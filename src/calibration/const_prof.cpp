@@ -46,6 +46,8 @@
 #include <tuple>
 #include <vector>
 
+#include <cstdlib>
+
 using namespace morphstore;
 using namespace vectorlib;
 
@@ -206,44 +208,46 @@ struct cache2cache_morph_t<t_vector_extension, t_dst_f, uncompr_f> {
  * @return The decompressed-again input column.
  */
 template<class t_vector_extension, class t_format>
-const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
+const column<uncompr_f> * measure_morphs(
+        const column<uncompr_f> * p_InCol, int p_RepIdx
+) {
     // This is unused iff monitoring is disabled.
     MSV_CXX_ATTRIBUTE_PPUNUSED const size_t countValues =
         p_InCol->get_count_values();
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
     auto comprCol = morph<t_vector_extension, t_format, uncompr_f>(p_InCol);
     MONITORING_END_INTERVAL_FOR(
             "runtime compr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
             
     MONITORING_START_INTERVAL_FOR(
             "runtime decompr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
     auto decomprCol = morph<t_vector_extension, uncompr_f, t_format>(comprCol);
     MONITORING_END_INTERVAL_FOR(
             "runtime decompr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
             
     MONITORING_START_INTERVAL_FOR(
             "runtime agg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
     auto sumCol = agg_sum<t_vector_extension, t_format>(comprCol);
     MONITORING_END_INTERVAL_FOR(
             "runtime agg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
             
     MONITORING_START_INTERVAL_FOR(
             "runtime compr cache2cache [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
     auto comprColCache2Cache = cache2cache_morph_t<
             t_vector_extension, t_format, uncompr_f
@@ -253,7 +257,7 @@ const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
     );
     MONITORING_END_INTERVAL_FOR(
             "runtime compr cache2cache [µs]",
-            veName<t_vector_extension>, formatName<t_format>, countValues
+            veName<t_vector_extension>, formatName<t_format>, countValues, p_RepIdx
     );
     
     if(!std::is_same<t_format, uncompr_f>::value)
@@ -292,15 +296,26 @@ const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
 // Main program.
 // ****************************************************************************
 
-int main(void) {
+int main(int argc, char ** argv) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
     
-    using varex_t = variant_executor_helper<1, 1>::type
+    if(argc != 2)
+        throw std::runtime_error(
+                "this calibration benchmark expect the number of repetitions "
+                "as its only argument"
+        );
+    const int countRepetitions = atoi(argv[1]);
+    if(countRepetitions < 1)
+        throw std::runtime_error("the number of repetitions must be >= 1");
+    
+    // @todo Actually, the repetition number should be a setting parameter.
+    // However, we need it in the variants to add more measurements.
+    using varex_t = variant_executor_helper<1, 1, int>::type
         ::for_variant_params<std::string, std::string>
         ::for_setting_params<size_t>;
     varex_t varex(
-            {},
+            {"repetition"},
             {"vector_extension", "format"},
             {"countValues"}
     );
@@ -330,7 +345,8 @@ int main(void) {
     auto origCol = generate_sorted_unique(countValues);
     varex.print_datagen_done();
 
-    varex.execute_variants(variants, countValues, origCol);
+    for(int repIdx = 1; repIdx <= countRepetitions; repIdx++)
+        varex.execute_variants(variants, countValues, origCol, repIdx);
 
     delete origCol;
     
