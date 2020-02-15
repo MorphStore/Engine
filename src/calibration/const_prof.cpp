@@ -33,6 +33,7 @@
 #include <core/morphing/for.h>
 #include <core/morphing/format.h>
 #include <core/morphing/uncompr.h>
+#include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -83,7 +84,11 @@ struct morph_batch_t<t_vector_extension, uncompr_f, empty_f> {
             MSV_CXX_ATTRIBUTE_PPUNUSED uint8_t * & out8,
             MSV_CXX_ATTRIBUTE_PPUNUSED size_t countLog
     ) {
-        // Do nothing.
+        // Useless, but we need to store something to the output buffer,
+        // otherwise the compiler may have problems compiling delta_f with
+        // empty_f, since it assumes the cascade's internal buffer to be
+        // uninitialized.
+        *out8 = 0x49;
     }
 };
 
@@ -109,6 +114,85 @@ std::string formatName<delta_f<t_BlockSizeLog, t_Step, empty_f> > =
 template<size_t t_BlockSizeLog, size_t t_PageSizeBlocks>
 std::string formatName<for_f<t_BlockSizeLog, t_PageSizeBlocks, empty_f> > =
         "for_f<" + std::to_string(t_PageSizeBlocks) + ">";
+
+
+// ****************************************************************************
+// Variant of the morph-operator simulating the use on the output side of
+// on-the-fly de/re-compression at the block-granularity.
+// ****************************************************************************
+
+// ----------------------------------------------------------------------------
+// Interface
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief A variant of the morph-operator simulating the output side of
+ * on-the-fly de/re-compression at the block-granularity, where data is read
+ * from the internal buffer of a write-iterator and written to the internal
+ * buffer of a cascade, for logical-level algorithms.
+ * 
+ * That is, data must effectively be read from cache and written to cache.
+ */
+template<class t_vector_extension, class t_dst_f, class t_src_f>
+struct cache2cache_morph_t {
+    /**
+     * 
+     * @param p_InCol
+     * @param p_BufferCountValues The number of data elements in the internal
+     * buffer of the assumed write-iterator.
+     * @return 
+     */
+    static const column<t_dst_f> * apply(
+            const column<t_src_f> * p_InCol, size_t p_BufferCountValues
+    ) = delete;
+};
+
+// ----------------------------------------------------------------------------
+// Compression
+// ----------------------------------------------------------------------------
+
+template<class t_vector_extension, class t_dst_f>
+struct cache2cache_morph_t<t_vector_extension, t_dst_f, uncompr_f> {
+    static const column<t_dst_f> * apply(
+            const column<uncompr_f> * p_InCol, size_t p_BufferCountValues
+    ) {
+        const size_t srcCountValues = p_InCol->get_count_values();
+        
+        if(srcCountValues % p_BufferCountValues)
+            throw std::runtime_error(
+                    "cache2cache_morph_t compression: the number of data "
+                    "elements in the input column must be a multiple of the "
+                    "assumed number of data elements in the buffer"
+            );
+        if(p_BufferCountValues % t_dst_f::m_BlockSize)
+            throw std::runtime_error(
+                    "cache2cache_morph_t compression: the assumed number of "
+                    "data elements in the buffer must be a multiple of the "
+                    "destination format's block size"
+            );
+        
+        auto outCol = new column<t_dst_f>(
+                t_dst_f::get_size_max_byte(p_BufferCountValues)
+        );
+        uint8_t * outData = outCol->get_data();
+        uint8_t * const initOutData = outData;
+        
+        // Both, the input pointer and the output pointer are re-used for all
+        // blocks to achieve reading from and writing to the cache all the time.
+        size_t countCompressed = 0;
+        while(countCompressed < srcCountValues) {
+            const uint8_t * inData = p_InCol->get_data();
+            outData = initOutData;
+            morph_batch<t_vector_extension, t_dst_f, uncompr_f>(
+                    inData, outData, p_BufferCountValues
+            );
+            countCompressed += p_BufferCountValues;
+        }
+        
+        outCol->set_meta_data(p_BufferCountValues, outData - initOutData);
+        return outCol;
+    }
+};
 
 
 // ****************************************************************************
@@ -146,9 +230,36 @@ const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
             "runtime decompr [µs]",
             veName<t_vector_extension>, formatName<t_format>, countValues
     );
+            
+    MONITORING_START_INTERVAL_FOR(
+            "runtime agg [µs]",
+            veName<t_vector_extension>, formatName<t_format>, countValues
+    );
+    auto sumCol = agg_sum<t_vector_extension, t_format>(comprCol);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime agg [µs]",
+            veName<t_vector_extension>, formatName<t_format>, countValues
+    );
+            
+    MONITORING_START_INTERVAL_FOR(
+            "runtime compr cache2cache [µs]",
+            veName<t_vector_extension>, formatName<t_format>, countValues
+    );
+    auto comprColCache2Cache = cache2cache_morph_t<
+            t_vector_extension, t_format, uncompr_f
+    >::apply(
+            p_InCol,
+            write_iterator_base<t_vector_extension, t_format>::m_CountBuffer
+    );
+    MONITORING_END_INTERVAL_FOR(
+            "runtime compr cache2cache [µs]",
+            veName<t_vector_extension>, formatName<t_format>, countValues
+    );
     
     if(!std::is_same<t_format, uncompr_f>::value)
         delete comprCol;
+    delete sumCol;
+    delete comprColCache2Cache;
     
     return decomprCol;
 }

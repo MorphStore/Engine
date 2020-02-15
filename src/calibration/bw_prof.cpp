@@ -33,6 +33,7 @@
 #include <core/morphing/uncompr.h>
 #include <core/morphing/vbp.h>
 #include <core/morphing/format_names.h> // Must be included after all formats.
+#include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -59,7 +60,8 @@ using namespace vectorlib;
 // ****************************************************************************
 
 /**
- * @brief Measures the compression and decompression time as well as the
+ * @brief Measures the compression, decompression, and aggregation
+ * (decompression without storing the decompressed data) time as well as the
  * compressed size for the specified format.
  * @param p_InCol The column to be compressed and decompressed.
  * @return The decompressed-again input column.
@@ -100,9 +102,20 @@ const column<uncompr_f> * measure_morphs(const column<uncompr_f> * p_InCol) {
             "runtime decompr [µs]",
             veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
     );
+            
+    MONITORING_START_INTERVAL_FOR(
+            "runtime agg [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
+    auto sumCol = agg_sum<t_vector_extension, t_format>(comprCol);
+    MONITORING_END_INTERVAL_FOR(
+            "runtime agg [µs]",
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues
+    );
     
     if(!std::is_same<t_format, uncompr_f>::value)
         delete comprCol;
+    delete sumCol;
     
     return decomprCol;
 }
@@ -251,7 +264,7 @@ int main(void) {
 
         varex.execute_variants(variants, bw, countValues, origCol);
 
-//            delete origCol;
+//        delete origCol;
     }
     
     varex.done();
