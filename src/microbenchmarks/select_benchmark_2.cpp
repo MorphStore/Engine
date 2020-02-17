@@ -316,6 +316,7 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 
 #define VG_BEGIN \
     if(false) {/*dummy*/}
+// @todo This should be effective_bitwidth(_inDataCount - 1).
 #define VG_CASE(_inDataCount, _inDataMax) \
     else if(inDataCount == _inDataCount && inDataMax == _inDataMax) \
         variants = make_variants< \
@@ -379,25 +380,33 @@ int main(void) {
         uint64_t outlierMin;
         uint64_t outlierMax;
         double outlierShare;
+        MSV_CXX_ATTRIBUTE_PPUNUSED bool inDataAssumedUnique;
         
         for(auto params : {
             // Unsorted, small numbers, no outliers -> good for static_vbp.
-            std::make_tuple(false, _0, _63, _0, _0, 0.0),
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false),
             // Unsorted, small numbers, very rare outliers -> good for dynamic_vbp.
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001),
+            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001, false),
             // Unsorted, huge numbers in narrow range, no outliers -> good for for+dynamic_vbp.
-            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0),
+            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false),
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, _0, range, _0, _0, 0.0),
+            std::make_tuple(true, _0, range, _0, _0, 0.0, false),
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, min48bit, min48bit + range, _0, _0, 0.0),
+            std::make_tuple(true, min48bit, min48bit + range, _0, _0, 0.0, false),
             // Unsorted, random numbers -> good for nothing/uncompr.
-            std::make_tuple(false, _0, bitwidth_max<uint64_t>(63), _0, _0, 0.0),
+            std::make_tuple(false, _0, bitwidth_max<uint64_t>(63), _0, _0, 0.0, true),
         }) {
             datasetIdx++;
             
-            std::tie(isSorted, mainMin, mainMax, outlierMin, outlierMax, outlierShare) = params;
-            const uint64_t inDataMax = std::max(mainMax, outlierMax);
+            std::tie(
+                    isSorted,
+                    mainMin, mainMax,
+                    outlierMin, outlierMax,
+                    outlierShare,
+                    inDataAssumedUnique
+            ) = params;
+            MSV_CXX_ATTRIBUTE_PPUNUSED const uint64_t inDataMax = \
+                    std::max(mainMax, outlierMax);
 
 #ifdef SELECT_BENCHMARK_2_TIME
             varex.print_datagen_started();
@@ -451,8 +460,9 @@ int main(void) {
             MONITORING_ADD_INT_FOR("param_outlierMax", outlierMax, datasetIdx);
             
             // The maximum bit widths as used for static_vbp_f.
-            MONITORING_ADD_INT_FOR("inMaxBw", inMaxBw, datasetIdx);
-            MONITORING_ADD_INT_FOR("outMaxBw", outMaxBw, datasetIdx);
+            MONITORING_ADD_INT_FOR("inMaxBw", effective_bitwidth(inDataMax), datasetIdx);
+            // @todo This should be effective_bitwidth(inDataCount - 1).
+            MONITORING_ADD_INT_FOR("outMaxBw", effective_bitwidth(inDataCount), datasetIdx);
             
             // Data characteristics of the input data column.
             std::cerr << std::endl << "analyzing input data column... ";
@@ -462,7 +472,7 @@ int main(void) {
                     datasetIdx
             );
             MONITORING_ADD_DATAPROPERTIES_FOR(
-                    "inData", data_properties(inDataCol, false), datasetIdx
+                    "inData_", data_properties(inDataCol, inDataAssumedUnique), datasetIdx
             );
             std::cerr << "done." << std::endl;
             
@@ -481,7 +491,7 @@ int main(void) {
                     datasetIdx
             );
             MONITORING_ADD_DATAPROPERTIES_FOR(
-                    "outPos", data_properties(inDataCol, false), datasetIdx
+                    "outPos_", data_properties(outPosCol, true), datasetIdx
             );
             std::cerr << "done." << std::endl << std::endl;
             
