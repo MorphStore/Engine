@@ -30,6 +30,7 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/static_vbp.h>
 #include <core/morphing/k_wise_ns.h>
 #include <core/morphing/uncompr.h>
 #include <core/morphing/format_names.h> // Must be included after all formats.
@@ -251,17 +252,23 @@ const column<uncompr_f> * measure_morphs(
 
 template<class t_varex_t, unsigned t_Bw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
+    // Although static_vbp_f is not intended to be used in cascades, we need
+    // its profile anyway for the operator cost model.
     return {
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>), t_Bw),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>), t_Bw),
 #ifdef SSE
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>), t_Bw),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>), t_Bw),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>), t_Bw),
 #endif
 #ifdef AVXTWO
         MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>), t_Bw),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>), t_Bw),
 #endif
 #ifdef AVX512
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>), t_Bw),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>), t_Bw),
 #endif
     };
 }

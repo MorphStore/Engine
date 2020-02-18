@@ -16,4 +16,10 @@ if( BUILD_ALL OR BUILD_CALIB )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( const_prof PRIVATE "-ldl" )
+
+    add_executable( uncompr uncompr.cpp )
+    target_compile_options( uncompr PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( uncompr PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_CALIB )
