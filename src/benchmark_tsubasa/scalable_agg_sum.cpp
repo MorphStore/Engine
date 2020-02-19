@@ -26,6 +26,8 @@
 
 #include <math.h>
 
+#include <chrono>
+
 using namespace morphstore;
 using namespace vectorlib;
 
@@ -81,12 +83,15 @@ void execute_query(const column<uncompr_f> * const testdata){
    using ve = tsubasa<v16384<uint64_t> >;
 
    std::ofstream resultfile;
-   resultfile.open("/home/mundt/Results/results.csv", std::ofstream::out | std::ofstream::app);
-   resultfile << "Size in MiB" << "," << "Duration in ms" << "," << "Size of column in kiB" <<"\n"; 
+   resultfile.open("/home/mundt/Results/results_2.csv", std::ofstream::out | std::ofstream::app);
+   // resultfile << "Size_in_MiB" << "," << "Duration_in_ms" << "," << "Size_in_kiB" << "," << "Scalable" "\n"; 
 
    uint64_t result = 0;
 
-   const size_t inner = 1;
+   const size_t inner = 10;
+
+   const size_t outer = 20;
+
 
    const column <uncompr_f> * results [inner+1];
 
@@ -96,8 +101,11 @@ void execute_query(const column<uncompr_f> * const testdata){
    results[0] = morphstore::agg_sum<ve, uncompr_f>(testdata);
 
 
-   for (int i =0; i < 5; i++){
+   for (size_t i =0; i < outer; i++){
    
+
+      std::cout << "Start Benchmarking" << std::endl;
+      // auto begin = std::chrono::system_clock::now();
       uint64_t start = now();
       for(size_t j=0; j<inner; j++){
          // results[j+1] = morphstore::agg_sum<scalar<v64<uint64_t>>, uncompr_f>(testdata);
@@ -106,18 +114,27 @@ void execute_query(const column<uncompr_f> * const testdata){
       }
 
       double duration = time_elapsed_ns(start, now())/inner;
+      // auto end = std::chrono::system_clock::now();
+      // std::chrono::duration<double, std::milli> elapsed_seconds = end-begin;
+      // std::cout << "End Benchmarking"  << std::endl;
+      // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
+      // std::cout << elapsed_seconds.count() << std::endl;
+      // std::cout << duration << std::endl;
+
+
+
 
 
       for(size_t j=0; j<inner; j++){
          const uint8_t  * column_ptr = results[j+1]->get_data();
          const uint64_t * result_ptr = reinterpret_cast<const uint64_t  *> (column_ptr);
 
-         std::cout << "Ergebnis: " << (*result_ptr) << std::endl;
+         // std::cout << "Ergebnis: " << (*result_ptr) << std::endl;
          result |= (*result_ptr);
          
          delete results[j+1];
       }
-      resultfile << ((testdata->get_count_values()  *8) >> 20) << "," << duration/1000000 << "," << (testdata->get_size_used_byte() >> 10)  << "\n"; 
+      resultfile << ((testdata->get_count_values()  *8) >> 20) << "," << duration/1000000 << "," << (testdata->get_size_used_byte() >> 10)  << "," << "yes" << "\n"; 
    } 
 
    delete results[0];
@@ -136,10 +153,10 @@ void execute_query(const column<uncompr_f> * const testdata){
 }
 
 void execute_benchmark(){
-   // std::vector<size_t> testDataSizes {1_MB, 2_MB, 4_MB, 8_MB, 16_MB, 32_MB, 64_MB, 128_MB, 256_MB, 512_MB, 1_GB, 2_GB};
-   std::vector<size_t> testDataSizes {4_KB};
+   std::vector<size_t> testDataSizes { 16_MB, 32_MB, 64_MB, 128_MB, 256_MB, 512_MB, 1_GB, 2_GB};
+   // std::vector<size_t> testDataSizes {1_MB, 2_MB, 4_MB, 8_MB};
 
-   // std::vector<size_t> testDataSizes {16_KB, 32_KB, 64_KB, 128_KB, 256_KB, 512_KB};
+   // std::vector<size_t> testDataSizes {16_KB, 32_KB, 64_KB, 128_KB, 256_KB, 512_KB, 1_MB, 2_MB, 4_MB, 8_MB};
 
    for(const size_t& testsize: testDataSizes){
 
@@ -157,7 +174,7 @@ void execute_benchmark(){
       std::cout.flush();
 
 
-      size_t countValues = (testsize >> 3) + 10; // count = size in Byte divided by sizeof base-type
+      size_t countValues = (testsize >> 3) + 255; // count = size in Byte divided by sizeof base-type
 
       const column<uncompr_f> *  baseCol = generate_with_distr(
       countValues,
