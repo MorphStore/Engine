@@ -27,6 +27,7 @@
 #ifndef MORPHSTORE_CORE_MORPHING_DEFAULT_FORMATS_H
 #define MORPHSTORE_CORE_MORPHING_DEFAULT_FORMATS_H
 
+#include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 
 namespace morphstore {
@@ -34,6 +35,14 @@ namespace morphstore {
 #define DEFAULT_STATIC_VBP_F(ve, bw) \
     SINGLE_ARG(static_vbp_f< \
             vbp_l<bw, ve::vector_helper_t::element_count::value> \
+    >)
+    
+#define DEFAULT_STATIC_VBP_BYTE_F(ve, bw) \
+    SINGLE_ARG(static_vbp_f< \
+            vbp_l< \
+                    round_up_to_multiple(bw, bitsPerByte), \
+                    ve::vector_helper_t::element_count::value \
+            > \
     >)
 
 #define DEFAULT_DYNAMIC_VBP_F(ve) \

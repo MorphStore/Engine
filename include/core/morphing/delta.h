@@ -383,6 +383,7 @@ namespace morphstore {
         
         uint8_t * m_Out;
         const uint8_t * const m_InitOut;
+    public:
         // The largest multiple of the format's block size which is not smaller
         // than 2048 logical data elements respectively 16ki bytes of
         // uncompressed data.
@@ -390,6 +391,7 @@ namespace morphstore {
         static const size_t m_CountBuffer = round_up_to_multiple(
                 t_format::m_BlockSize, 2048
         );
+    private:
         // @todo We could also align it to a cache line.
         MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
                 m_CountBuffer + vector_element_count::value - 1

@@ -55,6 +55,7 @@
 #endif
 #include <core/morphing/format_names.h> // Must be included after all formats.
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -131,6 +132,7 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     );
     
     
+#if 0
     // 2) Decompression, select-operator on uncompressed data, recompression.
     
     MONITORING_START_INTERVAL_FOR(
@@ -206,6 +208,7 @@ const column<t_out_pos_f> * measure_select_and_morphs(
     );
     
     delete sumCol;
+#endif
     
     
     return outPosColCompr;
@@ -311,6 +314,23 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     };
 }
 
+#define VG_BEGIN \
+    if(false) {/*dummy*/}
+// @todo This should be effective_bitwidth(_inDataCount - 1).
+#define VG_CASE(_inDataCount, _inDataMax) \
+    else if(inDataCount == _inDataCount && inDataMax == _inDataMax) \
+        variants = make_variants< \
+                varex_t, \
+                effective_bitwidth(_inDataCount), \
+                effective_bitwidth(_inDataMax) \
+        >();
+#define VG_END \
+    else throw std::runtime_error( \
+            "unexpected combination: inDataCount=" + \
+            std::to_string(inDataCount) + ", inDataMax=" + \
+            std::to_string(inDataMax) \
+    );
+
 #endif
 
 // ****************************************************************************
@@ -321,8 +341,7 @@ int main(void) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
     
-    const size_t countValues = 128 * 1024 * 1024;
-    const unsigned outMaxBw = effective_bitwidth(countValues - 1);
+    const size_t inDataCount = 128 * 1024 * 1024;
     
 #ifdef SELECT_BENCHMARK_2_TIME
     // The datasetIdx is actually a setting parameter, but we need to model it
@@ -346,18 +365,14 @@ int main(void) {
     // Looks strange, but saves us from casting in the initializer list.
     const uint64_t _0 = 0;
     const uint64_t _63 = 63;
+    const uint64_t min48bit = bitwidth_min<uint64_t>(48);
+    const uint64_t min63bit = bitwidth_min<uint64_t>(63);
+    const uint64_t range = 100000;
     
     unsigned datasetIdx = 0;
     for(float selectedShare : {
-        0.00001,
-        0.0001,
-        0.001,
         0.01,
-        0.1,
-        0.25,
-        0.5,
-        0.75,
-        0.9
+        0.9,
     }) {
         bool isSorted;
         uint64_t mainMin;
@@ -365,25 +380,33 @@ int main(void) {
         uint64_t outlierMin;
         uint64_t outlierMax;
         double outlierShare;
+        MSV_CXX_ATTRIBUTE_PPUNUSED bool inDataAssumedUnique;
         
         for(auto params : {
             // Unsorted, small numbers, no outliers -> good for static_vbp.
-            std::make_tuple(false, _0, _63, _0, _0, 0.0),
-            // Unsorted, small numbers, many huge outliers -> good for k_wise_ns.
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.1),
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false),
             // Unsorted, small numbers, very rare outliers -> good for dynamic_vbp.
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001),
+            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001, false),
             // Unsorted, huge numbers in narrow range, no outliers -> good for for+dynamic_vbp.
-            std::make_tuple(false, bitwidth_min<uint64_t>(63), bitwidth_min<uint64_t>(63) + 63, _0, _0, 0.0),
+            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false),
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, _0, bitwidth_max<uint64_t>(24), _0, _0, 0.0),
+            std::make_tuple(true, _0, range, _0, _0, 0.0, false),
+            // Sorted, large numbers -> good for delta+dynamic_vbp.
+            std::make_tuple(true, min48bit, min48bit + range, _0, _0, 0.0, false),
             // Unsorted, random numbers -> good for nothing/uncompr.
-            std::make_tuple(false, _0, bitwidth_min<uint64_t>(63), _0, _0, 0.0),
+            std::make_tuple(false, _0, bitwidth_max<uint64_t>(63), _0, _0, 0.0, true),
         }) {
             datasetIdx++;
             
-            std::tie(isSorted, mainMin, mainMax, outlierMin, outlierMax, outlierShare) = params;
-            const unsigned inMaxBw = effective_bitwidth((outlierShare > 0) ? outlierMax : mainMax);
+            std::tie(
+                    isSorted,
+                    mainMin, mainMax,
+                    outlierMin, outlierMax,
+                    outlierShare,
+                    inDataAssumedUnique
+            ) = params;
+            MSV_CXX_ATTRIBUTE_PPUNUSED const uint64_t inDataMax = \
+                    std::max(mainMax, outlierMax);
 
 #ifdef SELECT_BENCHMARK_2_TIME
             varex.print_datagen_started();
@@ -391,7 +414,7 @@ int main(void) {
             std::cerr << "generating input data column... ";
 #endif
             auto inDataCol = generate_with_outliers_and_selectivity(
-                    countValues,
+                    inDataCount,
                     mainMin, mainMax,
                     selectedShare,
                     outlierMin, outlierMax, outlierShare,
@@ -401,75 +424,19 @@ int main(void) {
             varex.print_datagen_done();
             
             std::vector<varex_t::variant_t> variants;
-            switch(inMaxBw) {
-                // Generated with python:
-                // for bw in range(1, 64+1):
-                //   print("case {: >2}: variants = make_variants<varex_t, outMaxBw, {: >2}>(); break;".format(bw, bw))
-                case  1: variants = make_variants<varex_t, outMaxBw,  1>(); break;
-                case  2: variants = make_variants<varex_t, outMaxBw,  2>(); break;
-                case  3: variants = make_variants<varex_t, outMaxBw,  3>(); break;
-                case  4: variants = make_variants<varex_t, outMaxBw,  4>(); break;
-                case  5: variants = make_variants<varex_t, outMaxBw,  5>(); break;
-                case  6: variants = make_variants<varex_t, outMaxBw,  6>(); break;
-                case  7: variants = make_variants<varex_t, outMaxBw,  7>(); break;
-                case  8: variants = make_variants<varex_t, outMaxBw,  8>(); break;
-                case  9: variants = make_variants<varex_t, outMaxBw,  9>(); break;
-                case 10: variants = make_variants<varex_t, outMaxBw, 10>(); break;
-                case 11: variants = make_variants<varex_t, outMaxBw, 11>(); break;
-                case 12: variants = make_variants<varex_t, outMaxBw, 12>(); break;
-                case 13: variants = make_variants<varex_t, outMaxBw, 13>(); break;
-                case 14: variants = make_variants<varex_t, outMaxBw, 14>(); break;
-                case 15: variants = make_variants<varex_t, outMaxBw, 15>(); break;
-                case 16: variants = make_variants<varex_t, outMaxBw, 16>(); break;
-                case 17: variants = make_variants<varex_t, outMaxBw, 17>(); break;
-                case 18: variants = make_variants<varex_t, outMaxBw, 18>(); break;
-                case 19: variants = make_variants<varex_t, outMaxBw, 19>(); break;
-                case 20: variants = make_variants<varex_t, outMaxBw, 20>(); break;
-                case 21: variants = make_variants<varex_t, outMaxBw, 21>(); break;
-                case 22: variants = make_variants<varex_t, outMaxBw, 22>(); break;
-                case 23: variants = make_variants<varex_t, outMaxBw, 23>(); break;
-                case 24: variants = make_variants<varex_t, outMaxBw, 24>(); break;
-                case 25: variants = make_variants<varex_t, outMaxBw, 25>(); break;
-                case 26: variants = make_variants<varex_t, outMaxBw, 26>(); break;
-                case 27: variants = make_variants<varex_t, outMaxBw, 27>(); break;
-                case 28: variants = make_variants<varex_t, outMaxBw, 28>(); break;
-                case 29: variants = make_variants<varex_t, outMaxBw, 29>(); break;
-                case 30: variants = make_variants<varex_t, outMaxBw, 30>(); break;
-                case 31: variants = make_variants<varex_t, outMaxBw, 31>(); break;
-                case 32: variants = make_variants<varex_t, outMaxBw, 32>(); break;
-                case 33: variants = make_variants<varex_t, outMaxBw, 33>(); break;
-                case 34: variants = make_variants<varex_t, outMaxBw, 34>(); break;
-                case 35: variants = make_variants<varex_t, outMaxBw, 35>(); break;
-                case 36: variants = make_variants<varex_t, outMaxBw, 36>(); break;
-                case 37: variants = make_variants<varex_t, outMaxBw, 37>(); break;
-                case 38: variants = make_variants<varex_t, outMaxBw, 38>(); break;
-                case 39: variants = make_variants<varex_t, outMaxBw, 39>(); break;
-                case 40: variants = make_variants<varex_t, outMaxBw, 40>(); break;
-                case 41: variants = make_variants<varex_t, outMaxBw, 41>(); break;
-                case 42: variants = make_variants<varex_t, outMaxBw, 42>(); break;
-                case 43: variants = make_variants<varex_t, outMaxBw, 43>(); break;
-                case 44: variants = make_variants<varex_t, outMaxBw, 44>(); break;
-                case 45: variants = make_variants<varex_t, outMaxBw, 45>(); break;
-                case 46: variants = make_variants<varex_t, outMaxBw, 46>(); break;
-                case 47: variants = make_variants<varex_t, outMaxBw, 47>(); break;
-                case 48: variants = make_variants<varex_t, outMaxBw, 48>(); break;
-                case 49: variants = make_variants<varex_t, outMaxBw, 49>(); break;
-                case 50: variants = make_variants<varex_t, outMaxBw, 50>(); break;
-                case 51: variants = make_variants<varex_t, outMaxBw, 51>(); break;
-                case 52: variants = make_variants<varex_t, outMaxBw, 52>(); break;
-                case 53: variants = make_variants<varex_t, outMaxBw, 53>(); break;
-                case 54: variants = make_variants<varex_t, outMaxBw, 54>(); break;
-                case 55: variants = make_variants<varex_t, outMaxBw, 55>(); break;
-                case 56: variants = make_variants<varex_t, outMaxBw, 56>(); break;
-                case 57: variants = make_variants<varex_t, outMaxBw, 57>(); break;
-                case 58: variants = make_variants<varex_t, outMaxBw, 58>(); break;
-                case 59: variants = make_variants<varex_t, outMaxBw, 59>(); break;
-                case 60: variants = make_variants<varex_t, outMaxBw, 60>(); break;
-                case 61: variants = make_variants<varex_t, outMaxBw, 61>(); break;
-                case 62: variants = make_variants<varex_t, outMaxBw, 62>(); break;
-                case 63: variants = make_variants<varex_t, outMaxBw, 63>(); break;
-                case 64: variants = make_variants<varex_t, outMaxBw, 64>(); break;
-            }
+        
+            // Only enumerate the maximum bit widths that might actually be
+            // encountered depending on the parameters of the data generation.
+            // We do not need all 64 bit widths. This greatly reduces the
+            // compilation time.
+            VG_BEGIN
+            VG_CASE(inDataCount, _63)
+            VG_CASE(inDataCount, largeVal)
+            VG_CASE(inDataCount, min63bit + 63)
+            VG_CASE(inDataCount, range)
+            VG_CASE(inDataCount, min48bit + range)
+            VG_CASE(inDataCount, bitwidth_min<uint64_t>(63))
+            VG_END
             
             varex.execute_variants(variants, inDataCol, mainMin, datasetIdx);
 #else
@@ -493,8 +460,9 @@ int main(void) {
             MONITORING_ADD_INT_FOR("param_outlierMax", outlierMax, datasetIdx);
             
             // The maximum bit widths as used for static_vbp_f.
-            MONITORING_ADD_INT_FOR("inMaxBw", inMaxBw, datasetIdx);
-            MONITORING_ADD_INT_FOR("outMaxBw", outMaxBw, datasetIdx);
+            MONITORING_ADD_INT_FOR("inMaxBw", effective_bitwidth(inDataMax), datasetIdx);
+            // @todo This should be effective_bitwidth(inDataCount - 1).
+            MONITORING_ADD_INT_FOR("outMaxBw", effective_bitwidth(inDataCount), datasetIdx);
             
             // Data characteristics of the input data column.
             std::cerr << std::endl << "analyzing input data column... ";
@@ -504,7 +472,7 @@ int main(void) {
                     datasetIdx
             );
             MONITORING_ADD_DATAPROPERTIES_FOR(
-                    "inData", data_properties(inDataCol, false), datasetIdx
+                    "inData_", data_properties(inDataCol, inDataAssumedUnique), datasetIdx
             );
             std::cerr << "done." << std::endl;
             
@@ -523,7 +491,7 @@ int main(void) {
                     datasetIdx
             );
             MONITORING_ADD_DATAPROPERTIES_FOR(
-                    "outPos", data_properties(inDataCol, false), datasetIdx
+                    "outPos_", data_properties(outPosCol, true), datasetIdx
             );
             std::cerr << "done." << std::endl << std::endl;
             
