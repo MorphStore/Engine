@@ -280,7 +280,7 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi64(p_vec1, p_distance);
       }
@@ -308,7 +308,7 @@ namespace vectorlib{
          typename avx512<v512<uint64_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 64 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi64(p_vec1, p_distance);
       }
@@ -570,7 +570,7 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 32 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi32(p_vec1, p_distance);
       }
@@ -598,7 +598,7 @@ namespace vectorlib{
          typename avx512<v512<uint32_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 32 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi32(p_vec1, p_distance);
       }
@@ -883,7 +883,7 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 16 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_slli_epi16(p_vec1, p_distance);
       }
@@ -911,7 +911,7 @@ namespace vectorlib{
          typename avx512<v512<uint16_t>>::vector_t const & p_vec1,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 16 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_srli_epi16(p_vec1, p_distance);
       }
@@ -1180,7 +1180,7 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Left-shifting 8 bit integer values of one register (all by the same distance) (avx512)" );
          return _mm512_set_epi8(
                  (p_distance == 8) ? 0 : (_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,1),31) << p_distance),
@@ -1403,7 +1403,7 @@ namespace vectorlib{
          typename avx512<v512<uint8_t>>::vector_t const & p_vec,
          int const & p_distance
       ){
-         TALLY_CALC_BINARY_SIMD
+         TALLY_CALC_UNARY_SIMD
          trace( "[VECTOR] - Right-shifting 8 bit integer values of one register (all by the same distance) (avx512)" );
           return _mm512_set_epi8(
                  (p_distance == 8) ? 0 : (static_cast<uint8_t>(_mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,1),31)) >> p_distance),
