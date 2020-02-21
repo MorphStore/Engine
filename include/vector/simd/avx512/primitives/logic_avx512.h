@@ -19,9 +19,7 @@ namespace vectorlib {
       static
       typename avx512<v512<uint64_t>>::vector_t
       bitwise_and( typename avx512<v512<T>>::vector_t const & p_In1, typename avx512<v512<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm512_and_si512( p_In1, p_In2 );
       }
 
@@ -29,9 +27,7 @@ logic_simd += 1;
       static
       typename avx512<v512<T>>::vector_t
       bitwise_or( typename avx512<v512<T>>::vector_t const & p_In1, typename avx512<v512<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm512_or_si512( p_In1, p_In2 );
       }
    };
@@ -42,9 +38,7 @@ logic_simd += 1;
       static
       typename avx512<v256<uint64_t>>::vector_t
       bitwise_and( typename avx512<v256<T>>::vector_t const & p_In1, typename avx512<v256<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm256_and_si256( p_In1, p_In2 );
       }
 
@@ -52,9 +46,7 @@ logic_simd += 1;
       static
       typename avx512<v256<T>>::vector_t
       bitwise_or( typename avx512<v256<T>>::vector_t const & p_In1, typename avx512<v256<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm256_or_si256( p_In1, p_In2 );
       }
    };
@@ -66,9 +58,7 @@ logic_simd += 1;
       static
       typename avx512<v128<uint64_t>>::vector_t
       bitwise_and( typename avx512<v128<T>>::vector_t const & p_In1, typename avx512<v128<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm_and_si128( p_In1, p_In2 );
       }
 
@@ -76,9 +66,7 @@ logic_simd += 1;
       static
       typename avx512<v128<T>>::vector_t
       bitwise_or( typename avx512<v128<T>>::vector_t const & p_In1, typename avx512<v128<T>>::vector_t const & p_In2) {
-#if tally
-logic_simd += 1;
-#endif
+         TALLY_LOGIC_SIMD
          return _mm_or_si128( p_In1, p_In2 );
       }
    };

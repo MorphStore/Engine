@@ -32,9 +32,7 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi64(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -57,9 +55,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi32(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -90,9 +86,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi16(_mm512_extracti64x4_epi64(p_vec,0),0); break;
@@ -140,9 +134,7 @@ extract_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::base_t
       extract_value( avx512< v512< uint64_t > >::vector_t p_vec, int idx) {
-#if tally
-extract_simd += 1;
-#endif
+         TALLY_EXTRACT_SIMD
          trace( "[VECTOR] - extract value from sse register." );
          switch (idx){
              case 0: return _mm256_extract_epi8(_mm512_extracti64x4_epi64(p_vec,0),0); break;

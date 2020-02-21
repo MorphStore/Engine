@@ -29,9 +29,7 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values into 512 Bit vector register." );
          return _mm512_load_si512(/*reinterpret_cast<typename avx512< v512< U > >::vector_t const *>*/( void * )(p_DataPtr));
       }
@@ -39,9 +37,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx512< v512< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values to memory" );
          _mm512_store_si512(/*reinterpret_cast<typename avx512< v512< U > >::vector_t const *>*/( void * )(p_DataPtr),p_vec);
          return;
@@ -51,9 +47,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned float values into 512 Bit vector register." );
          return _mm512_load_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -62,9 +56,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr , avx512< v512< float > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned float values  to memory" );
          _mm512_store_ps(( void * )(p_DataPtr),p_vec);
          return;
@@ -74,9 +66,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned double values into 512 Bit vector register." );
          return _mm512_load_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -85,9 +75,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr,  avx512< v512< double > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned double values  to memory" );
          _mm512_store_pd(( void * )(p_DataPtr), p_vec);
          return;
@@ -103,9 +91,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Stream load integer values into 512 Bit vector register." );
          return _mm512_stream_load_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
@@ -114,9 +100,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U const * const p_DataPtr,  avx512< v512< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Stream store integer values  to memory" );
          _mm512_stream_si512((void *)p_DataPtr, p_vec);
          return ;
@@ -131,9 +115,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading unaligned integer values into 512 Bit vector register." );
          return _mm512_loadu_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
@@ -142,9 +124,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Store unaligned integer values  to memory" );
          _mm512_storeu_si512((void *)p_DataPtr, p_vec);
          return ;
@@ -154,9 +134,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm512_mask_compressstoreu_epi64((void *)p_DataPtr, mask,p_vec);
          return ;
@@ -166,9 +144,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading unaligned float values into 512 Bit vector register." );
          return _mm_loadu_ps(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -177,9 +153,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr,  avx512< v512< float > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Store unaligned floating values to memory" );
          _mm512_storeu_ps((void *)p_DataPtr, p_vec);
          return ;
@@ -189,9 +163,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading unaligned double values into 512 Bit vector register." );
          return _mm_loadu_pd(reinterpret_cast< U const * >(p_DataPtr));
       }
@@ -200,9 +172,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx512< v512< double > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Store unaligned double values  to memory" );
          _mm512_storeu_pd((void *)p_DataPtr, p_vec);
          return ;
@@ -216,9 +186,7 @@ io_write_seq_simd += 1;
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    static void
    compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi64((void *)p_DataPtr, mask,p_vec);
       return ;
@@ -229,9 +197,7 @@ io_write_ran_simd += 1;
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    static void
    compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
       _mm512_mask_compressstoreu_epi32((void *)p_DataPtr, mask,p_vec);
       return ;
@@ -242,11 +208,9 @@ io_write_ran_simd += 1;
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    static void
    compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
-      _mm512_mask_compressstoreu_epi16((void *)p_DataPtr, mask,p_vec);
+      _mm512_mask_compressstoreu_epi16((void *)p_DataPtr, mask,p_vec);  //NEEDS: CPUID Flag: AVX512_VBMI2
       return ;
    }};
    template<typename T>
@@ -255,11 +219,9 @@ io_write_ran_simd += 1;
    MSV_CXX_ATTRIBUTE_FORCE_INLINE
    static void
    compressstore( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
       trace( "[VECTOR] - Store masked unaligned integer values to memory" );
-      _mm512_mask_compressstoreu_epi8((void *)p_DataPtr, mask,p_vec);
+      _mm512_mask_compressstoreu_epi8((void *)p_DataPtr, mask,p_vec);   //NEEDS: CPUID Flag: AVX512_VBMI2
       return ;
    }};
 
@@ -269,9 +231,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
-#if tally
-io_load_ran_simd += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SIMD
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
          return _mm512_i64gather_epi64( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 8);
       }
@@ -283,9 +243,7 @@ io_load_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
-#if tally
-io_load_ran_simd += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SIMD
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
          return _mm512_i32gather_epi32( p_vec,reinterpret_cast<typename avx512< v512< int > >::vector_t const *> (p_DataPtr), 4);
       }
@@ -297,9 +255,7 @@ io_load_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
-#if tally
-io_load_ran_simd += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SIMD
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
          __m512i p_vec_1 = _mm512_srli_epi32(p_vec, 16);
          __m512i p_vec_2 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 16), 16);
@@ -320,19 +276,17 @@ io_load_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       apply( U const * const p_DataPtr,  avx512< v512< uint64_t > >::vector_t p_vec ) {
-#if tally
-io_load_ran_simd += 1;
-#endif
+         TALLY_IO_LOAD_RAN_SIMD
          trace( "[VECTOR] - Gather integer values into 512 Bit vector register." );
          __m512i p_vec_1 = _mm512_srli_epi32(p_vec, 24);
          __m512i p_vec_2 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 8),24);
          __m512i p_vec_3 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 16),24);
          __m512i p_vec_4 = _mm512_srli_epi32(_mm512_slli_epi32(p_vec, 24),24);
 
-         __m512i d_vec_1 = _mm512_i32gather_epi32(p_vec_1,reinterpret_cast<const int *> (p_DataPtr), p_vec_1, 1);
-         __m512i d_vec_2 = _mm512_i32gather_epi32(p_vec_2,reinterpret_cast<const int *> (p_DataPtr), p_vec_2, 1);
-         __m512i d_vec_3 = _mm512_i32gather_epi32(p_vec_3,reinterpret_cast<const int *> (p_DataPtr), p_vec_3, 1);
-         __m512i d_vec_4 = _mm512_i32gather_epi32(p_vec_4,reinterpret_cast<const int *> (p_DataPtr), p_vec_4, 1);
+         __m512i d_vec_1 = _mm512_i32gather_epi32(p_vec_1, reinterpret_cast<const int *> (p_DataPtr), 1);
+         __m512i d_vec_2 = _mm512_i32gather_epi32(p_vec_2, reinterpret_cast<const int *> (p_DataPtr), 1);
+         __m512i d_vec_3 = _mm512_i32gather_epi32(p_vec_3, reinterpret_cast<const int *> (p_DataPtr), 1);
+         __m512i d_vec_4 = _mm512_i32gather_epi32(p_vec_4, reinterpret_cast<const int *> (p_DataPtr), 1);
 
          return
          _mm512_or_si512(
@@ -356,9 +310,7 @@ io_load_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v512< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading unaligned integer values into 512 Bit vector register using lddqu." );
          return _mm512_loadu_si512(reinterpret_cast<typename avx512< v512< U > >::vector_t const *>(p_DataPtr));
       }
@@ -367,9 +319,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr,  avx512< v512< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Store unaligned integer values  to memory" );
          _mm512_storeu_si512((void *)p_DataPtr, p_vec);
          return ;
@@ -384,9 +334,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm256_mask_compressstoreu_epi64((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -398,9 +346,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm256_mask_compressstoreu_epi32((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -412,9 +358,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm256_mask_compressstoreu_epi16((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -426,9 +370,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v256< int > > ::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+         TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm256_mask_compressstoreu_epi8((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -442,9 +384,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v256< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values into 512 Bit vector register." );
          return _mm256_load_si256(reinterpret_cast<typename avx512< v256< U > >::vector_t const *>(p_DataPtr));
       }
@@ -453,9 +393,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx512< v256< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values to memory" );
          _mm256_store_si256(reinterpret_cast<typename avx512< v256< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
@@ -468,9 +406,7 @@ io_write_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm_mask_compressstoreu_epi64((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -482,9 +418,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm_mask_compressstoreu_epi32((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -496,9 +430,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm_mask_compressstoreu_epi16((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -510,9 +442,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       compressstore( U * p_DataPtr,  avx512< v128< int > >::vector_t p_vec, int mask ) {
-#if tally
-io_write_ran_simd += 1;
-#endif
+      TALLY_IO_WRITE_RAN_SIMD
          trace( "[VECTOR] - Store masked unaligned integer values to memory" );
          _mm_mask_compressstoreu_epi8((void *)p_DataPtr,mask, p_vec);
          return ;
@@ -525,9 +455,7 @@ io_write_ran_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename avx512< v128< U > >::vector_t
       load( U const * const p_DataPtr ) {
-#if tally
-io_load_seq_simd += 1;
-#endif
+         TALLY_IO_LOAD_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values into 512 Bit vector register." );
          return _mm_load_si128(reinterpret_cast<typename avx512< v128< U > >::vector_t const *>(p_DataPtr));
       }
@@ -536,9 +464,7 @@ io_load_seq_simd += 1;
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void
       store( U * p_DataPtr, avx512< v128< int > >::vector_t p_vec ) {
-#if tally
-io_write_seq_simd += 1;
-#endif
+         TALLY_IO_WRITE_SEQ_SIMD
          trace( "[VECTOR] - Loading aligned integer values to memory" );
          _mm_store_si128(reinterpret_cast<typename avx512< v128< U > >::vector_t *>(p_DataPtr),p_vec);
          return;
