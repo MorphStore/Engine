@@ -156,7 +156,7 @@ const column<uncompr_f> * generate_sorted_unique_extraction(
         }
     }
     
-    for(size_t i = 0; i < p_CountValues; i++)
+    for(size_t i = 0; i < p_CountPopulation; i++)
         if(chosen[i])
             *res++ = i;
     
