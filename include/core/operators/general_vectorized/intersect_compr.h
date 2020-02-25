@@ -60,15 +60,8 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
          vector_mask_t m_MaskLess;
          vector_mask_t m_MaskEqual;
          
-
-         //typename random_read_access<VectorExtension, t_in_data_f>::type m_Rra;
-            
-            
          size_t rightLeftValues=p_State.data2leftValues;
-            
-         //base_t* p_Data2Ptr=p_State.data2ptr;
-         //const base_t * const endInPosR = p_Data2Ptr+p_CountData2;
-             
+        
          vector_t Data1Vector;
                   
          vector_t sequence;
@@ -79,7 +72,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
          unsigned offset=p_State.offset;
          base_t cur;
          unsigned step;
-         //if (offset>p_State.data2leftValues) {return;}
+         if (offset>p_State.data2leftValues) {return;}
          
          for (unsigned i=0;i<vector_element_count::value;i++){
             //std::cout << "i: " << i << "\n";
@@ -93,10 +86,6 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
             
             while(!match && (rightLeftValues > (int) vector_element_count::value) ){
                 
-                
-                
-                    //if (*p_Data2Ptr > *p_Data1Ptr) {match=true;continue;} //it's not a match, but we don't have to go through the sequential part of the outer loop
-                    //if (*p_Data1Ptr > *(current_endR-1)) {match=true; p_Data2Ptr=(current_endR-1); continue;}//it's not a match, but we don't have to go through the sequential part of the outer loop
                     step=(unsigned)((rightLeftValues)/(vector_element_count::value+1));
                     sequence = vectorlib::set_sequence<VectorExtension,vector_base_t_granularity::value>(offset+step,step);
                     //data2Vector = vectorlib::gather<VectorExtension, vector_base_t_granularity::value,vector_base_t_granularity::value/8>(p_Data2Ptr,sequence);
@@ -119,11 +108,18 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
 
                         ad=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence, match_helper-1);
                         
-                        rightLeftValues=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence,0)-offset;
+                        
                      
+                        //TODO left values aus distance extracts berechnen
+                        
+                        if (match_helper==vector_element_count::value) {
+                            rightLeftValues=p_State.data2leftValues-ad;
+                           
+                        }else{
+                            rightLeftValues=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence,0)-offset;
+                        }
+                        
                         offset=(ad+1);
-                        //if (offset>p_State.data2leftValues) {offset=p_State.data2leftValues;rightLeftValues=0;}
-                 
 
                     }
 
@@ -156,7 +152,6 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
              //Go through the rest of every iteration sequentially if no match was found, yet
              if (((rightLeftValues) <= (int) vector_element_count::value) && (match==false)) {
                  // std::cout << "\t search in scalar rest\n";
-            //TODO sequential acccess to second ptr here!
                  sequence = vectorlib::set_sequence<VectorExtension,vector_base_t_granularity::value>(offset,1);
                  data2Vector = p_State.m_Rra.get(sequence); 
                  m_MaskEqual      = vectorlib::equal<VectorExtension>::apply(data2Vector, Data1Vector);
@@ -178,7 +173,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
                      match=true;
                   //   std::cout << "\t\t enter state eq!=0, last register\n";
                  }
-                 
+               //  rightLeftValues=0;
                  
                  
              }
@@ -263,7 +258,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_
          >::apply(
             inDataPtr,inDataCountLog, witState
          );
-         //std::cout << "finish compressed vectorized batch\n";
+         
          //Get uncompressed size:
          inDataPtr = p_Data1Column->get_data_uncompr_start();
          size_t outCountLog;
@@ -274,8 +269,11 @@ template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_
                     outSizeComprByte, std::ignore, outDataPtr
             ) = witState.m_Wit.done();
          outCountLog = witState.m_Wit.get_count_values();
+         
+         //std::cout << "\nfinish compressed vectorized batch, inCount: " << inDataCountLog << ", outCount:" << outCountLog << "\n";
          }else{
-             //std::cout << "uncomressed rest\n";
+           //  std::cout << "\nfinish compressed vectorized batch, inCount: " << inDataCountLog << ", outCount:" << witState.m_Wit.get_count_values() << "\n";
+           //  std::cout << "uncomressed rest\n";
              //do uncompressed rest
              inDataPtr = p_Data1Column->get_data_uncompr_start();
              const size_t inSizeRestByte = startDataPtr + inDataSizeUsedByte - inDataPtr;
@@ -295,18 +293,18 @@ template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_
                inDataPtr,convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte), witState
             );
             
-            //std::cout << "finish uncompressed vectorized batch\n";
+            
             uint8_t * outDataAppendUncompr;
             std::tie(
                     outSizeComprByte, outDataAppendUncompr, outDataPtr
             ) = witState.m_Wit.done();
             outCountLog = witState.m_Wit.get_count_values();
-            
+           // std::cout << "finish uncompressed vectorized batch, inCount: " << convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte) << ", outCount:" << outCountLog << "\n";
             // The size of the input column's uncompressed rest that can only
             // be processed with scalar instructions.
            const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte && witState.offset < p_Data2Column->get_count_values()) {
-                    
+                
                // const uint8_t * inScalar=inDataPtr + inDataSizeUncomprVecByte;
                     typename intersect_processing_unit_wit<
                         scalar<v64<uint64_t>>, uncompr_f, t_in_pos_r_f
@@ -327,13 +325,14 @@ template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_
                         //inScalar, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState
                             inDataPtr, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState
                 );
-                //std::cout << "finish uncompressed scalar batch\n";
+                
                 
                 std::tie(
                         std::ignore, std::ignore, outDataPtr
                 ) = witUncomprState.m_Wit.done();
                 outCountLog += witUncomprState.m_Wit.get_count_values();
-            
+                
+              //  std::cout << "finish uncompressed scalar batch, inCount: " << convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte) << ", outCount:" << outCountLog << "\n";
             }
          }
          
