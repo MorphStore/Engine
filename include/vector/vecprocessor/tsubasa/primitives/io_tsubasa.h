@@ -41,6 +41,21 @@ namespace vectorlib {
 
    };
 
+   template<typename T, int IOGranularity, int Scale>
+   struct gather_t <tsubasa<v16384<T>>, IOGranularity, Scale>{
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static typename tsubasa<v16384<U>>::vector_t
+      apply(typename tsubasa<v16384<U>>::base_t const * const a, typename tsubasa<v16384<U>>::vector_t b, 
+      int element_count = tsubasa<v16384<U>>::vector_helper_t::element_count::value){
+         typename tsubasa<v16384<U>>::vector_t vy = _vel_vsfa_vvssl(b, 3, reinterpret_cast<uint64_t>(a), element_count); // shift left by 3 and add a, should depend from scale
+         return _vel_vgt_vvssl(vy, 
+                              0, //lowest address reinterpret_cast<uint64_t> (a)
+                              0, //highest address
+                              element_count);
+      }
+   };
+
 
 
 }

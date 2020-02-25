@@ -192,7 +192,34 @@ namespace morphstore {
     // Random read
     // ------------------------------------------------------------------------
 
-    template<class t_vector_extension>
+    // template<class t_vector_extension>
+    // class random_read_access<t_vector_extension, uncompr_f> {
+    //     using t_ve = t_vector_extension;
+    //     IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+    //     const base_t * const m_Data;
+                
+    // public:
+    //     // Alias to itself, in this case.
+    //     using type = random_read_access<t_vector_extension, uncompr_f>;
+        
+    //     random_read_access(const base_t * p_Data) : m_Data(p_Data) {
+    //         //
+    //     }
+
+    //     MSV_CXX_ATTRIBUTE_FORCE_INLINE
+    //     vector_t get(const vector_t & p_Positions) {
+    //         return vectorlib::gather<
+    //                 t_ve,
+    //                 vector_base_t_granularity::value,
+    //                 sizeof(base_t)
+    //         >(m_Data, p_Positions);
+    //     }
+
+    // };
+
+    // Scalable
+        template<class t_vector_extension>
     class random_read_access<t_vector_extension, uncompr_f> {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -214,6 +241,15 @@ namespace morphstore {
                     vector_base_t_granularity::value,
                     sizeof(base_t)
             >(m_Data, p_Positions);
+        }
+
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions, int element_count) {
+            return vectorlib::gather<
+                    t_ve,
+                    vector_base_t_granularity::value,
+                    sizeof(base_t)
+            >(m_Data, p_Positions, element_count);
         }
     };
     
@@ -320,6 +356,16 @@ namespace morphstore {
                     vector_base_t_granularity::value
             >(this->m_OutBase, p_Data);
             this->m_OutBase += vector_element_count::value;
+        }
+
+        // Scalable
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data, int element_count) {
+            vectorlib::store<
+                    t_vector_extension,
+                    vectorlib::iov::ALIGNED,
+                    vector_base_t_granularity::value
+            >(this->m_OutBase, p_Data, element_count);
+            this->m_OutBase += element_count;
         }
     };
     
