@@ -43,11 +43,19 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( inc_benchmark PRIVATE "-ldl" )
 
-    add_executable( project_benchmark project_benchmark.cpp )
-    target_compile_options( project_benchmark PRIVATE
+    add_executable( project_benchmark_t project_benchmark.cpp )
+    target_compile_options( project_benchmark_t PRIVATE
+                            -DPROJECT_BENCHMARK_TIME
                            # $<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( project_benchmark PRIVATE "-ldl" )
+    target_link_libraries( project_benchmark_t PRIVATE "-ldl" )
+
+    add_executable( project_benchmark_d project_benchmark.cpp )
+    target_compile_options( project_benchmark_d PRIVATE
+                            -UPROJECT_BENCHMARK_TIME
+                           # $<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( project_benchmark_d PRIVATE "-ldl" )
 
     add_executable( calc_binary_benchmark calc_binary_benchmark.cpp )
     target_compile_options( calc_binary_benchmark PRIVATE

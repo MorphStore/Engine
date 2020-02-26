@@ -20,26 +20,34 @@
  * @brief A micro benchmark of the project-operator.
  */
 
+//#define PROJECT_BENCHMARK_TIME
+
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
-#include <core/morphing/default_formats.h>
-#include <core/morphing/delta.h>
-#include <core/morphing/dynamic_vbp.h>
-#include <core/morphing/for.h>
 #include <core/morphing/format.h>
-#include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
-#include <core/morphing/vbp.h>
-#include <core/morphing/format_names.h> // Must be included after all formats.
-#include <core/operators/general_vectorized/project_compr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
-#include <core/utils/variant_executor.h>
 #include <vector/vector_extension_names.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#ifdef PROJECT_BENCHMARK_TIME
+#include <core/morphing/default_formats.h>
+#include <core/morphing/delta.h>
+#include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/for.h>
+#include <core/morphing/static_vbp.h>
+#include <core/morphing/vbp.h>
+#include <core/morphing/format_names.h> // Must be included after all formats.
+#include <core/operators/general_vectorized/project_compr.h>
+#include <core/utils/variant_executor.h>
+#else
+#include <core/operators/scalar/project_uncompr.h>
+#include <core/utils/data_properties.h>
+#include <core/utils/monitoring.h>
+#endif
 
 #include <functional>
 #include <iostream>
@@ -51,6 +59,8 @@
 using namespace morphstore;
 using namespace vectorlib;
 
+
+#ifdef PROJECT_BENCHMARK_TIME
 
 // ****************************************************************************
 // Amendment for the format names (just for this benchmark).
@@ -89,7 +99,7 @@ SPECIALIZE_FORMATNAME_BYTEPACKING(64)
     formatName<in_pos_f> \
 }
 
-#if 1 // all variants (compressed and uncompressed)
+#if 0 // all variants (compressed and uncompressed)
 #define MAKE_VARIANTS_VE_OUTDATA_INDATA(ve, out_data_f, in_data_f, inPosBw) \
     MAKE_VARIANT( \
             ve, \
@@ -219,6 +229,8 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
             std::to_string(inPosMaxVal) \
     );
 
+#endif
+
 
 // ****************************************************************************
 // Main program.
@@ -246,12 +258,12 @@ const uint64_t range = 100000;
 
 std::vector<std::tuple<
         size_t, bool, size_t,
-        bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+        bool, uint64_t, uint64_t, uint64_t, uint64_t, double, bool
 >> get_params() {
     std::vector<
             std::tuple<
                     size_t, bool, size_t,
-                    bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+                    bool, uint64_t, uint64_t, uint64_t, uint64_t, double, bool
             >
     > params;
     
@@ -264,11 +276,11 @@ std::vector<std::tuple<
         std::make_tuple(inPosCountB, false, inDataCountB2),
     })
         for(auto inDataCh : {
-            std::make_tuple(false, _0, _7, _0, _0, 0.0), // C0
-            std::make_tuple(false, _0, _63, _0, _0, 0.0), // C1
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001), // C2
-            std::make_tuple(true, min47bit, min47bit + range, _0, _0, 0.0), // C5
-            std::make_tuple(false, _0, max63bit, _0, _0, 0.0), // C6
+            std::make_tuple(false, _0, _7, _0, _0, 0.0, false), // C0
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C1
+            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001, false), // C2
+            std::make_tuple(true, min47bit, min47bit + range, _0, _0, 0.0, false), // C5
+            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C6
         }) {
             size_t inPosCount;
             bool inPosSorted;
@@ -280,14 +292,15 @@ std::vector<std::tuple<
             uint64_t inDataOutlierMin;
             uint64_t inDataOutlierMax;
             double inDataOutlierShare;
+            bool inDataAssumedUnique;
             std::tie(
                     inDataSorted, inDataMainMin, inDataMainMax,
-                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare, inDataAssumedUnique
             ) = inDataCh;
             params.push_back(std::make_tuple(
                     inPosCount, inPosSorted,
                     inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
-                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+                    inDataOutlierMin, inDataOutlierMax, inDataOutlierShare, inDataAssumedUnique
             ));
         }
         
@@ -301,7 +314,7 @@ std::tuple<
         unsigned
 > generate_data(std::tuple<
         size_t, bool, size_t,
-        bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+        bool, uint64_t, uint64_t, uint64_t, uint64_t, double, bool
 > param) {
     size_t inPosCount;
     size_t inDataCount;
@@ -317,7 +330,7 @@ std::tuple<
     std::tie(
             inPosCount, inPosSorted, //inPosContiguous
             inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
-            inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+            inDataOutlierMin, inDataOutlierMax, inDataOutlierShare, std::ignore
     ) = param;
 
     const uint64_t inDataMaxVal = std::max(inDataMainMax, inDataOutlierMax);
@@ -358,6 +371,7 @@ std::tuple<
     return std::make_tuple(inDataCol, inPosCol, inDataMaxVal, inPosMaxVal);
 }
 
+#ifdef PROJECT_BENCHMARK_TIME
 int main(void) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
@@ -448,3 +462,90 @@ int main(void) {
     
     return 0;
 }
+#else
+int main(void) {
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
+    // ========================================================================
+    // Specification of the settings.
+    // ========================================================================
+    
+    auto params = get_params();
+    
+    // ========================================================================
+    // Analysis of the input and output data.
+    // ========================================================================
+    
+    unsigned datasetIdx = 0;
+    // @todo This results in a frequent regeneration of the same data (but it
+    // does not seem to be a performance issue).
+    for(auto param : params) {
+        datasetIdx++;
+        std::cerr << "dataset " << datasetIdx << '/' << params.size() << std::endl;
+        
+        // The way we generate the data, sorted positions columns are always
+        // unique.
+        MSV_CXX_ATTRIBUTE_PPUNUSED const bool inPosAssumedUnique = std::get<1>(param);
+        MSV_CXX_ATTRIBUTE_PPUNUSED const bool inDataAssumedUnique = std::get<9>(param);
+        
+        // --------------------------------------------------------------------
+        // Data generation.
+        // --------------------------------------------------------------------
+        
+        std::cerr << "\tgenerating input data... ";
+        const column<uncompr_f> * inDataCol;
+        const column<uncompr_f> * inPosCol;
+        std::tie(inDataCol, inPosCol, std::ignore, std::ignore) = 
+                generate_data(param);
+        std::cerr << "done." << std::endl;
+        
+        // --------------------------------------------------------------------
+        // Analysis of the input and output data.
+        // --------------------------------------------------------------------
+        
+        MONITORING_CREATE_MONITOR(
+                MONITORING_MAKE_MONITOR(datasetIdx),
+                MONITORING_KEY_IDENTS("datasetIdx")
+        );
+
+        // Execution of the project-operator.
+        std::cerr << "\texecuting project-operator... ";
+        auto outDataCol = project<scalar<v64<uint64_t>>, uncompr_f>(
+                inDataCol, inPosCol
+        );
+        std::cerr << "done." << std::endl;
+        
+        // Data characteristics of the input and output columns.
+        for(auto colInfo : {
+            std::make_tuple("inData" , inDataCol , inDataAssumedUnique),
+            std::make_tuple("inPos"  , inPosCol  , inPosAssumedUnique),
+            std::make_tuple("outData", outDataCol, inPosAssumedUnique ? inDataAssumedUnique : false),
+        }) {
+            std::string colName;
+            const column<uncompr_f> * col;
+            bool assumedUnique;
+            std::tie(colName, col, assumedUnique) = colInfo;
+            
+            std::cerr << "\tanalyzing " << colName << " column... ";
+            // @todo The data analysis in data_properties should also cover the
+            // number of data elements, just for ease of use.
+            MONITORING_ADD_INT_FOR(
+                    colName + "_ValueCount",
+                    col->get_count_values(),
+                    datasetIdx
+            );
+            MONITORING_ADD_DATAPROPERTIES_FOR(
+                    colName + "_", data_properties(col, assumedUnique), datasetIdx
+            );
+            std::cerr << "done." << std::endl;
+            
+            delete col;
+        }
+    }
+    
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
+    
+    return 0;
+}
+#endif
