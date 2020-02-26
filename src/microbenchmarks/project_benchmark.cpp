@@ -224,47 +224,30 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 // Main program.
 // ****************************************************************************
 
-int main(void) {
-    // @todo This should not be necessary.
-    fail_if_self_managed_memory();
-    
-    // ========================================================================
-    // Creation of the variant executor.
-    // ========================================================================
-    
-    using varex_t = variant_executor_helper<1, 2>::type
-        ::for_variant_params<std::string, std::string, std::string, std::string>
-        ::for_setting_params<unsigned>;
-    varex_t varex(
-            {},
-            {"vector_extension", "out_data_f", "in_data_f", "in_pos_f"},
-            {"datasetIdx"}
-    );
-    
-    // ========================================================================
-    // Specification of the settings.
-    // ========================================================================
-    
-    const size_t inDataCountA = 128 * 1024 * 1024;
-    const size_t inDataCountB1 = 1024;
-    const size_t inDataCountB2 = 2 * 1024 * 1024;
-    
-    const size_t inPosCountA1 = static_cast<size_t>(inDataCountA * 0.9);
-    const size_t inPosCountA3 = static_cast<size_t>(inDataCountA * 0.01);
-    const size_t inPosCountB = 128 * 1024 * 1024;
-    
-    // @todo It would be nice to use a 64-bit value, but then, some vector-lib
-    // primitives would interpret it as a negative number. This would hurt,
-    // e.g., FOR.
-    const uint64_t largeVal = bitwidth_max<uint64_t>(63);
-    // Looks strange, but saves us from casting in the initializer list.
-    const uint64_t _0 = 0;
-    const uint64_t _7 = 7;
-    const uint64_t _63 = 63;
-    const uint64_t min47bit = bitwidth_min<uint64_t>(47);
-    const uint64_t max63bit = bitwidth_max<uint64_t>(63);
-    const uint64_t range = 100000;
-    
+const size_t inDataCountA = 128 * 1024 * 1024;
+const size_t inDataCountB1 = 1024;
+const size_t inDataCountB2 = 2 * 1024 * 1024;
+
+const size_t inPosCountA1 = static_cast<size_t>(inDataCountA * 0.9);
+const size_t inPosCountA3 = static_cast<size_t>(inDataCountA * 0.01);
+const size_t inPosCountB = 128 * 1024 * 1024;
+
+// @todo It would be nice to use a 64-bit value, but then, some vector-lib
+// primitives would interpret it as a negative number. This would hurt,
+// e.g., FOR.
+const uint64_t largeVal = bitwidth_max<uint64_t>(63);
+// Looks strange, but saves us from casting in the initializer list.
+const uint64_t _0 = 0;
+const uint64_t _7 = 7;
+const uint64_t _63 = 63;
+const uint64_t min47bit = bitwidth_min<uint64_t>(47);
+const uint64_t max63bit = bitwidth_max<uint64_t>(63);
+const uint64_t range = 100000;
+
+std::vector<std::tuple<
+        size_t, bool, size_t,
+        bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+>> get_params() {
     std::vector<
             std::tuple<
                     size_t, bool, size_t,
@@ -307,11 +290,19 @@ int main(void) {
                     inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
             ));
         }
-    
-    // ========================================================================
-    // Variant execution for each setting.
-    // ========================================================================
-    
+        
+    return params;
+}
+
+std::tuple<
+        const column<uncompr_f> *,
+        const column<uncompr_f> *,
+        uint64_t,
+        unsigned
+> generate_data(std::tuple<
+        size_t, bool, size_t,
+        bool, uint64_t, uint64_t, uint64_t, uint64_t, double
+> param) {
     size_t inPosCount;
     size_t inDataCount;
     bool inDataSorted;
@@ -323,56 +314,94 @@ int main(void) {
     bool inPosSorted;
 //    bool inPosContiguous;
     
+    std::tie(
+            inPosCount, inPosSorted, //inPosContiguous
+            inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
+            inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
+    ) = param;
+
+    const uint64_t inDataMaxVal = std::max(inDataMainMax, inDataOutlierMax);
+
+    auto inDataCol = generate_with_outliers_and_selectivity(
+            inDataCount,
+            inDataMainMin, inDataMainMax,
+            0,
+            inDataOutlierMin, inDataOutlierMax,
+            inDataOutlierShare,
+            inDataSorted
+    );
+    const column<uncompr_f> * inPosCol;
+    unsigned inPosMaxVal;
+    if(inPosSorted) {
+        // Case A
+//        if(inPosContiguous) {
+//            inPosCol = generate_sorted_unique(inPosCount);
+//            inPosMaxVal = inPosCount - 1;
+//        }
+//        else {
+            inPosCol = generate_sorted_unique_extraction(
+                    inPosCount, inDataCount
+            );
+            inPosMaxVal = inDataCount - 1;
+//        }
+    }
+    else {
+        // Case B
+        inPosCol = generate_with_distr(
+                inPosCount,
+                std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
+                false
+        );
+        inPosMaxVal = inDataCount - 1;
+    }
+
+    return std::make_tuple(inDataCol, inPosCol, inDataMaxVal, inPosMaxVal);
+}
+
+int main(void) {
+    // @todo This should not be necessary.
+    fail_if_self_managed_memory();
+    
+    // ========================================================================
+    // Creation of the variant executor.
+    // ========================================================================
+    
+    using varex_t = variant_executor_helper<1, 2>::type
+        ::for_variant_params<std::string, std::string, std::string, std::string>
+        ::for_setting_params<unsigned>;
+    varex_t varex(
+            {},
+            {"vector_extension", "out_data_f", "in_data_f", "in_pos_f"},
+            {"datasetIdx"}
+    );
+    
+    // ========================================================================
+    // Specification of the settings.
+    // ========================================================================
+    
+    auto params = get_params();
+    
+    // ========================================================================
+    // Variant execution for each setting.
+    // ========================================================================
+    
     unsigned datasetIdx = 0;
     // @todo This results in a frequent regeneration of the same data (but it
     // does not seem to be a performance issue).
     for(auto param : params) {
         datasetIdx++;
-
-        std::tie(
-                inPosCount, inPosSorted, //inPosContiguous
-                inDataCount, inDataSorted, inDataMainMin, inDataMainMax,
-                inDataOutlierMin, inDataOutlierMax, inDataOutlierShare
-        ) = param;
-        const uint64_t inDataMaxVal = std::max(inDataMainMax, inDataOutlierMax);
         
         // --------------------------------------------------------------------
         // Data generation.
         // --------------------------------------------------------------------
         
         varex.print_datagen_started();
-        auto inDataCol = generate_with_outliers_and_selectivity(
-                inDataCount,
-                inDataMainMin, inDataMainMax,
-                0,
-                inDataOutlierMin, inDataOutlierMax,
-                inDataOutlierShare,
-                inDataSorted
-        );
+        const column<uncompr_f> * inDataCol;
         const column<uncompr_f> * inPosCol;
-        unsigned inPosMaxVal;
-        if(inPosSorted) {
-            // Case A
-//            if(inPosContiguous) {
-//                inPosCol = generate_sorted_unique(inPosCount);
-//                inPosMaxVal = inPosCount - 1;
-//            }
-//            else {
-                inPosCol = generate_sorted_unique_extraction(
-                        inPosCount, inDataCount
-                );
-                inPosMaxVal = inDataCount - 1;
-//            }
-        }
-        else {
-            // Case B
-            inPosCol = generate_with_distr(
-                    inPosCount,
-                    std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
-                    false
-            );
-            inPosMaxVal = inDataCount - 1;
-        }
+        uint64_t inDataMaxVal;
+        unsigned inPosMaxVal; // @todo Why unsigned? Why not uint64_t?
+        std::tie(inDataCol, inPosCol, inDataMaxVal, inPosMaxVal) = 
+                generate_data(param);
         varex.print_datagen_done();
         
         // --------------------------------------------------------------------
