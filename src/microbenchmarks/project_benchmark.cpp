@@ -99,7 +99,7 @@ SPECIALIZE_FORMATNAME_BYTEPACKING(64)
     formatName<in_pos_f> \
 }
 
-#if 0 // all variants (compressed and uncompressed)
+#if 1 // all variants (compressed and uncompressed)
 #define MAKE_VARIANTS_VE_OUTDATA_INDATA(ve, out_data_f, in_data_f, inPosBw) \
     MAKE_VARIANT( \
             ve, \
