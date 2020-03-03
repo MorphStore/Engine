@@ -31,7 +31,6 @@
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
-#include <vector/vecprocessor/tsubasa/extension_tsubasa.h>
 
 
 #include <tuple>
@@ -100,35 +99,48 @@ namespace morphstore {
         // ) {
         //     const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
 
-        //     std::cout << "p_CountInLog: " << p_CountInLog << std::endl;
+        //     // std::cout << "p_CountInLog: " << p_CountInLog << std::endl;
 
-        //     size_t vectorCount = p_CountInLog / vector_element_count::value;
-        //     size_t remainderCount = p_CountInLog % vector_element_count::value;
+        //     int vectorCount = p_CountInLog / vector_element_count::value;
+        //     int remainderCount = p_CountInLog % vector_element_count::value;
 
-        //     std::cout << "vectorCount: " << vectorCount << std::endl;
-        //     std::cout << "remainderCount: " << remainderCount << std::endl;
+        //     // std::cout << "vectorCount: " << vectorCount << std::endl;
+        //     // std::cout << "remainderCount: " << remainderCount << std::endl;
 
 
 
-        //     for(size_t i = 0; i < vectorCount; i++)
+        //     for(int i = 0; i < vectorCount; i++)
         //         t_op_vector<t_ve, t_extra_args ...>::apply(
         //                 vectorlib::load<
         //                         t_ve,
         //                         vectorlib::iov::ALIGNED,
         //                         vector_base_t_granularity::value
-        //                 >(inBase + (i*vector_element_count::value) , vector_element_count::value),
-        //                 p_State, vector_element_count::value
+        //                 >(inBase + (i*vector_element_count::value) , (int)vector_element_count::value),
+        //                 p_State, (int)vector_element_count::value
         //         );
 
 
-        //     std::cout << "NachVec: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(p_State.m_Aggregate) << std::endl;
+        //     // uint64_t vectorized = 0;
+        //     // for(int i = 0; i < vectorCount; i++){
+        //     //     for(size_t j=0; j < vector_element_count::value; j++){
+        //     //         vectorized += *(inBase + i*vector_element_count::value + j);
+        //     //     }
+        //     // }
+        //     // std::cout << "Vectorized Scalar" << vectorized << std::endl;
+
+
+
+        //     // std::cout << "NachVec: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(p_State.m_Aggregate) << std::endl;
 
 
         //     if(remainderCount != 0){
-        //         std::cout << "Rest" << std::endl;
-        //         for(size_t i=0; i<remainderCount; i++){
-        //             std::cout << *(inBase+(vectorCount*vector_element_count::value)+i) << std::endl; 
-        //         }
+        //         // std::cout << "Rest" << std::endl;
+        //         // uint64_t remainder = 0;
+        //         // for(int i=0; i<remainderCount; i++){
+        //         //     std::cout << *(inBase+(vectorCount*vector_element_count::value)+i) << std::endl; 
+        //         //     remainder += *(inBase+(vectorCount*vector_element_count::value)+i);
+        //         // }
+        //         // std::cout << "Remainder" << remainder << std::endl;
         //         vector_t reg = vectorlib::load<
         //                         t_ve,
         //                         vectorlib::iov::ALIGNED,
@@ -136,13 +148,24 @@ namespace morphstore {
         //                 >(inBase + (vectorCount*vector_element_count::value), remainderCount);
 
 
-        //         // std::cout << "ImReg: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(reg) << std::endl;
+        //         // std::cout << "ImReg: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(reg, remainderCount) << std::endl;
+
+
 
         //         t_op_vector<t_ve, t_extra_args ...>::apply(
         //                 reg,
         //                 p_State,
         //                 remainderCount
         //         );
+
+        //     // uint64_t data[256]; 
+        //     // vectorlib::store<t_ve, vectorlib::iov::ALIGNED, vector_base_t_granularity::value>(data, reg);
+        //     // std::cout << "RestRegister: "  << std::endl;
+
+        //     // for(int k=0; k<256; k++){
+        //     //    std::cout << data[k] << " ;" ;
+        //     // }
+        //     // std::cout << "Ende "  << std::endl;
         //     }
             
         //     p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
