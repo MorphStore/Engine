@@ -1,3 +1,6 @@
+#ifndef BENCHMARK_PROJECT_H
+#define BENCHMARK_PROJECT_H
+
 #include "../../include/core/memory/mm_glob.h"
 #include "../../include/core/morphing/format.h"
 
@@ -36,7 +39,7 @@ template <template <class, class ...> class op, typename ve, class ... op_args >
 void execute_query(const column<uncompr_f> * const testdata, std::string filename);
 
 template <template <class, class ...> class op, typename ve, class ... op_args >
-void execute_benchmark (std::string filename);
+void execute_benchmark_project (std::string filename);
 
 std::vector<const column<uncompr_f> * > generate_testdata();
 
@@ -72,6 +75,8 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
    results[0] = op<ve, op_args ...>::apply(baseCol, posCol);
 
 
+
+
    for (size_t i =0; i < outer; i++){
    
 
@@ -86,7 +91,7 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
 
       }
 
-      double duration = time_elapsed_ns(start, now())/inner;
+      double duration = time_elapsed_ns(start, now());
 
 
 
@@ -99,10 +104,9 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
          
          delete results[j+1];
       }
-      resultfile << ((posCol->get_count_values()  *8) >> 20) << "," << duration/1000000 << "," << (posCol->get_size_used_byte() >> 10)  << "," << "yes" << "\n"; 
+      resultfile << posCol->get_size_used_byte() << ";" << duration << ";" <<  inner  << ";"  << "yes" << "\n"; 
    } 
 
-   delete results[0];
 
    
    resultfile.close();
@@ -111,6 +115,11 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
 
    std::cout << "Result: " << result << std::endl;
    std::cout << "Result-ref: " << (*result_ref_ptr) << std::endl;
+   // print_columns(print_buffer_base::decimal, reference, "Reference Column");
+   // print_columns(print_buffer_base::decimal, results[0], "Vectorized Column");
+
+   delete results[0];
+
 
    delete reference;
 
@@ -123,13 +132,16 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
 
 
 template <template <class, class ...> class op, typename ve, class ... op_args >
-void execute_benchmark(std::string filename  ){
+void execute_benchmark_project (std::string filename  ){
    // std::vector<size_t> testDataSizes { 16_MB, 32_MB, 64_MB, 128_MB, 256_MB, 512_MB, 1_GB, 2_GB};
    // std::vector<size_t> testDataSizes {1_MB, 2_MB, 4_MB, 8_MB};
    // std::vector<size_t> testDataSizes { 16_MB, 32_MB, 64_MB, 128_MB, 256_MB, 512_MB};
 
    std::vector<size_t> testDataSizes {16_KB, 32_KB, 64_KB, 128_KB, 256_KB, 512_KB, 1_MB, 2_MB, 4_MB, 8_MB, 
                                        16_MB, 32_MB, 64_MB, 128_MB, 256_MB, 512_MB};
+
+   // std::vector<size_t> testDataSizes { 2_KB};
+
 
    std::cout << "Base data generation started... ";
    std::cout.flush();
@@ -178,15 +190,17 @@ void execute_benchmark(std::string filename  ){
    }
 }
 
-int main (void) {
+// int main (void) {
 
-    using ve = tsubasa<v16384<uint64_t>>;
+//     using ve = tsubasa<v16384<uint64_t>>;
 
-    std::string filename = "test";
+//     std::string filename = "project";
     
-    execute_benchmark<morphstore::my_project_wit_t, ve, uncompr_f, uncompr_f, uncompr_f>(filename);
+//     execute_benchmark<morphstore::my_project_wit_t, ve, uncompr_f, uncompr_f, uncompr_f>(filename);
 
 
 
-    return 0;
-}
+//     return 0;
+// }
+
+#endif //BENCHMARK_PROJECT_H

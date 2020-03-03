@@ -37,9 +37,10 @@ using namespace vectorlib;
 int main (void) {
 
     using ve = tsubasa<v16384<uint64_t>>;
+    // using ve = scalar<v64<uint64_t> >;
 
-    const size_t countValues = 1000;
-    const size_t posValues = 260;
+    const size_t countValues = 266;
+    const size_t posValues = 259;
 
 
 

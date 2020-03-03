@@ -1,3 +1,7 @@
+#ifndef TIME_TSUBASA_H
+#define TIME_TSUBASA_H
+
+
 #include "../../include/core/memory/mm_glob.h"
 #include "../../include/core/morphing/format.h"
 
@@ -29,3 +33,5 @@ static inline uint64_t now() {
 static inline double time_elapsed_ns( uint64_t start, uint64_t end ) {
    return ( (double)( end - start ) ) / 1.4;
 }
+
+#endif //TIME_TSUBASA_H
