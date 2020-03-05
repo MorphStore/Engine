@@ -139,6 +139,7 @@ const column<uncompr_f> * measure(
     );
     delete uselessColReg2Ram;
     
+#if 0
     MONITORING_START_INTERVAL_FOR(
             "runtime cache2ram [µs]",
             veName<t_vector_extension>, p_RepIdx
@@ -153,6 +154,7 @@ const column<uncompr_f> * measure(
             veName<t_vector_extension>, p_RepIdx
     );
     delete uselessColCache2Ram;
+#endif
     
     return sumCol;
 }
