@@ -82,4 +82,10 @@ if( BUILD_ALL OR BUILD_MICROBMS )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( semi_join_benchmark PRIVATE "-ldl" )
+
+    add_executable( select_sum_benchmark select_sum_benchmark.cpp )
+    target_compile_options( select_sum_benchmark PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( select_sum_benchmark PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )
