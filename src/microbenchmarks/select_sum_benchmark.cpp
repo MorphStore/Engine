@@ -384,10 +384,10 @@ using param_t = std::tuple<col_param_t, col_param_t>;
 std::vector<param_t> get_params() {
     std::vector<param_t> params;
     
-    auto c1 = std::make_tuple(false, _0, _63, _0, _0, 0.0);
-    auto c2 = std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001);
-    auto c3 = std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0);
-    auto c4 = std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0);
+    auto c1 = std::make_tuple(false, _0, _63, _0, _0, 0.0); // C2
+    auto c2 = std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001); // C3
+    auto c3 = std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0); // C4
+    auto c4 = std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0); // C6
     
     // Dummy to ensure warm-start.
     params.push_back(std::make_tuple(c1, c1));

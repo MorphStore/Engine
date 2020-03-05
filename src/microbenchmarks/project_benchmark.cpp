@@ -247,14 +247,14 @@ const size_t inPosCountB = 128 * 1024 * 1024;
 // @todo It would be nice to use a 64-bit value, but then, some vector-lib
 // primitives would interpret it as a negative number. This would hurt,
 // e.g., FOR.
-const uint64_t largeVal = bitwidth_max<uint64_t>(63);
 // Looks strange, but saves us from casting in the initializer list.
 const uint64_t _0 = 0;
 const uint64_t _7 = 7;
 const uint64_t _63 = 63;
+const uint64_t _100k = 100000;
 const uint64_t min47bit = bitwidth_min<uint64_t>(47);
+const uint64_t min48bit = bitwidth_min<uint64_t>(48);
 const uint64_t max63bit = bitwidth_max<uint64_t>(63);
-const uint64_t range = 100000;
 
 std::vector<std::tuple<
         size_t, bool, size_t,
@@ -276,11 +276,12 @@ std::vector<std::tuple<
         std::make_tuple(inPosCountB, false, inDataCountB2),
     })
         for(auto inDataCh : {
-            std::make_tuple(false, _0, _7, _0, _0, 0.0, false), // C0
-            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C1
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001, false), // C2
-            std::make_tuple(true, min47bit, min47bit + range, _0, _0, 0.0, false), // C5
-            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C6
+            std::make_tuple(false, _0, _7, _0, _0, 0.0, false), // C1
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C2
+            std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001, false), // C3
+            std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0, false), // C6
+            std::make_tuple(true, min47bit, min47bit + _100k, _0, _0, 0.0, false), // C6b
+            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C7
         }) {
             size_t inPosCount;
             bool inPosSorted;
@@ -432,19 +433,22 @@ int main(void) {
         // Case A
         VG_CASE(_7              , inDataCountA - 1)
         VG_CASE(_63             , inDataCountA - 1)
-        VG_CASE(largeVal        , inDataCountA - 1)
-        VG_CASE(min47bit + range, inDataCountA - 1)
+        VG_CASE(max63bit        , inDataCountA - 1)
+        VG_CASE(min48bit + _100k, inDataCountA - 1)
+        VG_CASE(min47bit + _100k, inDataCountA - 1)
         VG_CASE(max63bit        , inDataCountA - 1)
         // Case B
         VG_CASE(_7              , inDataCountB1 - 1)
         VG_CASE(_63             , inDataCountB1 - 1)
-        VG_CASE(largeVal        , inDataCountB1 - 1)
-        VG_CASE(min47bit + range, inDataCountB1 - 1)
+        VG_CASE(max63bit        , inDataCountB1 - 1)
+        VG_CASE(min48bit + _100k, inDataCountB1 - 1)
+        VG_CASE(min47bit + _100k, inDataCountB1 - 1)
         VG_CASE(max63bit        , inDataCountB1 - 1)
         VG_CASE(_7              , inDataCountB2 - 1)
         VG_CASE(_63             , inDataCountB2 - 1)
-        VG_CASE(largeVal        , inDataCountB2 - 1)
-        VG_CASE(min47bit + range, inDataCountB2 - 1)
+        VG_CASE(max63bit        , inDataCountB2 - 1)
+        VG_CASE(min48bit + _100k, inDataCountB2 - 1)
+        VG_CASE(min47bit + _100k, inDataCountB2 - 1)
         VG_CASE(max63bit        , inDataCountB2 - 1)
         VG_END
         

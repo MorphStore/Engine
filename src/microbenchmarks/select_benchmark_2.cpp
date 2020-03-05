@@ -45,6 +45,7 @@
 #include <core/morphing/for.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/vbp.h>
+#include <core/morphing/format_names.h> // Must be included after all formats.
 #include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/operators/general_vectorized/select_compr.h>
 #include <core/utils/variant_executor.h>
@@ -53,7 +54,6 @@
 #include <core/utils/data_properties.h>
 #include <core/utils/monitoring.h>
 #endif
-#include <core/morphing/format_names.h> // Must be included after all formats.
 
 #include <algorithm>
 #include <functional>
@@ -361,13 +361,13 @@ int main(void) {
     // @todo It would be nice to use a 64-bit value, but then, some vector-lib
     // primitives would interpret it as a negative number. This would hurt,
     // e.g., FOR.
-    const uint64_t largeVal = bitwidth_max<uint64_t>(63);
     // Looks strange, but saves us from casting in the initializer list.
     const uint64_t _0 = 0;
     const uint64_t _63 = 63;
+    const uint64_t _100k = 100000;
     const uint64_t min48bit = bitwidth_min<uint64_t>(48);
     const uint64_t min63bit = bitwidth_min<uint64_t>(63);
-    const uint64_t range = 100000;
+    const uint64_t max63bit = bitwidth_max<uint64_t>(63);
     
     unsigned datasetIdx = 0;
     for(float selectedShare : {
@@ -384,17 +384,17 @@ int main(void) {
         
         for(auto params : {
             // Unsorted, small numbers, no outliers -> good for static_vbp.
-            std::make_tuple(false, _0, _63, _0, _0, 0.0, false),
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C2
             // Unsorted, small numbers, very rare outliers -> good for dynamic_vbp.
-            std::make_tuple(false, _0, _63, largeVal, largeVal, 0.0001, false),
+            std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001, false), // C3
             // Unsorted, huge numbers in narrow range, no outliers -> good for for+dynamic_vbp.
-            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false),
+            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false), // C4
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, _0, range, _0, _0, 0.0, false),
+            std::make_tuple(true, _0, _100k, _0, _0, 0.0, false), // C5
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, min48bit, min48bit + range, _0, _0, 0.0, false),
+            std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0, false), // C6
             // Unsorted, random numbers -> good for nothing/uncompr.
-            std::make_tuple(false, _0, bitwidth_max<uint64_t>(63), _0, _0, 0.0, true),
+            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C7
         }) {
             datasetIdx++;
             
@@ -431,10 +431,10 @@ int main(void) {
             // compilation time.
             VG_BEGIN
             VG_CASE(inDataCount, _63)
-            VG_CASE(inDataCount, largeVal)
+            VG_CASE(inDataCount, max63bit)
             VG_CASE(inDataCount, min63bit + 63)
-            VG_CASE(inDataCount, range)
-            VG_CASE(inDataCount, min48bit + range)
+            VG_CASE(inDataCount, _100k)
+            VG_CASE(inDataCount, min48bit + _100k)
             VG_CASE(inDataCount, bitwidth_min<uint64_t>(63))
             VG_END
             
