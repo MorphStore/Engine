@@ -57,7 +57,7 @@ namespace vectorlib {
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename sse< v128< U > >::vector_t
-      set1( int a0) {
+      set1( uint64_t a0) {
          trace( "[VECTOR] - set1 sse register." );
          return _mm_set1_epi64x(a0);
       }
