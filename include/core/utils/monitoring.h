@@ -26,9 +26,19 @@
 #define MORPHSTORE_CORE_UTILS_MONITORING_H_
 
 #include <core/memory/mm_glob.h>
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <vector>
+#include <map>
+namespace morphstore {
+    template<typename ... ts>
+    using vector = std::vector<ts...>;
+    template<typename ... ts>
+    using map = std::map<ts...>;
+}
+#else
 #include <core/memory/stl_wrapper/vector.h>
 #include <core/memory/stl_wrapper/map.h>
-//#include <core/memory/stl_wrapper/string.h>
+#endif
 #include <string>
 #include <iostream>
 #include <algorithm>
