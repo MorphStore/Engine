@@ -315,6 +315,7 @@ template<
 >
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
+#if 0
         MAKE_VARIANTS_VARY_INDATAXF(
                 scalar<v64<uint64_t>>,
                 t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
@@ -330,6 +331,7 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
                 avx2<v256<uint64_t>>,
                 t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
         ),
+#endif
 #endif
 #ifdef AVX512
         MAKE_VARIANTS_VARY_INDATAXF(
