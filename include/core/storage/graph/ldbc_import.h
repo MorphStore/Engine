@@ -35,6 +35,7 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
+#include <regex>
 
 // hash function used to hash a pair of any kind using XOR (for verticesMap)
 struct hash_pair {
@@ -75,11 +76,28 @@ namespace morphstore{
             return directory;
         }
 
+        // get the vertex or edge type based on the fileName
+        std::string getEntityType(std::string fileName) {
+                // last [a-zA-Z] to remove ending _
+                std::regex typeRegExp("[a-zA-Z_]+[a-zA-Z]");
+                std::smatch match;
+
+                if(std::regex_search(fileName, match, typeRegExp)) {
+                    std::cout << "EntityType: " << match[0] << std::endl;
+                    std::cout.flush();
+                    return match[0];
+                }
+                else {
+                    throw std::invalid_argument("No EntityType in: " + fileName);
+                }
+        }
+        
+
         // function which iterates through directory to receive file names (entire path)
         void insert_file_names(std::string dir) {
             for (const auto &entry : std::experimental::filesystem::directory_iterator(dir)) {
-                // ignore files starting with a '.'
-                if (entry.path().string()[dir.size()] == '.') {
+                // ignore files starting with a '.' (+ 1 as '/' is the first character otherwise)
+                if (entry.path().string()[dir.size() + 1] == '.') {
                     continue;
                 } else {
                     // insert file path to vertices or relations vector
@@ -87,8 +105,9 @@ namespace morphstore{
                 }
             }
 
+            print_file_names();
+
             if(verticesPaths.empty()) {
-                print_file_names();
                 throw std::invalid_argument("No vertex files found");
             }
         }
@@ -96,128 +115,142 @@ namespace morphstore{
         // this function differentiates, whether the file is a vertex or relation and puts it into the specific vector
         void differentiate(std::string path, std::string dir) {
             // if the string contains a '_' -> it's a relation file; otherwise a vertex file
-            // remove dir name to remain only the *.csv
-            if (path.substr(dir.size()).find('_') != std::string::npos) {
-                relationsPaths.push_back(path);
+            // if string contains word_word it is an edge files (vertex files only contain one word)
+            // todo: remove dir name to remain only the *.csv
+
+            // a vertex file contains exactly one word and after that only numbers are allowed f.i. _0_0
+            std::regex vertexFileRegExp("^\\/([a-zA-Z]+\\_)([0-9_]*).csv$");
+            std::string fileName = path.substr(dir.size());
+
+            if (std::regex_match(fileName, vertexFileRegExp)) {
+                verticesPaths.push_back(fileName);
             } else {
-                verticesPaths.push_back(path);
+                relationsPaths.push_back(fileName);
             }
         }
 
         // this function reads the vertices-files and creates vertices in a graph
         // + creates the entityLookup (number to string) for the graph
         void generate_vertices(Graph& graph) {
+            std::cout << "(1/2) Generating LDBC-Vertices ...";
+            std::cout.flush();
 
-            if (!verticesPaths.empty()) {
-                //std::cout << "(1/2) Generating LDBC-Vertices ...";
-                //std::cout.flush();
+            //this variable is used for the entityLookup-keys, starting by 0
+            unsigned short int entityNumber = 0;
 
-                //this variable is used for the entityLookup-keys, starting by 0
-                unsigned short int entityNumber = 0;
+            // iterate through vector of vertex-addresses
+            for (const auto &file : verticesPaths)
+            {
+                // data structure for attributes of entity, e.g. taglass -> id, name, url
+                std::vector<std::string> attributes;
 
-                // iterate through vector of vertex-addresses
-                for (const auto &address : verticesPaths) {
+                
+                // get the entity from address ([...path...] / [entity-name].csv)
+                std::string entity = getEntityType(file);
 
-                    // data structure for attributes of entity, e.g. taglass -> id, name, url
-                    std::vector<std::string> attributes;
+                char *buffer;
 
-                    // get the entity from address ([...path...] / [entity-name].csv)
-                    std::string entity = address.substr(getDirectory().size(),
-                                                        address.size() - getDirectory().size() - 4);
+                uint64_t fileSize = 0;
 
-                    char *buffer;
+                std::string address = getDirectory() + file;
 
-                    uint64_t fileSize = 0;
-
-                    std::ifstream vertexFile(address, std::ios::binary |
+                std::ifstream vertexFile(address, std::ios::binary |
                                                       std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
-                    if (!vertexFile) {
-                        std::cerr << "Error, opening file. ";
-                        exit(EXIT_FAILURE);
-                    }
-
-                    // calculate file size
-                    if (vertexFile.is_open()) {
-                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                        vertexFile.clear();
-                        vertexFile.seekg(0,
-                                         std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-                    }
-
-                    // allocate memory
-                    buffer = (char *) malloc(fileSize * sizeof(char));
-                    vertexFile.read(buffer, fileSize); // read data as one big block
-                    size_t start = 0;
-                    std::string delimiter = "|";
-
-                    // read buffer and do the magic ...
-                    for (size_t i = 0; i < fileSize; ++i) {
-                        if (buffer[i] == '\n') {
-                            // get a row into string form buffer with start- and end-point
-                            std::string row(&buffer[start], &buffer[i]);
-
-                            // remove unnecessary '\n' at the beginning of a string
-                            if (row.find('\n') != std::string::npos) {
-                                row.erase(0, 1);
-                            }
-
-                            size_t last = 0;
-                            size_t next = 0;
-
-                            // first line of *.csv contains the attributes -> write to attributes vector
-                            if (start == 0) {
-                                // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
-                                while ((next = row.find(delimiter, last)) != std::string::npos) {
-                                    attributes.push_back(row.substr(last, next - last));
-                                    last = next + 1;
-                                }
-                                // last attribute
-                                attributes.push_back(row.substr(last));
-                            } else {
-                                // actual data:
-                                std::unordered_map<std::string, std::string> properties;
-                                size_t attrIndex = 0;
-                                std::string ldbcID = row.substr(0, row.find(delimiter));
-                                while ((next = row.find(delimiter, last)) != std::string::npos) {
-                                    properties.insert(
-                                            std::make_pair(attributes[attrIndex], row.substr(last, next - last)));
-                                    last = next + 1;
-                                    ++attrIndex;
-                                }
-                                // last attribute
-                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
-
-                                //-----------------------------------------------------
-                                // create vertex and insert into graph with properties
-                                uint64_t systemID = graph.add_vertex_with_properties(properties);
-                                // add entity number to vertex
-                                graph.add_entity_to_vertex(systemID, entityNumber);
-                                // map entity and ldbc id to system generated id
-                                globalIdLookupMap.insert({{entity, ldbcID}, systemID});
-                                //-----------------------------------------------------
-                                properties.clear(); // free memory
-                            }
-
-                            start = i; // set new starting point for buffer (otherwise it's concatenated)
-                        }
-                    }
-
-                    delete[] buffer; // free memory
-                    vertexFile.close();
-
-                    // insert entity-number with string into map
-                    entitiesLookup.insert(std::make_pair(entityNumber, entity));
-                    ++entityNumber;
-                    attributes.clear();
+                if (!vertexFile) {
+                    std::cerr << "Error, opening file. ";
+                    exit(EXIT_FAILURE);
                 }
-                // graph gets full entity-list here:
-                graph.setEntityDictionary(entitiesLookup);
+
+                // calculate file size
+                if (vertexFile.is_open()) {
+                    fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                    vertexFile.clear();
+                    vertexFile.seekg(0,
+                                     std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                }
+
+                // allocate memory
+                buffer = (char *)malloc(fileSize * sizeof(char));
+                vertexFile.read(buffer, fileSize); // read data as one big block
+                size_t start = 0;
+                std::string delimiter = "|";
+
+                // read buffer and do the magic ...
+                for (size_t i = 0; i < fileSize; ++i)
+                {
+                    if (buffer[i] == '\n')
+                    {
+                        // get a row into string form buffer with start- and end-point
+                        std::string row(&buffer[start], &buffer[i]);
+
+                        // remove unnecessary '\n' at the beginning of a string
+                        if (row.find('\n') != std::string::npos)
+                        {
+                            row.erase(0, 1);
+                        }
+
+                        size_t last = 0;
+                        size_t next = 0;
+
+                        // first line of *.csv contains the attributes -> write to attributes vector
+                        if (start == 0)
+                        {
+                            // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
+                            while ((next = row.find(delimiter, last)) != std::string::npos)
+                            {
+                                attributes.push_back(row.substr(last, next - last));
+                                last = next + 1;
+                            }
+                            // last attribute
+                            attributes.push_back(row.substr(last));
+                        }
+                        else
+                        {
+                            // actual data:
+                            std::unordered_map<std::string, std::string> properties;
+                            size_t attrIndex = 0;
+                            std::string ldbcID = row.substr(0, row.find(delimiter));
+                            while ((next = row.find(delimiter, last)) != std::string::npos)
+                            {
+                                properties.insert(
+                                    std::make_pair(attributes[attrIndex], row.substr(last, next - last)));
+                                last = next + 1;
+                                ++attrIndex;
+                            }
+                            // last attribute
+                            properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
+
+                            //-----------------------------------------------------
+                            // create vertex and insert into graph with properties
+                            uint64_t systemID = graph.add_vertex_with_properties(properties);
+                            // add entity number to vertex
+                            graph.add_entity_to_vertex(systemID, entityNumber);
+                            // map entity and ldbc id to system generated id
+                            globalIdLookupMap.insert({{entity, ldbcID}, systemID});
+                            //-----------------------------------------------------
+                            properties.clear(); // free memory
+                        }
+
+                        start = i; // set new starting point for buffer (otherwise it's concatenated)
+                    }
+                }
+
+                delete[] buffer; // free memory
+                vertexFile.close();
+
+                // insert entity-number with string into map
+                entitiesLookup.insert(std::make_pair(entityNumber, entity));
+                ++entityNumber;
+                attributes.clear();
             }
+            // graph gets full entity-list here:
+            graph.setEntityDictionary(entitiesLookup);
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
         bool is_entity(const std::string &entity) {
+            // Todo: replace whole function by by entitiesLookup.find(entity)
             // iterate through entities-map to look up for paramater
             for (auto const &entry : entitiesLookup) {
                 if (entry.second == entity) {
@@ -242,6 +275,7 @@ namespace morphstore{
 
         // for debugging
         void print_file_names() {
+            std::cout << "File-directory: " << getDirectory() << std::endl;
             std::cout << "Vertices-Files: " << std::endl;
             for (const auto &v : verticesPaths) {
                 std::cout << "\t" << v << std::endl;
@@ -271,10 +305,12 @@ namespace morphstore{
             if (!relationsPaths.empty()) {
 
                 // iterate through vector of relation-addresses
-                for (const auto &address : relationsPaths) {
+                for (const auto &file : relationsPaths) {
                     // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
-                    std::string relation = address.substr(getDirectory().size(),
-                                                          address.size() - getDirectory().size() - 4);
+                    std::string relation = getEntityType(file);
+
+
+                    // TOdo: use regExp ([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)
                     std::string fromEntity = relation.substr(0, relation.find('_'));
                     relation.erase(0, relation.find('_') + 1);
 
@@ -286,6 +322,8 @@ namespace morphstore{
                     char *buffer;
 
                     uint64_t fileSize = 0;
+
+                    std::string address = getDirectory() + file;
 
                     std::ifstream relationFile(address, std::ios::binary |
                                                         std::ios::ate); // 'ate' means: open and seek to end immediately after opening
@@ -342,14 +380,16 @@ namespace morphstore{
                 unsigned short int entityNumber = 0;
 
                 // iterate through vector of vertex-addresses
-                for (const auto &address : verticesPaths) {
+                for (const auto &file : verticesPaths) {
 
                     // get the entity from address ([...path...] / [entity-name].csv)
-                    std::string entity = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+                    std::string entity = getEntityType(file);
 
                     char *buffer;
 
                     uint64_t fileSize = 0;
+
+                    std::string address = getDirectory() + file;
 
                     std::ifstream vertexFile(address, std::ios::binary |
                                                       std::ios::ate); // 'ate' means: open and seek to end immediately after opening
@@ -410,20 +450,20 @@ namespace morphstore{
         void fill_vertexRelationsLookup(Graph& graph){
 
             if(!relationsPaths.empty()) {
-                //std::cout << "(2/2) Generating LDBC-Edges ...";
-                //std::cout.flush();
+                std::cout << "(2/2) Generating LDBC-Edges ...";
+                std::cout.flush();
 
                 //this variable is used for the relationLookup-keys, starting by 0
                 unsigned short int relationNumber = 0;
                 bool isRelation = false; // flag which is used to differentiate for relatoin-lookup-entrys (to avoid e.g. email as relation)
 
                 // iterate through vector of vertex-addresses
-                for (const auto &address : relationsPaths) {
+                for (const auto &file : relationsPaths) {
 
                     isRelation = false;
 
                     // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
-                    std::string relation = address.substr(getDirectory().size(), address.size() - getDirectory().size() - 4);
+                    std::string relation = getEntityType(file);
                     std::string fromEntity = relation.substr(0, relation.find('_'));
                     relation.erase(0, relation.find('_') + 1);
 
@@ -435,6 +475,8 @@ namespace morphstore{
                     char* buffer;
 
                     uint64_t fileSize = 0;
+
+                    std::string address = getDirectory() + file;
 
                     std::ifstream relationFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
