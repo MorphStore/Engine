@@ -37,8 +37,8 @@ namespace morphstore{
     protected:
         // vertex: id,
         // optional: entity, properties
-        uint64_t id;
-        unsigned short int entity;
+        uint64_t id;      
+        unsigned short int type;
         std::unordered_map<std::string, std::string> properties;
 
 
@@ -50,12 +50,12 @@ namespace morphstore{
             return id;
         }
 
-        unsigned short getEntity() const {
-            return entity;
+        unsigned short getType() const {
+            return type;
         }
 
-        void setEntity(const unsigned short e) {
-            Vertex::entity = e;
+        void setType(const unsigned short type) {
+            Vertex::type = type;
         }
 
         const std::unordered_map<std::string, std::string> &getProperties() const {
@@ -73,16 +73,21 @@ namespace morphstore{
 
 
         // ----------------- (pure) virtual functions -----------------
+        // todo: remove (not a vertex but a graph.h function)
         virtual void add_edges(const std::vector<morphstore::Edge> edges) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void print_neighbors() = 0;
+
+
         virtual size_t get_data_size_of_vertex() = 0;
 
+        // todo: remove (not a vertex but a graph.h function)
         virtual uint64_t get_number_edges(){
             return 0;
         };
 
         // for BFS alg.: adj-list
+        // todo: remove (not a vertex but a graph.h function)
         virtual std::vector<uint64_t> get_neighbors_ids() {
             // return empty vector: implementation only needed in adj - Vertex
             return std::vector<uint64_t>();

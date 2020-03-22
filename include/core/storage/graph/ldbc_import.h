@@ -55,14 +55,14 @@ namespace morphstore{
     private:
         std::string directory;
         std::vector<std::string> verticesPaths;
-        std::vector<std::string> relationsPaths;
-        std::map<unsigned short int, std::string> entitiesLookup;
-        std::map<unsigned short int, std::string> relationsLookup;
+        std::vector<std::string> edgesPaths;
+        std::map<unsigned short int, std::string> vertexTypeLookup;
+        std::map<unsigned short int, std::string> edgeTypeLookup;
         // data structure for lookup local ids with entity to global system id: (entity, ldbc_id) -> global id
         std::unordered_map<std::pair<std::string, std::string>, uint64_t, hash_pair> globalIdLookupMap;
 
         // unordered_map for lookup system-id and its in the graph (for further processing, e.g. filling the edge_array in the right order)
-        std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexRelationsLookup;
+        std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexEdgesLookup;
 
     public:
 
@@ -83,8 +83,8 @@ namespace morphstore{
                 std::smatch match;
 
                 if(std::regex_search(fileName, match, typeRegExp)) {
-                    std::cout << "EntityType: " << match[0] << std::endl;
-                    std::cout.flush();
+                    //std::cout << "EntityType: " << match[0] << std::endl;
+                    //std::cout.flush();
                     return match[0];
                 }
                 else {
@@ -100,7 +100,7 @@ namespace morphstore{
                 if (entry.path().string()[dir.size() + 1] == '.') {
                     continue;
                 } else {
-                    // insert file path to vertices or relations vector
+                    // insert file path to vertices or edges vector
                     differentiate(entry.path().string(), dir);
                 }
             }
@@ -125,7 +125,7 @@ namespace morphstore{
             if (std::regex_match(fileName, vertexFileRegExp)) {
                 verticesPaths.push_back(fileName);
             } else {
-                relationsPaths.push_back(fileName);
+                edgesPaths.push_back(fileName);
             }
         }
 
@@ -225,7 +225,7 @@ namespace morphstore{
                             // create vertex and insert into graph with properties
                             uint64_t systemID = graph.add_vertex_with_properties(properties);
                             // add entity number to vertex
-                            graph.add_entity_to_vertex(systemID, entityNumber);
+                            graph.add_type_to_vertex(systemID, entityNumber);
                             // map entity and ldbc id to system generated id
                             globalIdLookupMap.insert({{entity, ldbcID}, systemID});
                             //-----------------------------------------------------
@@ -240,19 +240,19 @@ namespace morphstore{
                 vertexFile.close();
 
                 // insert entity-number with string into map
-                entitiesLookup.insert(std::make_pair(entityNumber, entity));
+                vertexTypeLookup.insert(std::make_pair(entityNumber, entity));
                 ++entityNumber;
                 attributes.clear();
             }
             // graph gets full entity-list here:
-            graph.setEntityDictionary(entitiesLookup);
+            graph.setVertexTypeDictionary(vertexTypeLookup);
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
         bool is_entity(const std::string &entity) {
             // Todo: replace whole function by by entitiesLookup.find(entity)
             // iterate through entities-map to look up for paramater
-            for (auto const &entry : entitiesLookup) {
+            for (auto const &entry : vertexTypeLookup) {
                 if (entry.second == entity) {
                     return true;
                 }
@@ -263,8 +263,9 @@ namespace morphstore{
 
         // function which returns true, if the relation already exist
         bool exist_relation_name(const std::string &relation) {
-            // iterate through relations-map to look up for paramater
-            for (auto const &entry : relationsLookup) {
+            // Todo: replace whole function by by entitiesLookup.find(relation)
+            // iterate through edges-map to look up for paramater
+            for (auto const &entry : edgeTypeLookup) {
                 if (entry.second == relation) {
                     return true;
                 }
@@ -280,8 +281,8 @@ namespace morphstore{
             for (const auto &v : verticesPaths) {
                 std::cout << "\t" << v << std::endl;
             }
-            std::cout << "Relations-Files: " << std::endl;
-            for (const auto &rel : relationsPaths) {
+            std::cout << "Edge-Files: " << std::endl;
+            for (const auto &rel : edgesPaths) {
                 std::cout << "\t" << rel << std::endl;
             }
 
@@ -290,11 +291,11 @@ namespace morphstore{
         // function which clears all intermediates after import
         void clear_intermediates() {
             globalIdLookupMap.clear();
-            relationsLookup.clear();
-            entitiesLookup.clear();
-            relationsPaths.clear();
+            edgeTypeLookup.clear();
+            vertexTypeLookup.clear();
+            edgesPaths.clear();
             verticesPaths.clear();
-            vertexRelationsLookup.clear();
+            vertexEdgesLookup.clear();
         }
 
         // function which returns the total number of edges (IMPORTANT: vertex generation has to be done first, because of the entity lookup creation)
@@ -302,10 +303,10 @@ namespace morphstore{
 
             uint64_t result = 0;
 
-            if (!relationsPaths.empty()) {
+            if (!edgesPaths.empty()) {
 
                 // iterate through vector of relation-addresses
-                for (const auto &file : relationsPaths) {
+                for (const auto &file : edgesPaths) {
                     // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
                     std::string relation = getEntityType(file);
 
@@ -437,7 +438,7 @@ namespace morphstore{
                     vertexFile.close();
 
                     // insert entity-number with string into map
-                    entitiesLookup.insert(std::make_pair( entityNumber, entity));
+                    vertexTypeLookup.insert(std::make_pair( entityNumber, entity));
                     ++entityNumber;
 
                 }
@@ -447,9 +448,9 @@ namespace morphstore{
 
         // this function reads the relation-files and fills the intermediate: vertexRelationLookup
         // + creates the relationLookup (number to string) for the graph
-        void fill_vertexRelationsLookup(Graph& graph){
+        void fill_vertexEdgesLookup(Graph& graph){
 
-            if(!relationsPaths.empty()) {
+            if(!edgesPaths.empty()) {
                 std::cout << "(2/2) Generating LDBC-Edges ...";
                 std::cout.flush();
 
@@ -458,7 +459,7 @@ namespace morphstore{
                 bool isRelation = false; // flag which is used to differentiate for relatoin-lookup-entrys (to avoid e.g. email as relation)
 
                 // iterate through vector of vertex-addresses
-                for (const auto &file : relationsPaths) {
+                for (const auto &file : edgesPaths) {
 
                     isRelation = false;
 
@@ -586,15 +587,15 @@ namespace morphstore{
                                         toID = globalIdLookupMap.at({toEntity, row});
 
                                         // insert relation into vertexRealtionsLookup:
-                                        vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber));
+                                        vertexEdgesLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber));
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
                                         toID = globalIdLookupMap.at({toEntity, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
 
-                                        // insert relation into vertexRelationsLookup with its edge-property:
-                                        vertexRelationsLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber, {propertyKey, value}));
+                                        // insert relation into vertexEdgesLookup with its edge-property:
+                                        vertexEdgesLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber, {propertyKey, value}));
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -609,43 +610,43 @@ namespace morphstore{
                         // check if the name already exists
                         if(!exist_relation_name(relationName)){
                             // insert relation-number with string into map
-                            relationsLookup.insert(std::make_pair( relationNumber, relationName));
+                            edgeTypeLookup.insert(std::make_pair( relationNumber, relationName));
                             ++relationNumber;
                         }
                     }
 
                 }
                 // graph gets full relation-list here:
-                graph.setRelationDictionary(relationsLookup);
+                graph.setEdgeTypeDictionary(edgeTypeLookup);
             }
         }
 
-        // function for sorting the vertexRelationsLookup ASC (needed in CSR)
+        // function for sorting the vertexEdgesLookup ASC (needed in CSR)
         // sorting for every vertex its vector list with target-ids ASC
-        void sort_VertexRelationsLookup(){
+        void sort_VertexEdgesLookup(){
             // sorting the first element of the pair (target-id)
-            for(auto &rel: vertexRelationsLookup){
+            for(auto &rel: vertexEdgesLookup){
                 std::sort(rel.second.begin(), rel.second.end());
             }
         }
 
-        // this function writes the actual data from the intermediate vertexRelationsLookup into the graph
+        // this function writes the actual data from the intermediate vertexEdgesLookup into the graph
         void generate_edges(Graph&  graph){
             // firstly, sorting the intermediates with their target IDs ASC
-            sort_VertexRelationsLookup();
+            sort_VertexEdgesLookup();
 
             uint64_t graphSize = graph.getNumberVertices();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
                 // add edge data:
-                graph.add_edges(vertexID, vertexRelationsLookup[vertexID]);
+                graph.add_edges(vertexID, vertexEdgesLookup[vertexID]);
             }
         }
 
         // MAIN IMPORT FUNCTION: see steps in comments
         void import(Graph&  graph) {
-            //std::cout << "Importing LDBC-files into graph ... ";
-            //std::cout.flush();
+            std::cout << "Importing LDBC-files into graph ... ";
+            std::cout.flush();
 
             // (1) get number vertices and number edges:
             uint64_t numberVertices = get_total_number_vertices();
@@ -657,8 +658,8 @@ namespace morphstore{
             // (3) generate vertices
             generate_vertices(graph);
 	    
-            // (4) read relations and write to intermediate results
-            fill_vertexRelationsLookup(graph);
+            // (4) read edges and write to intermediate results
+            fill_vertexEdgesLookup(graph);
 
             // (5) read intermediates and write edges
             generate_edges(graph);

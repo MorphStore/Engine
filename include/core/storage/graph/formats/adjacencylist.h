@@ -69,19 +69,19 @@ namespace morphstore{
             }
         }
 
-        // adding entity to vertex
-        void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) override {
+        // adding type to vertex
+        void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
             if (exist_id(id)) {
-                vertices[id]->setEntity(entity);
+                vertices[id]->setType(type);
             } else {
                 std::cout << "Vertex with ID " << id << " not found." << std::endl;
             }
         }
 
         // adding a single edge to vertex:
-        void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
+        void add_edge(uint64_t from, uint64_t to, unsigned short int type) override {
             if (exist_id(from) && exist_id(to)) {
-                vertices[from]->add_edge(from, to, rel);
+                vertices[from]->add_edge(from, to, type);
             } else {
                 std::cout << "Source-/Target-Vertex-ID does not exist in the database!" << std::endl;
             }
@@ -119,13 +119,13 @@ namespace morphstore{
             size_t data_size = 0;
             size_t index_size = 0;
 
-            // lookup dicts: entity dict  + relation dict.
+            // lookup type dicts
             index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
-            for(auto& ent : entityDictionary){
+            for(auto& ent : vertexTypeDictionary){
                 index_size += sizeof(unsigned short int);
                 index_size += sizeof(char)*(ent.second.length());
             }
-            for(auto& rel : relationDictionary){
+            for(auto& rel : edgeTypeDictionary){
                 index_size += sizeof(unsigned short int);
                 index_size += sizeof(char)*(rel.second.length());
             }

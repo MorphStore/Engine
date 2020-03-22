@@ -49,9 +49,9 @@ namespace morphstore{
         // Data-structure for Vertex-Properties
         std::unordered_map<uint64_t , std::shared_ptr<morphstore::Vertex>> vertices;
 
-        // Lookup for entities and relations: number to string
-        std::map<unsigned short int, std::string> entityDictionary;
-        std::map<unsigned short int, std::string> relationDictionary;
+        // Lookup for types: number to string
+        std::map<unsigned short int, std::string> vertexTypeDictionary;
+        std::map<unsigned short int, std::string> edgeTypeDictionary;
 
     public:
 
@@ -59,20 +59,20 @@ namespace morphstore{
 
         // -------------------- Setters & Getters --------------------
 
-        const std::map<unsigned short, std::string> &getEntityDictionary() const {
-            return entityDictionary;
+        const std::map<unsigned short, std::string> &getVertexTypeDictionary() const {
+            return vertexTypeDictionary;
         }
 
-        void setEntityDictionary(const std::map<unsigned short, std::string>& ent) {
-            this->entityDictionary = ent;
+        void setVertexTypeDictionary(const std::map<unsigned short, std::string>& ent) {
+            this->vertexTypeDictionary = ent;
         }
 
         const std::map<unsigned short, std::string> &getRelationDictionary() const {
-            return relationDictionary;
+            return edgeTypeDictionary;
         }
 
-        void setRelationDictionary(const std::map<unsigned short, std::string>& rel) {
-            this->relationDictionary = rel;
+        void setEdgeTypeDictionary(const std::map<unsigned short, std::string>& rel) {
+            this->edgeTypeDictionary = rel;
         }
 
         uint64_t getNumberVertices() const {
@@ -91,17 +91,17 @@ namespace morphstore{
             Graph::numberEdges = numE;
         }
 
-        std::string get_entity_by_number(unsigned short int e){
-            if(entityDictionary.find( e ) != entityDictionary.end()){
-                return entityDictionary.at(e);
+        std::string get_vertexType_by_number(unsigned short int type){
+            if(vertexTypeDictionary.find( type ) != vertexTypeDictionary.end()){
+                return vertexTypeDictionary.at(type);
             }else{
-                return "No Matching of entity-number in the database!";
+                return "No Matching of type-number in the database!";
             }
         }
 
-        std::string get_relation_by_number(unsigned short int re){
-            if(relationDictionary.find( re ) != relationDictionary.end()){
-                return relationDictionary.at(re);
+        std::string get_edgeType_by_number(unsigned short int type){
+            if(edgeTypeDictionary.find( type ) != edgeTypeDictionary.end()){
+                return edgeTypeDictionary.at(type);
             }else{
                 return "No Matching of relation-number in the database!";
             }
@@ -167,7 +167,7 @@ namespace morphstore{
         virtual void add_vertex() = 0;
         virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
-        virtual void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) = 0;
+        virtual void add_type_to_vertex(const uint64_t id, const unsigned short int type) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
         virtual uint64_t get_degree(uint64_t id) = 0;
@@ -190,7 +190,7 @@ namespace morphstore{
             std::cout << "-------------- Vertex ID: " << id << " --------------" << std::endl;
             std::shared_ptr<Vertex> v = vertices[id];
             std::cout << "Vertex-ID: \t" << v->getID() << std::endl;
-            std::cout << "Entity: \t" << get_entity_by_number(v->getEntity()) << std::endl;
+            std::cout << "Type: \t" << get_vertexType_by_number(v->getType()) << std::endl;
             std::cout << "\n";
             std::cout << "Properties: ";
             v->print_properties();
@@ -199,15 +199,15 @@ namespace morphstore{
             std::cout << "-----------------------------------------------" << std::endl;
         }
 
-        void print_entity_relationship_dicts(){
-            std::cout << "Entity-Dict: " << std::endl;
-            for(auto const& entry : entityDictionary){
+        void print_type_dicts(){
+            std::cout << "VertexType-Dict: " << std::endl;
+            for(auto const& entry : vertexTypeDictionary){
                 std::cout << entry.first << " -> " << entry.second << std::endl;
             }
             std::cout << "\n";
 
-            std::cout << "Relationship-Dict: " << std::endl;
-            for(auto const& rel : relationDictionary){
+            std::cout << "EdgeType-Dict: " << std::endl;
+            for(auto const& rel : edgeTypeDictionary){
                 std::cout << rel.first << " -> " << rel.second << std::endl;
             }
         }

@@ -17,7 +17,7 @@
 
 /**
  * @file edge.h
- * @brief Edge class which represents a relationship object betwenn two vertices
+ * @brief Edge class which represents an edge object between two vertices
  * @todo
 */
 
@@ -35,22 +35,23 @@ namespace morphstore{
     protected:
         // Edge characteristics
         uint64_t sourceID, targetID;
-        unsigned short int relation;
+        unsigned short int type;
+        // todo: allow map instead of pair
         std::pair<std::string, std::string> property;
 
     public:
 
         // Constructors with parameters
-        Edge(uint64_t from, uint64_t to, unsigned short int rel){
+        Edge(uint64_t from, uint64_t to, unsigned short int type){
             setSourceId(from);
             setTargetId(to);
-            setRelation(rel);
+            setType(type);
         }
 
-        Edge(uint64_t from, uint64_t to, unsigned short int rel, std::pair<std::string, std::string> prop){
+        Edge(uint64_t from, uint64_t to, unsigned short int type, std::pair<std::string, std::string> prop){
             setSourceId(from);
             setTargetId(to);
-            setRelation(rel);
+            setType(type);
             setProperty(prop);
         }
 
@@ -63,7 +64,7 @@ namespace morphstore{
             // do the copy
             setSourceId(edge.sourceID);
             setTargetId(edge.targetID);
-            setRelation(edge.relation);
+            setType(edge.type);
             setProperty(edge.property);
 
             // return the existing object so we can chain this operator
@@ -88,12 +89,12 @@ namespace morphstore{
             targetID = targetId;
         }
 
-        unsigned short getRelation() const {
-            return relation;
+        unsigned short getType() const {
+            return type;
         }
 
-        void setRelation(unsigned short relation) {
-            Edge::relation = relation;
+        void setType(unsigned short type) {
+            Edge::type = type;
         }
 
         const std::pair<std::string, std::string> &getProperty() const {

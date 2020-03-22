@@ -34,7 +34,7 @@ namespace morphstore{
     private:
         /* graph topology:
          * node array: index is vertex-id; array cell contains offset in edge_array
-         * edge array: contains target id of relationship
+         * edge array: contains target id of the edge (TODO: should contain edge-id)
          * edge value array: contains edge object with addtional information (same index with edge array)
          */
         uint64_t* node_array = nullptr;
@@ -111,12 +111,12 @@ namespace morphstore{
             }
         }
 
-        // adding entity to vertex
-        void add_entity_to_vertex(const uint64_t id, const unsigned short int entity) override {
+        // adding type to vertex
+        void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
             if(exist_id(id)){
-                vertices[id]->setEntity(entity);
+                vertices[id]->setType(type);
             }else{
-                std::cout << "Vertex with ID " << id << " not found./entity_to_vertex." << std::endl;
+                std::cout << "Vertex with ID " << id << " not found./type_to_vertex." << std::endl;
             }
         }
 
@@ -168,11 +168,11 @@ namespace morphstore{
 
             // lookup dicts: entity dict  + relation dict.
             index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
-            for(auto& ent : entityDictionary){
+            for(auto& ent : vertexTypeDictionary){
                 index_size += sizeof(unsigned short int);
                 index_size += sizeof(char)*(ent.second.length());
             }
-            for(auto& rel : relationDictionary){
+            for(auto& rel : edgeTypeDictionary){
                 index_size += sizeof(unsigned short int);
                 index_size += sizeof(char)*(rel.second.length());
             }
