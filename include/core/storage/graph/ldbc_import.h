@@ -86,6 +86,11 @@ namespace morphstore{
                     differentiate(entry.path().string(), dir);
                 }
             }
+
+            if(verticesPaths.empty()) {
+                print_file_names();
+                throw std::invalid_argument("No vertex files found");
+            }
         }
 
         // this function differentiates, whether the file is a vertex or relation and puts it into the specific vector
@@ -209,7 +214,6 @@ namespace morphstore{
                 // graph gets full entity-list here:
                 graph.setEntityDictionary(entitiesLookup);
             }
-
         }
 
         // function which returns true, if parameter is a entity in ldbc-files
