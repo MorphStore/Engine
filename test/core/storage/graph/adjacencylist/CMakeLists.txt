@@ -1,6 +1,6 @@
 if ( CTEST_ALL OR CTEST_STORAGE )
-    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/storage/graph/adjacencylist/ldbc_graph_adjacencylist_test_app )
     FILE( REMOVE ${CMAKE_BINARY_DIR}test/core/storage/graph/adjacencylist/simple_adj_graph_test_app )
+    FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/storage/graph/adjacencylist/ldbc_graph_adjacencylist_test_app )
     
     add_executable( simple_adj_graph_test_app simple_adj_graph_test.cpp)
     add_executable( ldbc_graph_adjacencylist_test_app ldbc_graph_adjacencylist.cpp)

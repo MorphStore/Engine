@@ -28,7 +28,7 @@
 #include <utility>
 #include <string>
 #include <iostream>
-
+#include <unordered_map>
 namespace morphstore{
 
     class Edge{
@@ -37,8 +37,8 @@ namespace morphstore{
         // Edge characteristics
         uint64_t sourceID, targetID, id;
         unsigned short int type;
-        // todo: allow map instead of pair
-        std::pair<std::string, std::string> property;
+
+        std::unordered_map<std::string, std::string> properties;
 
         uint64_t getNextEdgeId() const {
             static uint64_t currentMaxEdgeId = 0;
@@ -46,20 +46,11 @@ namespace morphstore{
         }
 
     public:
-
-        // Constructors with parameters
-        Edge(uint64_t from, uint64_t to, unsigned short int type){
-            setSourceId(from);
-            setTargetId(to);
-            setType(type);
-            this->id = getNextEdgeId();
-        }
-
-        Edge(uint64_t from, uint64_t to, unsigned short int type, std::pair<std::string, std::string> prop){
-            setSourceId(from);
-            setTargetId(to);
-            setType(type);
-            setProperty(prop);
+        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type, const std::unordered_map<std::string, std::string> properties = {}){
+            this->sourceID = sourceId;
+            this->targetID = targetId;
+            this->type = type;
+            this->properties = properties;
             this->id = getNextEdgeId();
         }
 
@@ -70,10 +61,10 @@ namespace morphstore{
                 return *this;
 
             // do the copy
-            setSourceId(edge.sourceID);
-            setTargetId(edge.targetID);
-            setType(edge.type);
-            setProperty(edge.property);
+            this->sourceID = edge.sourceID;
+            this->targetID = edge.targetID;
+            this->type = edge.type;
+            this->properties = edge.properties;
 
             // return the existing object so we can chain this operator
             return *this;
@@ -89,35 +80,22 @@ namespace morphstore{
             return sourceID;
         }
 
-        void setSourceId(uint64_t sourceId) {
-            sourceID = sourceId;
-        }
-
         uint64_t getTargetId() const {
             return targetID;
-        }
-
-        void setTargetId(uint64_t targetId) {
-            targetID = targetId;
         }
 
         unsigned short getType() const {
             return type;
         }
 
-        void setType(unsigned short type) {
-            Edge::type = type;
-        }
-
-        const std::pair<std::string, std::string> &getProperty() const {
-            return property;
+        const std::unordered_map<std::string, std::string> &getProperties() const {
+            return properties;
         }
 
         void setProperty(const std::pair<std::string, std::string> prop) {
             // first check if there is any key value data, otherwise problems with segfaults
             if(prop.first != "" && prop.second != ""){
-                Edge::property.first = prop.first;
-                Edge::property.second = prop.second;
+                properties[prop.first] = prop.second;
             }
         }
 
@@ -133,18 +111,21 @@ namespace morphstore{
             size += sizeof(uint64_t) * 2; // source- and target-id
             size += sizeof(unsigned short int); // relation
 
-            // property:
-            size += sizeof(std::pair<std::string, std::string>);
-            size += sizeof(char)*(property.first.length() + property.second.length());
-
+            // properties:
+            size += sizeof(std::unordered_map<std::string, std::string>);
+            for(auto property = properties.begin(); property != properties.end(); ++property){
+                size += sizeof(char)*(property->first.length() + property->second.length());
+            }
             return size;
         }
 
 
         // ----------------- DEBUGGING -----------------
         void print_properties() {
-            std::cout << "{" << getProperty().first << ": " << getProperty().second << "}";
-            std::cout << "\n";
+            std::cout << std::endl;
+            for (const auto entry  : properties) {
+                std::cout << "  {" << entry.first << ": " << entry.second << "}" << std::endl;
+            }
         }
     };
 }

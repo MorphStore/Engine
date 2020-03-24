@@ -130,8 +130,13 @@ namespace morphstore{
         }
 
         // function which returns a pointer to vertex by id
-        std::shared_ptr<Vertex> get_vertex_by_id(uint64_t id){
+        std::shared_ptr<Vertex> get_vertex(uint64_t id){
             return vertices[id];
+        }
+
+        // function which returns a pointer to vertex by id
+        std::shared_ptr<Edge> get_edge(uint64_t id){
+            return edges[id];
         }
 
 	    // function to return a list of pair < vertex id, degree > DESC:
@@ -140,7 +145,7 @@ namespace morphstore{
             vertexDegreeList.reserve(expectedVertexCount);
             // fill the vector with every vertex key and his degree
             for(uint64_t i = 0; i < expectedVertexCount; ++i){
-                vertexDegreeList.push_back({i, this->get_degree(i)});
+                vertexDegreeList.push_back({i, this->get_out_degree(i)});
             }
             // sort the vector on degree DESC
             std::sort(vertexDegreeList.begin(), vertexDegreeList.end(), [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t ,uint64_t> &right) {
@@ -179,12 +184,12 @@ namespace morphstore{
         virtual storageFormat getStorageFormat() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
         virtual uint64_t add_vertex() = 0;
-        virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) = 0;
+        virtual uint64_t add_vertex(const std::unordered_map<std::string, std::string> props ) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
         virtual void add_type_to_vertex(const uint64_t id, const unsigned short int type) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
-        virtual uint64_t get_degree(uint64_t id) = 0;
+        virtual uint64_t get_out_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
 	    virtual std::pair<size_t, size_t> get_size_of_graph() = 0;
 
@@ -195,8 +200,8 @@ namespace morphstore{
 
         virtual void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
-            std::cout << "Number of vertices: " << vertices.size() << std::endl;
-            std::cout << "Number of relations/edges: " << edges.size() << std::endl;
+            std::cout << "Number of vertices: " << getVertexCount() << std::endl;
+            std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 
@@ -208,7 +213,7 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "Properties: ";
             v->print_properties();
-            std::cout << "#Edges: " << this->get_degree(v->getID());
+            std::cout << "#Edges: " << this->get_out_degree(v->getID());
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
         }

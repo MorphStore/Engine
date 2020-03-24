@@ -21,20 +21,22 @@
  * @todo
  */
 
-#include <core/storage/graph/formats/adjacencylist.h>
+#include <core/storage/graph/formats/csr.h>
 #include <assert.h>
 //#include <core/operators/graph/top_down_bfs.h>
 
 int main( void ){
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: Adjacency-List Storage Format *" << std::endl;
+    std::cout << "* MorphStore-Storage-Test: CSR-List Storage Format *" << std::endl;
     std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
 
     // Graph init:
-    std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
+    std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::CSR>();
+    g1->allocate_graph_structure(3, 3);
 
+    // generate vertices & edges from LDBC files and insert into graph structure
     uint64_t v1 = g1->add_vertex({{"age", "12"}});
     uint64_t v2 = g1->add_vertex();
     uint64_t v3 = g1->add_vertex();
@@ -44,10 +46,17 @@ int main( void ){
     g1->setEdgeTypeDictionary(edgeTypeMap);
     g1->setVertexTypeDictionary(vertexTypeMap);
 
+
     g1->add_edges(v1, {morphstore::Edge(v1, v2, 1, {{"rating", "42"}, {"description", "has the answer to everything"}})});
     g1->add_edges(v2, {morphstore::Edge(v2, v3, 2), morphstore::Edge(v2, v3, 1)});
 
+
+    // (DEBUG)
+    /*g1->statistics();
+    g1->print_edge_by_id(0);
+    g1->print_neighbors_of_vertex(v1);
     g1->print_neighbors_of_vertex(v2);
+    g1->print_neighbors_of_vertex(v3);*/
 
     assert(g1->getVertexCount() == 3);
     assert(g1->getEdgeCount() == 3);

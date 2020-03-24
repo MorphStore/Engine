@@ -33,13 +33,11 @@ namespace morphstore{
 
     private:
         /* graph topology:
-         * node array: index is vertex-id; array cell contains offset in edge_array
-         * edge array: contains target id of the edge (TODO: should contain edge-id)
-         * edge value array: contains edge object with addtional information (same index with edge array)
+         * offset array: index is vertex-id; array cell contains offset in edgeId array
+         * edgeId array: contains edge id
          */
-        uint64_t* node_array = nullptr;
-        uint64_t* edge_array = nullptr;
-        Edge* edge_value_array = nullptr;
+        uint64_t* offset_array = nullptr;
+        uint64_t* edgeId_array = nullptr;
 
     public:
 
@@ -53,13 +51,13 @@ namespace morphstore{
             this->expectedEdgeCount = numberEdges;
 
             vertices.reserve(numberVertices);
+            edges.reserve(numberEdges);
 
-            node_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
-            edge_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
-            edge_value_array = (Edge*) malloc(numberEdges * sizeof(Edge));
+            offset_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
+            edgeId_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
 
             // init node array:
-            node_array[0] = 0;
+            offset_array[0] = 0;
         }
 
         // adding a single vertex (without any properties, etc...)
@@ -70,7 +68,7 @@ namespace morphstore{
         }
 
         // adding a vertex with its properties
-        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) override {
+        uint64_t add_vertex(const std::unordered_map<std::string, std::string> props ) override {
             std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             v->setProperties(props);
             vertices[v->getID()] = v;
@@ -85,19 +83,20 @@ namespace morphstore{
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
-            uint64_t offset = node_array[sourceID];
+            uint64_t offset = offset_array[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
 
             // fill the arrays
-            for(const auto & edge : edgesToAdd){
-                edge_value_array[offset] = edge;
-                edge_array[offset] = edge.getTargetId();
+            for(const auto& edge : edgesToAdd){
+                std::shared_ptr<Edge> ePtr = std::make_shared<Edge>(edge);
+                edges[ePtr->getId()] = ePtr;
+                edgeId_array[offset] = ePtr->getId();
                 ++offset;
             }
 
             // to avoid buffer overflow:
             if(sourceID < getExpectedVertexCount()-1){
-                node_array[sourceID+1] = nextOffset;
+                offset_array[sourceID+1] = nextOffset;
             }
         }
 
@@ -120,36 +119,43 @@ namespace morphstore{
         }
 
         // get number of edges of vertex with id
-        uint64_t get_degree(uint64_t id) override {
-            uint64_t offset = node_array[id];
+        uint64_t get_out_degree(uint64_t id) override {
+            uint64_t offset = offset_array[id];
             // special case: last vertex id has no next offset
             uint64_t nextOffset;
-            if(id == getNumberVertices() -1){
-                nextOffset = getNumberEdges();
+            if(id == getExpectedVertexCount() -1){
+                nextOffset = getExpectedEdgeCount();
             }else{
-                nextOffset = node_array[id+1];
+                nextOffset = offset_array[id+1];
             }
 
             if(offset == nextOffset) return 0;
-            uint64_t numberEdges = nextOffset - offset;
-            return numberEdges;
+            uint64_t degree = nextOffset - offset;
+            return degree;
         }
 
         // for debugging:
         void print_neighbors_of_vertex(uint64_t id) override{
-            uint64_t offset = node_array[id];
-            uint64_t numberEdges = get_degree(id);
+            std::cout << "Neighbours for Vertex with id " << id << std::endl;
+            uint64_t offset = offset_array[id];
+            uint64_t numberEdges = get_out_degree(id);
 
             for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                std::cout << "Source-ID: " << edge_value_array[i].getSourceId() << " - Target-ID: " << edge_value_array[i].getTargetId() << " - Property: { " << edge_value_array[i].getProperty().first << ": " << edge_value_array[i].getProperty().second << " }" << " || ";
+                uint64_t edgeId = edgeId_array[i];
+                std::cout << "Source-ID: " << edges[edgeId]->getSourceId()
+                          << " - Target-ID: " << edges[edgeId]->getTargetId()
+                          << " Property: { ";
+                edges[i]->print_properties();
+                std::cout << std::endl
+                          << "   }" << std::endl;
             }
         }
 
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
              std::vector<uint64_t> neighbors;
-             uint64_t offset = node_array[id];
-             uint64_t numberEdges = get_degree(id);
+             uint64_t offset = offset_array[id];
+             uint64_t numberEdges = get_out_degree(id);
 
              // avoiding out of bounds ...
              if( offset < getExpectedEdgeCount()){
@@ -165,6 +171,7 @@ namespace morphstore{
             size_t data_size = 0;
             size_t index_size = 0;
             // TODO: use Graph::get_size_of_graph() for vertices, edges, vertexTypeDictionary and edgeTypeDictionary
+
             // lookup dicts: entity dict  + relation dict.
             index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
             for(auto& ent : vertexTypeDictionary){
@@ -176,11 +183,20 @@ namespace morphstore{
                 index_size += sizeof(char)*(rel.second.length());
             }
 
-            // container for indexes:
+            // container for vertices:
             index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Vertex>>);
             for(auto& it : vertices){
                 index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
                 data_size += it.second->get_data_size_of_vertex();
+            }
+            
+            // container for edges:
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
+            for(auto& it : edges){
+                // index size of edge: size of id and sizeof pointer 
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Edge>);
+                // data size:
+                data_size += it.second->size_in_bytes();
             }
 
             // pointer to arrays:
@@ -188,7 +204,6 @@ namespace morphstore{
             // edges array values:
             for(uint64_t i = 0; i < getExpectedEdgeCount(); i++){
                 index_size += sizeof(uint64_t); // node_array with offsets
-                data_size += edge_value_array[i].size_in_bytes(); // edge value array with object
             }
 
             index_data_size = {index_size, data_size};

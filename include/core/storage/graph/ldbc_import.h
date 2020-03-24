@@ -220,7 +220,7 @@ namespace morphstore{
 
                             //-----------------------------------------------------
                             // create vertex and insert into graph with properties
-                            uint64_t systemID = graph.add_vertex_with_properties(properties);
+                            uint64_t systemID = graph.add_vertex(properties);
                             // add vertexType number to vertex
                             graph.add_type_to_vertex(systemID, vertexTypeNumber);
                             // map vertexType and ldbc id to system generated id
@@ -286,6 +286,7 @@ namespace morphstore{
 
         // function which clears all intermediates after import
         void clear_intermediates() {
+            std::cout << "CleanUp";
             globalIdLookupMap.clear();
             edgeTypeLookup.clear();
             vertexTypeLookup.clear();
@@ -448,7 +449,7 @@ namespace morphstore{
                 std::cout.flush();
 
                 //this variable is used for the relationLookup-keys, starting by 0
-                unsigned short int relationNumber = 0;
+                unsigned short int edgeTypeNumber = 0;
                 bool isEdge = false; // flag which is used to differentiate for edge-lookup-entrys (to avoid e.g. email as an edge)
 
                 // iterate through vector of vertex-addresses
@@ -538,7 +539,7 @@ namespace morphstore{
 			
                         bool hasProperties = false;
                         std::string propertyKey;
-                        uint64_t fromID, toID;
+                        uint64_t sourceVertexId, targetVertexId;
 
                         // read buffer and do the magic ...
                         for(size_t i = 0; i < fileSize; ++i){
@@ -571,24 +572,24 @@ namespace morphstore{
                                 }else{
                                     // lines of data: (from_local-ldbc-id), (to_local-ldbc-id) and property
                                     // get the system-(global) id's from local ids
-                                    fromID = globalIdLookupMap.at({sourceVertexType, row.substr(0, row.find(delimiter))});
+                                    sourceVertexId = globalIdLookupMap.at({sourceVertexType, row.substr(0, row.find(delimiter))});
                                     // remove from id from string
                                     row.erase(0, row.find(delimiter) + delimiter.length());
                                     std::string value;
                                     if(!hasProperties){
                                         // WITHOUT properties: just from the first delimiter on
-                                        toID = globalIdLookupMap.at({targetVertexType, row});
+                                        targetVertexId = globalIdLookupMap.at({targetVertexType, row});
 
                                         // insert relation into vertexRealtionsLookup:
-                                        vertexEdgesLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber));
+                                        vertexEdgesLookup[sourceVertexId].push_back(morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber));
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
-                                        toID = globalIdLookupMap.at({targetVertexType, row.substr(0, row.find(delimiter))});
+                                        targetVertexId = globalIdLookupMap.at({targetVertexType, row.substr(0, row.find(delimiter))});
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
 
                                         // insert relation into vertexEdgesLookup with its edge-property:
-                                        vertexEdgesLookup[fromID].push_back(morphstore::Edge(fromID, toID, relationNumber, {propertyKey, value}));
+                                        vertexEdgesLookup[sourceVertexId].push_back(morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber, {{propertyKey, value}}));
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -603,8 +604,8 @@ namespace morphstore{
                         // check if the name already exists
                         if(!exist_relation_name(edgeType)){
                             // insert relation-number with string into map
-                            edgeTypeLookup.insert(std::make_pair( relationNumber, edgeType));
-                            ++relationNumber;
+                            edgeTypeLookup.insert(std::make_pair( edgeTypeNumber, edgeType));
+                            ++edgeTypeNumber;
                         }
                     }
 

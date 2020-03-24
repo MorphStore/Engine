@@ -59,7 +59,7 @@ namespace morphstore{
         }
 
         // adding a vertex with its properties
-        uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props) override {
+        uint64_t add_vertex(const std::unordered_map<std::string, std::string> props) override {
             std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             v->setProperties(props);
             vertices[v->getID()] = v;
@@ -117,7 +117,7 @@ namespace morphstore{
 
 
         // get number of neighbors of vertex with id
-        uint64_t get_degree(uint64_t id) override {
+        uint64_t get_out_degree(uint64_t id) override {
             if (adjacencylistPerVertex.find(id) == adjacencylistPerVertex.end()) {
                 return 0;
             }
@@ -165,7 +165,7 @@ namespace morphstore{
 
             index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
             for(auto& it : edges){
-                // index size of vertex: size of id and sizeof pointer 
+                // index size of edge: size of id and sizeof pointer 
                 index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Edge>);
                 // data size:
                 data_size += it.second->size_in_bytes();
@@ -192,10 +192,12 @@ namespace morphstore{
                 for (const auto edgeId : *adjacencylistPerVertex[id]) {
                     auto edge = edges[edgeId];
                     std::cout << " Edge-ID: " << edge->getId() 
+                              << " Type: " <<  get_edgeType_by_number(edge->getType())
                               << " Source-ID: " << edge->getSourceId() 
                               << " Target-ID: " << edge->getTargetId() 
-                              << " Property: { " << edge->getProperty().first << ": " << edge->getProperty().second << " }"
-                              << std::endl;
+                              << " Property: { "; 
+                    edge->print_properties(); 
+                    std::cout << std::endl << " }" << std::endl;
                 }
             }
         }
