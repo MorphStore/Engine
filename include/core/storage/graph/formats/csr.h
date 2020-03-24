@@ -60,21 +60,6 @@ namespace morphstore{
             offset_array[0] = 0;
         }
 
-        // adding a single vertex (without any properties, etc...)
-        uint64_t add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
-            vertices[v->getID()] = v;
-            return v->getID();
-        }
-
-        // adding a vertex with its properties
-        uint64_t add_vertex(const std::unordered_map<std::string, std::string> props ) override {
-            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
-            v->setProperties(props);
-            vertices[v->getID()] = v;
-            return v->getID();
-        }
-
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
         void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
             std::cout << "Singe edge addition not yet implemented for CSR" << sourceId << targetId << type;
@@ -106,15 +91,6 @@ namespace morphstore{
                 vertices[id]->add_property(property);
             }else{
                 std::cout << "Vertex with ID " << id << " not found./property_to_vertex" << std::endl;
-            }
-        }
-
-        // adding type to vertex
-        void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
-            if(exist_vertexId(id)){
-                vertices[id]->setType(type);
-            }else{
-                std::cout << "Vertex with ID " << id << " not found./type_to_vertex." << std::endl;
             }
         }
 

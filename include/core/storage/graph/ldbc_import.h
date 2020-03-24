@@ -220,9 +220,8 @@ namespace morphstore{
 
                             //-----------------------------------------------------
                             // create vertex and insert into graph with properties
-                            uint64_t systemID = graph.add_vertex(properties);
-                            // add vertexType number to vertex
-                            graph.add_type_to_vertex(systemID, vertexTypeNumber);
+                            uint64_t systemID = graph.add_vertex(vertexTypeNumber, properties);
+
                             // map vertexType and ldbc id to system generated id
                             globalIdLookupMap.insert({{vertexType, ldbcID}, systemID});
                             //-----------------------------------------------------

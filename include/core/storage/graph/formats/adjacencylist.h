@@ -51,34 +51,10 @@ namespace morphstore{
             this->expectedVertexCount = numberVertices;
         }
 
-        // adding a single vertex
-        uint64_t add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
-            vertices[v->getID()] = v;
-            return v->getID();
-        }
-
-        // adding a vertex with its properties
-        uint64_t add_vertex(const std::unordered_map<std::string, std::string> props) override {
-            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
-            v->setProperties(props);
-            vertices[v->getID()] = v;
-            return v->getID();
-        }
-
         // function to add a single property to vertex
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
             if (exist_vertexId(id)) {
                 vertices[id]->add_property(property);
-            } else {
-                std::cout << "Vertex with ID " << id << " not found." << std::endl;
-            }
-        }
-
-        // adding type to vertex
-        void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
-            if (exist_vertexId(id)) {
-                vertices[id]->setType(type);
             } else {
                 std::cout << "Vertex with ID " << id << " not found." << std::endl;
             }

@@ -46,8 +46,10 @@ namespace morphstore{
 
         // ----------------- Setter & Getter -----------------
 
-        Vertex(uint64_t id){
+        Vertex(uint64_t id, unsigned short int type, const std::unordered_map<std::string, std::string> props){
             this->id = id;
+            this->type = type;
+            this->properties = props;
         }
 
         uint64_t getID(){
@@ -64,10 +66,6 @@ namespace morphstore{
 
         const std::unordered_map<std::string, std::string> &getProperties() const {
             return properties;
-        }
-
-        void setProperties(const std::unordered_map<std::string, std::string> props) {
-            Vertex::properties = props;
         }
 
         // function that adds a single property key-value pair to vertex

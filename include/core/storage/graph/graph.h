@@ -96,6 +96,12 @@ namespace morphstore{
             return edges.size();
         }
 
+        uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, std::string> props = {}) {
+            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId(), type, props);
+            vertices[v->getID()] = v;
+            return v->getID();
+        };
+
         std::string get_vertexType_by_number(unsigned short int type){
             if(vertexTypeDictionary.find( type ) != vertexTypeDictionary.end()){
                 return vertexTypeDictionary.at(type);
@@ -183,10 +189,7 @@ namespace morphstore{
 
         virtual storageFormat getStorageFormat() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
-        virtual uint64_t add_vertex() = 0;
-        virtual uint64_t add_vertex(const std::unordered_map<std::string, std::string> props ) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
-        virtual void add_type_to_vertex(const uint64_t id, const unsigned short int type) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
         virtual uint64_t get_out_degree(uint64_t id) = 0;

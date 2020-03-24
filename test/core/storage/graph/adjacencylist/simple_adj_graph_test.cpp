@@ -35,15 +35,15 @@ int main( void ){
     // Graph init:
     std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
 
-    uint64_t v1 = g1->add_vertex({{"age", "12"}});
-    uint64_t v2 = g1->add_vertex();
-    uint64_t v3 = g1->add_vertex();
-    
     std::map<unsigned short, std::string> edgeTypeMap = {{1, "knows"}, {2, "likes"}}; 
     std::map<unsigned short, std::string> vertexTypeMap = {{0, "Person"}}; 
     g1->setEdgeTypeDictionary(edgeTypeMap);
     g1->setVertexTypeDictionary(vertexTypeMap);
 
+    uint64_t v1 = g1->add_vertex(0,{{"age", "12"}});
+    uint64_t v2 = g1->add_vertex(0);
+    uint64_t v3 = g1->add_vertex(0);
+    
     g1->add_edges(v1, {morphstore::Edge(v1, v2, 1, {{"rating", "42"}, {"description", "has the answer to everything"}})});
     g1->add_edges(v2, {morphstore::Edge(v2, v3, 2), morphstore::Edge(v2, v3, 1)});
 
