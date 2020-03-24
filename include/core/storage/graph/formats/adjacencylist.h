@@ -18,14 +18,14 @@
 /**
  * @file adjacencylist.h
  * @brief Derived adj. list storage format class. Base: graph.h
- * @todo
+ * @todo Adjust get_size_of_graph(), ?replace unordered_map with a fixed sized array
 */
 
 #ifndef MORPHSTORE_ADJACENCYLIST_H
 #define MORPHSTORE_ADJACENCYLIST_H
 
 #include "../graph.h"
-#include "../vertex/adjacencylist_vertex.h"
+#include "../vertex/vertex.h"
 
 #include <iterator>
 
@@ -33,8 +33,10 @@ namespace morphstore{
 
     class AdjacencyList: public Graph {
 
-    public:
+    private:
+        std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
 
+    public:
         storageFormat getStorageFormat() const override {
             return adjacencylist;
         }
@@ -42,19 +44,23 @@ namespace morphstore{
         // function: to set graph allocations
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             vertices.reserve(numberVertices);
+            adjacencylistPerVertex.reserve(numberVertices);
+            edges.reserve(numberEdges);
+
             setNumberEdges(numberEdges);
             setNumberVertices(numberVertices);
         }
 
         // adding a single vertex
-        void add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<AdjacencyListVertex>();
+        uint64_t add_vertex() override {
+            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             vertices[v->getID()] = v;
+            return v->getID();
         }
 
         // adding a vertex with its properties
         uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props) override {
-            std::shared_ptr<Vertex> v = std::make_shared<AdjacencyListVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             v->setProperties(props);
             vertices[v->getID()] = v;
             return v->getID();
@@ -62,7 +68,7 @@ namespace morphstore{
 
         // function to add a single property to vertex
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
-            if (exist_id(id)) {
+            if (exist_vertexId(id)) {
                 vertices[id]->add_property(property);
             } else {
                 std::cout << "Vertex with ID " << id << " not found." << std::endl;
@@ -71,7 +77,7 @@ namespace morphstore{
 
         // adding type to vertex
         void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
-            if (exist_id(id)) {
+            if (exist_vertexId(id)) {
                 vertices[id]->setType(type);
             } else {
                 std::cout << "Vertex with ID " << id << " not found." << std::endl;
@@ -79,38 +85,56 @@ namespace morphstore{
         }
 
         // adding a single edge to vertex:
-        void add_edge(uint64_t from, uint64_t to, unsigned short int type) override {
-            if (exist_id(from) && exist_id(to)) {
-                vertices[from]->add_edge(from, to, type);
-            } else {
-                std::cout << "Source-/Target-Vertex-ID does not exist in the database!" << std::endl;
-            }
+        void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
+            Edge e = Edge(sourceId, targetId, type);
+            add_edges(sourceId, {e});
         }
 
         // function that adds multiple edges (list of neighbors) at once to vertex
-        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) override {
-            if (exist_id(sourceID)) {
-                if (relations.size() != 0) {
-                    vertices[sourceID]->add_edges(relations);
+        void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
+            if (exist_vertexId(sourceId)) {
+                std::shared_ptr<std::vector<uint64_t>> adjacencyList;
+                if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
+                    adjacencyList = adjacencylistPerVertex[sourceId];
+                } else {
+                    adjacencyList = std::make_shared<std::vector<uint64_t>>();
+                    adjacencylistPerVertex[sourceId] = adjacencyList;
+                }
+
+                for(const auto& edge : edgesToAdd) {
+                    edges[edge.getId()] = std::make_shared<Edge>(edge);
+                    if(exist_vertexId(edge.getTargetId())) {
+                        adjacencyList->push_back(edge.getId());
+                    }
+                    else {
+                        std::cout << "Target-Vertex with ID " << edge.getTargetId() << " not found." << std::endl;
+                    }
                 }
             } else {
-                std::cout << "Vertex with ID " << sourceID << " not found." << std::endl;
+                std::cout << "Source-Vertex with ID " << sourceId << " not found." << std::endl;
             }
         }
 
-        // for debugging: print neighbors a vertex
-        void print_neighbors_of_vertex(uint64_t id) override{
-            vertices[id]->print_neighbors();
-        }
 
         // get number of neighbors of vertex with id
         uint64_t get_degree(uint64_t id) override {
-            return vertices[id]->get_number_edges();
+            if (adjacencylistPerVertex.find(id) == adjacencylistPerVertex.end()) {
+                return 0;
+            }
+            else { 
+                return adjacencylistPerVertex[id]->size();
+            }
         }
 
         // get the neighbors-ids into vector for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-            return vertices.at(id)->get_neighbors_ids();
+            std::vector<uint64_t> targetVertexIds = std::vector<uint64_t>();
+
+            for(auto const edgeId: *adjacencylistPerVertex[id]) {
+                targetVertexIds.push_back(edges[edgeId]->getTargetId());
+            }
+            
+            return targetVertexIds;
         }
 
         // for measuring the size in bytes:
@@ -131,17 +155,55 @@ namespace morphstore{
             }
 
             // container for indexes:
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::AdjacencyListVertex>>);
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Vertex>>);
             for(auto& it : vertices){
                 // index size of vertex: size of id and sizeof pointer 
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::AdjacencyListVertex>);
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
                 // data size:
                 data_size += it.second->get_data_size_of_vertex();
+            }
+
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
+            for(auto& it : edges){
+                // index size of vertex: size of id and sizeof pointer 
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Edge>);
+                // data size:
+                data_size += it.second->size_in_bytes();
+            }
+
+            // adjacencyListPerVertex
+            for(auto& it : adjacencylistPerVertex){
+                // data size:
+                data_size += sizeof(it);
             }
 
             index_data_size = {index_size, data_size};
 
             return index_data_size;
+        }
+
+        // for debugging: print neighbors a vertex
+        void print_neighbors_of_vertex(uint64_t id) override{
+            std::cout << "Neighbours for Vertex with id " << id << std::endl;
+            if(adjacencylistPerVertex.find(id) == adjacencylistPerVertex.end()) {
+                std::cout << "  No outgoing edges for vertex with id: " << id << std::endl;
+            }
+            else {
+                for (const auto edgeId : *adjacencylistPerVertex[id]) {
+                    auto edge = edges[edgeId];
+                    std::cout << " Edge-ID: " << edge->getId() 
+                              << " Source-ID: " << edge->getSourceId() 
+                              << " Target-ID: " << edge->getTargetId() 
+                              << " Property: { " << edge->getProperty().first << ": " << edge->getProperty().second << " }"
+                              << std::endl;
+                }
+            }
+        }
+
+        void statistics() override {
+            Graph::statistics();
+            std::cout << "Number of adjacency lists:" << adjacencylistPerVertex.size() << std::endl;
+            std::cout << std::endl << std::endl;
         }
 
     };

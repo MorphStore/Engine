@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <utility>
 #include <string>
+#include <iostream>
 
 namespace morphstore{
 
@@ -34,10 +35,15 @@ namespace morphstore{
 
     protected:
         // Edge characteristics
-        uint64_t sourceID, targetID;
+        uint64_t sourceID, targetID, id;
         unsigned short int type;
         // todo: allow map instead of pair
         std::pair<std::string, std::string> property;
+
+        uint64_t getNextEdgeId() const {
+            static uint64_t currentMaxEdgeId = 0;
+            return currentMaxEdgeId++;
+        }
 
     public:
 
@@ -46,6 +52,7 @@ namespace morphstore{
             setSourceId(from);
             setTargetId(to);
             setType(type);
+            this->id = getNextEdgeId();
         }
 
         Edge(uint64_t from, uint64_t to, unsigned short int type, std::pair<std::string, std::string> prop){
@@ -53,6 +60,7 @@ namespace morphstore{
             setTargetId(to);
             setType(type);
             setProperty(prop);
+            this->id = getNextEdgeId();
         }
 
         // this is needed for csr when doing edge_array[offset] = edge...
@@ -72,6 +80,10 @@ namespace morphstore{
         }
 
         // --------------- Getter and Setter ---------------
+
+        uint64_t getId() const {
+            return id;
+        }
 
         uint64_t getSourceId() const {
             return sourceID;
@@ -126,6 +138,13 @@ namespace morphstore{
             size += sizeof(char)*(property.first.length() + property.second.length());
 
             return size;
+        }
+
+
+        // ----------------- DEBUGGING -----------------
+        void print_properties() {
+            std::cout << "{" << getProperty().first << ": " << getProperty().second << "}";
+            std::cout << "\n";
         }
     };
 }

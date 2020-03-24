@@ -48,11 +48,16 @@ namespace morphstore{
 
         // Data-structure for Vertex-Properties
         std::unordered_map<uint64_t , std::shared_ptr<morphstore::Vertex>> vertices;
+        std::unordered_map<uint64_t , std::shared_ptr<morphstore::Edge>> edges;
 
         // Lookup for types: number to string
         std::map<unsigned short int, std::string> vertexTypeDictionary;
         std::map<unsigned short int, std::string> edgeTypeDictionary;
 
+        uint64_t getNextVertexId() const {
+            static uint64_t currentMaxVertexId = 0;
+            return currentMaxVertexId++;
+        }
     public:
 
         enum storageFormat {csr, adjacencylist };
@@ -76,7 +81,7 @@ namespace morphstore{
         }
 
         uint64_t getNumberVertices() const {
-            return numberVertices;
+            return vertices.size();
         }
 
         void setNumberVertices(uint64_t numV) {
@@ -84,7 +89,7 @@ namespace morphstore{
         }
 
         uint64_t getNumberEdges() const {
-            return numberEdges;
+            return edges.size();
         }
 
         void setNumberEdges(uint64_t numE) {
@@ -95,7 +100,7 @@ namespace morphstore{
             if(vertexTypeDictionary.find( type ) != vertexTypeDictionary.end()){
                 return vertexTypeDictionary.at(type);
             }else{
-                return "No Matching of type-number in the database!";
+                return "No Matching of type-number in the database! For type " + std::to_string(type);
             }
         }
 
@@ -103,13 +108,22 @@ namespace morphstore{
             if(edgeTypeDictionary.find( type ) != edgeTypeDictionary.end()){
                 return edgeTypeDictionary.at(type);
             }else{
-                return "No Matching of relation-number in the database!";
+                print_type_dicts();
+                return std::to_string(type) + " not found in edge-type dictionary";
             }
         }
 
         // function to check if the vertex-ID is present or not (exists)
-        bool exist_id(const uint64_t id){
+        bool exist_vertexId(const uint64_t id){
             if(vertices.find(id) == vertices.end()){
+                return false;
+            }
+            return true;
+        }
+
+        // function to check if the edge-ID is present or not (exists)
+        bool exist_edgeId(const uint64_t id){
+            if(edges.find(id) == edges.end()){
                 return false;
             }
             return true;
@@ -164,7 +178,7 @@ namespace morphstore{
 
         virtual storageFormat getStorageFormat() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
-        virtual void add_vertex() = 0;
+        virtual uint64_t add_vertex() = 0;
         virtual uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
         virtual void add_type_to_vertex(const uint64_t id, const unsigned short int type) = 0;
@@ -179,7 +193,7 @@ namespace morphstore{
         // for debugging
         virtual void print_neighbors_of_vertex(uint64_t id) = 0;
 
-        void statistics(){
+        virtual void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
             std::cout << "Number of vertices: " << getNumberVertices() << std::endl;
             std::cout << "Number of relations/edges: " << getNumberEdges() << std::endl;
@@ -195,6 +209,20 @@ namespace morphstore{
             std::cout << "Properties: ";
             v->print_properties();
             std::cout << "#Edges: " << this->get_degree(v->getID());
+            std::cout << "\n";
+            std::cout << "-----------------------------------------------" << std::endl;
+        }
+
+        void print_edge_by_id(uint64_t id) {
+            std::cout << "-------------- Edge ID: " << id << " --------------" << std::endl;
+            std::shared_ptr<Edge> edge = edges[id];
+            std::cout << "Edge-ID: \t" << edge->getId() << std::endl;
+            std::cout << "Source-ID: \t" << edge->getSourceId() << std::endl;
+            std::cout << "Target-ID: \t" << edge->getTargetId() << std::endl;
+            std::cout << "Type: \t" << get_edgeType_by_number(edge->getType()) << std::endl;
+            std::cout << "\n";
+            std::cout << "Properties: ";
+            edge->print_properties();
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
         }

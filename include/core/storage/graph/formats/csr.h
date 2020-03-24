@@ -18,14 +18,14 @@
 /**
  * @file csr.h
  * @brief Derived CSR storage format class. Base: graph.h
- * @todo
+ * @todo Edge_value_array should only store edge-ids (not whole objects)
 */
 
 #ifndef MORPHSTORE_CSR_H
 #define MORPHSTORE_CSR_H
 
 #include "../graph.h"
-#include "../vertex/csr_vertex.h"
+#include "../vertex/vertex.h"
 
 namespace morphstore{
 
@@ -63,34 +63,33 @@ namespace morphstore{
         }
 
         // adding a single vertex (without any properties, etc...)
-        void add_vertex() override {
-            std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
+        uint64_t add_vertex() override {
+            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             vertices[v->getID()] = v;
+            return v->getID();
         }
 
         // adding a vertex with its properties
         uint64_t add_vertex_with_properties(const std::unordered_map<std::string, std::string> props ) override {
-            std::shared_ptr<Vertex> v = std::make_shared<CSRVertex>();
+            std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId());
             v->setProperties(props);
             vertices[v->getID()] = v;
             return v->getID();
         }
 
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
-        void add_edge(uint64_t from, uint64_t to, unsigned short int rel) override {
-            if(exist_id(from) && exist_id(to)){
-                std::cout << rel << std::endl;
-            }
+        void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
+            std::cerr << "Singe edge addition not yet implemented for CSR" << sourceId << targetId << type;
         }
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of its neighbors
-        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) override {
+        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
             uint64_t offset = node_array[sourceID];
-            uint64_t nextOffset = offset + relations.size();
+            uint64_t nextOffset = offset + edgesToAdd.size();
 
             // fill the arrays
-            for(const auto & edge : relations){
+            for(const auto & edge : edgesToAdd){
                 edge_value_array[offset] = edge;
                 edge_array[offset] = edge.getTargetId();
                 ++offset;
@@ -104,7 +103,7 @@ namespace morphstore{
 
         // function to add a single property to vertex
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
-            if(exist_id(id)){
+            if(exist_vertexId(id)){
                 vertices[id]->add_property(property);
             }else{
                 std::cout << "Vertex with ID " << id << " not found./property_to_vertex" << std::endl;
@@ -113,7 +112,7 @@ namespace morphstore{
 
         // adding type to vertex
         void add_type_to_vertex(const uint64_t id, const unsigned short int type) override {
-            if(exist_id(id)){
+            if(exist_vertexId(id)){
                 vertices[id]->setType(type);
             }else{
                 std::cout << "Vertex with ID " << id << " not found./type_to_vertex." << std::endl;
@@ -165,7 +164,7 @@ namespace morphstore{
             std::pair<size_t, size_t> index_data_size;
             size_t data_size = 0;
             size_t index_size = 0;
-
+            // TODO: use Graph::get_size_of_graph() for vertices, edges, vertexTypeDictionary and edgeTypeDictionary
             // lookup dicts: entity dict  + relation dict.
             index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
             for(auto& ent : vertexTypeDictionary){
@@ -178,9 +177,9 @@ namespace morphstore{
             }
 
             // container for indexes:
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::CSRVertex>>);
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Vertex>>);
             for(auto& it : vertices){
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::CSRVertex>);
+                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
                 data_size += it.second->get_data_size_of_vertex();
             }
 
