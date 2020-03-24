@@ -49,8 +49,8 @@ namespace morphstore{
 
         // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph topology arrays
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
-            setNumberVertices(numberVertices);
-            setNumberEdges(numberEdges);
+            this->expectedVertexCount = numberVertices;
+            this->expectedEdgeCount = numberEdges;
 
             vertices.reserve(numberVertices);
 
@@ -79,7 +79,7 @@ namespace morphstore{
 
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
         void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
-            std::cerr << "Singe edge addition not yet implemented for CSR" << sourceId << targetId << type;
+            std::cout << "Singe edge addition not yet implemented for CSR" << sourceId << targetId << type;
         }
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
@@ -96,7 +96,7 @@ namespace morphstore{
             }
 
             // to avoid buffer overflow:
-            if(sourceID < getNumberVertices()-1){
+            if(sourceID < getExpectedVertexCount()-1){
                 node_array[sourceID+1] = nextOffset;
             }
         }
@@ -152,8 +152,8 @@ namespace morphstore{
              uint64_t numberEdges = get_degree(id);
 
              // avoiding out of bounds ...
-             if( offset < getNumberEdges()){
-                 neighbors.insert(neighbors.end(), edge_array+offset, edge_array+offset+numberEdges);
+             if( offset < getExpectedEdgeCount()){
+                 neighbors.insert(neighbors.end(), edgeId_array+offset, edgeId_array+offset+numberEdges);
              }
 
              return neighbors;
@@ -186,7 +186,7 @@ namespace morphstore{
             // pointer to arrays:
             index_size += sizeof(uint64_t*) * 2 + sizeof(Edge*);
             // edges array values:
-            for(uint64_t i = 0; i < getNumberEdges(); i++){
+            for(uint64_t i = 0; i < getExpectedEdgeCount(); i++){
                 index_size += sizeof(uint64_t); // node_array with offsets
                 data_size += edge_value_array[i].size_in_bytes(); // edge value array with object
             }

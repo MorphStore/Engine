@@ -105,9 +105,8 @@ namespace morphstore{
                 }
             }
 
-            print_file_names();
-
             if(verticesPaths.empty()) {
+                print_file_names();
                 throw std::invalid_argument("No vertex files found");
             }
         }
@@ -626,10 +625,11 @@ namespace morphstore{
 
         // this function writes the actual data from the intermediate vertexEdgesLookup into the graph
         void generate_edges(Graph&  graph){
+            std::cout << " Writing edges into graph " << std::endl;
             // firstly, sorting the intermediates with their target IDs ASC
             sort_VertexEdgesLookup();
 
-            uint64_t graphSize = graph.getNumberVertices();
+            uint64_t graphSize = graph.getVertexCount();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
                 // add edge data:

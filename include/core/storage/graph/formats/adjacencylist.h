@@ -47,8 +47,8 @@ namespace morphstore{
             adjacencylistPerVertex.reserve(numberVertices);
             edges.reserve(numberEdges);
 
-            setNumberEdges(numberEdges);
-            setNumberVertices(numberVertices);
+            this->expectedEdgeCount = numberEdges;
+            this->expectedVertexCount = numberVertices;
         }
 
         // adding a single vertex

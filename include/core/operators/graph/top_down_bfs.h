@@ -40,7 +40,7 @@ namespace morphstore{
 
         // constructor with smart pointer to graph as parameter/reference
         BFS(std::unique_ptr<morphstore::Graph>& g) : graph(std::move(g)){
-            graphSize = graph->getNumberVertices();
+            graphSize = graph->getVertexCount();
         }
 
         uint64_t get_graph_size(){

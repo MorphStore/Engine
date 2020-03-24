@@ -43,8 +43,8 @@ namespace morphstore{
     class Graph{
 
     protected:
-        uint64_t numberVertices;
-        uint64_t numberEdges;
+        uint64_t expectedVertexCount;
+        uint64_t expectedEdgeCount;
 
         // Data-structure for Vertex-Properties
         std::unordered_map<uint64_t , std::shared_ptr<morphstore::Vertex>> vertices;
@@ -80,20 +80,20 @@ namespace morphstore{
             this->edgeTypeDictionary = rel;
         }
 
-        uint64_t getNumberVertices() const {
+        uint64_t getExpectedVertexCount() const {
+            return expectedVertexCount;
+        }
+
+        uint64_t getVertexCount() const {
             return vertices.size();
         }
 
-        void setNumberVertices(uint64_t numV) {
-            Graph::numberVertices = numV;
+        uint64_t getExpectedEdgeCount() const {
+            return expectedEdgeCount;
         }
 
-        uint64_t getNumberEdges() const {
+        uint64_t getEdgeCount() const {
             return edges.size();
-        }
-
-        void setNumberEdges(uint64_t numE) {
-            Graph::numberEdges = numE;
         }
 
         std::string get_vertexType_by_number(unsigned short int type){
@@ -137,9 +137,9 @@ namespace morphstore{
 	    // function to return a list of pair < vertex id, degree > DESC:
         std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC(){
             std::vector<std::pair<uint64_t, uint64_t>> vertexDegreeList;
-            vertexDegreeList.reserve(numberVertices);
+            vertexDegreeList.reserve(expectedVertexCount);
             // fill the vector with every vertex key and his degree
-            for(uint64_t i = 0; i < numberVertices; ++i){
+            for(uint64_t i = 0; i < expectedVertexCount; ++i){
                 vertexDegreeList.push_back({i, this->get_degree(i)});
             }
             // sort the vector on degree DESC
@@ -195,8 +195,8 @@ namespace morphstore{
 
         virtual void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
-            std::cout << "Number of vertices: " << getNumberVertices() << std::endl;
-            std::cout << "Number of relations/edges: " << getNumberEdges() << std::endl;
+            std::cout << "Number of vertices: " << vertices.size() << std::endl;
+            std::cout << "Number of relations/edges: " << edges.size() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 
