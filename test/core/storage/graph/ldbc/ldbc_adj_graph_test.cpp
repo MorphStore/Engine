@@ -20,46 +20,15 @@
  * @brief Test for generating social network graph in adj. list format + BFS measurements
  * @todo
  */
-
-#include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/formats/adjacencylist.h>
-#include <core/operators/graph/top_down_bfs.h>
-
-#include <chrono>  // for high_resolution_clock
+#include "ldbc_graph_test.h"
 
 int main( void ){
-
-    // ------------------------------------ LDBC-IMPORT TEST -----------------------------------
-    /*
-    std::cout << "\n";
-    std::cout << "**********************************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: Adjacency-List Storage Format *" << std::endl;
-    std::cout << "**********************************************************" << std::endl;
-    std::cout << "\n";
-    */
-
-    // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_1/");
-
-    // Graph init:
-    std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::AdjacencyList>();
-
-    // generate vertices & edges from LDBC files and insert into graph structure
-    ldbcImport->import(*g1);
-
-    // measure degree distribution and write to file (file path as parameter):
-    // g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
-
-    // some statistics (DEBUG)
-    g1->statistics();
-
-    // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
-    // g1->print_vertex_by_id(1035174);
-    // g1->print_neighbors_of_vertex(1035174);
+    ldbcGraphFormatTest<morphstore::AdjacencyList>();
 
     // Execute BFS measurements:
-    // std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-    // bfs->do_measurements(10000, "/home/pfeiffer/measurements/adjacency_list/bfs_SF1.csv");
+    //std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
+    //bfs->do_measurements(10000, "/home/florentin/Morphstore/Output/adj_bfs_SF1.csv");
 
     return 0;
 }

@@ -16,50 +16,69 @@
  **********************************************************************************************/
 
 /**
- * @file ldbc_graph_csr.cpp
- * @brief Test for generating social network graph in CSR format + BFS measurements
+ * @file ldbc_graph_adjacency.cpp
+ * @brief Test for generating social network graph in adj. list format + BFS measurements
  * @todo
  */
 
 #include <core/storage/graph/ldbc_import.h>
-#include <core/storage/graph/formats/csr.h>
-#include <core/operators/graph/top_down_bfs.h>
+#include <core/storage/graph/formats/adjacencylist.h>
 
-#include <chrono>  // for high_resolution_clock
+void print_header(morphstore::Graph::storageFormat format) {
+    std::string storageFormat;
 
-int main( void ){
+    switch (format)
+    {
+    case morphstore::Graph::storageFormat::csr:
+        storageFormat = "CSR";
+        break;
+    case morphstore::Graph::storageFormat::adjacencylist:
+        storageFormat = "Adjacency-List";
+        break;
+    };
 
-    // ------------------------------------ LDBC-IMPORT TEST -----------------------------------
-    /*
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: CSR Storage Format *" << std::endl;
+    std::cout << "* MorphStore-Storage-Test: LDBC " << storageFormat << " Storage Format *" << std::endl;
     std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
-    */
+}
+
+template <class GRAPH_FORMAT>
+void ldbcGraphFormatTest (void) {
+
+    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
+
+    std::string sourceDir = "";
+    std::string targetDir = "";
+
+    if (sourceDir.empty()) {
+        throw std::invalid_argument("Where are the ldbc files??");
+    }
+
+    if (targetDir.empty()) {
+        throw std::invalid_argument("Degree count has to be saved somewhere");
+    }
+
+    std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
+    print_header(graph->getStorageFormat());
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>("/home/pfeiffer/ldbc_sn_data/social_network_1/");
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
 
-    // Graph init:
-    std::unique_ptr<morphstore::Graph> g1 = std::make_unique<morphstore::CSR>();
 
     // generate vertices & edges from LDBC files and insert into graph structure
-    ldbcImport->import(*g1);
+    ldbcImport->import(*graph);
 
     // measure degree distribution and write to file (file path as parameter):
-    // g1->measure_degree_count("/home/pfeiffer/measurements/adjacency_list/graph_degree_count_SF10.csv");
+    graph->measure_degree_count(targetDir + "adj_graph_degree_count_SF10.csv");
 
     // some statistics (DEBUG)
-    g1->statistics();
+    std::cout << "Some statistics" << std::endl;
+    graph->statistics();
 
     // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
-    // g1->print_vertex_by_id(1035174);
-    // g1->print_neighbors_of_vertex(1035174);
-
-    // Execute BFS measurements:
-    // std::unique_ptr<morphstore::BFS> bfs = std::make_unique<morphstore::BFS>(g1);
-    // bfs->do_measurements(10000, "/home/pfeiffer/measurements/csr/bfs_SF1.csv");
-
-    return 0;
+    graph->print_vertex_by_id(1035174);
+    graph->print_edge_by_id(10);
+    graph->print_neighbors_of_vertex(1035174);
 }
