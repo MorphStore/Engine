@@ -62,6 +62,18 @@ namespace morphstore{
 
         enum storageFormat {csr, adjacencylist };
 
+        const std::string get_storage_format_string() {
+            switch (this->getStorageFormat()) {
+            case csr:
+                return "CSR";
+            case adjacencylist:
+                return "Adjacency_List";
+            default:
+                return "";
+            }
+            return "";
+        }
+
         // -------------------- Setters & Getters --------------------
 
         const std::map<unsigned short, std::string> &getVertexTypeDictionary() const {

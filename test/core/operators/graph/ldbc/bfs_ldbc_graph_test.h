@@ -16,15 +16,28 @@
  **********************************************************************************************/
 
 /**
- * @file ldbc_graph_test.cpp
- * @brief Test for generating social network graph in a given graph format
+ * @file bfs_ldbc_graph_test.cpp
+ * @brief Test methods for bfs on social network graph
  * @todo
  */
 
 #include <core/storage/graph/ldbc_import.h>
 #include <core/storage/graph/formats/adjacencylist.h>
+#include <core/operators/graph/top_down_bfs.h>
 
-void print_header(std::string storageFormat) {
+void print_header(morphstore::Graph::storageFormat format) {
+    std::string storageFormat;
+
+    switch (format)
+    {
+    case morphstore::Graph::storageFormat::csr:
+        storageFormat = "CSR";
+        break;
+    case morphstore::Graph::storageFormat::adjacencylist:
+        storageFormat = "Adjacency-List";
+        break;
+    };
+
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
     std::cout << "* MorphStore-Storage-Test: LDBC " << storageFormat << " Storage Format *" << std::endl;
@@ -33,7 +46,7 @@ void print_header(std::string storageFormat) {
 }
 
 template <class GRAPH_FORMAT>
-void ldbcGraphFormatTest (void) {
+void bfs_ldbc_graph_test (void) {
 
     static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
 
@@ -49,10 +62,7 @@ void ldbcGraphFormatTest (void) {
     }
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
-
-    std::string storageFormat = graph->get_storage_format_string();
-
-    print_header(storageFormat);
+    print_header(graph->getStorageFormat());
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
@@ -61,15 +71,11 @@ void ldbcGraphFormatTest (void) {
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
 
-    // measure degree distribution and write to file (file path as parameter):
-    graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
-
     // some statistics (DEBUG)
     std::cout << "Some statistics" << std::endl;
     graph->statistics();
 
-    // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
-    graph->print_vertex_by_id(1035174);
-    graph->print_edge_by_id(10);
-    graph->print_neighbors_of_vertex(1035174);
+    auto bfs = std::make_unique<morphstore::BFS>(graph);
+
+    bfs->do_measurements(10000, targetDir + "bfs_" + graph->get_storage_format_string());
 }
