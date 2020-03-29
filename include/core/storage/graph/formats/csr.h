@@ -26,6 +26,7 @@
 
 #include "../graph.h"
 #include "../vertex/vertex.h"
+#include <stdexcept>
 
 namespace morphstore{
 
@@ -62,7 +63,7 @@ namespace morphstore{
 
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
         void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
-            std::cout << "Singe edge addition not yet implemented for CSR" << sourceId << targetId << type;
+            throw std::runtime_error("Singe edge addition not yet implemented for CSR" + sourceId + targetId + type);
         }
 
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
