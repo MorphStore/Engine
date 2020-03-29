@@ -35,6 +35,12 @@ function printHelp {
 	echo "	     Deactivates the memory hooks and enables standard C++ memory management."
 	echo "	-queryMinMemEx 2^x"
 	echo "	     Sets the minimum chunk reallocation size in bytes for the Query Memory Manager. The value should be a power of two."
+	echo "	-queryInitSize x"
+	echo "	     Sets the initial amount of memory in bytes allocated by the Query Memory Manager."
+	echo "	-queryDisallowExpand"
+	echo "	     Disallows the Query Memory Manager to allocate additional memory beyond its initial amount. Use with care: set -queryInitSize to a sufficient amount."
+	echo "	-queryInitBuffers"
+	echo "	     Make the Query Memory Manager initialize all buffers it allocates to zero directly after their allocation."
 	echo "	-lc|--leakCheck"
 	echo "	     Makes the MemoryManager more aware of possible memory leaks."
 	echo "	--alignment 2^x"
@@ -110,6 +116,9 @@ logging="-UNOLOGGING"
 debugMalloc="-UDEBUG_MALLOC"
 selfManagedMemory="-UNO_SELF_MANAGING"
 qmmes="-UQMMMES"
+qmmis="-UQMMIS"
+qmmae="-DQMMAE=True"
+qmmib="-UQMMIB"
 checkForLeaks="-UCHECK_LEAKING"
 runCtest=false
 enableMonitoring="-UENABLE_MONITORING"
@@ -175,6 +184,19 @@ case $key in
 	qmmes="-DQMMMES=$2"
 	shift
 	shift
+	;;
+	-queryInitSize)
+	qmmis="-DQMMIS=$2"
+	shift
+	shift
+	;;
+	-queryDisallowExpand)
+	qmmae="-UQMMAE"
+	shift # past argument
+	;;
+	-queryInitBuffers)
+	qmmib="-DQMMIB=True"
+	shift # past argument
 	;;
 	--alignment)
 	if ! is_power_of_two $2; then
@@ -345,7 +367,7 @@ addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 set +e
 

@@ -31,6 +31,13 @@ namespace vectorlib {
       bitwise_and( typename neon<v128<T>>::vector_t const & p_In1, typename neon<v128<T>>::vector_t const & p_In2) {
          return vandq_u64( p_In1, p_In2 );
       }
+
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename neon<v128<T>>::mask_t
+      bitwise_and( typename neon<v128<T>>::mask_t const & p_In1, typename neon<v128<T>>::mask_t const & p_In2) {
+         return ( p_In1 & p_In2 );
+      }
       
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static

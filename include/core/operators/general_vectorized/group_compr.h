@@ -279,7 +279,6 @@ namespace morphstore {
 
 
    template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
-   static
    const std::tuple<
       const column<t_out_gr_f> *,
       const column<t_out_ext_f> *

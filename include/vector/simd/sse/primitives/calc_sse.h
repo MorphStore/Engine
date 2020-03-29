@@ -256,6 +256,21 @@ namespace vectorlib{
       }
    };
 
+   /*NOTE: This primitive automatically substracts the unused bits, where a bitmask is larger than required*/
+   template<typename T>
+   struct count_leading_zero<sse<v128<T>>> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename sse<v128<U>>::mask_t const & p_mask
+      ) {
+  
+       //  return __builtin_clz(p_mask)-(sizeof(p_mask)*8-sse<v128<U>>::vector_helper_t::element_count::value);
+           return __builtin_clz(p_mask)-(sizeof(p_mask)*8-sse<v128<U>>::vector_helper_t::element_count::value) - (sizeof(p_mask) > 4 ? 0 : 16);
+          
+      }
+   };
 }
 #endif /* MORPHSTORE_VECTOR_SIMD_SSE_PRIMITIVES_CALC_SSE_H */
 

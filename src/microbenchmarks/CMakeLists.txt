@@ -17,6 +17,20 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( select_benchmark PRIVATE "-ldl" )
 
+    add_executable( select_benchmark_2_t select_benchmark_2.cpp )
+    target_compile_options( select_benchmark_2_t PRIVATE
+                            -DSELECT_BENCHMARK_2_TIME
+                            $<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( select_benchmark_2_t PRIVATE "-ldl" )
+
+    add_executable( select_benchmark_2_d select_benchmark_2.cpp )
+    target_compile_options( select_benchmark_2_d PRIVATE
+                            -USELECT_BENCHMARK_2_TIME
+                            $<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( select_benchmark_2_d PRIVATE "-ldl" )
+
     add_executable( select_uncompr_benchmark select_uncompr.cpp )
     target_compile_options( select_uncompr_benchmark PRIVATE
                             $<$<CONFIG:DEBUG>:-DDEBUG>
@@ -29,11 +43,19 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( inc_benchmark PRIVATE "-ldl" )
 
-    add_executable( project_benchmark project_benchmark.cpp )
-    target_compile_options( project_benchmark PRIVATE
+    add_executable( project_benchmark_t project_benchmark.cpp )
+    target_compile_options( project_benchmark_t PRIVATE
+                            -DPROJECT_BENCHMARK_TIME
                            # $<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( project_benchmark PRIVATE "-ldl" )
+    target_link_libraries( project_benchmark_t PRIVATE "-ldl" )
+
+    add_executable( project_benchmark_d project_benchmark.cpp )
+    target_compile_options( project_benchmark_d PRIVATE
+                            -UPROJECT_BENCHMARK_TIME
+                           # $<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( project_benchmark_d PRIVATE "-ldl" )
 
     add_executable( calc_binary_benchmark calc_binary_benchmark.cpp )
     target_compile_options( calc_binary_benchmark PRIVATE
@@ -54,4 +76,16 @@ if( BUILD_ALL OR BUILD_MICROBMS )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( join_benchmark PRIVATE "-ldl" )
+
+    add_executable( semi_join_benchmark semi_join_benchmark.cpp )
+    target_compile_options( semi_join_benchmark PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( semi_join_benchmark PRIVATE "-ldl" )
+
+    add_executable( select_sum_benchmark select_sum_benchmark.cpp )
+    target_compile_options( select_sum_benchmark PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( select_sum_benchmark PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )

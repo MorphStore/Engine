@@ -36,12 +36,19 @@
 #  define MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE 128_MB
 #endif
 
+#ifndef MSV_QUERY_MEMORY_MANAGER_INITIAL_SIZE
+#  define MSV_QUERY_MEMORY_MANAGER_INITIAL_SIZE 128_MB
+#endif
+
 #include <core/utils/basic_types.h>
 #include <core/utils/helper.h>
 #include <core/utils/preprocessor.h>
 
 #include <core/memory/management/utils/memory_bin_handler.h>
 
+#ifndef MSV_QUERY_MEMORY_MANAGER_ALLOW_EXPAND
+#include <cstdlib>
+#endif
 #include <cstring>
 
 namespace morphstore {
@@ -75,7 +82,7 @@ class query_memory_manager_state_helper {
 
 class query_memory_manager : public abstract_memory_manager {
    public:
-      static query_memory_manager & get_instance( size_t p_InitSpaceSize = 128_MB ) {
+      static query_memory_manager & get_instance( size_t p_InitSpaceSize = MSV_QUERY_MEMORY_MANAGER_INITIAL_SIZE ) {
          trace( "[Query Memory Manager] - IN.  ( void )." );
          static thread_local query_memory_manager instance( p_InitSpaceSize );
          trace( "[Query Memory Manager] - OUT. ( Instance: ", &instance, " )." );
@@ -94,13 +101,20 @@ class query_memory_manager : public abstract_memory_manager {
       explicit query_memory_manager( size_t p_InitSpaceSize ) :
          abstract_memory_manager{},
          m_GeneralMemoryManager{ general_memory_manager::get_instance( ) },
+         m_InitPtr{ nullptr },
          m_CurrentPtr{ nullptr },
+         m_InitSpace{ 0 },
          m_SpaceLeft{ 0 } {
          trace( "[Query Memory Manager] - IN.  ( Initial Size = ", ( p_InitSpaceSize / 1024 / 1024 ), " MB )." );
          void * tmp = m_GeneralMemoryManager.allocate( this, p_InitSpaceSize );
+#ifdef MSV_QUERY_MEMORY_MANAGER_INITIALIZE_BUFFERS
+         memset(tmp, 0, p_InitSpaceSize);
+#endif
          if( tmp != nullptr ) {
             debug( "[Query Memory Manager] - Aquired ", p_InitSpaceSize, " Bytes ( @ position: ", tmp, " ).");
+            m_InitPtr = tmp;
             m_CurrentPtr = tmp;
+            m_InitSpace = p_InitSpaceSize;
             m_SpaceLeft = p_InitSpaceSize;
             debug( "[Query Memory Manager] - Head = ", m_CurrentPtr, ". Space Lef = ", m_SpaceLeft, " Bytes." );
             query_memory_manager_state_helper::get_instance().set_alive( true );
@@ -112,6 +126,11 @@ class query_memory_manager : public abstract_memory_manager {
       }
 
    public:
+       
+       void reset() {
+           m_CurrentPtr = reinterpret_cast<uint8_t *>(m_InitPtr);
+           m_SpaceLeft = m_InitSpace;
+       }
 
       void * allocate( size_t p_AllocSize ) override {
          trace( "[Query Memory Manager] - IN.  ( AllocSize = ", p_AllocSize, " )." );
@@ -124,25 +143,36 @@ class query_memory_manager : public abstract_memory_manager {
             debug(
                "[Query Memory Manager] - No Space Left. ( Needed: ", allocSize,
                " Bytes. Available: ", m_SpaceLeft, " Bytes )." );
+#ifdef MSV_QUERY_MEMORY_MANAGER_ALLOW_EXPAND
             size_t nextExpandSize = expander.next_size( allocSize );
             trace( "[Query Memory Manager] - Requesting ", nextExpandSize, " Bytes from global scoped memory." );
             m_CurrentPtr = m_GeneralMemoryManager.allocate( this, nextExpandSize );
+#ifdef MSV_QUERY_MEMORY_MANAGER_INITIALIZE_BUFFERS
+            memset(m_CurrentPtr, 0, nextExpandSize);
+#endif
             m_SpaceLeft = nextExpandSize;
             trace( "[Query Memory Manager] - New head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes." );
+#else
+            wtf("[Query Memory Manager] - Not allowed to expand.");
+            exit(EXIT_FAILURE);
+#endif
          }
          void * tmp = m_CurrentPtr;
+         size_t orig_ptr_size_t = reinterpret_cast< size_t >( tmp );
          if(MSV_CXX_ATTRIBUTE_LIKELY(tmp != nullptr)) {
             trace( "[Query Memory Manager] - Move current head ", sizeof( size_t ), " byte forward, to hold the datasize." );
             tmp = static_cast< void * >(static_cast< char * >(tmp) + sizeof(size_t));
             trace( "[Query Memory Manager] - Creating extended aligned ptr (current = ", tmp, ". Size = ", p_AllocSize, " Bytes." );
             void * result_ptr = create_extended_aligned_ptr(tmp, p_AllocSize);
-            size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
+/*            size_t bytes_lost = reinterpret_cast<size_t>(tmp)-reinterpret_cast<size_t>(m_CurrentPtr);
             trace(
                "[Query Memory Manager] - Set new Head to aligned ptr ( ", result_ptr, " ) + size ( ", p_AllocSize, " ). ",
                "Bytes lost through Alignment: ",
                bytes_lost, ".");
+               */
             m_CurrentPtr = static_cast< char * >( result_ptr ) + p_AllocSize;
-            m_SpaceLeft -= ( p_AllocSize + bytes_lost );
+            m_SpaceLeft -= ((reinterpret_cast< size_t >( m_CurrentPtr ) ) - orig_ptr_size_t);
+//            m_SpaceLeft -= ( p_AllocSize + bytes_lost );
             trace( "[Query Memory Manager] - OUT. ( pointer: ", result_ptr, ". head = ", m_CurrentPtr, ". Space Left = ", m_SpaceLeft, " Bytes)." );
             return result_ptr;
          } else {
@@ -195,7 +225,9 @@ class query_memory_manager : public abstract_memory_manager {
 
    private:
       general_memory_manager & m_GeneralMemoryManager;
+      void * m_InitPtr;
       void * m_CurrentPtr;
+      size_t m_InitSpace;
       size_t m_SpaceLeft;
       mm_expand_strategy_chunk_based< MSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE > expander;
 

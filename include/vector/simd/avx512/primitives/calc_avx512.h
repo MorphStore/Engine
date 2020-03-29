@@ -310,6 +310,20 @@ namespace vectorlib{
          return _mm512_srlv_epi64(p_data, p_distance);
       }
    };
+   
+   /*NOTE: This primitive automatically substracts the unused bits, where a bitmask is larger than required*/
+   template<typename T>
+   struct count_leading_zero<avx512<v512<T>>> {
+      template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename avx512<v512<U>>::mask_t const & p_mask
+      ) {
+         //return __builtin_clz(p_mask)-(sizeof(p_mask)*8-avx512<v512<U>>::vector_helper_t::element_count::value);
+         return __builtin_clz(p_mask)-(sizeof(p_mask)*8-avx512<v512<U>>::vector_helper_t::element_count::value) - (sizeof(p_mask) > 3 ? 0 : 16);
+      }
+   };
 }
 #endif /* MORPHSTORE_VECTOR_SIMD_AVX512_PRIMITIVES_CALC_AVX512_H */
 

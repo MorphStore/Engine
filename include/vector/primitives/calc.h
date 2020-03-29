@@ -137,6 +137,15 @@ namespace vectorlib{
          typename VectorExtension::vector_t const & p_distance
       ) = delete;
    };
+   
+   template<class VectorExtension>
+   struct count_leading_zero {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static uint8_t
+      apply(
+         typename VectorExtension::mask_t const & p_mask
+      ) = delete;
+   };
 
    
       

@@ -18,16 +18,27 @@
 /**
  * @file monitoring.h
  * @brief The monitoring interface helps to get some data out of a benchmark.
- * @todo TODOS?
+ * @todo Currently, only signed integers (int64_t) are supported, unsigned
+ * (uint64_t) would be highly desired.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_MONITORING_H_
 #define MORPHSTORE_CORE_UTILS_MONITORING_H_
 
 #include <core/memory/mm_glob.h>
+#ifdef MSV_NO_SELFMANAGED_MEMORY
+#include <vector>
+#include <map>
+namespace morphstore {
+    template<typename ... ts>
+    using vector = std::vector<ts...>;
+    template<typename ... ts>
+    using map = std::map<ts...>;
+}
+#else
 #include <core/memory/stl_wrapper/vector.h>
 #include <core/memory/stl_wrapper/map.h>
-//#include <core/memory/stl_wrapper/string.h>
+#endif
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -41,6 +52,7 @@
 #include <math.h>
 #include <inttypes.h>
 
+#include <core/utils/data_properties.h>
 #include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/variadic.h>
@@ -138,7 +150,7 @@ namespace morphstore {
 
 		monitoring_parameter(const std::string name, size_t id, T value) :
 			monitoring_info(name, id),
-			maxValues(1024000),
+			maxValues(10),
 			lastValue(0)
 		{
 			values = (T*) malloc( maxValues * sizeof(T) );
@@ -191,7 +203,7 @@ namespace morphstore {
 		explicit monitoring_counter(const std::string name, size_t id) :
 			monitoring_info(name, id),
 			started(false),
-			maxValues(1024),
+			maxValues(10),
 			lastValue(0)
 		{
 			values = (uint64_t*)malloc(maxValues * sizeof(uint64_t));
@@ -269,8 +281,7 @@ namespace morphstore {
 			}
 		}
 
-		void stopInterval(const std::string& ident) {
-			chrono_tp stopTp = chronoHighRes::now();
+		void stopInterval(const std::string& ident, chrono_tp stopTp) {
 			monitorIntervalMap::iterator counter = intervalData.find(ident);
 			if (counter != intervalData.cend()) {
 				if (counter->second->started) {
@@ -690,6 +701,15 @@ public:
 	}
 
 	void clearAll() {
+                // @todo This does NOT clear everything. The monitoring_counters
+                // and monitoring_parameters in
+                // - monitorIntervalMap intervalData;
+		// - monitorBoolParameterMap boolParams;
+		// - monitorIntegerParameterMap integerParams;
+		// - monitorDoubleParameterMap doubleParams;
+                // of each SuperMon are never freed, but these allocate the
+                // actual buffers for the recorded values, i.e., the bulk of
+                // the data. Therefore, this is a memory leak.
 		for (auto m : monVec) {
 			delete m;
 		}
@@ -699,6 +719,8 @@ public:
 	template<typename... Ts>
 	SuperMon* findMonitor(Ts... args) {
 		std::tuple< Ts... > lookup(args...);
+                // @todo This segfaults, if args has another "shape" than those
+                // of existing monitors.
 		for (size_t i = 0; i < monVec.size(); ++i) {
 			std::tuple< Ts... > castedKey = static_cast<std::tuple< Ts... >>(static_cast<Monitor< Ts... >*>(monVec[i])->key);
 			if (compare::compareTuples(lookup, castedKey)) {
@@ -758,9 +780,10 @@ public:
 
 	template<typename... Ts>
 	void endIntervalFor(std::string ident, Ts... args) {
+                chrono_tp stopTp = chronoHighRes::now();
 		auto mon = findMonitor(args...);
 		if (mon) {
-			mon->stopInterval(ident);
+			mon->stopInterval(ident, stopTp);
 		}
 		else {
 			throw std::runtime_error("[MONITORING ERROR] Trying to stop an interval for a non-existent monitor.");
@@ -799,6 +822,22 @@ public:
 			throw std::runtime_error("[MONITORING ERROR] Trying to add a double parameter for a non-existent monitor.");
 		}
 	}
+        
+        template<typename ... Ts>
+        void addDataPropertiesFor(
+                const std::string & ident,
+                const data_properties & dp,
+                Ts ... args
+        ) {
+            addBoolFor(ident + "Sorted", dp.is_sorted_asc(), args ...);
+            addBoolFor(ident + "Unique", dp.is_unique(), args ...);
+            addIntFor(ident + "Min", dp.get_min(), args ...);
+            addIntFor(ident + "Max", dp.get_max(), args ...);
+            addIntFor(ident + "DistinctCount", dp.get_distinct_count(), args ...);
+            
+            for(unsigned bw = 1; bw <= 64; bw++)
+                addIntFor(ident + "bwHist_" + std::to_string(bw), dp.get_bw_hist(bw), args ...);
+        }
 
 	//template<typename... Ts>
 	//void incrementIntFor(std::string ident, int64_t val, Ts... args) {
@@ -849,6 +888,7 @@ public:
 	#define MONITORING_ADD_BOOL_FOR( ident, val, ... ) 			Monitoring::get_instance().addBoolFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_INT_FOR( ident, val, ... ) 			Monitoring::get_instance().addIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_ADD_DOUBLE_FOR( ident, val, ... ) 		Monitoring::get_instance().addDoubleFor( ident, val, __VA_ARGS__ )
+	#define MONITORING_ADD_DATAPROPERTIES_FOR( ident, val, ... ) 		Monitoring::get_instance().addDataPropertiesFor( ident, val, __VA_ARGS__ )
 	/*#define MONITORING_INCREMENT_INT_BY( ident, val, ... )		Monitoring::get_instance().incrementIntFor( ident, val, __VA_ARGS__ )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ident, val, ... )	Monitoring::get_instance().incrementDoubleFor( ident, val, __VA_ARGS__ )*/
 	#define MONITORING_PRINT_MONITOR( ... )						Monitoring::get_instance().printMonitor( __VA_ARGS__ );
@@ -873,6 +913,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(endTp_##timer - startTp_##t
 	#define MONITORING_ADD_BOOL_FOR( ... )
 	#define MONITORING_ADD_INT_FOR( ... ) 
 	#define MONITORING_ADD_DOUBLE_FOR( ... )
+	#define MONITORING_ADD_DATAPROPERTIES_FOR( ... )
 	#define MONITORING_INCREMENT_INT_BY( ... )
 	#define MONITORING_INCREMENT_DOUBLE_BY( ... )
 	#define MONITORING_PRINT_MONITOR( ... )	

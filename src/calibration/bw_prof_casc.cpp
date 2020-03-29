@@ -16,9 +16,11 @@
  **********************************************************************************************/
 
 /**
- * @file bw_prof.cpp
+ * @file bw_prof_casc.cpp
  * @brief Measures the bit width profiles of (physical-level) Null Suppression
- * algorithms required for our cost model for lightweight compression
+ * algorithms in cascade situations.
+ * 
+ * These are required for our cost model for lightweight compression 
  * algorithms.
  * 
  * The output is produced as a CSV table on stdout.
@@ -28,17 +30,14 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/dynamic_vbp.h>
-#include <core/morphing/k_wise_ns.h>
 #include <core/morphing/static_vbp.h>
+#include <core/morphing/k_wise_ns.h>
 #include <core/morphing/uncompr.h>
-#include <core/morphing/vbp.h>
 #include <core/morphing/format_names.h> // Must be included after all formats.
-#include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
-#include <core/utils/preprocessor.h>
 #include <core/utils/variant_executor.h>
 #include <vector/vector_extension_names.h>
 #include <vector/vector_extension_structs.h>
@@ -46,6 +45,7 @@
 
 #include <limits>
 #include <random>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -57,68 +57,182 @@ using namespace vectorlib;
 
 
 // ****************************************************************************
+// Variant of the morph-operator simulating in-cascade use
+// ****************************************************************************
+
+// ----------------------------------------------------------------------------
+// Interface
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief A variant of the morph-operator simulating in-cascade use of the
+ * morph-operator for (physical-level) Null Suppression formats.
+ * 
+ * That is, compressions must effectively read from cache and write to memory,
+ * while decompressions must read from memory and write to cache.
+ */
+template<class t_vector_extension, class t_dst_f, class t_src_f>
+struct cache2ram_morph_t {
+    static const column<t_dst_f> * apply(
+            const column<t_src_f> * p_InCol, size_t p_DstCountValues
+    ) = delete;
+};
+
+// ----------------------------------------------------------------------------
+// Compression
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief A variant of the morph-operator simulating in-cascade use of the
+ * morph-operator for (physical-level) Null Suppression formats.
+ * 
+ * This variant effectively reads from cache and writes to memory by repeatedly
+ * calling the compressing batch-level morph-operator until `p_DstCountValues`
+ * logical data elements are represented in the compressed output. The input
+ * is always the same (small) buffer, namely the data buffer of the (small)
+ * input column. However, the output pointer moves on with every call, so that
+ * a large output is generated.
+ */
+template<class t_vector_extension, class t_dst_f>
+struct cache2ram_morph_t<t_vector_extension, t_dst_f, uncompr_f> {
+    static const column<t_dst_f> * apply(
+            const column<uncompr_f> * p_InCol, size_t p_DstCountValues
+    ) {
+        const size_t srcCountValues = p_InCol->get_count_values();
+        
+        if(srcCountValues % t_dst_f::m_BlockSize)
+            throw std::runtime_error(
+                    "cache2ram_morph_t compression: the number of data "
+                    "elements in the input column must be a multiple of the "
+                    "destination format's block size"
+            );
+        if(p_DstCountValues % srcCountValues)
+            throw std::runtime_error(
+                    "cache2ram_morph_t compression: the number of data "
+                    "elements for the output column must be a multiple of the "
+                    "number of data elements in the input column"
+            );
+        
+        auto outCol = new column<t_dst_f>(
+                t_dst_f::get_size_max_byte(p_DstCountValues)
+        );
+        uint8_t * outData = outCol->get_data();
+        const uint8_t * const initOutData = outData;
+        
+        size_t countCompressed = 0;
+        while(countCompressed < p_DstCountValues) {
+            const uint8_t * inData = p_InCol->get_data();
+            morph_batch<t_vector_extension, t_dst_f, uncompr_f>(
+                    inData, outData, srcCountValues
+            );
+            countCompressed += srcCountValues;
+        }
+        
+        outCol->set_meta_data(p_DstCountValues, outData - initOutData);
+        return outCol;
+    }
+};
+
+// ----------------------------------------------------------------------------
+// Decompression
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief A variant of the morph-operator simulating in-cascade use of the
+ * morph-operator for (physical-level) Null Suppression formats.
+ * 
+ * This variant effectively reads from memory and writes to cache by repeatedly
+ * calling the decompressing batch-level morph-operator until all logical data
+ * elements in the (large) input column have been consumed. The output is
+ * always the same (small) buffer, namely the data buffer of the (small) output
+ * column. However, the input pointer moves on with every call, so that only a
+ * small output is generated.
+ */
+template<class t_vector_extension, class t_src_f>
+struct cache2ram_morph_t<t_vector_extension, uncompr_f, t_src_f> {
+    static const column<uncompr_f> * apply(
+            const column<t_src_f> * p_InCol, size_t p_DstCountValues
+    ) {
+        const size_t srcCountValues = p_InCol->get_count_values();
+        
+        if(p_DstCountValues % t_src_f::m_BlockSize)
+            throw std::runtime_error(
+                    "cache2ram_morph_t decompression: the number of data "
+                    "elements in the output column must be a multiple of the "
+                    "source format's block size"
+            );
+        if(srcCountValues % p_DstCountValues)
+            throw std::runtime_error(
+                    "cache2ram_morph_t decompression: the number of data "
+                    "elements in th input column must be a multiple of the "
+                    "number of data elements in the output column"
+            );
+        
+        const uint8_t * inData = p_InCol->get_data();
+        
+        const size_t outSizeAlloc =
+                uncompr_f::get_size_max_byte(p_DstCountValues);
+        auto outCol = new column<uncompr_f>(outSizeAlloc);
+        
+        size_t countDecompressed = 0;
+        while(countDecompressed < srcCountValues) {
+            uint8_t * outData = outCol->get_data();
+            morph_batch<t_vector_extension, uncompr_f, t_src_f>(
+                    inData, outData, p_DstCountValues
+            );
+            countDecompressed += p_DstCountValues;
+        }
+        
+        outCol->set_meta_data(p_DstCountValues, outSizeAlloc);
+        return outCol;
+    }
+};
+
+
+// ****************************************************************************
 // "Operator" to be executed by `variant_executor`
 // ****************************************************************************
 
 /**
- * @brief Measures the compression, decompression, and aggregation
- * (decompression without storing the decompressed data) time as well as the
- * compressed size for the specified format.
- * @param p_InCol The column to be compressed and decompressed.
+ * @brief Measures the compression and decompression time for the specified
+ * format.
+ * @param p_InCol The column to be compressed and decompressed. This column is
+ * assumed to be small.
  * @return The decompressed-again input column.
  */
 template<class t_vector_extension, class t_format, unsigned t_Bw>
 const column<uncompr_f> * measure_morphs(
-        const column<uncompr_f> * p_InCol, int p_RepIdx
+        const column<uncompr_f> * p_InCol,
+        size_t p_CountValuesLarge,
+        int p_RepIdx
 ) {
-    // This is unused iff monitoring is disabled.
-    MSV_CXX_ATTRIBUTE_PPUNUSED const size_t countValues =
-        p_InCol->get_count_values();
+    const size_t countValuesSmall = p_InCol->get_count_values();
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValuesSmall, p_CountValuesLarge, p_RepIdx
     );
-    auto comprCol = morph<t_vector_extension, t_format, uncompr_f>(p_InCol);
+    auto comprCol = cache2ram_morph_t<
+            t_vector_extension, t_format, uncompr_f
+    >::apply(p_InCol, p_CountValuesLarge);
     MONITORING_END_INTERVAL_FOR(
             "runtime compr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
-    );
-            
-    MONITORING_ADD_INT_FOR(
-            "size used [byte]",
-            comprCol->get_size_used_byte(),
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
-    );
-    MONITORING_ADD_INT_FOR(
-            "size compr [byte]",
-            comprCol->get_size_compr_byte(),
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValuesSmall, p_CountValuesLarge, p_RepIdx
     );
             
     MONITORING_START_INTERVAL_FOR(
             "runtime decompr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValuesSmall, p_CountValuesLarge, p_RepIdx
     );
-    auto decomprCol = morph<t_vector_extension, uncompr_f, t_format>(comprCol);
+    auto decomprCol = cache2ram_morph_t<
+            t_vector_extension, uncompr_f, t_format
+    >::apply(comprCol, countValuesSmall);
     MONITORING_END_INTERVAL_FOR(
             "runtime decompr [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
-    );
-            
-    MONITORING_START_INTERVAL_FOR(
-            "runtime agg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
-    );
-    auto sumCol = agg_sum<t_vector_extension, t_format>(comprCol);
-    MONITORING_END_INTERVAL_FOR(
-            "runtime agg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValues, p_RepIdx
+            veName<t_vector_extension>, formatName<t_format>, t_Bw, countValuesSmall, p_CountValuesLarge, p_RepIdx
     );
     
-    if(!std::is_same<t_format, uncompr_f>::value)
-        delete comprCol;
-    delete sumCol;
+    delete comprCol;
     
     return decomprCol;
 }
@@ -138,12 +252,9 @@ const column<uncompr_f> * measure_morphs(
 
 template<class t_varex_t, unsigned t_Bw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
+    // Although static_vbp_f is not intended to be used in cascades, we need
+    // its profile anyway for the operator cost model.
     return {
-        // Uncompressed reference variant, required to check the correctness of
-        // the compressed variants.
-        MAKE_VARIANT(scalar<v64<uint64_t>>, uncompr_f, t_Bw),
-        
-        // Compressed variants.
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>), t_Bw),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>), t_Bw),
 #ifdef SSE
@@ -182,17 +293,19 @@ int main(int argc, char ** argv) {
     
     // @todo Actually, the repetition number should be a setting parameter.
     // However, we need it in the variants to add more measurements.
-    using varex_t = variant_executor_helper<1, 1, int>::type
+    using varex_t = variant_executor_helper<1, 1, size_t, int>::type
         ::for_variant_params<std::string, std::string>
         ::for_setting_params<unsigned, size_t>;
     varex_t varex(
-            {"repetition"},
+            {"countValuesLarge", "repetition"},
             {"vector_extension", "format"},
-            {"bitwidth", "countValues"}
+            {"bitwidth", "countValuesSmall"}
     );
     
-    // @todo This could be a command line argument.
-    const size_t countValues = 128 * 1024 * 1024;
+    // @todo These could be command line arguments.
+    const size_t countValuesLarge = 128 * 1024 * 1024;
+    // Cascade block size in terms of logical data elements.
+    const size_t countValuesSmall = 1024;
     
     for(int repIdx = 1; repIdx <= countRepetitions; repIdx++)
         for(unsigned bw = 1; bw <= std::numeric_limits<uint64_t>::digits; bw++) {
@@ -269,7 +382,7 @@ int main(int argc, char ** argv) {
 
             varex.print_datagen_started();
             auto origCol = generate_with_distr(
-                    countValues,
+                    countValuesSmall,
                     std::uniform_int_distribution<uint64_t>(
                             bitwidth_min<uint64_t>(bw), bitwidth_max<uint64_t>(bw)
                     ),
@@ -277,9 +390,14 @@ int main(int argc, char ** argv) {
             );
             varex.print_datagen_done();
 
-            varex.execute_variants(variants, bw, countValues, origCol, repIdx);
+            varex.execute_variants(
+                    variants,
+                    bw, countValuesSmall,
+                    origCol,
+                    countValuesLarge, repIdx
+            );
 
-//            delete origCol;
+            delete origCol;
         }
     
     varex.done();
