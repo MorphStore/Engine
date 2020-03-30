@@ -27,8 +27,8 @@
 #include <core/storage/graph/formats/adjacencylist.h>
 #include <core/storage/graph/formats/csr.h>
 
-// experimental/filesystem to read file directories
-#include <experimental/filesystem>
+
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -95,7 +95,7 @@ namespace morphstore{
 
         // function which iterates through directory to receive file names (entire path)
         void insert_file_names(std::string dir) {
-            for (const auto &entry : std::experimental::filesystem::directory_iterator(dir)) {
+            for (const auto &entry : std::filesystem::directory_iterator(dir)) {
                 // ignore files starting with a '.' (+ 1 as '/' is the first character otherwise)
                 if (entry.path().string()[dir.size() + 1] == '.') {
                     continue;
@@ -115,7 +115,6 @@ namespace morphstore{
         void differentiate(std::string path, std::string dir) {
             // if the string contains a '_' -> it's a relation file; otherwise a vertex file
             // if string contains word_word it is an edge files (vertex files only contain one word)
-            // todo: remove dir name to remain only the *.csv
 
             // a vertex file contains exactly one word and after that only numbers are allowed f.i. _0_0
             std::regex vertexFileRegExp("^\\/([a-zA-Z]+\\_)([0-9_]*).csv$");
@@ -373,7 +372,6 @@ namespace morphstore{
             if (!verticesPaths.empty()) {
 
                 //this variable is used for the vertexTypeLookup-keys, starting by 0
-                unsigned short int vertexTypeNumber = 0;
 
                 // iterate through vector of vertex-addresses
                 for (const auto &file : verticesPaths) {
@@ -430,9 +428,6 @@ namespace morphstore{
                     delete[] buffer; // free memory
                     vertexFile.close();
 
-                    // insert vertexType-number with string into map
-                    vertexTypeLookup.insert(std::make_pair( vertexTypeNumber, vertexType));
-                    ++vertexTypeNumber;
 
                 }
             }
