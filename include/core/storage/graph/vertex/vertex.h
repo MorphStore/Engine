@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 namespace morphstore{
 
@@ -39,17 +40,12 @@ namespace morphstore{
         uint64_t id;      
         // optional: type, properties
         unsigned short int type;
-        std::unordered_map<std::string, std::string> properties;
 
 
     public:
-
-        // ----------------- Setter & Getter -----------------
-
-        Vertex(uint64_t id, unsigned short int type, const std::unordered_map<std::string, std::string> props){
+        Vertex(uint64_t id, unsigned short int type){
             this->id = id;
             this->type = type;
-            this->properties = props;
         }
 
         uint64_t getID(){
@@ -60,40 +56,38 @@ namespace morphstore{
             return type;
         }
 
-        void setType(const unsigned short type) {
-            Vertex::type = type;
-        }
-
-        const std::unordered_map<std::string, std::string> &getProperties() const {
-            return properties;
-        }
-
-        // function that adds a single property key-value pair to vertex
-        void add_property(const std::pair<std::string, std::string> property){
-            this->properties[property.first] = property.second;//std::move(property.second);
-        }
-
          // get size of vertex in bytes:
         size_t get_data_size_of_vertex() {
             size_t size = 0;
             size += sizeof(uint64_t); // id
             size += sizeof(unsigned short int); // entity
-            // properties:
-            size += sizeof(std::unordered_map<std::string, std::string>);
-            for(std::unordered_map<std::string, std::string>::iterator property = properties.begin(); property != properties.end(); ++property){
-                size += sizeof(char)*(property->first.length() + property->second.length());
-            }
 
             return size;
         }
+    };
 
-        // ----------------- DEBUGGING -----------------
-        void print_properties() {
-            for (const auto entry  : properties) {
-                std::cout << "{" << entry.first << ": " << entry.second << "}";
+    // convinience class for returning whole vertices
+    class VertexWithProperties {
+        private:
+            std::shared_ptr<Vertex> vertex;
+            std::unordered_map<std::string, std::string> properties;
+        public:
+            VertexWithProperties(std::shared_ptr<Vertex> vertex, const std::unordered_map<std::string, std::string> properties) {
+                this->vertex = vertex;
+                this->properties = properties;
             }
-            std::cout << "\n";
-        }
+
+            uint64_t getID() {
+                return vertex->getID();
+            }
+
+            unsigned short getType() const {
+                return vertex->getType();
+            }
+
+            std::unordered_map<std::string, std::string> getProperties() {
+                return properties;
+            }
     };
 
 }

@@ -44,21 +44,8 @@ namespace morphstore{
 
         // function: to set graph allocations
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
-            vertices.reserve(numberVertices);
+            Graph::allocate_graph_structure(numberVertices, numberEdges);
             adjacencylistPerVertex.reserve(numberVertices);
-            edges.reserve(numberEdges);
-
-            this->expectedEdgeCount = numberEdges;
-            this->expectedVertexCount = numberVertices;
-        }
-
-        // function to add a single property to vertex
-        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) override {
-            if (exist_vertexId(id)) {
-                vertices[id]->add_property(property);
-            } else {
-                std::cout << "Vertex with ID " << id << " not found." << std::endl;
-            }
         }
 
         // adding a single edge to vertex:
@@ -123,36 +110,8 @@ namespace morphstore{
         // for measuring the size in bytes:
         std::pair<size_t, size_t> get_size_of_graph() override {
             std::pair<size_t, size_t> index_data_size;
-            size_t data_size = 0;
-            size_t index_size = 0;
-
-            // lookup type dicts
-            index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
-            for(auto& ent : vertexTypeDictionary){
-                index_size += sizeof(unsigned short int);
-                index_size += sizeof(char)*(ent.second.length());
-            }
-            for(auto& rel : edgeTypeDictionary){
-                index_size += sizeof(unsigned short int);
-                index_size += sizeof(char)*(rel.second.length());
-            }
-
-            // container for indexes:
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Vertex>>);
-            for(auto& it : vertices){
-                // index size of vertex: size of id and sizeof pointer 
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
-                // data size:
-                data_size += it.second->get_data_size_of_vertex();
-            }
-
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
-            for(auto& it : edges){
-                // index size of edge: size of id and sizeof pointer 
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Edge>);
-                // data size:
-                data_size += it.second->size_in_bytes();
-            }
+            
+            auto [index_size, data_size] = Graph::get_size_of_graph();
 
             // adjacencyListPerVertex
             for(auto& it : adjacencylistPerVertex){
