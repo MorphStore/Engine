@@ -111,9 +111,9 @@ namespace morphstore{
             }
         }
 
-        // this function differentiates, whether the file is a vertex or relation and puts it into the specific vector
+        // this function differentiates, whether the file is a vertex or edge and puts it into the specific vector
         void differentiate(std::string path, std::string dir) {
-            // if the string contains a '_' -> it's a relation file; otherwise a vertex file
+            // if the string contains a '_' -> it's a edge file; otherwise a vertex file
             // if string contains word_word it is an edge files (vertex files only contain one word)
 
             // a vertex file contains exactly one word and after that only numbers are allowed f.i. _0_0
@@ -133,8 +133,6 @@ namespace morphstore{
             std::cout << "(1/2) Generating LDBC-Vertices ...";
             std::cout.flush();
 
-            //this variable is used for the vertexTypeLookup-keys, starting by 0
-            unsigned short int vertexTypeNumber = 0;
 
             // iterate through vector of vertex-addresses
             for (const auto &file : verticesPaths)
@@ -143,6 +141,7 @@ namespace morphstore{
                 std::vector<std::string> attributes;
 
                 std::string vertexType = getEntityType(file);
+                int vertexTypeNumber = get_vertex_type_number(vertexType);
 
                 char *buffer;
 
@@ -160,10 +159,11 @@ namespace morphstore{
 
                 // calculate file size
                 if (vertexFile.is_open()) {
-                    fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                    // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                    fileSize = static_cast<uint64_t>(vertexFile.tellg()); 
                     vertexFile.clear();
-                    vertexFile.seekg(0,
-                                     std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    vertexFile.seekg(0, std::ios::beg); 
                 }
 
                 // allocate memory
@@ -209,8 +209,7 @@ namespace morphstore{
                             std::string ldbcID = row.substr(0, row.find(delimiter));
                             while ((next = row.find(delimiter, last)) != std::string::npos)
                             {
-                                properties.insert(
-                                    std::make_pair(attributes[attrIndex], row.substr(last, next - last)));
+                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next - last)));
                                 last = next + 1;
                                 ++attrIndex;
                             }
@@ -234,33 +233,28 @@ namespace morphstore{
                 delete[] buffer; // free memory
                 vertexFile.close();
 
-                // insert vertexType-number with string into map
-                vertexTypeLookup.insert(std::make_pair(vertexTypeNumber, vertexType));
                 ++vertexTypeNumber;
                 attributes.clear();
             }
-            // graph gets full vertexType-list here:
-            graph.setVertexTypeDictionary(vertexTypeLookup);
         }
 
-        // function which returns true, if parameter is a vertexType in ldbc-files
-        bool is_vertexType(const std::string &vertexType) {
+        // function which returns the vertex_type_number if parameter is a vertexType in the ldbc-files. else -1 
+        int get_vertex_type_number(const std::string &vertexType) {
             // iterate through entities-map to look up for paramater
             for (auto const &entry : vertexTypeLookup) {
                 if (entry.second == vertexType) {
-                    return true;
+                    return entry.first;
                 }
             }
 
-            return false;
+            return -1;
         }
 
-        // function which returns true, if the relation already exist
-        bool exist_relation_name(const std::string &relation) {
-            // Todo: replace whole function by by entitiesLookup.find(relation)
+        // function which returns true, if the edge type already exist
+        bool exist_edge_type_name(const std::string &edge_type) {
             // iterate through edges-map to look up for paramater
             for (auto const &entry : edgeTypeLookup) {
-                if (entry.second == relation) {
+                if (entry.second == edge_type) {
                     return true;
                 }
             }
@@ -300,19 +294,19 @@ namespace morphstore{
 
             if (!edgesPaths.empty()) {
 
-                // iterate through vector of relation-addresses
+                // iterate through vector of edge-type file paths
                 for (const auto &file : edgesPaths) {
-                    std::string relation = getEntityType(file);
+                    std::string edge_type = getEntityType(file);
 
 
                     // TOdo: use regExp ([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)
-                    std::string sourceVertexType = relation.substr(0, relation.find('_'));
-                    relation.erase(0, relation.find('_') + 1);
+                    std::string sourceVertexType = edge_type.substr(0, edge_type.find('_'));
+                    edge_type.erase(0, edge_type.find('_') + 1);
 
-                    std::string edgeType = relation.substr(0, relation.find('_'));
-                    relation.erase(0, relation.find('_') + 1);
+                    std::string edgeType = edge_type.substr(0, edge_type.find('_'));
+                    edge_type.erase(0, edge_type.find('_') + 1);
 
-                    std::string targetVertexType = relation;
+                    std::string targetVertexType = edge_type;
 
                     char *buffer;
 
@@ -340,8 +334,8 @@ namespace morphstore{
                     edgeFile.read(buffer, fileSize); // read data as one big block
                     bool firstLine = true;
 
-                    // check from file name whether it's a relation file or multi value attribute file
-                    if (is_vertexType(targetVertexType)) {
+                    // check from file name whether it's a edge file or multi value attribute file
+                    if (get_vertex_type_number(targetVertexType) != -1) {
 
                         for (size_t i = 0; i < fileSize; ++i) {
                             if (buffer[i] == '\n') {
@@ -364,72 +358,62 @@ namespace morphstore{
             return result;
         }
 
-        // get number of vertices from files
+        // get number of vertices from files and fill vertexTypeDictionary
         uint64_t get_total_number_vertices() {
 
             uint64_t result = 0;
 
-            if (!verticesPaths.empty()) {
-
-                //this variable is used for the vertexTypeLookup-keys, starting by 0
-
-                // iterate through vector of vertex-addresses
-                for (const auto &file : verticesPaths) {
-                    std::string vertexType = getEntityType(file);
-
-                    char *buffer;
-
-                    uint64_t fileSize = 0;
-
-                    std::string address = getDirectory() + file;
-
-                    std::ifstream vertexFile(address, std::ios::binary |
+            // iterate through vector of vertex-addresses
+            for (const auto &file : verticesPaths) {
+                char *buffer;
+                uint64_t fileSize = 0;
+                std::string address = getDirectory() + file;
+                std::ifstream vertexFile(address, std::ios::binary |
                                                       std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
-                    if (!vertexFile) {
-                        std::cerr << "Error, opening file. ";
-                        exit(EXIT_FAILURE);
-                    }
-
-                    // calculate file size
-                    if (vertexFile.is_open()) {
-                        fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
-                        vertexFile.clear();
-                        vertexFile.seekg(0,
-                                         std::ios::beg); // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
-                    }
-
-                    // allocate memory
-                    buffer = (char *) malloc(fileSize * sizeof(char));
-                    vertexFile.read(buffer, fileSize); // read data as one big block
-                    size_t start = 0;
-                    std::string delimiter = "|";
-
-                    // read buffer and do the magic ...
-                    for (size_t i = 0; i < fileSize; ++i) {
-                        if (buffer[i] == '\n') {
-                            // get a row into string form buffer with start- and end-point
-                            std::string row(&buffer[start], &buffer[i]);
-
-                            // remove unnecessary '\n' at the beginning of a string
-                            if (row.find('\n') != std::string::npos) {
-                                row.erase(0, 1);
-                            }
-
-                            // first line of *.csv contains the attributes -> write to attributes vector
-                            if (start != 0) {
-                                ++result;
-                            }
-
-                            start = i; // set new starting point for buffer (otherwise it's concatenated)
-                        }
-                    }
-
-                    delete[] buffer; // free memory
-                    vertexFile.close();
-
-
+                if (!vertexFile) {
+                    std::cerr << "Error, opening file. ";
+                    exit(EXIT_FAILURE);
                 }
+
+                // calculate file size
+                if (vertexFile.is_open()) {
+                    fileSize = static_cast<uint64_t>(vertexFile.tellg()); // tellg() returns: The current position of the get pointer in the stream on success, pos_type(-1) on failure.
+                    vertexFile.clear();
+                    // Seeks to the very beginning of the file, clearing any fail bits first (such as the end-of-file bit)
+                    vertexFile.seekg(0, std::ios::beg);
+                }
+
+                // allocate memory
+                buffer = (char *)malloc(fileSize * sizeof(char));
+                vertexFile.read(buffer, fileSize); // read data as one big block
+                size_t start = 0;
+                std::string delimiter = "|";
+
+                // read buffer and do the magic ...
+                for (size_t i = 0; i < fileSize; ++i) {
+                    if (buffer[i] == '\n')
+                    {
+                        // get a row into string form buffer with start- and end-point
+                        std::string row(&buffer[start], &buffer[i]);
+
+                        // remove unnecessary '\n' at the beginning of a string
+                        if (row.find('\n') != std::string::npos) {
+                            row.erase(0, 1);
+                        }
+
+                        // first line of *.csv contains the attributes -> write to attributes vector
+                        if (start != 0) {
+                            ++result;
+                        }
+
+                        // set new starting point for buffer (otherwise it's concatenated)
+                        start = i;
+                    }
+                }
+
+                delete[] buffer; // free memory
+                vertexFile.close();
             }
             return result;
         }
@@ -442,24 +426,21 @@ namespace morphstore{
                 std::cout << "(2/2) Generating LDBC-Edges ...";
                 std::cout.flush();
 
-                //this variable is used for the relationLookup-keys, starting by 0
+                //this variable is used for the edgeLookup-keys, starting by 0
                 unsigned short int edgeTypeNumber = 0;
-                bool isEdge = false; // flag which is used to differentiate for edge-lookup-entrys (to avoid e.g. email as an edge)
 
                 // iterate through vector of vertex-addresses
                 for (const auto &file : edgesPaths) {
+                    // get the edge-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
+                    // TODO: use regExp
+                    std::string edge_type = getEntityType(file);
+                    std::string sourceVertexType = edge_type.substr(0, edge_type.find('_'));
+                    edge_type.erase(0, edge_type.find('_') + 1);
 
-                    isEdge = false;
+                    std::string edgeType = edge_type.substr(0, edge_type.find('_'));
+                    edge_type.erase(0, edge_type.find('_') + 1);
 
-                    // get the relation-infos from file name: e.g. ([...path...] / [person_likes_comment].csv) --> person_likes_comment
-                    std::string relation = getEntityType(file);
-                    std::string sourceVertexType = relation.substr(0, relation.find('_'));
-                    relation.erase(0, relation.find('_') + 1);
-
-                    std::string edgeType = relation.substr(0, relation.find('_'));
-                    relation.erase(0, relation.find('_') + 1);
-
-                    std::string targetVertexType = relation;
+                    std::string targetVertexType = edge_type;
 
                     char* buffer;
 
@@ -488,8 +469,8 @@ namespace morphstore{
                     size_t start = 0;
                     std::string delimiter = "|";
 
-                    // check from file name whether it's a relation file or multi value attribute file
-                    if(!is_vertexType(targetVertexType)){
+                    // check from file name whether it's an edge file or multi value attribute file
+                    if(get_vertex_type_number(targetVertexType) == -1) {
                         // Multi-value-attributes: just take the last recently one
                         std::string propertyKey;
                         std::unordered_map<uint64_t, std::string> multiValueAttr;
@@ -526,10 +507,13 @@ namespace morphstore{
                         }
 
                     }
-                        // handling of relation-files ...
+                    // handling of edge-files ...
                     else{
-
-                        isEdge = true;
+                        // check if the name already exists
+                        if (!exist_edge_type_name(edgeType)) {
+                            ++edgeTypeNumber;
+                            edgeTypeLookup.insert(std::make_pair(edgeTypeNumber, edgeType));
+                        }
 			
                         bool hasProperties = false;
                         std::string propertyKey;
@@ -551,10 +535,10 @@ namespace morphstore{
                                 size_t count = 0;
 
                                 // first line of *.csv: Differentiate whether it's
-                                // (1) relation without properties: e.g. Person.id|Person.id -> #delimiter = 1
-                                // (2) relation with properties: e.g. Person.id|Person.id|fromDate -> #delimiter = 2
+                                // (1) edge without properties: e.g. Person.id|Person.id -> #delimiter = 1
+                                // (2) edge with properties: e.g. Person.id|Person.id|fromDate -> #delimiter = 2
                                 if(start == 0){
-                                    // if there are 2 delimiter ('|') -> relation file with properties
+                                    // if there are 2 delimiter ('|') -> edge file with properties
                                     while ((next = row.find(delimiter, last)) != std::string::npos){
                                         last = next + 1;
                                         ++count;
@@ -563,7 +547,7 @@ namespace morphstore{
                                         hasProperties = true;
                                         propertyKey = row.substr(last);
                                     }
-                                }else{
+                                } else {
                                     // lines of data: (from_local-ldbc-id), (to_local-ldbc-id) and property
                                     // get the system-(global) id's from local ids
                                     sourceVertexId = globalIdLookupMap.at({sourceVertexType, row.substr(0, row.find(delimiter))});
@@ -574,7 +558,7 @@ namespace morphstore{
                                         // WITHOUT properties: just from the first delimiter on
                                         targetVertexId = globalIdLookupMap.at({targetVertexType, row});
 
-                                        // insert relation into vertexRealtionsLookup:
+                                        // insert edge into vertexRealtionsLookup:
                                         vertexEdgesLookup[sourceVertexId].push_back(morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber));
                                     }else{
                                         // with properties means: toID is until the next delimiter, and then the value for the property
@@ -582,7 +566,7 @@ namespace morphstore{
                                         row.erase(0, row.find(delimiter) + delimiter.length());
                                         value = row;
 
-                                        // insert relation into vertexEdgesLookup with its edge-property:
+                                        // insert edge into vertexEdgesLookup with its edge-property:
                                         vertexEdgesLookup[sourceVertexId].push_back(morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber, {{propertyKey, value}}));
                                     }
                                 }
@@ -592,19 +576,8 @@ namespace morphstore{
                     }
                     delete[] buffer; // free memory
                     edgeFile.close();
-
-                    //check if the relation name is a relation (no multi value file)
-                    if(isEdge){
-                        // check if the name already exists
-                        if(!exist_relation_name(edgeType)){
-                            // insert relation-number with string into map
-                            edgeTypeLookup.insert(std::make_pair( edgeTypeNumber, edgeType));
-                            ++edgeTypeNumber;
-                        }
-                    }
-
                 }
-                // graph gets full relation-list here:
+                // graph gets full edge-type-list here:
                 graph.setEdgeTypeDictionary(edgeTypeLookup);
             }
         }
@@ -632,6 +605,14 @@ namespace morphstore{
             }
         }
 
+        void generate_vertex_type_lookup() {
+            uint64_t vertex_type_number = 0;
+            for(std::string vertex_file: verticesPaths) {
+                vertexTypeLookup.insert(std::make_pair(vertex_type_number, getEntityType(vertex_file)));
+                vertex_type_number++;
+            }
+        }
+
         // MAIN IMPORT FUNCTION: see steps in comments
         void import(Graph&  graph) {
             std::cout << "Importing LDBC-files into graph ... ";
@@ -639,6 +620,11 @@ namespace morphstore{
 
             // (1) get number vertices and number edges:
             uint64_t numberVertices = get_total_number_vertices();
+
+            // populate vertex_type_lookup for differentiating between edge and property files
+            generate_vertex_type_lookup();
+            graph.setVertexTypeDictionary(vertexTypeLookup);
+
             uint64_t numberEdges = get_total_number_edges();
 
             // (2) allocate graph memory

@@ -67,6 +67,7 @@ namespace morphstore{
         }
 
         void setVertexTypeDictionary(const std::map<unsigned short, std::string>& ent) {
+            assert(ent.size() != 0);
             this->vertexTypeDictionary = ent;
         }
 
