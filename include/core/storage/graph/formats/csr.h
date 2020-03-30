@@ -27,6 +27,7 @@
 #include "../graph.h"
 #include "../vertex/vertex.h"
 #include <stdexcept>
+#include <assert.h>
 
 namespace morphstore{
 
@@ -42,8 +43,8 @@ namespace morphstore{
 
     public:
 
-        storageFormat getStorageFormat() const override {
-            return csr;
+        std::string get_storage_format() const override {
+            return "CSR";
         }
 
         // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph topology arrays
@@ -69,6 +70,7 @@ namespace morphstore{
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
+            assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
             uint64_t offset = offset_array[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
 
@@ -111,35 +113,27 @@ namespace morphstore{
             return degree;
         }
 
-        // for debugging:
-        void print_neighbors_of_vertex(uint64_t id) override{
-            std::cout << "Neighbours for Vertex with id " << id << std::endl;
-            uint64_t offset = offset_array[id];
-            uint64_t numberEdges = get_out_degree(id);
-
-            for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                uint64_t edgeId = edgeId_array[i];
-                std::cout << "Source-ID: " << edges[edgeId]->getSourceId()
-                          << " - Target-ID: " << edges[edgeId]->getTargetId()
-                          << " Property: { ";
-                edges[i]->print_properties();
-                std::cout << std::endl
-                          << "   }" << std::endl;
-            }
-        }
-
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-             std::vector<uint64_t> neighbors;
+             std::vector<uint64_t> neighbourEdgeIds;
              uint64_t offset = offset_array[id];
              uint64_t numberEdges = get_out_degree(id);
 
              // avoiding out of bounds ...
              if( offset < getExpectedEdgeCount()){
-                 neighbors.insert(neighbors.end(), edgeId_array+offset, edgeId_array+offset+numberEdges);
+                 neighbourEdgeIds.insert(neighbourEdgeIds.end(), edgeId_array+offset, edgeId_array+offset+numberEdges);
              }
 
-             return neighbors;
+             std::vector<uint64_t> targetVertexIds;
+
+             // resolving each edgeId
+             for (auto edgeId: neighbourEdgeIds)
+             {
+                 assert(edges.find(edgeId) != edges.end());
+                 targetVertexIds.push_back(edges[edgeId]->getTargetId());
+             }
+             
+             return targetVertexIds;
         }
 
         // get size of storage format:
@@ -186,6 +180,18 @@ namespace morphstore{
             index_data_size = {index_size, data_size};
 
             return index_data_size;
+        }
+
+        // for debugging:
+        void print_neighbors_of_vertex(uint64_t id) override{
+            std::cout << "Neighbours for Vertex with id " << id << std::endl;
+            uint64_t offset = offset_array[id];
+            uint64_t numberEdges = get_out_degree(id);
+
+            for(uint64_t i = offset; i < offset+numberEdges; ++i){
+                uint64_t edgeId = edgeId_array[i];
+                print_edge_by_id(edgeId);
+            }
         }
     };
 }

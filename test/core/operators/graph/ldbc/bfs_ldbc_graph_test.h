@@ -25,22 +25,11 @@
 #include <core/storage/graph/formats/adjacencylist.h>
 #include <core/operators/graph/top_down_bfs.h>
 
-void print_header(morphstore::Graph::storageFormat format) {
-    std::string storageFormat;
-
-    switch (format)
-    {
-    case morphstore::Graph::storageFormat::csr:
-        storageFormat = "CSR";
-        break;
-    case morphstore::Graph::storageFormat::adjacencylist:
-        storageFormat = "Adjacency-List";
-        break;
-    };
+void print_header(std::string storageFormat) {
 
     std::cout << "\n";
     std::cout << "**********************************************************" << std::endl;
-    std::cout << "* MorphStore-Storage-Test: LDBC " << storageFormat << " Storage Format *" << std::endl;
+    std::cout << "* MorphStore-Operator-Test: LDBC " << storageFormat << " BFS Test *" << std::endl;
     std::cout << "**********************************************************" << std::endl;
     std::cout << "\n";
 }
@@ -62,7 +51,9 @@ void bfs_ldbc_graph_test (void) {
     }
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
-    print_header(graph->getStorageFormat());
+    std::string storageFormat = graph->get_storage_format();
+
+    print_header(storageFormat);
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
@@ -77,5 +68,6 @@ void bfs_ldbc_graph_test (void) {
 
     auto bfs = std::make_unique<morphstore::BFS>(graph);
 
-    bfs->do_measurements(10000, targetDir + "bfs_" + graph->get_storage_format_string());
+    assert(bfs->do_BFS(0) == 229144);
+    //bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
 }

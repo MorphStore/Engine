@@ -28,6 +28,7 @@
 #include "../vertex/vertex.h"
 
 #include <iterator>
+#include <assert.h>
 
 namespace morphstore{
 
@@ -37,8 +38,8 @@ namespace morphstore{
         std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
 
     public:
-        storageFormat getStorageFormat() const override {
-            return adjacencylist;
+        std::string get_storage_format() const override {
+            return "Adjacency_List";
         }
 
         // function: to set graph allocations
@@ -77,7 +78,7 @@ namespace morphstore{
                     adjacencylistPerVertex[sourceId] = adjacencyList;
                 }
 
-                for(const auto& edge : edgesToAdd) {
+                for(const auto edge : edgesToAdd) {
                     edges[edge.getId()] = std::make_shared<Edge>(edge);
                     if(exist_vertexId(edge.getTargetId())) {
                         adjacencyList->push_back(edge.getId());
@@ -94,11 +95,12 @@ namespace morphstore{
 
         // get number of neighbors of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
-            if (adjacencylistPerVertex.find(id) == adjacencylistPerVertex.end()) {
+            auto entry = adjacencylistPerVertex.find(id);
+            if (entry == adjacencylistPerVertex.end()) {
                 return 0;
             }
             else { 
-                return adjacencylistPerVertex[id]->size();
+                return entry->second->size();
             }
         }
 
@@ -106,8 +108,13 @@ namespace morphstore{
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
             std::vector<uint64_t> targetVertexIds = std::vector<uint64_t>();
 
-            for(auto const edgeId: *adjacencylistPerVertex[id]) {
-                targetVertexIds.push_back(edges[edgeId]->getTargetId());
+            auto entry = adjacencylistPerVertex.find(id);
+            
+            if (entry != adjacencylistPerVertex.end()) {
+                for(uint64_t const edgeId: *(entry->second)) {
+                    assert(edges.find(edgeId) != edges.end());
+                    targetVertexIds.push_back(edges[edgeId]->getTargetId());
+                }
             }
             
             return targetVertexIds;
@@ -166,14 +173,7 @@ namespace morphstore{
             }
             else {
                 for (const auto edgeId : *adjacencylistPerVertex[id]) {
-                    auto edge = edges[edgeId];
-                    std::cout << " Edge-ID: " << edge->getId() 
-                              << " Type: " <<  get_edgeType_by_number(edge->getType())
-                              << " Source-ID: " << edge->getSourceId() 
-                              << " Target-ID: " << edge->getTargetId() 
-                              << " Property: { "; 
-                    edge->print_properties(); 
-                    std::cout << std::endl << " }" << std::endl;
+                    print_edge_by_id(edgeId);
                 }
             }
         }

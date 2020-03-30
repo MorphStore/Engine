@@ -7,6 +7,7 @@ add_subdirectory( core/utils )
 
 add_subdirectory( core/storage/graph/simple )
 add_subdirectory( core/storage/graph/ldbc )
+add_subdirectory( core/operators/graph/simple )
 add_subdirectory( core/operators/graph/ldbc )
 
 add_subdirectory(vector)

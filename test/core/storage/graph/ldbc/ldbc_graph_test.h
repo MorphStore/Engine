@@ -50,7 +50,7 @@ void ldbcGraphFormatTest (void) {
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
 
-    std::string storageFormat = graph->get_storage_format_string();
+    std::string storageFormat = graph->get_storage_format();
 
     print_header(storageFormat);
 

@@ -36,6 +36,7 @@
 #include <memory>
 #include <fstream>
 #include <sstream>
+#include <assert.h>
 
 
 namespace morphstore{
@@ -59,21 +60,6 @@ namespace morphstore{
             return currentMaxVertexId++;
         }
     public:
-
-        enum storageFormat {csr, adjacencylist };
-
-        const std::string get_storage_format_string() {
-            switch (this->getStorageFormat()) {
-            case csr:
-                return "CSR";
-            case adjacencylist:
-                return "Adjacency_List";
-            default:
-                return "";
-            }
-            return "";
-        }
-
         // -------------------- Setters & Getters --------------------
 
         const std::map<unsigned short, std::string> &getVertexTypeDictionary() const {
@@ -109,6 +95,7 @@ namespace morphstore{
         }
 
         uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, std::string> props = {}) {
+            assert(expectedVertexCount > getVertexCount());
             std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId(), type, props);
             vertices[v->getID()] = v;
             return v->getID();
@@ -199,7 +186,7 @@ namespace morphstore{
 
         // -------------------- pure virtual functions --------------------
 
-        virtual storageFormat getStorageFormat() const = 0;
+        virtual std::string get_storage_format() const = 0;
         virtual void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) = 0;
         virtual void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
