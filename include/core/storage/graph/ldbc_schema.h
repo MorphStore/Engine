@@ -32,10 +32,10 @@
 
 namespace morphstore{
     
-    enum class Ldbc_Data_Type {LONG_STRING, STRING, TEXT, INT_32, ID, DATE_TIME, DATE};
+    enum class Ldbc_Data_Type {LONG_STRING, STRING, TEXT, INT_32, ID, DATE_TIME, DATE, ERROR};
 
     // static not included -> f.i. hasTag edge seen as property tag.id
-    static const std::map<std::string, std::map<std::string, Ldbc_Data_Type>> ldbc_dynamic_schema{
+    static const std::map<std::string, std::map<std::string, Ldbc_Data_Type>> ldbc_schema {
         {
             // vertices
             {"person", {
@@ -71,22 +71,40 @@ namespace morphstore{
                             {"browserUsed", Ldbc_Data_Type::STRING},
                             {"locationIP", Ldbc_Data_Type::STRING},
                             {"content", Ldbc_Data_Type::TEXT},
-                            {"length", Ldbc_Data_Type::INT_32},
-                        }},
+                            {"length", Ldbc_Data_Type::INT_32}}},
+            {"tagclass", {
+                            {"name", Ldbc_Data_Type::LONG_STRING},
+                            {"url", Ldbc_Data_Type::LONG_STRING}}},
+            {"tag", {
+                            {"name", Ldbc_Data_Type::LONG_STRING},
+                            {"url", Ldbc_Data_Type::LONG_STRING}}},
+            {"place", {
+                            {"name", Ldbc_Data_Type::LONG_STRING},
+                            {"url", Ldbc_Data_Type::LONG_STRING},
+                            {"type", Ldbc_Data_Type::STRING}}},
+            {"organisation", {
+                                {"name", Ldbc_Data_Type::LONG_STRING},
+                                {"type", Ldbc_Data_Type::STRING},
+                                {"url", Ldbc_Data_Type::LONG_STRING}}},
             // edges
             {"likes", {{"creationDate", Ldbc_Data_Type::DATE_TIME}}},
             {"hasMember", {{"joinDate", Ldbc_Data_Type::DATE_TIME}}},
             {"hasModerator", {}},
             {"hasCreator", {}},
+            {"hasTag", {}},
             {"containerOf", {}},
             {"replyOf", {}},
+            {"isSubclassOf", {}},
+            {"isPartOf", {}},
+            {"isLocatedIn", {}},
+            {"studyAt", {{"classYear", Ldbc_Data_Type::INT_32}}},
+            {"workAt", {{"workFrom", Ldbc_Data_Type::INT_32}}},
             {"knows", {{"creationDate", Ldbc_Data_Type::DATE_TIME}}},
-
         }};
 
     Ldbc_Data_Type get_data_type(std::string entity_type, std::string property_key) {
-        auto perEntity = ldbc_dynamic_schema.find(entity_type);
-        if (perEntity != ldbc_dynamic_schema.end()) {
+        auto perEntity = ldbc_schema.find(entity_type);
+        if (perEntity != ldbc_schema.end()) {
             auto propertiesMap = perEntity->second;
             auto propertyEntry = propertiesMap.find(property_key);
             if (propertyEntry != propertiesMap.end()) {
@@ -96,11 +114,10 @@ namespace morphstore{
 
         // ldbc id is saved as an extra property as morphstore::graph generates new ones
         // static part of social network not included thus saved as property (!!wrongly!!)
-        std::regex id_reg_exp("(Tag|Place)+\\.id\\s*");
-        if(property_key == "id" || std::regex_match(property_key, id_reg_exp)) return Ldbc_Data_Type::ID;
+        if(property_key == "id") return Ldbc_Data_Type::ID;
 
-        std::cout << "Could not find a data type for " << entity_type << " " << property_key;
-        return Ldbc_Data_Type::STRING;
+        //std::cout << "Could not find a data type for " << entity_type << " " << property_key;
+        return Ldbc_Data_Type::ERROR;
     }
 
     property_type convert_property_value(std::string value, Ldbc_Data_Type type) {

@@ -59,9 +59,9 @@ namespace morphstore{
     class LDBCImport {
 
     private:
-        std::string directory;
-        std::vector<std::string> verticesPaths;
-        std::vector<std::string> edgesPaths;
+        std::filesystem::path base_directory;
+        std::vector<std::filesystem::path> verticesPaths;
+        std::vector<std::filesystem::path> edgesPaths;
         std::map<unsigned short int, std::string> vertexTypeLookup;
         std::map<unsigned short int, std::string> edgeTypeLookup;
         // data structure for lookup local ids with vertexType to global system id: (vertexType, ldbc_id) -> global id
@@ -72,23 +72,23 @@ namespace morphstore{
         std::unordered_map<uint64_t,  std::unordered_map<std::string, property_type>> edgeProperties;
 
     public:
-
-        // Constructor: needs the address of the csv files !!! both static and dynamic in one folder
-        // 
+        // directory including a static/ and dynamic/ directory like in /ldbc_snb_datagen/social_network/
         LDBCImport(const std::string &dir) {
-            directory = dir;
-            insert_file_names(directory);
+            base_directory = dir;
+            insert_file_names();
         }
 
         std::string getDirectory() const {
-            return directory;
+            return base_directory;
         }
 
         // get the vertex or edge type based on the fileName
-        std::string getEntityType(std::string fileName) {
+        std::string getEntityType(std::filesystem::path filePath) {
                 // last [a-zA-Z] to remove ending _
                 std::regex typeRegExp("[a-zA-Z_]+[a-zA-Z]");
                 std::smatch match;
+
+                std::string fileName = filePath.filename().string();
 
                 if(std::regex_search(fileName, match, typeRegExp)) {
                     //std::cout << "EntityType: " << match[0] << std::endl;
@@ -101,15 +101,22 @@ namespace morphstore{
         }
         
 
-        // function which iterates through directory to receive file names (entire path)
-        void insert_file_names(std::string dir) {
-            for (const auto &entry : std::filesystem::directory_iterator(dir)) {
-                // ignore files starting with a '.' (+ 1 as '/' is the first character otherwise)
-                if (entry.path().string()[dir.size() + 1] == '.') {
-                    continue;
-                } else {
-                    // insert file path to vertices or edges vector
-                    differentiate(entry.path().string(), dir);
+        // function which iterates through the base_directory to receive file names (entire path)
+        void insert_file_names() {
+            
+            std::filesystem::path dynamic_data_dir (base_directory / "dynamic"); 
+            std::filesystem::path static_data_dir (base_directory / "static"); 
+            std::vector<std::filesystem::path> dirs{dynamic_data_dir, static_data_dir}; 
+
+            for(const auto dir: dirs) {
+                for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+                    // ignore files starting with a '.' (+ 1 as '/' is the first character otherwise)
+                    if (entry.path().string()[dir.u8string().length() + 1] == '.') {
+                        continue;
+                    } else {
+                        // insert file path to vertices or edges vector
+                        differentiate(entry.path().string());
+                    }
                 }
             }
 
@@ -120,18 +127,18 @@ namespace morphstore{
         }
 
         // this function differentiates, whether the file is a vertex or edge and puts it into the specific vector
-        void differentiate(std::string path, std::string dir) {
+        void differentiate(std::filesystem::path path) {
             // if the string contains a '_' -> it's a edge file; otherwise a vertex file
             // if string contains word_word it is an edge files (vertex files only contain one word)
 
-            // a vertex file contains exactly one word and after that only numbers are allowed f.i. _0_0
-            std::regex vertexFileRegExp("^\\/([a-zA-Z]+\\_)([0-9_]*).csv$");
-            std::string fileName = path.substr(dir.size());
+            // a vertex file name contains exactly one word and after that only numbers are allowed f.i. _0_0
+            // .*\\/ for path marks the directory path
+            std::regex vertexFileRegExp("^(.*\\/)([a-zA-Z]+\\_)([0-9_]*).csv$");
 
-            if (std::regex_match(fileName, vertexFileRegExp)) {
-                verticesPaths.push_back(fileName);
+            if (std::regex_match(path.u8string(), vertexFileRegExp)) {
+                verticesPaths.push_back(path);
             } else {
-                edgesPaths.push_back(fileName);
+                edgesPaths.push_back(path);
             }
         }
 
@@ -140,7 +147,6 @@ namespace morphstore{
         void generate_vertices(Graph& graph) {
             std::cout << "(1/2) Generating LDBC-Vertices ...";
             std::cout.flush();
-
 
             // iterate through vector of vertex-addresses
             for (const auto &file : verticesPaths)
@@ -155,7 +161,7 @@ namespace morphstore{
 
                 uint64_t fileSize = 0;
 
-                std::string address = getDirectory() + file;
+                std::string address = file;
 
                 std::ifstream vertexFile(address, std::ios::binary |
                                                       std::ios::ate); // 'ate' means: open and seek to end immediately after opening
@@ -201,17 +207,25 @@ namespace morphstore{
                         if (start == 0)
                         {
                             std::string property_key;
-
+                            Ldbc_Data_Type data_type;
                             // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
                             while ((next = row.find(delimiter, last)) != std::string::npos)
                             {
                                 property_key = row.substr(last, next - last);
-                                attributes.push_back(std::make_pair(property_key, get_data_type(vertexType, property_key)));
+                                data_type = get_data_type(vertexType, property_key);
+                                if (data_type == Ldbc_Data_Type::ERROR) {
+                                    throw std::invalid_argument(file.string() + ":" + vertexType + ":" + property_key + " could not be found in schema");
+                                }
+                                attributes.push_back(std::make_pair(property_key, data_type));
                                 last = next + 1;
                             }
                             // last attribute
                             property_key = row.substr(last);
-                            attributes.push_back(std::make_pair(property_key, get_data_type(vertexType, property_key)));
+                            data_type = get_data_type(vertexType, property_key);
+                            if (data_type == Ldbc_Data_Type::ERROR) {
+                                throw std::invalid_argument(file.string() + ":" + vertexType + ":" + property_key + " could not be found in schema");
+                            }
+                            attributes.push_back(std::make_pair(property_key, data_type));
                         }
                         else
                         {
@@ -329,9 +343,7 @@ namespace morphstore{
 
                     uint64_t fileSize = 0;
 
-                    std::string address = getDirectory() + file;
-
-                    std::ifstream edgeFile(address, std::ios::binary |
+                    std::ifstream edgeFile(file, std::ios::binary |
                                                         std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
                     if (!edgeFile) {
@@ -384,8 +396,7 @@ namespace morphstore{
             for (const auto &file : verticesPaths) {
                 char *buffer;
                 uint64_t fileSize = 0;
-                std::string address = getDirectory() + file;
-                std::ifstream vertexFile(address, std::ios::binary |
+                std::ifstream vertexFile(file, std::ios::binary |
                                                       std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
                 if (!vertexFile) {
@@ -463,9 +474,7 @@ namespace morphstore{
 
                     uint64_t fileSize = 0;
 
-                    std::string address = getDirectory() + file;
-
-                    std::ifstream edgeFile(address, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
+                    std::ifstream edgeFile(file, std::ios::binary | std::ios::ate); // 'ate' means: open and seek to end immediately after opening
 
                     if (!edgeFile) {
                         std::cerr << "Error, opening file. ";
@@ -509,6 +518,8 @@ namespace morphstore{
                                 if(start == 0){
                                     propertyKey = row.substr(row.find(delimiter) + 1);
                                     data_type = get_data_type(sourceVertexType ,propertyKey);
+                                    if (data_type == Ldbc_Data_Type::ERROR)
+                                        throw std::invalid_argument(file.string() + ":" + edgeType + ":" + propertyKey + " could not be found in schema");
                                     
                                 }else{
                                     // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
