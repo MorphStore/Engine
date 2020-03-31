@@ -63,6 +63,7 @@ namespace morphstore{
 
         // unordered_map for lookup system-id and its in the graph (for further processing, e.g. filling the edge_array in the right order)
         std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexEdgesLookup;
+        std::unordered_map<uint64_t,  std::unordered_map<std::string, std::string>> edgeProperties;
 
     public:
 
@@ -283,6 +284,7 @@ namespace morphstore{
             edgeTypeLookup.clear();
             vertexTypeLookup.clear();
             edgesPaths.clear();
+            edgeProperties.clear();
             verticesPaths.clear();
             vertexEdgesLookup.clear();
         }
@@ -567,7 +569,10 @@ namespace morphstore{
                                         value = row;
 
                                         // insert edge into vertexEdgesLookup with its edge-property:
-                                        vertexEdgesLookup[sourceVertexId].push_back(morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber, {{propertyKey, value}}));
+                                        auto edge = morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber);
+                                        vertexEdgesLookup[sourceVertexId].push_back(edge);
+                                        // assuming all properties of an edge are defined in the same file
+                                        edgeProperties[edge.getId()] = {{propertyKey, value}};
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -600,8 +605,15 @@ namespace morphstore{
             uint64_t graphSize = graph.getVertexCount();
 
             for(uint64_t vertexID = 0; vertexID < graphSize ; ++vertexID){
+                auto edges = vertexEdgesLookup[vertexID];
                 // add edge data:
-                graph.add_edges(vertexID, vertexEdgesLookup[vertexID]);
+                graph.add_edges(vertexID, edges);
+                for(auto edge: edges) {
+                    auto entry = edgeProperties.find(edge.getId());
+                    if (entry != edgeProperties.end()) {
+                        graph.add_properties_to_edge(entry->first, entry->second);
+                    }
+                }
             }
         }
 

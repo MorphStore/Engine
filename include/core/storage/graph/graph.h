@@ -149,8 +149,8 @@ namespace morphstore{
         }
 
         // function which returns a pointer to vertex by id
-        std::shared_ptr<Edge> get_edge(uint64_t id){
-            return edges[id];
+        EdgeWithProperties get_edge(uint64_t id){
+            return EdgeWithProperties(edges[id], edge_properties[id]);
         }
 
 	    // function to return a list of pair < vertex id, degree > DESC:
@@ -195,6 +195,10 @@ namespace morphstore{
 
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) {
             vertex_properties[id].insert(property);
+        };
+
+        void add_properties_to_edge(uint64_t id, const std::unordered_map<std::string, std::string> properties) {
+            edge_properties[id] = properties;
         };
 
         // -------------------- pure virtual functions --------------------
@@ -279,7 +283,9 @@ namespace morphstore{
         virtual void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
             std::cout << "Number of vertices: " << getVertexCount() << std::endl;
+            std::cout << "Number of vertices with properties:" << vertex_properties.size() << std::endl;
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
+            std::cout << "Number of edges with properties:" << edge_properties.size() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 
@@ -308,7 +314,9 @@ namespace morphstore{
             std::cout << "Type: \t" << get_edgeType_by_number(edge->getType()) << std::endl;
             std::cout << "\n";
             std::cout << "Properties: ";
-            edge->print_properties();
+            for (const auto entry  : edge_properties[id]) {
+                std::cout << "{" << entry.first << ": " << entry.second << "}";
+            }
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;
         }

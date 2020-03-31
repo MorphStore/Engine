@@ -29,6 +29,8 @@
 #include <string>
 #include <iostream>
 #include <unordered_map>
+#include <memory>
+
 namespace morphstore{
 
     class Edge{
@@ -38,19 +40,16 @@ namespace morphstore{
         uint64_t sourceID, targetID, id;
         unsigned short int type;
 
-        std::unordered_map<std::string, std::string> properties;
-
         uint64_t getNextEdgeId() const {
             static uint64_t currentMaxEdgeId = 0;
             return currentMaxEdgeId++;
         }
 
     public:
-        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type, const std::unordered_map<std::string, std::string> properties = {}){
+        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type){
             this->sourceID = sourceId;
             this->targetID = targetId;
             this->type = type;
-            this->properties = properties;
             this->id = getNextEdgeId();
         }
 
@@ -64,7 +63,6 @@ namespace morphstore{
             this->sourceID = edge.sourceID;
             this->targetID = edge.targetID;
             this->type = edge.type;
-            this->properties = edge.properties;
 
             // return the existing object so we can chain this operator
             return *this;
@@ -88,17 +86,6 @@ namespace morphstore{
             return type;
         }
 
-        const std::unordered_map<std::string, std::string> &getProperties() const {
-            return properties;
-        }
-
-        void setProperty(const std::pair<std::string, std::string> prop) {
-            // first check if there is any key value data, otherwise problems with segfaults
-            if(prop.first != "" && prop.second != ""){
-                properties[prop.first] = prop.second;
-            }
-        }
-
         // function for sorting algorithms in the ldbc-importer:
         // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
         bool operator<(const Edge& e) const{
@@ -110,23 +97,27 @@ namespace morphstore{
             size_t size = 0;
             size += sizeof(uint64_t) * 2; // source- and target-id
             size += sizeof(unsigned short int); // relation
-
-            // properties:
-            size += sizeof(std::unordered_map<std::string, std::string>);
-            for(auto property = properties.begin(); property != properties.end(); ++property){
-                size += sizeof(char)*(property->first.length() + property->second.length());
-            }
             return size;
         }
+    };
 
-
-        // ----------------- DEBUGGING -----------------
-        void print_properties() {
-            std::cout << std::endl;
-            for (const auto entry  : properties) {
-                std::cout << "  {" << entry.first << ": " << entry.second << "}" << std::endl;
+    class EdgeWithProperties {
+        private:
+            std::shared_ptr<Edge> edge;
+            std::unordered_map<std::string, std::string> properties;
+        public:
+            EdgeWithProperties(std::shared_ptr<Edge> edge, const std::unordered_map<std::string, std::string> properties) {
+                this->edge = edge;
+                this->properties = properties;
             }
-        }
+
+            std::shared_ptr<Edge> getEdge() {
+                return edge;
+            }
+
+            std::unordered_map<std::string, std::string> getProperties() {
+                return properties;
+            }
     };
 }
 

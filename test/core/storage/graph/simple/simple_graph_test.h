@@ -49,7 +49,10 @@ void simpleGraphFormatTest (void) {
     uint64_t v2 = graph->add_vertex(0);
     uint64_t v3 = graph->add_vertex(0);
 
-    graph->add_edges(v1, {morphstore::Edge(v1, v2, 1, {{"rating", "42"}, {"description", "has the answer to everything"}})});
+    auto e1 = morphstore::Edge(v1, v2, 1);
+
+    graph->add_edges(v1, {e1});
+    graph->add_properties_to_edge(e1.getId(), {{"rating", "42"}, {"description", "has the answer to everything"}});
     graph->add_edges(v2, {morphstore::Edge(v2, v3, 2), morphstore::Edge(v2, v3, 1)});
 
     // (DEBUG)
@@ -61,7 +64,7 @@ void simpleGraphFormatTest (void) {
 
     assert(graph->getVertexCount() == 3);
     assert(graph->getEdgeCount() == 3);
-    assert((int)graph->get_edge(0)->getProperties().size() == 2);
+    assert((int)graph->get_edge(e1.getId()).getProperties().size() == 2);
     assert(graph->get_out_degree(v3) == 0);
     assert(graph->get_out_degree(v1) == 1);
     assert(graph->get_out_degree(v2) == 2);
