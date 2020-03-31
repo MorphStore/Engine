@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_VERTEX_H
 #define MORPHSTORE_VERTEX_H
 
-#include "../edge/edge.h"
+#include "../property_type.h"
 
 #include <unordered_map>
 #include <iostream>
@@ -70,9 +70,9 @@ namespace morphstore{
     class VertexWithProperties {
         private:
             std::shared_ptr<Vertex> vertex;
-            std::unordered_map<std::string, std::string> properties;
+            std::unordered_map<std::string, property_type> properties;
         public:
-            VertexWithProperties(std::shared_ptr<Vertex> vertex, const std::unordered_map<std::string, std::string> properties) {
+            VertexWithProperties(std::shared_ptr<Vertex> vertex, const std::unordered_map<std::string, property_type> properties) {
                 this->vertex = vertex;
                 this->properties = properties;
             }
@@ -85,7 +85,7 @@ namespace morphstore{
                 return vertex->getType();
             }
 
-            std::unordered_map<std::string, std::string> getProperties() {
+            std::unordered_map<std::string, property_type> getProperties() {
                 return properties;
             }
     };

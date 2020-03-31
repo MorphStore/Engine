@@ -26,6 +26,7 @@
 
 #include "vertex/vertex.h"
 #include "edge/edge.h"
+#include "property_type.h"
 
 #include <map>
 #include <iostream>
@@ -53,8 +54,8 @@ namespace morphstore{
 
         // store outside of entity objects as they have a variable size and can be better compressed this way
         // TODO: try other property storage formats than per node .. (triple-store or per property)
-        std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>> vertex_properties;
-        std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>> edge_properties;
+        std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> vertex_properties;
+        std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edge_properties;
 
 
         // Lookup for types: number to string
@@ -101,12 +102,14 @@ namespace morphstore{
             return edges.size();
         }
 
-        uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, std::string> props = {}) {
+        uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, property_type> props = {}) {
             assert(expectedVertexCount > getVertexCount());
             std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId(), type);
             uint64_t id = v->getID();
             vertices[id] = v;
-            vertex_properties.insert(std::make_pair(id, props));
+            if (!props.empty()) {
+                vertex_properties.insert(std::make_pair(id, props));
+            }
             return id;
         };
 
@@ -193,11 +196,11 @@ namespace morphstore{
             fs.close();
         }
 
-        void add_property_to_vertex(uint64_t id, const std::pair<std::string, std::string> property) {
+        void add_property_to_vertex(uint64_t id, const std::pair<std::string, property_type> property) {
             vertex_properties[id].insert(property);
         };
 
-        void add_properties_to_edge(uint64_t id, const std::unordered_map<std::string, std::string> properties) {
+        void add_properties_to_edge(uint64_t id, const std::unordered_map<std::string, property_type> properties) {
             edge_properties[id] = properties;
         };
 
@@ -248,8 +251,8 @@ namespace morphstore{
             index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
             for(auto& property_mapping: vertex_properties) {
                 index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
-                for (std::unordered_map<std::string, std::string>::iterator property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
-                    data_size += sizeof(char) * (property->first.length() + property->second.length());
+                for (std::unordered_map<std::string, property_type>::iterator property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
+                    data_size += sizeof(char) * (property->first.length() + sizeof(property->second));
                 }
             }
 
@@ -257,8 +260,8 @@ namespace morphstore{
             index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
             for(auto& property_mapping: edge_properties) {
                 index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
-                for (std::unordered_map<std::string, std::string>::iterator property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
-                    data_size += sizeof(char) * (property->first.length() + property->second.length());
+                for (std::unordered_map<std::string, property_type>::iterator property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
+                    data_size += sizeof(char) * (property->first.length() + sizeof(property->second));
                 }
             }
 
@@ -297,7 +300,10 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "Properties: ";
             for (const auto entry  : vertex_properties[id]) {
-                std::cout << "{" << entry.first << ": " << entry.second << "}";
+                auto value = entry.second;
+                std::cout << "{" << entry.first << ": "; 
+                std::visit(PropertyValueVisitor{}, value);
+                std::cout << "}";
             }
             std::cout << "\n";
             std::cout << "#Edges: " << this->get_out_degree(v->getID());
@@ -315,7 +321,10 @@ namespace morphstore{
             std::cout << "\n";
             std::cout << "Properties: ";
             for (const auto entry  : edge_properties[id]) {
-                std::cout << "{" << entry.first << ": " << entry.second << "}";
+                auto value = entry.second;
+                std::cout << "{" << entry.first << ": "; 
+                std::visit(PropertyValueVisitor{}, value);
+                std::cout << "}";
             }
             std::cout << "\n";
             std::cout << "-----------------------------------------------" << std::endl;

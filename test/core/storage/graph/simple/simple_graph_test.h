@@ -52,15 +52,15 @@ void simpleGraphFormatTest (void) {
     auto e1 = morphstore::Edge(v1, v2, 1);
 
     graph->add_edges(v1, {e1});
-    graph->add_properties_to_edge(e1.getId(), {{"rating", "42"}, {"description", "has the answer to everything"}});
+    graph->add_properties_to_edge(e1.getId(), {{"rating", 42}, {"description", "has the answer to everything"}});
     graph->add_edges(v2, {morphstore::Edge(v2, v3, 2), morphstore::Edge(v2, v3, 1)});
 
     // (DEBUG)
-    /*graph->statistics();
-            graph->print_edge_by_id(0);
-            graph->print_neighbors_of_vertex(v1);
-            graph->print_neighbors_of_vertex(v2);
-            graph->print_neighbors_of_vertex(v3);*/
+    graph->statistics();
+    graph->print_edge_by_id(0);
+    graph->print_neighbors_of_vertex(v1);
+    graph->print_neighbors_of_vertex(v2);
+    graph->print_neighbors_of_vertex(v3);
 
     assert(graph->getVertexCount() == 3);
     assert(graph->getEdgeCount() == 3);

@@ -24,6 +24,8 @@
 #ifndef MORPHSTORE_EDGE_H
 #define MORPHSTORE_EDGE_H
 
+#include "../property_type.h"
+
 #include <stdint.h>
 #include <utility>
 #include <string>
@@ -104,9 +106,9 @@ namespace morphstore{
     class EdgeWithProperties {
         private:
             std::shared_ptr<Edge> edge;
-            std::unordered_map<std::string, std::string> properties;
+            std::unordered_map<std::string, property_type> properties;
         public:
-            EdgeWithProperties(std::shared_ptr<Edge> edge, const std::unordered_map<std::string, std::string> properties) {
+            EdgeWithProperties(std::shared_ptr<Edge> edge, const std::unordered_map<std::string, property_type> properties) {
                 this->edge = edge;
                 this->properties = properties;
             }
@@ -115,7 +117,7 @@ namespace morphstore{
                 return edge;
             }
 
-            std::unordered_map<std::string, std::string> getProperties() {
+            std::unordered_map<std::string, property_type> getProperties() {
                 return properties;
             }
     };

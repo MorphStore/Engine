@@ -18,15 +18,14 @@
 /**
  * @file ldbc_import.h
  * @brief this class reads the ldbc files and generates the graph in CSR or AdjList
- * @todo
+ * @todo support for array properties (for simplicity only last one take currently)
 */
 
 #ifndef MORPHSTORE_LDBC_IMPORT_H
 #define MORPHSTORE_LDBC_IMPORT_H
 
-#include <core/storage/graph/formats/adjacencylist.h>
-#include <core/storage/graph/formats/csr.h>
-
+#include <core/storage/graph/graph.h>
+#include "ldbc_schema.h"
 
 #include <filesystem>
 #include <vector>
@@ -36,6 +35,13 @@
 #include <map>
 #include <algorithm>
 #include <regex>
+#include <variant>
+#include <chrono>
+#include <string>
+#include <stdexcept>
+
+
+
 
 // hash function used to hash a pair of any kind using XOR (for verticesMap)
 struct hash_pair {
@@ -63,11 +69,12 @@ namespace morphstore{
 
         // unordered_map for lookup system-id and its in the graph (for further processing, e.g. filling the edge_array in the right order)
         std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexEdgesLookup;
-        std::unordered_map<uint64_t,  std::unordered_map<std::string, std::string>> edgeProperties;
+        std::unordered_map<uint64_t,  std::unordered_map<std::string, property_type>> edgeProperties;
 
     public:
 
-        // Constructor: needs the address of the csv files
+        // Constructor: needs the address of the csv files !!! both static and dynamic in one folder
+        // 
         LDBCImport(const std::string &dir) {
             directory = dir;
             insert_file_names(directory);
@@ -139,7 +146,7 @@ namespace morphstore{
             for (const auto &file : verticesPaths)
             {
                 // data structure for attributes of entity, e.g. taglass -> id, name, url
-                std::vector<std::string> attributes;
+                std::vector<std::pair<std::string, Ldbc_Data_Type>> attributes;
 
                 std::string vertexType = getEntityType(file);
                 int vertexTypeNumber = get_vertex_type_number(vertexType);
@@ -193,29 +200,37 @@ namespace morphstore{
                         // first line of *.csv contains the attributes -> write to attributes vector
                         if (start == 0)
                         {
+                            std::string property_key;
+
                             // extract attribute from delimiter, e.g. id|name|url to id,name,url and push back to attributes vector
                             while ((next = row.find(delimiter, last)) != std::string::npos)
                             {
-                                attributes.push_back(row.substr(last, next - last));
+                                property_key = row.substr(last, next - last);
+                                attributes.push_back(std::make_pair(property_key, get_data_type(vertexType, property_key)));
                                 last = next + 1;
                             }
                             // last attribute
-                            attributes.push_back(row.substr(last));
+                            property_key = row.substr(last);
+                            attributes.push_back(std::make_pair(property_key, get_data_type(vertexType, property_key)));
                         }
                         else
                         {
                             // actual data:
-                            std::unordered_map<std::string, std::string> properties;
+                            std::unordered_map<std::string, property_type> properties;
                             size_t attrIndex = 0;
                             std::string ldbcID = row.substr(0, row.find(delimiter));
                             while ((next = row.find(delimiter, last)) != std::string::npos)
-                            {
-                                properties.insert(std::make_pair(attributes[attrIndex], row.substr(last, next - last)));
+                            {   
+                                auto key_to_datatype = attributes[attrIndex];
+                                property_type property_value = convert_property_value(row.substr(last, next - last), key_to_datatype.second);
+                                properties.insert(std::make_pair(key_to_datatype.first, property_value));
                                 last = next + 1;
                                 ++attrIndex;
                             }
                             // last attribute
-                            properties.insert(std::make_pair(attributes[attrIndex], row.substr(last)));
+                            auto key_to_datatype = attributes[attrIndex];
+                            property_type propertyValue = convert_property_value(row.substr(last), key_to_datatype.second);
+                            properties.insert(std::make_pair(key_to_datatype.first, propertyValue));
 
                             //-----------------------------------------------------
                             // create vertex and insert into graph with properties
@@ -475,9 +490,10 @@ namespace morphstore{
                     if(get_vertex_type_number(targetVertexType) == -1) {
                         // Multi-value-attributes: just take the last recently one
                         std::string propertyKey;
-                        std::unordered_map<uint64_t, std::string> multiValueAttr;
+                        Ldbc_Data_Type data_type;
+                        std::unordered_map<uint64_t, property_type> multiValueAttr;
                         uint64_t systemID;
-                        std::string value;
+                        property_type value;
 			
                         for(size_t i = 0; i < fileSize; ++i){
                             if(buffer[i] == '\n'){
@@ -492,10 +508,12 @@ namespace morphstore{
                                 // first line: get the attribute a.k.a key for the property, e.g. Person.id|email -> get 'email'
                                 if(start == 0){
                                     propertyKey = row.substr(row.find(delimiter) + 1);
+                                    data_type = get_data_type(sourceVertexType ,propertyKey);
+                                    
                                 }else{
                                     // (1) write data to vector: if key is already present, over write value (simplicity: we take the newest one)
                                     systemID = globalIdLookupMap[{sourceVertexType, row.substr(0, row.find(delimiter))}];
-                                    value = row.substr(row.find(delimiter) + 1);
+                                    value = convert_property_value(row.substr(row.find(delimiter) + 1), data_type);
                                     multiValueAttr[systemID] = std::move(value);
                                 }
 
