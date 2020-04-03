@@ -25,41 +25,67 @@
 #include <random>
 
 
+typedef std::chrono::high_resolution_clock highResClock;
+using namespace morphstore;
+
+int64_t getDuration(std::chrono::time_point<std::chrono::system_clock> start) {
+    auto stop = highResClock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+}
 
 int main(void) {
-    using namespace morphstore;
+    // TODO: use core/utils/monitoring.h ? or a "time_it" function to stop a given function
+
+    int number_of_executions = 5;
+
+    std::cout << "Test vertex storage structure (avg of 5 for full_iterate and random access) times in μs" << std::endl;
+    std::cout << "vertex_count | loading time | full_iterate | 10^4 random access" << std::endl;
 
     for(int vertex_count=10000; vertex_count < 100000000; vertex_count = vertex_count*10) {
-        std::cout << "Testing graph with vertex count of:" << vertex_count << std::endl;
+        int64_t duration = 0;
+        
+        std::cout << vertex_count << " | ";
         std::unique_ptr<CSR> graph = std::make_unique<CSR>();
         graph->allocate_graph_structure(vertex_count, 0);
+        auto start = highResClock::now();
         for(int i=0; i < vertex_count; i++) {
             graph->add_vertex(i);
         }
 
-        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << getDuration(start)  << " | ";
+        
+        duration = 0;
 
-        // iterate
-        for(int i=0; i < vertex_count; i++) {
-            graph->get_vertex(i);
+        for(int exec=0; exec < number_of_executions;  exec++) {
+            auto start = highResClock::now();
+            // iterate
+            for(int i=0; i < vertex_count; i++) {
+                graph->get_vertex(i);
+            }
+            duration += getDuration(start);
         }
 
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto iteration_duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
-        std::cout << "Iteration time: " << iteration_duration << "ms" << std::endl;
+        std::cout << duration / number_of_executions << " | ";
+
+
         // random access
-        std::random_device rd;
-        std::uniform_int_distribution<uint64_t> dist(0, vertex_count);
 
-        start = std::chrono::high_resolution_clock::now();
+        duration = 0;
 
-        for(int i=0; i < 10000; i++) {
-            graph->get_vertex(dist(rd));
+        for(int exec=0; exec < number_of_executions;  exec++) { 
+            std::random_device rd;
+            std::uniform_int_distribution<uint64_t> dist(0, vertex_count - 1);
+
+            auto start = highResClock::now();
+
+            for(int i=0; i < 10000; i++) {
+                graph->get_vertex(dist(rd));
+            }
+
+            duration += getDuration(start);
         }
 
-        stop = std::chrono::high_resolution_clock::now();
-        auto random_access_duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
-        std::cout << "Random access of 10000 vertices: " << random_access_duration << "ms" << std::endl;
+        std::cout << duration / number_of_executions << std::endl;
     }
 
     return 0;
