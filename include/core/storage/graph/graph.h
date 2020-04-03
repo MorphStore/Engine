@@ -27,6 +27,7 @@
 #include "vertex/vertex.h"
 #include "edge/edge.h"
 #include "property_type.h"
+#include "core/utils/math.h"
 
 #include <map>
 #include <iostream>
@@ -48,9 +49,11 @@ namespace morphstore{
         uint64_t expectedVertexCount;
         uint64_t expectedEdgeCount;
 
+        mutable uint64_t currentMaxVertexId = 0;
+        static const inline uint64_t vertex_vector_size = 4096;
         // Data-structure for Vertex-Properties
-        std::unordered_map<uint64_t , std::shared_ptr<morphstore::Vertex>> vertices;
-        std::unordered_map<uint64_t , std::shared_ptr<morphstore::Edge>> edges;
+        std::vector<std::vector<std::shared_ptr<Vertex>>> vertices;
+        std::unordered_map<uint64_t , std::shared_ptr<Edge>> edges;
 
         // store outside of entity objects as they have a variable size and can be better compressed this way
         // TODO: try other property storage formats than per node .. (triple-store or per property)
@@ -62,10 +65,47 @@ namespace morphstore{
         std::map<unsigned short int, std::string> vertexTypeDictionary;
         std::map<unsigned short int, std::string> edgeTypeDictionary;
 
+
+        uint64_t get_vertex_vector_number(uint64_t vertex_id) {
+            return vertex_id / vertex_vector_size;
+        }
+        const std::shared_ptr<morphstore::Vertex> get_vertex_at(uint64_t id) { 
+                uint64_t pos_in_vector = id % vertex_vector_size;
+                assert (pos_in_vector <  vertices.at(get_vertex_vector_number(id)).size());
+
+                return vertices.at(get_vertex_vector_number(id)).at(pos_in_vector);
+        }
+
+        void insert_vertex(std::shared_ptr<morphstore::Vertex> v) {
+                auto vector_number = get_vertex_vector_number(v->getID());
+                assert (vector_number < vertices.size());
+
+                return vertices.at(vector_number).push_back(v);
+        }
+
+        // function to check if the vertex-ID is present or not (exists)
+        bool exist_vertexId(const uint64_t id){
+            // ! assumes no deletions
+            auto vector_pos = get_vertex_vector_number(id);
+            if (vector_pos < vertices.size()) {
+                if ((id % vertex_vector_size)  < vertices.at(vector_pos).size()) return true;
+            }
+
+            return false ;
+        }
+
+        // function to check if the edge-ID is present or not (exists)
+        bool exist_edgeId(const uint64_t id){
+            if(edges.find(id) == edges.end()){
+                return false;
+            }
+            return true;
+        }
+
         uint64_t getNextVertexId() const {
-            static uint64_t currentMaxVertexId = 0;
             return currentMaxVertexId++;
         }
+
     public:
         // -------------------- Setters & Getters --------------------
 
@@ -91,7 +131,11 @@ namespace morphstore{
         }
 
         uint64_t getVertexCount() const {
-            return vertices.size();
+            uint64_t count = 0;
+            for(uint32_t i = 0; i < vertices.size(); i++) {
+                count += vertices.at(i).size();
+            }
+            return count;
         }
 
         uint64_t getExpectedEdgeCount() const {
@@ -106,7 +150,7 @@ namespace morphstore{
             assert(expectedVertexCount > getVertexCount());
             std::shared_ptr<Vertex> v = std::make_shared<Vertex>(getNextVertexId(), type);
             uint64_t id = v->getID();
-            vertices[id] = v;
+            insert_vertex(v);
             if (!props.empty()) {
                 vertex_properties.insert(std::make_pair(id, props));
             }
@@ -130,25 +174,9 @@ namespace morphstore{
             }
         }
 
-        // function to check if the vertex-ID is present or not (exists)
-        bool exist_vertexId(const uint64_t id){
-            if(vertices.find(id) == vertices.end()){
-                return false;
-            }
-            return true;
-        }
-
-        // function to check if the edge-ID is present or not (exists)
-        bool exist_edgeId(const uint64_t id){
-            if(edges.find(id) == edges.end()){
-                return false;
-            }
-            return true;
-        }
-
         // function which returns a pointer to vertex by id
         VertexWithProperties get_vertex(uint64_t id){
-            return VertexWithProperties(vertices[id], vertex_properties[id]);
+            return VertexWithProperties(get_vertex_at(id), vertex_properties[id]);
         }
 
         // function which returns a pointer to vertex by id
@@ -229,12 +257,16 @@ namespace morphstore{
             }
 
             // container for indexes:
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Vertex>>);
-            for(auto& it : vertices){
-                // index size of vertex: size of id and sizeof pointer 
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
-                // data size:
-                data_size += it.second->get_data_size_of_vertex();
+            index_size += sizeof(std::vector<std::vector<std::shared_ptr<morphstore::Vertex>>>);
+
+            for (auto vertex_vector: vertices) {
+                index_size += sizeof(std::vector<std::shared_ptr<morphstore::Vertex>>);
+                for(auto& vector : vertex_vector){
+                    // index size of vertex: size of id and sizeof pointer 
+                    index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Vertex>);
+                    // data size:
+                    data_size += vector->get_data_size_of_vertex();
+            }
             }
 
             index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
@@ -272,7 +304,16 @@ namespace morphstore{
             this->expectedVertexCount = numberVertices;
             this->expectedEdgeCount = numberEdges;
 
-            vertices.reserve(numberVertices);
+            auto vertex_vector_count = round_up_div(numberVertices, vertex_vector_size);
+
+            vertices.reserve(vertex_vector_count);
+
+            for(uint64_t i = 0; i < vertex_vector_count; i++) {
+                auto vertex_vector = std::vector<std::shared_ptr<morphstore::Vertex>>();
+                vertex_vector.reserve(vertex_vector_size / Vertex::get_data_size_of_vertex());
+                vertices.push_back(vertex_vector);
+            }
+
             vertex_properties.reserve(numberVertices);
             edges.reserve(numberEdges);
             edge_properties.reserve(numberEdges);
@@ -294,7 +335,7 @@ namespace morphstore{
 
         void print_vertex_by_id(uint64_t id) {
             std::cout << "-------------- Vertex ID: " << id << " --------------" << std::endl;
-            std::shared_ptr<Vertex> v = vertices[id];
+            std::shared_ptr<Vertex> v = get_vertex_at(id);
             std::cout << "Vertex-ID: \t" << v->getID() << std::endl;
             std::cout << "Type: \t" << get_vertexType_by_number(v->getType()) << std::endl;
             std::cout << "\n";
