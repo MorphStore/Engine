@@ -616,6 +616,7 @@ namespace morphstore{
             }
         }
 
+        // TODO: is this function really needed?
         // function for sorting the vertexEdgesLookup ASC (needed in CSR)
         // sorting for every vertex its vector list with target-ids ASC
         void sort_VertexEdgesLookup(){
@@ -664,7 +665,7 @@ namespace morphstore{
 
             // populate vertex_type_lookup for differentiating between edge and property files
             generate_vertex_type_lookup();
-            graph.setVertexTypeDictionary(vertexTypeLookup);
+            graph.set_vertex_type_dictionary(vertexTypeLookup);
 
             uint64_t numberEdges = get_total_number_edges();
 

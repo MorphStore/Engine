@@ -41,14 +41,17 @@ namespace morphstore{
         // optional: type, properties
         unsigned short int type;
 
-
     public:
+        // default constr. needed for VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties)
+        // otherwise compiler won't accept
+        Vertex(){}
+
         Vertex(uint64_t id, unsigned short int type){
             this->id = id;
             this->type = type;
         }
 
-        uint64_t getID(){
+        uint64_t getID() const {
             return id;
         }
 
@@ -56,8 +59,22 @@ namespace morphstore{
             return type;
         }
 
+        // this is needed when using VerticesVectorArrayContainer when doing vertex_array[offset] = vertex
+        Vertex& operator= (const Vertex &vertex){
+            // self-assignment guard
+            if (this == &vertex)
+                return *this;
+
+            // do the copy
+            this->id = vertex.id;
+            this->type = vertex.type;
+
+            // return the existing object so we can chain this operator
+            return *this;
+        }
+
          // get size of vertex in bytes:
-        size_t get_data_size_of_vertex() {
+        static size_t get_data_size_of_vertex() {
             size_t size = 0;
             size += sizeof(uint64_t); // id
             size += sizeof(unsigned short int); // entity
@@ -69,20 +86,20 @@ namespace morphstore{
     // convinience class for returning whole vertices
     class VertexWithProperties {
         private:
-            std::shared_ptr<Vertex> vertex;
+            Vertex vertex;
             std::unordered_map<std::string, property_type> properties;
         public:
-            VertexWithProperties(std::shared_ptr<Vertex> vertex, const std::unordered_map<std::string, property_type> properties) {
+            VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties) {
                 this->vertex = vertex;
                 this->properties = properties;
             }
 
             uint64_t getID() {
-                return vertex->getID();
+                return vertex.getID();
             }
 
             unsigned short getType() const {
-                return vertex->getType();
+                return vertex.getType();
             }
 
             std::unordered_map<std::string, property_type> getProperties() {

@@ -47,7 +47,7 @@ void bfs_simple_graph_test (void) {
     std::map<unsigned short, std::string> edgeTypeMap = {{1, "knows"}, {2, "likes"}};
     std::map<unsigned short, std::string> vertexTypeMap = {{0, "Person"}};
     graph->setEdgeTypeDictionary(edgeTypeMap);
-    graph->setVertexTypeDictionary(vertexTypeMap);
+    graph->set_vertex_type_dictionary(vertexTypeMap);
 
     uint64_t v1 = graph->add_vertex(0);
     uint64_t v2 = graph->add_vertex(0);

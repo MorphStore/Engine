@@ -95,10 +95,10 @@ namespace morphstore{
         }
 
         // get size of edge object in bytes:
-        size_t size_in_bytes() const{
+        static size_t size_in_bytes() {
             size_t size = 0;
             size += sizeof(uint64_t) * 2; // source- and target-id
-            size += sizeof(unsigned short int); // relation
+            size += sizeof(unsigned short int); // type
             return size;
         }
 
