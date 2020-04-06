@@ -101,6 +101,10 @@ namespace morphstore{
             size += sizeof(unsigned short int); // relation
             return size;
         }
+
+        std::string to_string() const {
+            return "(id:" + std::to_string(this->id) + " ," + std::to_string(this->sourceID) + "->" + std::to_string(this->targetID) + ")";
+        }
     };
 
     class EdgeWithProperties {

@@ -56,26 +56,26 @@ namespace morphstore{
 
         // function that adds multiple edges (list of neighbors) at once to vertex
         void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
-            if (exist_vertexId(sourceId)) {
-                std::shared_ptr<std::vector<uint64_t>> adjacencyList;
-                if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
-                    adjacencyList = adjacencylistPerVertex[sourceId];
-                } else {
-                    adjacencyList = std::make_shared<std::vector<uint64_t>>();
-                    adjacencylistPerVertex[sourceId] = adjacencyList;
-                }
+            if (!vertices.exist_vertex(sourceId)) {
+                throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
+            }
 
-                for(const auto edge : edgesToAdd) {
-                    edges[edge.getId()] = std::make_shared<Edge>(edge);
-                    if(exist_vertexId(edge.getTargetId())) {
-                        adjacencyList->push_back(edge.getId());
-                    }
-                    else {
-                        std::cout << "Target-Vertex with ID " << edge.getTargetId() << " not found." << std::endl;
-                    }
-                }
+            std::shared_ptr<std::vector<uint64_t>> adjacencyList;
+            if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
+                adjacencyList = adjacencylistPerVertex[sourceId];
             } else {
-                std::cout << "Source-Vertex with ID " << sourceId << " not found." << std::endl;
+                adjacencyList = std::make_shared<std::vector<uint64_t>>();
+                adjacencylistPerVertex[sourceId] = adjacencyList;
+            }
+
+            for(const auto edge : edgesToAdd) {
+                edges[edge.getId()] = std::make_shared<Edge>(edge);
+                if(vertices.exist_vertex(edge.getTargetId())) {
+                    adjacencyList->push_back(edge.getId());
+                }
+                else {
+                    throw std::runtime_error("Target not found  :" + edge.to_string());
+                }
             }
         }
 
