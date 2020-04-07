@@ -39,7 +39,7 @@
 #include <chrono>
 #include <string>
 #include <stdexcept>
-
+#include <optional>
 
 
 
@@ -155,7 +155,7 @@ namespace morphstore{
                 std::vector<std::pair<std::string, Ldbc_Data_Type>> attributes;
 
                 std::string vertexType = getEntityType(file);
-                int vertexTypeNumber = get_vertex_type_number(vertexType);
+                int vertexTypeNumber = get_vertex_type_number(vertexType).value();
 
                 char *buffer;
 
@@ -268,8 +268,8 @@ namespace morphstore{
             }
         }
 
-        // function which returns the vertex_type_number if parameter is a vertexType in the ldbc-files. else -1 
-        int get_vertex_type_number(const std::string &vertexType) {
+        // function which returns the vertex_type_number (has no value if non existing)
+        std::optional<int> get_vertex_type_number(const std::string &vertexType) {
             // iterate through entities-map to look up for paramater
             for (auto const &entry : vertexTypeLookup) {
                 if (entry.second == vertexType) {
@@ -277,7 +277,7 @@ namespace morphstore{
                 }
             }
 
-            return -1;
+            return {};
         }
 
         // function which returns true, if the edge type already exist
@@ -364,7 +364,7 @@ namespace morphstore{
                     bool firstLine = true;
 
                     // check from file name whether it's a edge file or multi value attribute file
-                    if (get_vertex_type_number(targetVertexType) != -1) {
+                    if (get_vertex_type_number(targetVertexType).has_value()) {
 
                         for (size_t i = 0; i < fileSize; ++i) {
                             if (buffer[i] == '\n') {
@@ -496,7 +496,7 @@ namespace morphstore{
                     std::string delimiter = "|";
 
                     // check from file name whether it's an edge file or multi value attribute file
-                    if(get_vertex_type_number(targetVertexType) == -1) {
+                    if(!get_vertex_type_number(targetVertexType).has_value()) {
                         // Multi-value-attributes: just take the last recently one
                         std::string propertyKey;
                         Ldbc_Data_Type data_type;
