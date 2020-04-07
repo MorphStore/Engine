@@ -25,9 +25,9 @@
 #define MORPHSTORE_GRAPH_H
 
 #include "vertex/vertex.h"
-//#include "vertex/vertices_hashmap_container.h"
+#include "vertex/vertices_hashmap_container.h"
 #include "vertex/vertices_vectorvector_container.h"
-//#include "vertex/vertices_vectorarray_container.h"
+#include "vertex/vertices_vectorarray_container.h"
 #include "edge/edge.h"
 #include "property_type.h"
 
@@ -54,7 +54,7 @@ namespace morphstore{
         mutable uint64_t currentMaxVertexId = 0;
 
         // ! currently need to change to right container (abstract seems not to be possible due to pure virtual functions)
-        VerticesVectorVectorContainer vertices;
+        VerticesVectorArrayContainer vertices;
 
         std::unordered_map<uint64_t , std::shared_ptr<Edge>> edges;
 

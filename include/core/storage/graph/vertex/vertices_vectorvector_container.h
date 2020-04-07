@@ -42,11 +42,11 @@ namespace morphstore{
             uint64_t number_of_vertices = 0;
             vertex_vector_ptr current_vector;
             static const inline uint64_t vertex_vector_size = 4096;
-            static const inline uint64_t vertices_per_vector = vertex_vector_size / Vertex::get_data_size_of_vertex();
+            static const inline uint64_t vertices_per_vector = vertex_vector_size / sizeof(Vertex);
 
              vertex_vector_ptr allocate_vertex_array() {
                  auto vertex_vector = std::make_shared<std::vector<std::shared_ptr<morphstore::Vertex>>>();
-                 vertex_vector->reserve(vertex_vector_size / Vertex::get_data_size_of_vertex());
+                 vertex_vector->reserve(vertex_vector_size / sizeof(Vertex));
                  vertices.push_back(vertex_vector);
 
                  //std::cout << " Added a page" << std::endl;
