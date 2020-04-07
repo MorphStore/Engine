@@ -136,21 +136,20 @@ namespace morphstore{
         }
 
         // get size of storage format:
-        std::pair<size_t, size_t> get_size_of_graph() override {
-            std::pair<size_t, size_t> index_data_size;
+        std::pair<size_t, size_t> get_size_of_graph() const override {
             
             auto [index_size, data_size] = Graph::get_size_of_graph();
-
+            // might be only valid for the uncompressed case
             // pointer to arrays:
             index_size += sizeof(uint64_t*) * 2 + sizeof(Edge*);
-            // edges array values:
-            for(uint64_t i = 0; i < getExpectedEdgeCount(); i++){
-                index_size += sizeof(uint64_t); // node_array with offsets
-            }
 
-            index_data_size = {index_size, data_size};
+            // edgeId array values:
+            index_size += getExpectedEdgeCount() * sizeof(uint64_t);
 
-            return index_data_size;
+            // offset array values:
+            index_size += getExpectedVertexCount() * sizeof(uint64_t);
+
+            return {index_size, data_size};
         }
 
         // for debugging:

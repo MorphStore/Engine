@@ -108,20 +108,19 @@ namespace morphstore{
         }
 
         // for measuring the size in bytes:
-        std::pair<size_t, size_t> get_size_of_graph() override {
-            std::pair<size_t, size_t> index_data_size;
-            
+        std::pair<size_t, size_t> get_size_of_graph() const override {
             auto [index_size, data_size] = Graph::get_size_of_graph();
 
             // adjacencyListPerVertex
-            for(auto& it : adjacencylistPerVertex){
-                // data size:
-                data_size += sizeof(it);
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>>);
+            index_size += adjacencylistPerVertex.size() * (sizeof(uint64_t) + sizeof(std::shared_ptr<std::vector<uint64_t>>));
+
+            for(const auto& iterator : adjacencylistPerVertex){
+                // might be wrong in case of compression
+                data_size += sizeof(uint64_t) * iterator.second->size();
             }
 
-            index_data_size = {index_size, data_size};
-
-            return index_data_size;
+            return {index_size, data_size};
         }
 
         // for debugging: print neighbors a vertex

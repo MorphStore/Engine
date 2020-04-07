@@ -103,7 +103,7 @@ namespace morphstore{
                 return number_of_vertices;
             }
 
-            std::pair<size_t, size_t> get_size() override {
+            std::pair<size_t, size_t> get_size() const override {
                 auto [index_size, data_size] = VerticesContainer::get_size();
 
                 // vector count, current_array_offset 

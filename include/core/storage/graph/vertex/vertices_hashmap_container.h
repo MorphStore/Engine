@@ -61,19 +61,17 @@ namespace morphstore{
                 return vertices.size();
             }
 
-            std::pair<size_t, size_t> get_size() override {
+            std::pair<size_t, size_t> get_size() const override {
                 auto [index_size, data_size] = VerticesContainer::get_size();
 
                 // container for indexes:
-                index_size += sizeof(std::unordered_map<uint64_t, std::unique_ptr<morphstore::Vertex>>);
-                for (auto &it : vertices) {
-                    // index size of vertex: size of id and sizeof pointer
-                    index_size += sizeof(uint64_t) + sizeof(std::unique_ptr<morphstore::Vertex>);
-                    // data size:
-                    data_size += it.second->get_data_size_of_vertex();
-                }
+                index_size += sizeof(std::unordered_map<uint64_t, std::unique_ptr<Vertex>>);
+                // index size of vertex: size of id and sizeof pointer
+                index_size += vertices.size() * (sizeof(uint64_t) + sizeof(std::unique_ptr<Vertex>));
+                data_size += vertices.size() * Vertex::get_data_size_of_vertex();
+                
 
-                return std::make_pair(index_size, data_size);
+                return {index_size, data_size};
             }
     };
 }

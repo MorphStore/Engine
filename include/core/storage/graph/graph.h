@@ -192,34 +192,29 @@ namespace morphstore{
         virtual uint64_t get_out_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
 
-	    virtual std::pair<size_t, size_t> get_size_of_graph(){
+	    virtual std::pair<size_t, size_t> get_size_of_graph() const {
             // including vertices + its properties + its type dict
             auto [index_size, data_size] = vertices.get_size();
 
             // lookup type dicts
-            for(auto& rel : edgeTypeDictionary){
+            for(const auto& rel : edgeTypeDictionary){
                 index_size += sizeof(unsigned short int);
                 index_size += sizeof(char)*(rel.second.length());
             }
 
-            // container for indexes:
-            index_size += sizeof(std::vector<std::vector<std::shared_ptr<morphstore::Vertex>>>);
-
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<morphstore::Edge>>);
-            for(auto& it : edges){
-                // index size of edge: size of id and sizeof pointer 
-                index_size += sizeof(uint64_t) + sizeof(std::shared_ptr<morphstore::Edge>);
-                // data size:
-                data_size += it.second->size_in_bytes();
-            }
+            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<Edge>>);
+            // index size of edge: size of id and sizeof pointer 
+            index_size += edges.size() * (sizeof(uint64_t) + sizeof(std::shared_ptr<Edge>));
+            data_size += edges.size() * Edge::size_in_bytes();
 
             // TODO: extra propertymappings class 
             // edge-properties:
             index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
-            for(auto& property_mapping: edge_properties) {
+            for(const auto& property_mapping: edge_properties) {
                 index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
-                for (std::unordered_map<std::string, property_type>::iterator property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
-                    data_size += sizeof(char) * (property->first.length() + sizeof(property->second));
+                // properties of a single edge
+                for (const auto& property : property_mapping.second) {
+                    data_size += sizeof(char) * property.first.length() + sizeof(property.second);
                 }
             }
 

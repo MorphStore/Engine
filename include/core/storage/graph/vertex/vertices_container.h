@@ -90,27 +90,27 @@ namespace morphstore{
                 return vertex_properties.size();
             }
 
-            virtual std::pair<size_t, size_t> get_size(){
+            virtual std::pair<size_t, size_t> get_size() const {
                 size_t data_size = 0;
                 size_t index_size = 0;
 
                 // lookup type dicts
                 index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
-                for(auto& ent : vertex_type_dictionary){
+                for(auto& type_mapping : vertex_type_dictionary){
                     index_size += sizeof(unsigned short int);
-                    index_size += sizeof(char)*(ent.second.length());
+                    index_size += sizeof(char)*(type_mapping.second.length());
                 }
 
                 // vertex-properties:
                 index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
-                for (auto &property_mapping : vertex_properties) {
+                for (const auto &property_mapping : vertex_properties) {
                     index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
-                    for (auto property = property_mapping.second.begin(); property != property_mapping.second.end(); ++property) {
-                        data_size += sizeof(char) * (property->first.length() + sizeof(property->second));
+                    for (const auto &property : property_mapping.second) {
+                        data_size += sizeof(char) * property.first.length() + sizeof(property.second);
                     }
                 }
 
-                return std::make_pair(index_size, data_size);
+                return {index_size, data_size};
             }
 
             void print_type_dict(){
