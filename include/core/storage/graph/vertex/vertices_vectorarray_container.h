@@ -67,8 +67,8 @@ namespace morphstore{
                 uint64_t array_number = get_vertex_vector_number(id);
                 uint64_t pos_in_array = get_pos_in_array(id);
 
-                assert (pos_in_array < vertices_per_array);
-                assert (array_number < vertices.size());
+                //assert (pos_in_array < vertices_per_array);
+                //assert (array_number < vertices.size());
 
                 return vertices.at(array_number)[pos_in_array];
             }         
@@ -76,6 +76,10 @@ namespace morphstore{
         public:
             // TODO: make array_size based on constructor
             //VerticesVectorArrayContainer(array_size) 
+
+            std::string container_description() const override {
+                return "vector<Vertex*>";
+            }
 
             void allocate(const uint64_t numberVertices) {
                 VerticesContainer::allocate(numberVertices);

@@ -42,6 +42,7 @@ namespace morphstore{
         uint64_t* edgeId_array = nullptr;
 
     public:
+        CSR(VerticesContainerType vertices_container_type = VectorArrayContainer) : Graph(vertices_container_type) {}
 
         ~CSR() {
             free(offset_array);
@@ -75,14 +76,14 @@ namespace morphstore{
             uint64_t offset = offset_array[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
 
-            if (!vertices.exists_vertex(sourceID)) {
+            if (!vertices->exists_vertex(sourceID)) {
                 throw std::runtime_error("Source-id not found " + std::to_string(sourceID));
             }
 
             // fill the arrays
             for(const auto& edge : edgesToAdd){
                 std::shared_ptr<Edge> ePtr = std::make_shared<Edge>(edge);
-                 if(!vertices.exists_vertex(edge.getTargetId())) {
+                 if(!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found " + edge.to_string());
                 }
                 edges[ePtr->getId()] = ePtr;

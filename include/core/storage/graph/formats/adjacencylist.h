@@ -38,6 +38,8 @@ namespace morphstore{
         std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
 
     public:
+        AdjacencyList(VerticesContainerType vertices_container_type = VectorArrayContainer) : Graph(vertices_container_type) {}
+        
         std::string get_storage_format() const override {
             return "Adjacency_List";
         }
@@ -56,7 +58,7 @@ namespace morphstore{
 
         // function that adds multiple edges (list of neighbors) at once to vertex
         void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
-            if (!vertices.exists_vertex(sourceId)) {
+            if (!vertices->exists_vertex(sourceId)) {
                 throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
             }
 
@@ -70,7 +72,7 @@ namespace morphstore{
 
             for(const auto edge : edgesToAdd) {
                 edges[edge.getId()] = std::make_shared<Edge>(edge);
-                if(vertices.exists_vertex(edge.getTargetId())) {
+                if(vertices->exists_vertex(edge.getTargetId())) {
                     adjacencyList->push_back(edge.getId());
                 }
                 else {

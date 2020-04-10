@@ -21,8 +21,8 @@
  * @todo
 */
 
-#ifndef MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
-#define MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
+#ifndef MORPHSTORE_VERTICES_HASHMAP_PTR_CONTAINER_H
+#define MORPHSTORE_VERTICES_HASHMAP_PTR_CONTAINER_H
 
 #include "vertex.h"
 #include "vertices_container.h"
@@ -32,17 +32,17 @@
 
 namespace morphstore{
 
-    class VerticesHashMapContainer : public VerticesContainer{
+    class VerticesHashMapPtrContainer : public VerticesContainer{
         protected:
-            std::unordered_map<uint64_t , Vertex> vertices;
+            std::unordered_map<uint64_t , std::shared_ptr<Vertex>> vertices;
 
             Vertex get_vertex_without_properties(uint64_t id) override{
-                return vertices[id];
+                return *vertices[id];
             }
 
         public:
             std::string container_description() const override {
-                return "unordered_map<uint64_t , Vertex>";
+                return "unordered_map<uint64_t , shared_ptr<Vertex>>";
             }
 
             void allocate(const uint64_t numberVertices) override {
@@ -51,7 +51,7 @@ namespace morphstore{
             }
             
             void insert_vertex(const Vertex v) override {
-                vertices[v.getID()] = v;
+                vertices[v.getID()] = std::make_unique<Vertex>(v);
             }
 
             bool exists_vertex(const uint64_t id) const override {
@@ -69,9 +69,9 @@ namespace morphstore{
                 auto [index_size, data_size] = VerticesContainer::get_size();
 
                 // container for indexes:
-                index_size += sizeof(std::unordered_map<uint64_t, Vertex>);
+                index_size += sizeof(std::unordered_map<uint64_t, std::unique_ptr<Vertex>>);
                 // index size of vertex: size of id and sizeof pointer
-                index_size += vertices.size() * sizeof(uint64_t);
+                index_size += vertices.size() * (sizeof(uint64_t) + sizeof(std::unique_ptr<Vertex>));
                 data_size += vertices.size() * Vertex::get_data_size_of_vertex();
                 
 
@@ -80,4 +80,4 @@ namespace morphstore{
     };
 }
 
-#endif //MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
+#endif //MORPHSTORE_VERTICES_HASHMAP_PTR_CONTAINER_H

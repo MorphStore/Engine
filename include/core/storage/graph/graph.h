@@ -26,7 +26,9 @@
 
 #include "vertex/vertex.h"
 #include "vertex/vertices_hashmap_container.h"
+#include "vertex/vertices_hashmap_ptr_container.h"
 #include "vertex/vertices_vectorvector_container.h"
+#include "vertex/vertices_vectorvector_ptr_container.h"
 #include "vertex/vertices_vectorarray_container.h"
 #include "edge/edge.h"
 #include "property_type.h"
@@ -53,8 +55,7 @@ namespace morphstore{
 
         mutable uint64_t currentMaxVertexId = 0;
 
-        // ! currently need to change to right container (abstract seems not to be possible due to pure virtual functions)
-        VerticesVectorArrayContainer vertices;
+        std::unique_ptr<VerticesContainer> vertices;
 
         std::unordered_map<uint64_t , std::shared_ptr<Edge>> edges;
 
@@ -67,10 +68,10 @@ namespace morphstore{
 
         // function to check if the edge-ID is present or not (exists)
         bool exist_edgeId(const uint64_t id){
-            if(edges.find(id) == edges.end()){
-                return false;
-            }
-            return true;
+          if (edges.find(id) == edges.end()) {
+            return false;
+          }
+          return true;
         }
         
         // TODO: put this into vertex container?
@@ -81,9 +82,33 @@ namespace morphstore{
     public:
         // -------------------- Setters & Getters --------------------
 
+      Graph(VerticesContainerType vertices_container_type = VectorArrayContainer) {
+        switch (vertices_container_type) {
+        case VerticesContainerType::VectorArrayContainer:
+          vertices = std::make_unique<VerticesVectorArrayContainer>();
+          break;
+        case VerticesContainerType::VectorVectorContainer:
+          vertices = std::make_unique<VerticesVectorVectorContainer>();
+          break;
+        case VerticesContainerType::VectorVectorPtrContainer:
+          vertices = std::make_unique<VerticesVectorVectorPtrContainer>();
+          break;
+        case VerticesContainerType::HashMapContainer:
+          vertices = std::make_unique<VerticesHashMapContainer>();
+          break;
+        case VerticesContainerType::HashMapPtrContainer:
+          vertices = std::make_unique<VerticesHashMapPtrContainer>();
+          break;
+        }
+      }
+
+      std::string vertices_container_description() {
+        return vertices->container_description();
+        }
+
         void set_vertex_type_dictionary(const std::map<unsigned short, std::string>& types) {
             assert(types.size() != 0);
-            this->vertices.set_vertex_type_dictionary(types);
+            this->vertices->set_vertex_type_dictionary(types);
         }
 
         const std::map<unsigned short, std::string> &getRelationDictionary() const {
@@ -99,7 +124,7 @@ namespace morphstore{
         }
 
         uint64_t getVertexCount() const {
-            return vertices.vertex_count();
+            return vertices->vertex_count();
         }
 
         uint64_t getExpectedEdgeCount() const {
@@ -113,7 +138,7 @@ namespace morphstore{
         uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, property_type> props = {}) {
             assert(expectedVertexCount > getVertexCount());
             Vertex v = Vertex(getNextVertexId(), type);
-            vertices.add_vertex(v, props);  
+            vertices->add_vertex(v, props);  
             return v.getID();
         };
 
@@ -128,7 +153,7 @@ namespace morphstore{
 
         // function which returns a pointer to vertex by id
         VertexWithProperties get_vertex(uint64_t id){
-            return vertices.get_vertex(id);
+            return vertices->get_vertex(id);
         }
 
         // function which returns a pointer to vertex by id
@@ -177,7 +202,7 @@ namespace morphstore{
         }
 
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, property_type> property) {
-            vertices.add_property_to_vertex(id, property);
+            vertices->add_property_to_vertex(id, property);
         };
 
         void add_properties_to_edge(uint64_t id, const std::unordered_map<std::string, property_type> properties) {
@@ -194,7 +219,7 @@ namespace morphstore{
 
 	    virtual std::pair<size_t, size_t> get_size_of_graph() const {
             // including vertices + its properties + its type dict
-            auto [index_size, data_size] = vertices.get_size();
+            auto [index_size, data_size] = vertices->get_size();
 
             // lookup type dicts
             for(const auto& rel : edgeTypeDictionary){
@@ -225,7 +250,7 @@ namespace morphstore{
             this->expectedVertexCount = numberVertices;
             this->expectedEdgeCount = numberEdges;
 
-            vertices.allocate(numberVertices);
+            vertices->allocate(numberVertices);
 
             edges.reserve(numberEdges);
             edge_properties.reserve(numberEdges);
@@ -239,14 +264,14 @@ namespace morphstore{
         virtual void statistics(){
             std::cout << "---------------- Statistics ----------------" << std::endl;
             std::cout << "Number of vertices: " << getVertexCount() << std::endl;
-            std::cout << "Number of vertices with properties:" << vertices.vertices_with_properties_count() << std::endl;
+            std::cout << "Number of vertices with properties:" << vertices->vertices_with_properties_count() << std::endl;
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "Number of edges with properties:" << edge_properties.size() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 
         void print_vertex_by_id(uint64_t id) {
-            vertices.print_vertex_by_id(id);
+            vertices->print_vertex_by_id(id);
             std::cout << "\n";
             std::cout << "#Edges: " << this->get_out_degree(id);
             std::cout << "\n";
@@ -273,7 +298,7 @@ namespace morphstore{
         }
 
         void print_type_dicts(){
-            vertices.print_type_dict();
+            vertices->print_type_dict();
 
             std::cout << "EdgeType-Dict: " << std::endl;
             for(auto const& rel : edgeTypeDictionary){

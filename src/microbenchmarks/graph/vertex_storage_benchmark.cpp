@@ -21,16 +21,24 @@
  */
 
 #include <core/storage/graph/formats/csr.h>
+#include <core/storage/graph/vertex/vertices_container.h>
 #include <chrono>
 #include <random>
+#include <algorithm>
 
 
 typedef std::chrono::high_resolution_clock highResClock;
 using namespace morphstore;
 
-int64_t getDuration(std::chrono::time_point<std::chrono::system_clock> start) {
+int64_t get_duration(std::chrono::time_point<std::chrono::system_clock> start) {
     auto stop = highResClock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+}
+
+int64_t get_median(std::vector<int64_t> values) {
+    assert(values.size() > 0);
+    std::nth_element(values.begin(), values.begin() + values.size()/2, values.end());
+    return values[values.size()/2];
 }
 
 int main(void) {
@@ -38,54 +46,67 @@ int main(void) {
 
     int number_of_executions = 5;
 
-    std::cout << "Test vertex storage structure (avg of 5 for full_iterate and random access) times in μs" << std::endl;
-    std::cout << "vertex_count | loading time | full_iterate | 10^4 random access" << std::endl;
+    std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access) times in μs" << std::endl;
+    std::cout << "Container type | vertex_count | loading time | full_iterate | 10^4 random access" << std::endl;
 
-    for(int vertex_count=10000; vertex_count < 100000000; vertex_count = vertex_count*10) {
-        int64_t duration = 0;
-        
-        std::cout << vertex_count << " | ";
-        std::unique_ptr<CSR> graph = std::make_unique<CSR>();
+    std::vector<VerticesContainerType> storage_types = {
+        VerticesContainerType::HashMapContainer,
+        VerticesContainerType::HashMapPtrContainer,
+        VerticesContainerType::VectorArrayContainer,
+        VerticesContainerType::VectorVectorPtrContainer,
+        VerticesContainerType::VectorVectorContainer};
+
+    for (auto storage_type : storage_types) {
+      for (int vertex_count = 10000; vertex_count < 100000000;
+           vertex_count = vertex_count * 10) {
+        std::unique_ptr<CSR> graph = std::make_unique<CSR>(storage_type);
         graph->allocate_graph_structure(vertex_count, 0);
+
+        std::string measurement_entry =
+            graph->vertices_container_description() + " | ";
+        measurement_entry += std::to_string(vertex_count) + " | ";
+
         auto start = highResClock::now();
-        for(int i=0; i < vertex_count; i++) {
-            graph->add_vertex(i);
+        for (int i = 0; i < vertex_count; i++) {
+          graph->add_vertex(i);
         }
 
-        std::cout << getDuration(start)  << " | ";
-        
-        duration = 0;
+        measurement_entry += std::to_string(get_duration(start)) + " | ";
 
-        for(int exec=0; exec < number_of_executions;  exec++) {
-            auto start = highResClock::now();
-            // iterate
-            for(int i=0; i < vertex_count; i++) {
-                graph->get_vertex(i);
-            }
-            duration += getDuration(start);
+        std::vector<int64_t> durations;
+
+        for (int exec = 0; exec < number_of_executions; exec++) {
+          auto start = highResClock::now();
+          // iterate
+          for (int i = 0; i < vertex_count; i++) {
+            graph->get_vertex(i);
+          }
+          durations.push_back(get_duration(start));
         }
 
-        std::cout << duration / number_of_executions << " | ";
-
+        measurement_entry += std::to_string(get_median(durations)) + " | ";
 
         // random access
 
-        duration = 0;
+        durations.clear();
 
-        for(int exec=0; exec < number_of_executions;  exec++) { 
-            std::random_device rd;
-            std::uniform_int_distribution<uint64_t> dist(0, vertex_count - 1);
+        for (int exec = 0; exec < number_of_executions; exec++) {
+          std::random_device rd;
+          std::uniform_int_distribution<uint64_t> dist(0, vertex_count - 1);
 
-            auto start = highResClock::now();
+          auto start = highResClock::now();
 
-            for(int i=0; i < 10000; i++) {
-                graph->get_vertex(dist(rd));
-            }
+          for (int i = 0; i < 10000; i++) {
+            graph->get_vertex(dist(rd));
+          }
 
-            duration += getDuration(start);
+          durations.push_back(get_duration(start));
         }
 
-        std::cout << duration / number_of_executions << std::endl;
+        measurement_entry += std::to_string(get_median(durations));
+
+        std::cout << measurement_entry << std::endl;
+      }
     }
 
     return 0;

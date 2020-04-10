@@ -16,13 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file vertices__vectorvector_container.h
+ * @file vertices__vectorvector_ptr_container.h
  * @brief storing vertices using a vector of vectors
  * @todo
 */
 
-#ifndef MORPHSTORE_VERTICES_VECTORVECTOR_CONTAINER_H
-#define MORPHSTORE_VERTICES_VECTORVECTOR_CONTAINER_H
+#ifndef MORPHSTORE_VERTICES_VECTORVECTOR_PTR_CONTAINER_H
+#define MORPHSTORE_VERTICES_VECTORVECTOR_PTR_CONTAINER_H
 
 #include "vertex.h"
 #include "vertices_container.h"
@@ -34,18 +34,18 @@
 
 namespace morphstore{
 
-    using vertex_vector_ptr = std::shared_ptr<std::vector<Vertex>>;
+    using vertex_vector_ptr_ptr = std::shared_ptr<std::vector<std::shared_ptr<Vertex>>>;
 
-    class VerticesVectorVectorContainer : public VerticesContainer{
+    class VerticesVectorVectorPtrContainer : public VerticesContainer{
         protected:
-            std::vector<vertex_vector_ptr> vertices;
+            std::vector<vertex_vector_ptr_ptr> vertices;
             uint64_t number_of_vertices = 0;
-            vertex_vector_ptr current_vector;
+            vertex_vector_ptr_ptr current_vector;
             static const inline uint64_t vertex_vector_size = 4096;
-            static const inline uint64_t vertices_per_vector = vertex_vector_size / sizeof(Vertex);
+            static const inline uint64_t vertices_per_vector = vertex_vector_size / sizeof(std::shared_ptr<Vertex>);
 
-             vertex_vector_ptr allocate_vertex_array() {
-                 auto vertex_vector = std::make_shared<std::vector<Vertex>>();
+             vertex_vector_ptr_ptr allocate_vertex_array() {
+                 auto vertex_vector = std::make_shared<std::vector<std::shared_ptr<Vertex>>>();
                  vertex_vector->reserve(vertices_per_vector);
                  vertices.push_back(vertex_vector);
 
@@ -78,16 +78,16 @@ namespace morphstore{
                 */
 
                 //assert (vector_number <= vertices.size());
-                //assert (pos_in_vector < vertices_per_vector);
+               // assert (pos_in_vector < vertices_per_vector);
 
-                return vertices.at(vector_number)->at(pos_in_vector);
+                return *vertices.at(vector_number)->at(pos_in_vector);
             }
             
 
         public:
 
             std::string container_description() const override {
-                return "vector<shared_ptr<vector<Vertex>>>";
+                return "vector<shared_ptr<vector<shared_ptr<Vertex>>>>";
             }  
 
             void allocate(const uint64_t numberVertices) {
@@ -101,7 +101,7 @@ namespace morphstore{
                     current_vector = allocate_vertex_array();
                 }
 
-                current_vector->push_back(v);
+                current_vector->push_back(std::make_shared<Vertex>(v));
                 number_of_vertices++;;
             }
 
@@ -120,10 +120,11 @@ namespace morphstore{
                 // vector_count, current vertex_vector 
                 index_size += 2 * sizeof(uint64_t);
 
-                index_size += sizeof(std::vector<vertex_vector_ptr>);
-                index_size += vertices.size() * sizeof(vertex_vector_ptr);
+                index_size += sizeof(std::vector<vertex_vector_ptr_ptr>);
+                index_size += vertices.size() * sizeof(vertex_vector_ptr_ptr);
                 
                 for(auto vector: vertices) {
+                    index_size += vector->size() * sizeof(std::shared_ptr<morphstore::Vertex>);
                     data_size += vector->size() * Vertex::get_data_size_of_vertex();
                 }
                 
@@ -132,4 +133,4 @@ namespace morphstore{
     };
 }
 
-#endif //MORPHSTORE_VERTICES_VECTORVECTOR_CONTAINER_H
+#endif //MORPHSTORE_VERTICES_VECTORVECTOR_PTR_CONTAINER_H

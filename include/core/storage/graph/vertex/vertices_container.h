@@ -33,7 +33,7 @@
 #include <utility>
 
 namespace morphstore{
-
+    enum VerticesContainerType {HashMapContainer, HashMapPtrContainer, VectorVectorContainer, VectorVectorPtrContainer, VectorArrayContainer};
     class VerticesContainer {
         protected:
             std::map<unsigned short int, std::string> vertex_type_dictionary;
@@ -53,7 +53,7 @@ namespace morphstore{
             }
 
         public:
-
+            virtual std::string container_description() const = 0;
             virtual void insert_vertex(Vertex v) = 0;
             virtual bool exists_vertex(const uint64_t id) const = 0;
             virtual uint64_t vertex_count() const = 0;
