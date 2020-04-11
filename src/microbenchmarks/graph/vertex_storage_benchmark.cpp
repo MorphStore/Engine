@@ -46,8 +46,8 @@ int main(void) {
 
     int number_of_executions = 5;
 
-    std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access) times in μs" << std::endl;
-    std::cout << "Container type | vertex_count | loading time | full_iterate | 10^4 random access" << std::endl;
+    std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access)" << std::endl;
+    std::cout << "Container type | vertex_count | loading time in μs | full_iterate in μs | random access 1/10 of the vertex count in μs" << std::endl;
 
     std::vector<VerticesContainerType> storage_types = {
         VerticesContainerType::HashMapContainer,
@@ -56,9 +56,17 @@ int main(void) {
         VerticesContainerType::VectorVectorPtrContainer,
         VerticesContainerType::VectorVectorContainer};
 
-    for (auto storage_type : storage_types) {
-      for (int vertex_count = 10000; vertex_count < 100000000;
-           vertex_count = vertex_count * 10) {
+    std::vector<int> vertex_counts = {10000, 100000, 1000000, 2000000, 5000000, 10000000, 15000000};
+
+    for (int vertex_count: vertex_counts) {
+      std::random_device rd;
+      std::uniform_int_distribution<uint64_t> dist(0, vertex_count - 1);
+      std::vector<int> random_accesses;
+      for (int i = 0; i < vertex_count; i++) {
+        random_accesses.push_back(dist(rd));
+      }
+
+      for (auto storage_type : storage_types) {
         std::unique_ptr<CSR> graph = std::make_unique<CSR>(storage_type);
         graph->allocate_graph_structure(vertex_count, 0);
 
@@ -91,13 +99,10 @@ int main(void) {
         durations.clear();
 
         for (int exec = 0; exec < number_of_executions; exec++) {
-          std::random_device rd;
-          std::uniform_int_distribution<uint64_t> dist(0, vertex_count - 1);
-
           auto start = highResClock::now();
 
-          for (int i = 0; i < 10000; i++) {
-            graph->get_vertex(dist(rd));
+          for (int random_pos : random_accesses) {
+            graph->get_vertex(random_pos);
           }
 
           durations.push_back(get_duration(start));
