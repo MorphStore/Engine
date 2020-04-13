@@ -499,7 +499,7 @@ namespace morphstore{
                     if(!get_vertex_type_number(targetVertexType).has_value()) {
                         // Multi-value-attributes: just take the last recently one
                         std::string propertyKey;
-                        Ldbc_Data_Type data_type;
+                        Ldbc_Data_Type data_type = Ldbc_Data_Type::STRING;
                         std::unordered_map<uint64_t, property_type> multiValueAttr;
                         uint64_t systemID;
                         property_type value;
