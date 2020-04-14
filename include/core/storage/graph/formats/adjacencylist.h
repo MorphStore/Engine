@@ -109,6 +109,10 @@ namespace morphstore{
             return targetVertexIds;
         }
 
+        void compress() override {
+            std::cout << "Compressing graph format specific data structures";
+        }
+
         // for measuring the size in bytes:
         std::pair<size_t, size_t> get_size_of_graph() const override {
             auto [index_size, data_size] = Graph::get_size_of_graph();
