@@ -26,6 +26,8 @@
 
 #include "../graph.h"
 #include "../vertex/vertex.h"
+#include <core/storage/column.h>
+
 #include <stdexcept>
 #include <assert.h>
 
@@ -35,19 +37,14 @@ namespace morphstore{
 
     private:
         /* graph topology:
-         * offset array: index is vertex-id; array cell contains offset in edgeId array
-         * edgeId array: contains edge id
+         * offset column: index is vertex-id; column entry contains offset in edgeId array
+         * edgeId column: contains edge id
          */
-        uint64_t* offset_array = nullptr;
-        uint64_t* edgeId_array = nullptr;
+        column<uncompr_f>* offset_column;
+        column<uncompr_f>* edgeId_column;
 
     public:
         CSR(VerticesContainerType vertices_container_type = VectorArrayContainer) : Graph(vertices_container_type) {}
-
-        ~CSR() {
-            free(offset_array);
-            free(edgeId_array);
-        }
 
         std::string get_storage_format() const override {
             return "CSR";
@@ -57,11 +54,14 @@ namespace morphstore{
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
-            offset_array = (uint64_t*) malloc(numberVertices * sizeof(uint64_t));
-            edgeId_array = (uint64_t*) malloc(numberEdges * sizeof(uint64_t));
+            offset_column = column<uncompr_f>::create_global_column(numberVertices * sizeof(uint64_t));
+            offset_column->set_count_values(numberVertices);
+            edgeId_column = column<uncompr_f>::create_global_column(numberEdges * sizeof(uint64_t));
+            edgeId_column->set_count_values(numberEdges);
 
             // init node array:
-            offset_array[0] = 0;
+            uint64_t* offset_data = offset_column->get_data();
+            offset_data[0] = 0;
         }
 
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
@@ -73,7 +73,8 @@ namespace morphstore{
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
             assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
-            uint64_t offset = offset_array[sourceID];
+            uint64_t* offset_data = offset_column->get_data();
+            uint64_t offset = offset_data[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
 
             if (!vertices->exists_vertex(sourceID)) {
@@ -81,31 +82,37 @@ namespace morphstore{
             }
 
             // fill the arrays
+            // TODO: fill array using memcpy? (put edgeIds into vector as prerpare step)
+            uint64_t* edgeId_data = edgeId_column->get_data();
             for(const auto& edge : edgesToAdd){
                 std::shared_ptr<Edge> ePtr = std::make_shared<Edge>(edge);
                  if(!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found " + edge.to_string());
                 }
                 edges[ePtr->getId()] = ePtr;
-                edgeId_array[offset] = ePtr->getId();
+                
+                edgeId_data[offset] = ePtr->getId();
                 ++offset;
             }
 
             // to avoid buffer overflow:
             if(sourceID < getExpectedVertexCount()-1){
-                offset_array[sourceID+1] = nextOffset;
+                offset_data[sourceID+1] = nextOffset;
             }
         }
 
         // get number of edges of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
-            uint64_t offset = offset_array[id];
+            uint64_t* offset_data = offset_column->get_data();
+            uint64_t offset = offset_data[id];
             // special case: last vertex id has no next offset
             uint64_t nextOffset;
+
+            // todo: `getExpectedVertexCount()` could be replaced by `offset_column->get_count_values()`
             if(id == getExpectedVertexCount() -1){
                 nextOffset = getExpectedEdgeCount();
             }else{
-                nextOffset = offset_array[id+1];
+                nextOffset = offset_data[id+1];
             }
 
             if(offset == nextOffset) return 0;
@@ -116,12 +123,15 @@ namespace morphstore{
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
              std::vector<uint64_t> neighbourEdgeIds;
-             uint64_t offset = offset_array[id];
+             uint64_t* offset_data = offset_column->get_data();
+             uint64_t offset = offset_data[id];
              uint64_t numberEdges = get_out_degree(id);
 
              // avoiding out of bounds ...
+             // TODO: use assert here, as this is only out of bounds if the offset 
              if( offset < getExpectedEdgeCount()){
-                 neighbourEdgeIds.insert(neighbourEdgeIds.end(), edgeId_array+offset, edgeId_array+offset+numberEdges);
+                 uint64_t* edgeId_data = edgeId_column->get_data();
+                 neighbourEdgeIds.insert(neighbourEdgeIds.end(), edgeId_data+offset, edgeId_data+offset+numberEdges);
              }
 
              std::vector<uint64_t> targetVertexIds;
@@ -138,21 +148,16 @@ namespace morphstore{
 
         void compress() override {
             std::cout << "Compressing graph format specific data structures";
+            // TODO: need a way to change column format
         }
 
         // get size of storage format:
         std::pair<size_t, size_t> get_size_of_graph() const override {
             
             auto [index_size, data_size] = Graph::get_size_of_graph();
-            // might be only valid for the uncompressed case
-            // pointer to arrays:
-            index_size += sizeof(uint64_t*) * 2 + sizeof(Edge*);
 
-            // edgeId array values:
-            index_size += getExpectedEdgeCount() * sizeof(uint64_t);
-
-            // offset array values:
-            index_size += getExpectedVertexCount() * sizeof(uint64_t);
+            index_size += edgeId_column->get_size_used_byte();
+            index_size += offset_column->get_size_used_byte();
 
             return {index_size, data_size};
         }
@@ -160,11 +165,13 @@ namespace morphstore{
         // for debugging:
         void print_neighbors_of_vertex(uint64_t id) override{
             std::cout << "Neighbours for Vertex with id " << id << std::endl;
-            uint64_t offset = offset_array[id];
+            uint64_t* offset_data = offset_column->get_data();
+            uint64_t offset = offset_data[id];
             uint64_t numberEdges = get_out_degree(id);
-
+            
+            uint64_t* edgeId_data = edgeId_column->get_data();
             for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                uint64_t edgeId = edgeId_array[i];
+                uint64_t edgeId = edgeId_data[i];
                 print_edge_by_id(edgeId);
             }
         }
