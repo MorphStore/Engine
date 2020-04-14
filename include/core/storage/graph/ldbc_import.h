@@ -260,7 +260,7 @@ namespace morphstore{
                     }
                 }
 
-                delete[] buffer; // free memory
+                free(buffer); // free memory
                 vertexFile.close();
 
                 ++vertexTypeNumber;
@@ -379,7 +379,7 @@ namespace morphstore{
 
                     }
 
-                    delete[] buffer; // free memory
+                    free(buffer); // free memory
                     edgeFile.close();
 
                 }
@@ -440,7 +440,7 @@ namespace morphstore{
                     }
                 }
 
-                delete[] buffer; // free memory
+                free(buffer); // free memory
                 vertexFile.close();
             }
             return result;
@@ -608,7 +608,7 @@ namespace morphstore{
                             }
                         }
                     }
-                    delete[] buffer; // free memory
+                    free(buffer); // free memory
                     edgeFile.close();
                 }
                 // graph gets full edge-type-list here:
