@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "scalable_agg_sum.h"
+#include "benchmark_agg_sum.h"
 #include "benchmark_project.h"
 
 int main( void ) {
@@ -14,10 +14,10 @@ int main( void ) {
     std::cout << "Query execution started... ";
     std::cout.flush();
 
-    std::string filename1 = "agg_sum";
-    std::string filename2 = "project_tweak";
+    std::string filename1 = "agg_sum_clean";
+    std::string filename2 = "project_clean";
 
-    // execute_benchmark_agg <morphstore::agg_sum_t, ve, uncompr_f>(filename1);
+    execute_benchmark_agg <morphstore::agg_sum_t, ve, uncompr_f>(filename1);
     execute_benchmark_project <morphstore::my_project_wit_t, ve, uncompr_f, uncompr_f, uncompr_f>(filename2);
 
 

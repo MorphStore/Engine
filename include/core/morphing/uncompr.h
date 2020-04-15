@@ -89,89 +89,8 @@ namespace morphstore {
             p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
         }
 
-        // /*Scalable
-        // */
-        // template<typename T = t_ve, typename std::enable_if<T::is_scalable::value, T>::type* = nullptr >
-        // static void apply(
-        //         const uint8_t * & p_In8,
-        //         size_t p_CountInLog,
-        //         typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
-        // ) {
-        //     const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
-
-        //     // std::cout << "p_CountInLog: " << p_CountInLog << std::endl;
-
-        //     int vectorCount = p_CountInLog / vector_element_count::value;
-        //     int remainderCount = p_CountInLog % vector_element_count::value;
-
-        //     // std::cout << "vectorCount: " << vectorCount << std::endl;
-        //     // std::cout << "remainderCount: " << remainderCount << std::endl;
-
-
-
-        //     for(int i = 0; i < vectorCount; i++)
-        //         t_op_vector<t_ve, t_extra_args ...>::apply(
-        //                 vectorlib::load<
-        //                         t_ve,
-        //                         vectorlib::iov::ALIGNED,
-        //                         vector_base_t_granularity::value
-        //                 >(inBase + (i*vector_element_count::value) , (int)vector_element_count::value),
-        //                 p_State, (int)vector_element_count::value
-        //         );
-
-
-        //     // uint64_t vectorized = 0;
-        //     // for(int i = 0; i < vectorCount; i++){
-        //     //     for(size_t j=0; j < vector_element_count::value; j++){
-        //     //         vectorized += *(inBase + i*vector_element_count::value + j);
-        //     //     }
-        //     // }
-        //     // std::cout << "Vectorized Scalar" << vectorized << std::endl;
-
-
-
-        //     // std::cout << "NachVec: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(p_State.m_Aggregate) << std::endl;
-
-
-        //     if(remainderCount != 0){
-        //         // std::cout << "Rest" << std::endl;
-        //         // uint64_t remainder = 0;
-        //         // for(int i=0; i<remainderCount; i++){
-        //         //     std::cout << *(inBase+(vectorCount*vector_element_count::value)+i) << std::endl; 
-        //         //     remainder += *(inBase+(vectorCount*vector_element_count::value)+i);
-        //         // }
-        //         // std::cout << "Remainder" << remainder << std::endl;
-        //         vector_t reg = vectorlib::load<
-        //                         t_ve,
-        //                         vectorlib::iov::ALIGNED,
-        //                         vector_base_t_granularity::value
-        //                 >(inBase + (vectorCount*vector_element_count::value), remainderCount);
-
-
-        //         // std::cout << "ImReg: " << vectorlib::hadd<t_ve, vector_base_t_granularity::value>::apply(reg, remainderCount) << std::endl;
-
-
-
-        //         t_op_vector<t_ve, t_extra_args ...>::apply(
-        //                 reg,
-        //                 p_State,
-        //                 remainderCount
-        //         );
-
-        //     // uint64_t data[256]; 
-        //     // vectorlib::store<t_ve, vectorlib::iov::ALIGNED, vector_base_t_granularity::value>(data, reg);
-        //     // std::cout << "RestRegister: "  << std::endl;
-
-        //     // for(int k=0; k<256; k++){
-        //     //    std::cout << data[k] << " ;" ;
-        //     // }
-        //     // std::cout << "Ende "  << std::endl;
-        //     }
-            
-        //     p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
-        // }
-
-// Scalable 2
+/* Specialization for scalable vector lengths
+*/
         template<typename T = t_ve, typename std::enable_if<(T::is_scalable::value), T>::type* = nullptr >
         static void apply(
                 const uint8_t * & p_In8,
@@ -215,34 +134,8 @@ namespace morphstore {
     // Random read
     // ------------------------------------------------------------------------
 
-    // template<class t_vector_extension>
-    // class random_read_access<t_vector_extension, uncompr_f> {
-    //     using t_ve = t_vector_extension;
-    //     IMPORT_VECTOR_BOILER_PLATE(t_ve)
-        
-    //     const base_t * const m_Data;
-                
-    // public:
-    //     // Alias to itself, in this case.
-    //     using type = random_read_access<t_vector_extension, uncompr_f>;
-        
-    //     random_read_access(const base_t * p_Data) : m_Data(p_Data) {
-    //         //
-    //     }
 
-    //     MSV_CXX_ATTRIBUTE_FORCE_INLINE
-    //     vector_t get(const vector_t & p_Positions) {
-    //         return vectorlib::gather<
-    //                 t_ve,
-    //                 vector_base_t_granularity::value,
-    //                 sizeof(base_t)
-    //         >(m_Data, p_Positions);
-    //     }
-
-    // };
-
-    // Scalable
-        template<class t_vector_extension>
+    template<class t_vector_extension>
     class random_read_access<t_vector_extension, uncompr_f> {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -266,6 +159,8 @@ namespace morphstore {
             >(m_Data, p_Positions);
         }
 
+
+// Override for scalable vector lengths
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         vector_t get(const vector_t & p_Positions, int element_count) {
             return vectorlib::gather<
@@ -381,7 +276,7 @@ namespace morphstore {
             this->m_OutBase += vector_element_count::value;
         }
 
-        // Scalable
+        // Specialization for scalable vector lengths
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data, int element_count) {
             vectorlib::store<
                     t_vector_extension,
