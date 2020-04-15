@@ -19,19 +19,21 @@
  * @file select_sum_query.cpp
  * @brief A little example query with a selection on one column and a sum on
  * another column.
- * @todo TODOS?
  */
 
-#include "../../include/core/memory/mm_glob.h"
-#include "../../include/core/morphing/format.h"
-#include "../../include/core/operators/scalar/agg_sum_uncompr.h"
-#include "../../include/core/operators/scalar/project_uncompr.h"
-#include "../../include/core/operators/scalar/select_uncompr.h"
-#include "../../include/core/storage/column.h"
-#include "../../include/core/storage/column_gen.h"
-#include "../../include/core/utils/basic_types.h"
-#include "../../include/core/utils/printing.h"
-#include "../../include/vector/scalar/extension_scalar.h"
+#include <core/memory/mm_glob.h>
+#include <core/morphing/format.h>
+#include <core/morphing/uncompr.h>
+#include <core/operators/general_vectorized/agg_sum_compr.h>
+#include <core/operators/general_vectorized/project_compr.h>
+#include <core/operators/general_vectorized/select_compr.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/printing.h>
+
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <functional>
 #include <iostream>
@@ -78,14 +80,19 @@ int main( void ) {
     std::cout.flush();
     
     // Positions fulfilling "baseCol1 = 150"
-    auto i1 = morphstore::select<
-            std::equal_to,
+    auto i1 = my_select_wit_t<
+            equal,
             ve,
             uncompr_f,
             uncompr_f
-    >(baseCol1, 150);
+    >::apply(baseCol1, 150);
     // Data elements of "baseCol2" fulfilling "baseCol1 = 150"
-    auto i2 = project<ve, uncompr_f>(baseCol2, i1);
+    auto i2 = my_project_wit_t<
+            ve,
+            uncompr_f,
+            uncompr_f,
+            uncompr_f
+    >::apply(baseCol2, i1);
     // Sum over the data elements of "baseCol2" fulfilling "baseCol1 = 150"
     auto i3 = agg_sum<ve, uncompr_f>(i2);
     
