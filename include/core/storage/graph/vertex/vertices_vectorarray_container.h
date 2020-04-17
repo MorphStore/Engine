@@ -127,7 +127,7 @@ namespace morphstore{
                 // allocated memory for vertices
                 data_size  += vertices.size() * Vertex::get_data_size_of_vertex() * vertices_per_array;
                 
-                return std::make_pair(index_size, data_size);
+                return {index_size, data_size};
             }
     };
 }

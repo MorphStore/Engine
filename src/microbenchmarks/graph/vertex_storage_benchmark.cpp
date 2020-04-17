@@ -47,7 +47,7 @@ int main(void) {
     int number_of_executions = 5;
 
     std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access)" << std::endl;
-    std::cout << "Container type | vertex_count | loading time in μs | full_iterate in μs | random access 1/10 of the vertex count in μs" << std::endl;
+    std::cout << "Container type | vertex_count | loading time in μs | memory usage in bytes | full_iterate in μs | random access 1/10 of the vertex count in μs" << std::endl;
 
     std::vector<VerticesContainerType> storage_types = {
         VerticesContainerType::HashMapContainer,
@@ -76,11 +76,17 @@ int main(void) {
         for (int i = 0; i < vertex_count; i++) {
           graph->add_vertex(i);
         }
-
+        // loading time 
         measurement_entry += std::to_string(get_duration(start)) + " | ";
+
+        // size
+        auto [index_size, data_size] = graph->get_size_of_graph();
+        measurement_entry += std::to_string(index_size + data_size) + " | ";
+
 
         std::vector<int64_t> durations;
 
+        // full iterate
         for (int exec = 0; exec < number_of_executions; exec++) {
           auto start = highResClock::now();
           // iterate
