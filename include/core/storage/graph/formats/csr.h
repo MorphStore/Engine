@@ -40,16 +40,11 @@ namespace morphstore{
          * offset column: index is vertex-id; column entry contains offset in edgeId array
          * edgeId column: contains edge id
          */
-        column<uncompr_f>* offset_column;
-        column<uncompr_f>* edgeId_column;
+        std::unique_ptr<column<uncompr_f>> offset_column;
+        std::unique_ptr<column<uncompr_f>> edgeId_column;
 
     public:
         CSR(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
-
-        ~CSR() {
-            delete offset_column;
-            delete edgeId_column;
-        }
 
         std::string get_storage_format() const override {
             return "CSR";
@@ -59,9 +54,9 @@ namespace morphstore{
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
-            offset_column = column<uncompr_f>::create_global_column(numberVertices * sizeof(uint64_t));
+            offset_column = std::make_unique<column<uncompr_f>>(numberVertices * sizeof(uint64_t));
             offset_column->set_count_values(numberVertices);
-            edgeId_column = column<uncompr_f>::create_global_column(numberEdges * sizeof(uint64_t));
+            edgeId_column = std::make_unique<column<uncompr_f>>(numberEdges * sizeof(uint64_t));
             edgeId_column->set_count_values(numberEdges);
 
             // init node array:
