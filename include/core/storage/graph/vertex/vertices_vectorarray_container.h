@@ -77,6 +77,14 @@ namespace morphstore{
             // TODO: make array_size based on constructor
             //VerticesVectorArrayContainer(array_size) 
 
+            ~VerticesVectorArrayContainer() {
+                // TODO: find memory leak (destructor seems not to be called)
+                std::cout << "freeing vertex pages";
+                for (auto array_pointer : this->vertices) {
+                    free(array_pointer);
+                }
+            }
+
             std::string container_description() const override {
                 return "vector<Vertex*>";
             }
@@ -120,13 +128,6 @@ namespace morphstore{
                 data_size  += vertices.size() * Vertex::get_data_size_of_vertex() * vertices_per_array;
                 
                 return std::make_pair(index_size, data_size);
-            }
-
-            ~VerticesVectorArrayContainer() {
-                //std::cout << "freeing vertex pages";
-                for (auto array_pointer : this->vertices) {
-                    free(array_pointer);
-                }
             }
     };
 }

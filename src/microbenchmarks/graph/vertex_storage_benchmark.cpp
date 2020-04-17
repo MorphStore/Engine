@@ -51,10 +51,8 @@ int main(void) {
 
     std::vector<VerticesContainerType> storage_types = {
         VerticesContainerType::HashMapContainer,
-        VerticesContainerType::HashMapPtrContainer,
-        VerticesContainerType::VectorArrayContainer,
-        VerticesContainerType::VectorVectorPtrContainer,
-        VerticesContainerType::VectorVectorContainer};
+        VerticesContainerType::VectorArrayContainer
+        };
 
     std::vector<int> vertex_counts = {10000, 100000, 1000000, 2000000, 5000000, 10000000, 15000000};
 

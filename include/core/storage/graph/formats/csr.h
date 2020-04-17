@@ -44,7 +44,12 @@ namespace morphstore{
         column<uncompr_f>* edgeId_column;
 
     public:
-        CSR(VerticesContainerType vertices_container_type = VectorArrayContainer) : Graph(vertices_container_type) {}
+        CSR(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
+
+        ~CSR() {
+            delete offset_column;
+            delete edgeId_column;
+        }
 
         std::string get_storage_format() const override {
             return "CSR";

@@ -26,9 +26,6 @@
 
 #include "vertex/vertex.h"
 #include "vertex/vertices_hashmap_container.h"
-#include "vertex/vertices_hashmap_ptr_container.h"
-#include "vertex/vertices_vectorvector_container.h"
-#include "vertex/vertices_vectorvector_ptr_container.h"
 #include "vertex/vertices_vectorarray_container.h"
 #include "edge/edge.h"
 #include "property_type.h"
@@ -87,17 +84,8 @@ namespace morphstore{
         case VerticesContainerType::VectorArrayContainer:
           vertices = std::make_unique<VerticesVectorArrayContainer>();
           break;
-        case VerticesContainerType::VectorVectorContainer:
-          vertices = std::make_unique<VerticesVectorVectorContainer>();
-          break;
-        case VerticesContainerType::VectorVectorPtrContainer:
-          vertices = std::make_unique<VerticesVectorVectorPtrContainer>();
-          break;
         case VerticesContainerType::HashMapContainer:
           vertices = std::make_unique<VerticesHashMapContainer>();
-          break;
-        case VerticesContainerType::HashMapPtrContainer:
-          vertices = std::make_unique<VerticesHashMapPtrContainer>();
           break;
         }
       }

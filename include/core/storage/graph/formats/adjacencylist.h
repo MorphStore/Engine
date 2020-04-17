@@ -38,7 +38,7 @@ namespace morphstore{
         std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
 
     public:
-        AdjacencyList(VerticesContainerType vertices_container_type = VectorArrayContainer) : Graph(vertices_container_type) {}
+        AdjacencyList(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
         
         std::string get_storage_format() const override {
             return "Adjacency_List";
