@@ -50,10 +50,9 @@ namespace morphstore{
         uint64_t expectedVertexCount;
         uint64_t expectedEdgeCount;
 
-        mutable uint64_t currentMaxVertexId = 0;
-
         std::unique_ptr<VerticesContainer> vertices;
 
+        // Todo: use a EdgesContainer for edges and edge_properties (very similar to vertices Container)
         std::unordered_map<uint64_t , std::shared_ptr<Edge>> edges;
 
         std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edge_properties;
@@ -69,11 +68,6 @@ namespace morphstore{
             return false;
           }
           return true;
-        }
-        
-        // TODO: put this into vertex container?
-        uint64_t getNextVertexId() const {
-            return currentMaxVertexId++;
         }
 
     public:
@@ -125,9 +119,7 @@ namespace morphstore{
 
         uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, property_type> props = {}) {
             assert(expectedVertexCount > getVertexCount());
-            Vertex v = Vertex(getNextVertexId(), type);
-            vertices->add_vertex(v, props);  
-            return v.getID();
+            return vertices->add_vertex(type, props);
         };
 
         std::string get_edgeType_by_number(unsigned short int type){

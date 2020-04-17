@@ -36,6 +36,8 @@ namespace morphstore{
     enum VerticesContainerType {HashMapContainer, VectorArrayContainer};
     class VerticesContainer {
         protected:
+            uint64_t currentMaxVertexId = 0; 
+
             std::map<unsigned short int, std::string> vertex_type_dictionary;
 
             // TODO: try other property storage formats than per node .. (triple-store or per property)
@@ -52,6 +54,10 @@ namespace morphstore{
                 }
             }
 
+            uint64_t getNextVertexId() {
+                return currentMaxVertexId++;
+            }
+
         public:
             virtual std::string container_description() const = 0;
             virtual void insert_vertex(Vertex v) = 0;
@@ -63,11 +69,14 @@ namespace morphstore{
                 vertex_properties.reserve(numberVertices);
             }
 
-            void add_vertex(Vertex v, const std::unordered_map<std::string, property_type> properties = {}) {
+            uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, property_type> properties = {}) {
+                Vertex v = Vertex(getNextVertexId(), type);
                 insert_vertex(v);
                 if (!properties.empty()) {
                     vertex_properties.insert(std::make_pair(v.getID(), properties));
                 }
+
+                return v.getID();
             }
 
             void add_property_to_vertex(uint64_t id, const std::pair<std::string, property_type> property) {
