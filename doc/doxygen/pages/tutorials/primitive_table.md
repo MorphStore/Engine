@@ -14,6 +14,7 @@ IO
 |                               | AVX512        | 256               | <div class=NO></div> | <div class=YES>int</div>       | <div class=NO></div>       |  <div class=NO></div>    | <div class=YES>int</div>             | <div class=YES>int</div>      |  <div class=NO></div> | <div class=NO></div> |
 |                               | AVX512        | 512               | <div class=YES>int</div> |  <div class=YES>int, double</div>   |   <div class=YES>int</div> |  <div class=YES>int</div> |  <div class=YES>int, double</div> |  <div class=YES>int</div> |  <div class=YES>int</div> | <div class=YES>int</div>  |
 |                               | NEON          | 128               | <div class=YES>int***</div> |  <div class=YES>int***</div>   |   <div class=YES>int</div> |  <div class=YES>int***</div> |  <div class=YES>int***</div> |  <div class=YES>int</div> |  <div class=YES>int***</div> | <div class=YES>int***</div>  |
+|                               | TSUBASA          | 16384               | <div class=NO></div> |  <div class=YES>int</div>   |   <div class=YES>int</div> |  <div class=NO></div> |  <div class=YES>int</div> |  <div class=NO></div> |  <div class=NO></div> | <div class=NO></div>  |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=YES>float</div> |  <div class=YES>float</div>        |    <div class=NO></div>    |  <div class=YES>float</div>|  <div class=YES>float</div>     |  <div class=NO></div>     |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
@@ -22,6 +23,7 @@ IO
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | AVX512        | 512               |  <div class=HACKY>**</div> | <div class=HACKY>**</div>          | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
+|                               | TSUBASA          | 16384               | <div class=NO></div> |  <div class=NO></div>   |   <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> | <div class=NO></div>  |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | SSE           | 128               |  <div class=HACKY>**</div> | <div class=HACKY>**</div>          | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
@@ -30,6 +32,7 @@ IO
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | AVX512        | 512               |  <div class=HACKY>**</div> | <div class=HACKY>**</div>          | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
+|                               | TSUBASA          | 16384               | <div class=NO></div> |  <div class=NO></div>   |   <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> | <div class=NO></div>  |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | SSE           | 128               |  <div class=HACKY>**</div> | <div class=HACKY>**</div>          | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
@@ -38,6 +41,7 @@ IO
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
 |                               | AVX512        | 512               |  <div class=HACKY>**</div> | <div class=HACKY>**</div>          | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=HACKY>**</div> | <div class=HACKY>**</div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>      | <div class=NO></div>       |
+|                               | TSUBASA          | 16384               | <div class=NO></div> |  <div class=NO></div>   |   <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> |  <div class=NO></div> | <div class=NO></div>  |
 
 <p> \* There is an additional unaligned load with the IO version UNALIGNEDX, which uses a different intrinsic than the normal unaligned load. </p>
 <p> \*\* According 64-bit primitive can be used if input/output address is casted to a 64-bit integer pointer. </p>
@@ -58,6 +62,7 @@ Create
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX512        | 512               | <div class=YES>int</div>   | <div class=YES>int</div>           | <div class=YES>int</div>  |
 |                               | NEON          | 128               | <div class=YES>int</div>   | <div class=YES>int</div>           | <div class=NO></div>  |
+|                               | TSUBASA           | 16384               | <div class=YES>int</div>   | <div class=NO></div>           | <div class=NO></div>  |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | SSE           | 128               | <div class=YES>int</div>   | <div class=YES>int</div>           | <div class=YES>int</div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
@@ -66,6 +71,7 @@ Create
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX512        | 512               | <div class=YES>int</div>   | <div class=YES>int</div>           | <div class=YES>int</div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
+|                               | TSUBASA           | 16384               | <div class=NO></div>   | <div class=NO></div>           | <div class=NO></div>  |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
@@ -74,6 +80,7 @@ Create
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
+|                               | TSUBASA           | 16384               | <div class=NO></div>   | <div class=NO></div>           | <div class=NO></div>  |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
@@ -82,6 +89,7 @@ Create
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>  |
+|                               | TSUBASA           | 16384               | <div class=NO></div>   | <div class=NO></div>           | <div class=NO></div>  |
 
 <p> \* Using the set-primitive is highly discouraged, because the number of parameters (and probably also their value) is not independent from the vector size and base type. </p>
 
@@ -99,6 +107,7 @@ Extract
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=YES>int</div>   |
 |                               | NEON          | 128               | <div class=YES>int</div>   |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=YES>int</div>   |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -107,6 +116,7 @@ Extract
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=YES>int</div>   |
 |                               | NEON          | 128               | <div class=NO>int</div>    |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=NO></div>       |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -115,6 +125,7 @@ Extract
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=NO></div>       |
 |                               | NEON          | 128               | <div class=NO>int</div>    |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=NO></div>       |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -123,6 +134,8 @@ Extract
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=NO></div>       |
 |                               | NEON          | 128               | <div class=NO>int</div>    |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
+
 
 
 
@@ -141,6 +154,7 @@ Comparisons
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX512        | 512               | <div class=YES></div>      |  <div class=YES>int</div>          | <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=YES>int</div>         |  <div class=YES>int</div> |
 |                               | NEON          | 128               | <div class=YES></div>      |  <div class=YES>int</div>          | <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=YES>int</div>         |  <div class=YES>int</div> |
+|                               | TSUBASA          | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
@@ -149,6 +163,7 @@ Comparisons
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
+|                               | TSUBASA          | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
@@ -157,6 +172,7 @@ Comparisons
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
+|                               | TSUBASA          | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
@@ -165,6 +181,7 @@ Comparisons
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |
+|                               | TSUBASA          | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |
 
 Calculation
 --------------
@@ -181,6 +198,7 @@ Calculation
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>  | <div class=YES>int</div> |
 |                               | AVX512        | 512               | <div class=YES></div>      |  <div class=YES>int</div>          | <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=YES>int</div>         |  <div class=YES>int</div> |  <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=YES>int</div>         |  <div class=YES>int</div> |  <div class=YES>int</div> |      <div class=YES>int</div> |
 |                               | NEON          | 128               | <div class=YES>int</div>   |  <div class=YES>int</div>          | <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=NO></div>             |  <div class=NO></div>     |  <div class=YES>int</div>   | <div class=YES>int</div> |  <div class=YES>int</div>         |  <div class=YES>int</div> |  <div class=YES>int</div> |      <div class=YES>int *</div> |
+|                               | TSUBASA           | 16384               | <div class=YES>int</div>      |  <div class=NO></div>          | <div class=YES>int</div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div> |      <div class=NO></div> |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
@@ -189,6 +207,7 @@ Calculation
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
+|                               | TSUBASA           | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div> |      <div class=NO></div> |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
@@ -197,6 +216,7 @@ Calculation
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
+|                               | TSUBASA           | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div> |      <div class=NO></div> |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | SSE           | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
@@ -205,6 +225,7 @@ Calculation
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | AVX512        | 512               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
 |                               | NEON          | 128               | <div class=NO></div>       | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      | <div class=NO></div>               | <div class=NO></div>       |  <div class=NO></div>    |  <div class=NO></div>             | <div class=NO></div>      |  <div class=NO></div> |
+|                               | TSUBASA           | 16384               | <div class=NO></div>      |  <div class=NO></div>          | <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div>   | <div class=NO></div> |  <div class=NO></div>         |  <div class=NO></div> |  <div class=NO></div> |      <div class=NO></div> |
 
 
 <p> \* not tested </p>
@@ -223,6 +244,7 @@ Logic
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>                    |
 |                               | AVX512        | 512               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
 |                               | NEON          | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
+|                               | TSUBASA          | 16384               | <div class=NO></div>| <div class=NO></div>   |
 | 32                            | None (scalar) |  64               | <div class=HACKY>*</div>   | <div class=HACKY>*</div>   |
 |                               | SSE           | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>                    |
@@ -231,6 +253,7 @@ Logic
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>                    |
 |                               | AVX512        | 512               | <div class=YES>int, other*</div> | <div class=YES>int, other*</div>  |
 |                               | NEON          | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
+|                               | TSUBASA          | 16384               | <div class=NO></div>| <div class=NO></div>   |
 | 16                            | None (scalar) |  64               |  <div class=HACKY>*</div>  | <div class=HACKY>*</div>   |
 |                               | SSE           | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>                    |
@@ -239,6 +262,7 @@ Logic
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>                    |
 |                               | AVX512        | 512               | <div class=YES>int, other*</div> | <div class=YES>int, other*</div>  |
 |                               | NEON          | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
+|                               | TSUBASA          | 16384               | <div class=NO></div>| <div class=NO></div>   |
 |  8                            | None (scalar) |  64               | <div class=HACKY>*</div>   | <div class=HACKY>*</div>   |
 |                               | SSE           | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
 |                               | AVX2          | 128               | <div class=NO></div>       | <div class=NO></div>                    |
@@ -247,6 +271,7 @@ Logic
 |                               | AVX512        | 256               | <div class=NO></div>       | <div class=NO></div>                    |
 |                               | AVX512        | 512               | <div class=YES>int, other*</div> | <div class=YES>int, other*</div>  |
 |                               | NEON          | 128               | <div class=YES>int, other*</div>| <div class=YES>int, other*</div>   |
+|                               | TSUBASA          | 16384               | <div class=NO></div>| <div class=NO></div>   |
 
 <p> \* Primitive can be used when data is casted to a 64-bit integer (vector). </p>
 
@@ -265,6 +290,7 @@ Manipulate
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=YES>int</div>   |
 |                               | NEON          | 128               | <div class=YES>int</div>   |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 | 32                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=NO></div>       |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -273,6 +299,7 @@ Manipulate
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=NO></div>       |
 |                               | NEON          | 128               | <div class=NO></div>       |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 | 16                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=NO></div>       |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -281,6 +308,7 @@ Manipulate
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=NO></div>       |
 |                               | NEON          | 128               | <div class=NO></div>       |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
 |  8                            | None (scalar) |  64               | <div class=NO></div>       |
 |                               | SSE           | 128               | <div class=NO></div>       |
 |                               | AVX2          | 128               | <div class=NO></div>       |
@@ -289,4 +317,6 @@ Manipulate
 |                               | AVX512        | 256               | <div class=NO></div>       |
 |                               | AVX512        | 512               | <div class=NO></div>       |
 |                               | NEON          | 128               | <div class=NO></div>       |
+|                               | TSUBASA       | 16384             | <div class=NO></div>       |
+
 
