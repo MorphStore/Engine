@@ -1,4 +1,3 @@
-// // Original, no support for sve, remove debug code
 // /**********************************************************************************************
 //  * Copyright (C) 2019 by MorphStore-Team                                                      *
 //  *                                                                                            *
