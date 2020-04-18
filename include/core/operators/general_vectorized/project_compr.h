@@ -291,6 +291,7 @@
  * @file project_compr.h
  * @brief Project-operator based on the vector-lib, weaving the operator's core
  * into the decompression routine of the input data's format.
+ * Supports scalable vector lengths
  */
 
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_COMPR_H
@@ -480,7 +481,8 @@ public:
         return outDataCol;
     }
 
-        // Scalable
+      // Processes scalar part of a column.
+      // Specialization for VectorExtensions that support scalable vector lengths
         template<typename T = t_ve, typename std::enable_if<T::is_scalable::value, T>::type* = nullptr >      
         static void leftover (const size_t inSizeScalarRemainderByte,
                                 uint8_t *outDataAppendUncompr,
@@ -519,7 +521,8 @@ public:
                 outDataCountLog += inPosCountLogScalarRemainder;
         }
 
-        //  Not Scalable
+      // Processes scalar part of a column.
+      // Specialization for VectorExtensions that do not support scalable vector lengths
         template<typename T = t_ve, typename std::enable_if<!(T::is_scalable::value), T>::type* = nullptr >      
         static void leftover (const size_t inSizeScalarRemainderByte,
                                 uint8_t *outDataAppendUncompr,

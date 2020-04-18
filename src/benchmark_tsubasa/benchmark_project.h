@@ -1,3 +1,9 @@
+/*
+*  Used to benchmark the performance impact of scalable vector lengths on the project operator.
+*
+*/
+
+
 #ifndef BENCHMARK_PROJECT_H
 #define BENCHMARK_PROJECT_H
 
@@ -52,7 +58,7 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
    // resultfile << "Size_in_MB" << "," << "Duration_in_ms" << "," << "Size_in_kB" << "," << "Scalable" "\n"; 
 
    uint64_t result = 0;
-
+// Number of repetitions of the outer loop.
    size_t inner;
    const size_t inner_max = 1000;
 
@@ -63,7 +69,7 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
    } else {
       inner = 10;
    }
-
+// Number of repetitions of the outer loop.
    const size_t outer = 20;
 
 
@@ -85,6 +91,8 @@ void execute_query(const column<uncompr_f> * const baseCol, const column<uncompr
 
       // auto begin = std::chrono::system_clock::now();
       uint64_t start = now();
+      // Inner loop. Operator call is repeated "inner" times.
+      // "duration" is the time it takes to complete all these calls.
       for(size_t j=0; j<inner; j++){
          // results[j+1] = morphstore::agg_sum<scalar<v64<uint64_t>>, uncompr_f>(testdata);
          results[j+1] = op<ve, op_args ...>::apply(baseCol, posCol);

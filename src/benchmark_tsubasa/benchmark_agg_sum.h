@@ -1,3 +1,7 @@
+/*
+*  Used to benchmark the performance impact of scalable vector lengths on the agg_sum operator.
+*
+*/
 #ifndef SCALABLE_AGG_SUM_H
 #define SCALABLE_AGG_SUM_H
 
@@ -50,7 +54,7 @@ void execute_query(const column<uncompr_f> * const testdata, std::string filenam
    // resultfile << "Size_in_MiB" << "," << "Duration_in_ms" << "," << "Size_in_kiB" << "," << "Scalable" "\n"; 
 
    uint64_t result = 0;
-
+// Number of repetitions of the inner loop.
    size_t inner;
    const size_t inner_max = 1000;
 
@@ -62,6 +66,7 @@ void execute_query(const column<uncompr_f> * const testdata, std::string filenam
       inner = 10;
    }
 
+// Number of repetitions of the outer loop.
    const size_t outer = 20;
 
 
@@ -79,6 +84,8 @@ void execute_query(const column<uncompr_f> * const testdata, std::string filenam
       std::cout << "Start Benchmarking" << std::endl;
       // auto begin = std::chrono::system_clock::now();
       uint64_t start = now();
+      // Inner loop. Operator call is repeated "inner" times.
+      // "duration" is the time it takes to complete all these calls.
       for(size_t j=0; j<inner; j++){
          // results[j+1] = morphstore::agg_sum<scalar<v64<uint64_t>>, uncompr_f>(testdata);
          results[j+1] = op<ve, uncompr_f>::apply(testdata);
@@ -98,7 +105,7 @@ void execute_query(const column<uncompr_f> * const testdata, std::string filenam
          
          delete results[j+1];
       }
-      resultfile << testdata->get_size_used_byte() << ";" << duration << ";" <<  inner  << ";" <<  result << ";" << "no" << "\n"; 
+      resultfile << testdata->get_size_used_byte() << ";" << duration << ";" <<  inner  << ";" <<  result << ";" << "yes" << "\n"; 
    } 
 
    delete results[0];

@@ -164,7 +164,6 @@
 
 
 
-//  Scalable 1 call of vector-recursive intrinsic
 /**********************************************************************************************
  * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
@@ -187,6 +186,7 @@
  * @brief Whole-column aggregation-operator based on the vector-lib, weaving
  * the operator's core into the decompression routine of the input data's
  * format.
+ * Supports scalable vector lengths.
  * @todo Currently, it is not truly general-vectorized, because the current
  * implementation of decompress_and_process_batch is hand-written scalar code.
  * @todo Support columns of arbitrary length w.r.t. vectorization and
@@ -232,6 +232,8 @@ namespace morphstore {
             p_State.m_Aggregate, p_DataVector
          );
       }
+
+      // Supports scalable vector lengths via element_count parameter
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static void apply(
          vector_t const & p_DataVector,
@@ -321,6 +323,9 @@ namespace morphstore {
          return  outCol;
       }
 
+
+      // Processes scalar part of a column.
+      // Specialization for VectorExtensions that support scalable vector lengths
       template<typename T = VectorExtension, typename std::enable_if<T::is_scalable::value, T>::type* = nullptr >      
       static base_t leftover(size_t inSizeScalarRemainderByte, const uint8_t *inDataPtr,
       typename morphstore::agg_sum_processing_unit_wit<VectorExtension>::state_t witState,
@@ -341,7 +346,8 @@ namespace morphstore {
          return result;
       }
 
-
+      // Processes scalar part of a column.
+      // Specialization for VectorExtensions that do not support scalable vector lengths
       template<typename T = VectorExtension, typename std::enable_if<!(T::is_scalable::value), T>::type* = nullptr >      
       static base_t leftover(size_t inSizeScalarRemainderByte, const uint8_t *inDataPtr,
       __attribute__((unused)) typename morphstore::agg_sum_processing_unit_wit<VectorExtension>::state_t witState,
