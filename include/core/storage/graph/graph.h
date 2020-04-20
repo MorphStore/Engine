@@ -43,10 +43,33 @@
 
 
 namespace morphstore{
+    enum class GraphCompressionFormat {DELTA, RLE, FOR, UNCOMPRESSED};
 
+    std::string to_string(GraphCompressionFormat format) {
+        std::string desc;
+
+        switch (format) {
+        case GraphCompressionFormat::DELTA:
+            desc = "Delta";
+            break;
+        case GraphCompressionFormat::UNCOMPRESSED:
+            desc = "Uncompressed";
+            break;
+        case GraphCompressionFormat::RLE:
+            desc = "Runtime length";
+            break;
+        case GraphCompressionFormat::FOR:
+            desc = "Frame of Reference";
+            break;
+        }
+
+        return desc;
+    }
     class Graph{
 
     protected:
+        GraphCompressionFormat current_compression = GraphCompressionFormat::UNCOMPRESSED;
+
         uint64_t expectedVertexCount;
         uint64_t expectedEdgeCount;
 
@@ -73,7 +96,7 @@ namespace morphstore{
     public:
         // -------------------- Setters & Getters --------------------
 
-      Graph(VerticesContainerType vertices_container_type = VectorArrayContainer) {
+      Graph(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) {
         switch (vertices_container_type) {
         case VerticesContainerType::VectorArrayContainer:
           vertices = std::make_unique<VerticesVectorArrayContainer>();
@@ -194,7 +217,7 @@ namespace morphstore{
         virtual std::string get_storage_format() const = 0;
         virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
         virtual void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> relations) = 0;
-        virtual void compress() = 0;
+        virtual void compress(GraphCompressionFormat target_format) = 0;
         virtual uint64_t get_out_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
 
@@ -248,6 +271,7 @@ namespace morphstore{
             std::cout << "Number of vertices with properties:" << vertices->vertices_with_properties_count() << std::endl;
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "Number of edges with properties:" << edge_properties.size() << std::endl;
+            std::cout << "Compression Format:" << to_string(current_compression) << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
         }
 

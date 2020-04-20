@@ -27,6 +27,12 @@
 #include "../graph.h"
 #include "../vertex/vertex.h"
 #include <core/storage/column.h>
+#include <core/morphing/morph.h>
+#include <core/morphing/safe_morph.h>
+#include <core/morphing/rle.h>
+#include <core/morphing/delta.h>
+#include <core/morphing/for.h>
+#include <core/morphing/k_wise_ns.h>
 
 #include <stdexcept>
 #include <assert.h>
@@ -54,10 +60,13 @@ namespace morphstore{
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
-            offset_column = std::make_unique<column<uncompr_f>>(numberVertices * sizeof(uint64_t));
-            offset_column->set_count_values(numberVertices);
-            edgeId_column = std::make_unique<column<uncompr_f>>(numberEdges * sizeof(uint64_t));
-            edgeId_column->set_count_values(numberEdges);
+            const size_t offset_size = numberVertices * sizeof(uint64_t);
+            offset_column = std::make_unique<column<uncompr_f>>(offset_size);
+            offset_column->set_meta_data(numberVertices, offset_size);
+
+            const size_t edge_ids_size = numberEdges * sizeof(uint64_t);
+            edgeId_column = std::make_unique<column<uncompr_f>>(edge_ids_size);
+            edgeId_column->set_meta_data(numberEdges, edge_ids_size);
 
             // init node array:
             uint64_t* offset_data = offset_column->get_data();
@@ -146,9 +155,53 @@ namespace morphstore{
              return targetVertexIds;
         }
 
-        void compress() override {
-            std::cout << "Compressing graph format specific data structures";
-            // TODO: need a way to change column format
+        void compress(GraphCompressionFormat target_format) override {
+            std::cout << "Compressing graph format specific data structures via " << to_string(target_format)  << std::endl;
+            
+
+            if (current_compression == target_format) {
+                std::cout << "Already in " << to_string(target_format);
+                return;
+            }
+            
+            // TODO: allow also other vector extensions (switch from safe_morph to morph)
+            // example layout: dynamic_vbp_f<512, 32, 8>
+            
+            using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
+            column<uncompr_f>* inCol = offset_column.get();
+
+            switch (target_format)
+            {
+/*             case GraphCompressionFormat::DELTA:
+                auto column = morph<ve, delta_f<512, 32, k_wise_ns_f<4>>, uncompr_f>(inCol);
+                std::cout << " values: " << column->get_count_values() 
+                          << " size in bytes: " << column->get_size_used_byte() 
+                          << " ?compressed bytes : " << column->get_size_compr_byte() << std::endl;
+                break;
+            case GraphCompressionFormat::FOR:
+                auto column = morph<ve, for_f<512, 32, k_wise_ns_f<4>>, uncompr_f>(inCol);
+                std::cout << " values: " << column->get_count_values() 
+                          << " size in bytes: " << column->get_size_used_byte() 
+                          << " ?compressed bytes : " << column->get_size_compr_byte() << std::endl;
+                break; */
+            case GraphCompressionFormat::RLE: {
+                auto column = morph<ve, rle_f, uncompr_f>(inCol);
+                std::cout << " values: " << column->get_count_values()
+                          << " size in bytes: " << column->get_size_used_byte()
+                          << " compression ratio: " << inCol->get_size_used_byte() / (double) column->get_size_used_byte() << std::endl;
+                break;
+            }
+            default:
+                throw std::runtime_error("Could not compress yet");
+                break;
+            }
+            
+            //auto column = safe_morph<out_format, uncompr_f>(inCol);
+
+
+            // TODO: save them .. and correctly operate on the compressed column
+            // TODO: use normal morph (as vector extension is ignored) 
+            this->current_compression = target_format;
         }
 
         // get size of storage format:
@@ -174,6 +227,16 @@ namespace morphstore{
                 uint64_t edgeId = edgeId_data[i];
                 print_edge_by_id(edgeId);
             }
+        }
+
+        std::string get_column_info(const column<uncompr_f> *column) {
+            return " values: " + std::to_string(column->get_count_values()) + " size in bytes: " + std::to_string(column->get_size_used_byte());
+        }
+
+        void statistics() override {
+            Graph::statistics();
+            std::cout << "offset column: " << get_column_info(offset_column.get()) << std::endl;
+            std::cout << "edgeId column: " << get_column_info(edgeId_column.get()) << std::endl;
         }
     };
 }

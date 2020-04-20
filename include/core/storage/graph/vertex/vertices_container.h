@@ -33,7 +33,7 @@
 #include <utility>
 
 namespace morphstore{
-    enum VerticesContainerType {HashMapContainer, VectorArrayContainer};
+    enum class VerticesContainerType {HashMapContainer, VectorArrayContainer};
     class VerticesContainer {
         protected:
             uint64_t currentMaxVertexId = 0; 

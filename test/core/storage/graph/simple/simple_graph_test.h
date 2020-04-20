@@ -58,9 +58,9 @@ void simpleGraphFormatTest (void) {
     // (DEBUG)
     graph->statistics();
     graph->print_edge_by_id(0);
-    graph->print_neighbors_of_vertex(v1);
+    graph->compress(morphstore::GraphCompressionFormat::RLE);
     graph->print_neighbors_of_vertex(v2);
-    graph->print_neighbors_of_vertex(v3);
+    graph->statistics();
 
     assert(graph->getVertexCount() == 3);
     assert(graph->getEdgeCount() == 3);
