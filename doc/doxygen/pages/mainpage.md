@@ -63,6 +63,7 @@ This section is designed to hand a plan to staff members and students, who never
 <b>Deep Dive</b>
 <ul>
 <li>\ref memory</li>
+<li>\ref scalableVectorLengths</li>
 </ul>
 </div>
 <div class="BoxBlue" style="grid-column: 2">

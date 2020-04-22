@@ -276,7 +276,7 @@ namespace morphstore {
             this->m_OutBase += vector_element_count::value;
         }
 
-        // Specialization for scalable vector lengths
+        // Support for scalable vector lengths
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data, int element_count) {
             vectorlib::store<
                     t_vector_extension,
