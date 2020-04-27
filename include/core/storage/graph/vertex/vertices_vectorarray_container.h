@@ -89,8 +89,9 @@ namespace morphstore{
                 return "vector<Vertex*>";
             }
 
-            void allocate(const uint64_t numberVertices) {
+            void allocate(const uint64_t numberVertices) override {
                 VerticesContainer::allocate(numberVertices);
+                this->vertices.reserve(number_of_vertices / vertices_per_array);
                 current_array = allocate_vertex_array();
             }
 
