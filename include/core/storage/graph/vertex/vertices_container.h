@@ -37,7 +37,7 @@ namespace morphstore{
     class VerticesContainer {
         protected:
             uint64_t currentMaxVertexId = 0; 
-
+            uint64_t expected_vertex_count = 0;
             std::map<unsigned short int, std::string> vertex_type_dictionary;
 
             // TODO: try other property storage formats than per node .. (triple-store or per property)
@@ -65,11 +65,13 @@ namespace morphstore{
             virtual uint64_t vertex_count() const = 0;
 
 
-            virtual void allocate(uint64_t numberVertices) {
-                vertex_properties.reserve(numberVertices);
+            virtual void allocate(uint64_t expected_vertices) {
+                vertex_properties.reserve(expected_vertices);
+                expected_vertex_count += expected_vertices;
             }
 
             uint64_t add_vertex(const unsigned short int type, const std::unordered_map<std::string, property_type> properties = {}) {
+                assert(currentMaxVertexId < expected_vertex_count);
                 Vertex v = Vertex(getNextVertexId(), type);
                 insert_vertex(v);
                 if (!properties.empty()) {
@@ -110,7 +112,7 @@ namespace morphstore{
                     index_size += sizeof(char)*(type_mapping.second.length());
                 }
 
-                // vertex-properties:
+                // vertex-properties: 
                 index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
                 for (const auto &property_mapping : vertex_properties) {
                     index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
@@ -134,7 +136,6 @@ namespace morphstore{
                 VertexWithProperties v = get_vertex(id);
                 std::cout << "Vertex-ID: \t" << v.getID() << std::endl;
                 std::cout << "Type: \t" << get_vertex_type(v.getType()) << std::endl;
-                std::cout << "\n";
                 std::cout << "Properties: ";
                 for (const auto entry : v.getProperties()) {
                     auto value = entry.second;

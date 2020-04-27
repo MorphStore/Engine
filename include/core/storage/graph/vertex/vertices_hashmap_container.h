@@ -45,9 +45,9 @@ namespace morphstore{
                 return "unordered_map<uint64_t , Vertex>";
             }
 
-            void allocate(const uint64_t numberVertices) override {
-                VerticesContainer::allocate(numberVertices);
-                this->vertices.reserve(numberVertices);
+            void allocate(const uint64_t expected_vertices) override {
+                VerticesContainer::allocate(expected_vertices);
+                this->vertices.reserve(expected_vertices);
             }
             
             void insert_vertex(const Vertex v) override {

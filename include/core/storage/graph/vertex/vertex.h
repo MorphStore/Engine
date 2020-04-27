@@ -47,7 +47,7 @@ namespace morphstore{
     public:
         // default constr. needed for VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties)
         // otherwise compiler won't accept
-        Vertex(){}
+        Vertex() {};
 
         Vertex(uint64_t id, unsigned short int type){
             this->id = id;
