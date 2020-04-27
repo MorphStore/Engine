@@ -46,11 +46,16 @@ namespace morphstore{
         bool valid = false;
 
         uint64_t getNextEdgeId() const {
+            // Todo: enable resetting maxEdgeId 
+            // Ideal would be to pull id gen to graph.h but this requires rewriting Ldbc importer to use (edge property setting depends on it)
             static uint64_t currentMaxEdgeId = 0;
             return currentMaxEdgeId++;
         }
 
     public:
+        // default constr. needed for EdgeWithProperties constructor
+        Edge(){}
+
         Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type){
             this->sourceID = sourceId;
             this->targetID = targetId;
@@ -94,7 +99,7 @@ namespace morphstore{
             return type;
         }
 
-                bool isValid() const {
+        bool isValid() const {
             return valid;
         }
 
@@ -114,21 +119,23 @@ namespace morphstore{
         }
 
         std::string to_string() const {
-            return "(id:" + std::to_string(this->id) + " ," + std::to_string(this->sourceID) + "->" + std::to_string(this->targetID) + ")";
+            return "(id:" + std::to_string(this->id) + " ," 
+            + std::to_string(this->sourceID) + "->" + std::to_string(this->targetID) + " ," 
+            + "valid: " + std::to_string(this->valid) + ")";
         }
     };
 
     class EdgeWithProperties {
         private:
-            std::shared_ptr<Edge> edge;
+            Edge edge;
             std::unordered_map<std::string, property_type> properties;
         public:
-            EdgeWithProperties(std::shared_ptr<Edge> edge, const std::unordered_map<std::string, property_type> properties) {
+            EdgeWithProperties(Edge edge, const std::unordered_map<std::string, property_type> properties) {
                 this->edge = edge;
                 this->properties = properties;
             }
 
-            std::shared_ptr<Edge> getEdge() {
+            Edge getEdge() {
                 return edge;
             }
 
