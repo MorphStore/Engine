@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <cstdlib>
+#include <cmath>
 
 namespace morphstore{
 
@@ -52,26 +53,17 @@ namespace morphstore{
                 vertices.push_back(array_pointer);
                 //std::cout << " Added a page" << std::endl;
                 //std::cout.flush();
+
                 return array_pointer;
             }
 
             inline uint64_t get_vertex_vector_number(uint64_t vertex_id) const {
-                return vertex_id / vertex_array_size;
+                return vertex_id / vertices_per_array;
             }
 
             inline uint64_t get_pos_in_array(uint64_t vertex_id) const {
                 return vertex_id % vertices_per_array;
             }
-
-            Vertex get_vertex_without_properties(uint64_t id) override {
-                uint64_t array_number = get_vertex_vector_number(id);
-                uint64_t pos_in_array = get_pos_in_array(id);
-
-                //assert (pos_in_array < vertices_per_array);
-                //assert (array_number < vertices.size());
-
-                return vertices.at(array_number)[pos_in_array];
-            }         
 
         public:
             // TODO: make array_size based on constructor
@@ -89,10 +81,12 @@ namespace morphstore{
                 return "vector<Vertex*>";
             }
 
-            void allocate(const uint64_t numberVertices) override {
-                VerticesContainer::allocate(numberVertices);
-                this->vertices.reserve(number_of_vertices / vertices_per_array);
-                current_array = allocate_vertex_array();
+            void allocate(const uint64_t expected_vertices) override {
+                VerticesContainer::allocate(expected_vertices);
+                this->vertices.reserve(std::ceil(expected_vertices / (double) vertices_per_array));
+
+                if (current_array == nullptr)
+                    current_array = allocate_vertex_array();
             }
 
             void insert_vertex(Vertex v) {
@@ -101,10 +95,21 @@ namespace morphstore{
                     current_array = allocate_vertex_array();
                     current_array_offset = 0;
                 }
-
+                // TODO: add check that there is no valid vertex stored there 
+                //       need to solve problem that aligned_alloc randomaly inits Vertices (ignores default values)
                 current_array[current_array_offset] = v;
                 current_array_offset++;
                 number_of_vertices++;
+            }
+
+            Vertex get_vertex(uint64_t id) override {
+                uint64_t array_number = get_vertex_vector_number(id);
+                uint64_t pos_in_array = get_pos_in_array(id);
+
+                //assert (pos_in_array < vertices_per_array);
+                assert(array_number < vertices.size());
+
+                return vertices.at(array_number)[pos_in_array];
             }
 
             bool exists_vertex(const uint64_t id) const override {
@@ -123,6 +128,7 @@ namespace morphstore{
                 index_size += 2 * sizeof(uint64_t);
                 // current_array
                 index_size += sizeof(Vertex*);
+
                 index_size += sizeof(std::vector<Vertex*>);
                 index_size += vertices.size() * sizeof(Vertex*);
                 // allocated memory for vertices

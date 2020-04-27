@@ -43,8 +43,6 @@ namespace morphstore{
             // TODO: try other property storage formats than per node .. (triple-store or per property)
             std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> vertex_properties;
 
-            virtual Vertex get_vertex_without_properties(uint64_t id) = 0;
-
             std::string get_vertex_type(unsigned short int type) const {
                 if (vertex_type_dictionary.find(type) != vertex_type_dictionary.end()) {
                     return vertex_type_dictionary.at(type);
@@ -62,6 +60,7 @@ namespace morphstore{
             virtual std::string container_description() const = 0;
             virtual void insert_vertex(Vertex v) = 0;
             virtual bool exists_vertex(const uint64_t id) const = 0;
+            virtual Vertex get_vertex(uint64_t id) = 0;
             virtual uint64_t vertex_count() const = 0;
 
 
@@ -92,9 +91,9 @@ namespace morphstore{
             }
             
 
-            const VertexWithProperties get_vertex(uint64_t id) {
+            const VertexWithProperties get_vertex_with_properties(uint64_t id) {
                 assert(exists_vertex(id));
-                return VertexWithProperties(get_vertex_without_properties(id), vertex_properties[id]);
+                return VertexWithProperties(get_vertex(id), vertex_properties[id]);
             }
 
             uint64_t vertices_with_properties_count() {
@@ -133,7 +132,7 @@ namespace morphstore{
 
             void print_vertex_by_id(const uint64_t id) {
                 std::cout << "-------------- Vertex ID: " << id << " --------------" << std::endl;
-                VertexWithProperties v = get_vertex(id);
+                VertexWithProperties v = get_vertex_with_properties(id);
                 std::cout << "Vertex-ID: \t" << v.getID() << std::endl;
                 std::cout << "Type: \t" << get_vertex_type(v.getType()) << std::endl;
                 std::cout << "Properties: ";

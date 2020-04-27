@@ -145,7 +145,7 @@ namespace morphstore{
 
         // function which returns a pointer to vertex by id
         VertexWithProperties get_vertex(uint64_t id){
-            return vertices->get_vertex(id);
+            return vertices->get_vertex_with_properties(id);
         }
 
         // function which returns a pointer to edge by id

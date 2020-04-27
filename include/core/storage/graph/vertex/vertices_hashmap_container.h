@@ -36,10 +36,6 @@ namespace morphstore{
         protected:
             std::unordered_map<uint64_t , Vertex> vertices;
 
-            Vertex get_vertex_without_properties(uint64_t id) override{
-                return vertices[id];
-            }
-
         public:
             std::string container_description() const override {
                 return "unordered_map<uint64_t , Vertex>";
@@ -52,6 +48,10 @@ namespace morphstore{
             
             void insert_vertex(const Vertex v) override {
                 vertices[v.getID()] = v;
+            }
+
+            Vertex get_vertex(uint64_t id) override {
+                return vertices[id];
             }
 
             bool exists_vertex(const uint64_t id) const override {
