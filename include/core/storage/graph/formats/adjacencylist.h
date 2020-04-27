@@ -38,6 +38,9 @@ namespace morphstore{
         std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
 
     public:
+        AdjacencyList(EdgesContainerType edges_container_type)
+            : Graph(VerticesContainerType::VectorArrayContainer, edges_container_type) {}
+
         AdjacencyList(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
         
         std::string get_storage_format() const override {
@@ -61,7 +64,7 @@ namespace morphstore{
             if (!vertices->exists_vertex(sourceId)) {
                 throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
             }
-
+            // TODO: remove shared pointer?
             std::shared_ptr<std::vector<uint64_t>> adjacencyList;
             if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
                 adjacencyList = adjacencylistPerVertex[sourceId];
@@ -70,14 +73,12 @@ namespace morphstore{
                 adjacencylistPerVertex[sourceId] = adjacencyList;
             }
 
-            for(const auto edge : edgesToAdd) {
-                edges[edge.getId()] = std::make_shared<Edge>(edge);
-                if(vertices->exists_vertex(edge.getTargetId())) {
-                    adjacencyList->push_back(edge.getId());
-                }
-                else {
+            for (const auto edge : edgesToAdd) {
+                if (!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found  :" + edge.to_string());
                 }
+                edges->add_edge(edge);
+                adjacencyList->push_back(edge.getId());
             }
         }
 
@@ -101,8 +102,8 @@ namespace morphstore{
             
             if (entry != adjacencylistPerVertex.end()) {
                 for(uint64_t const edgeId: *(entry->second)) {
-                    assert(edges.find(edgeId) != edges.end());
-                    targetVertexIds.push_back(edges[edgeId]->getTargetId());
+                    assert(edges->exists_edge(edgeId));
+                    targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
                 }
             }
             

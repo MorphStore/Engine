@@ -641,7 +641,7 @@ namespace morphstore{
                 for(auto edge: edges) {
                     auto entry = edgeProperties.find(edge.getId());
                     if (entry != edgeProperties.end()) {
-                        graph.add_properties_to_edge(entry->first, entry->second);
+                        graph.set_edge_properties(entry->first, entry->second);
                     }
                 }
             }

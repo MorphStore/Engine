@@ -50,7 +50,11 @@ namespace morphstore{
         std::unique_ptr<column<uncompr_f>> edgeId_column;
 
     public:
-        CSR(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
+        CSR(EdgesContainerType edges_container_type)
+            : Graph(VerticesContainerType::VectorArrayContainer, edges_container_type) {}
+
+        CSR(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer)
+            : Graph(vertices_container_type) {}
 
         std::string get_storage_format() const override {
             return "CSR";
@@ -91,16 +95,14 @@ namespace morphstore{
             }
 
             // fill the arrays
-            // TODO: fill array using memcpy? (put edgeIds into vector as prerpare step)
+            // TODO: fill array using memcpy? (put edgeIds into vector as prepare step)
             uint64_t* edgeId_data = edgeId_column->get_data();
             for(const auto& edge : edgesToAdd){
-                std::shared_ptr<Edge> ePtr = std::make_shared<Edge>(edge);
                  if(!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found " + edge.to_string());
                 }
-                edges[ePtr->getId()] = ePtr;
-                
-                edgeId_data[offset] = ePtr->getId();
+                edgeId_data[offset] = edge.getId();
+                edges->add_edge(edge);
                 ++offset;
             }
 
@@ -148,8 +150,8 @@ namespace morphstore{
              // resolving each edgeId
              for (auto edgeId: neighbourEdgeIds)
              {
-                 assert(edges.find(edgeId) != edges.end());
-                 targetVertexIds.push_back(edges[edgeId]->getTargetId());
+                 assert(edges->exists_edge(edgeId));
+                 targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
              }
              
              return targetVertexIds;
