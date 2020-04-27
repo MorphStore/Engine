@@ -56,11 +56,14 @@ namespace morphstore{
         // default constr. needed for EdgeWithProperties constructor
         Edge(){}
 
-        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type){
+        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type)
+            : Edge(getNextEdgeId(), sourceId, targetId, type) {}
+
+        Edge(uint64_t id, uint64_t sourceId, uint64_t targetId, unsigned short int type){
             this->sourceID = sourceId;
             this->targetID = targetId;
             this->type = type;
-            this->id = getNextEdgeId();
+            this->id = id;
             this->valid = true;
         }
 
