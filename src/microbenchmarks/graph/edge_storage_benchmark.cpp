@@ -48,7 +48,7 @@ int main(void) {
     int number_of_executions = 5;
 
     std::cout << "Test edge storage structure (median of 5 for full_iterate and random access)" << std::endl;
-    std::cout << "Container type | vertex_count | loading time in μs | memory usage in bytes | full_iterate in μs | random access 1/10 of the vertex count in μs" << std::endl;
+    std::cout << "Container type | edge_count | loading time in μs | memory usage in bytes | full_iterate in μs | random access 1/10 of the edge count in μs" << std::endl;
 
     std::vector<EdgesContainerType> storage_types = {
         EdgesContainerType::HashMapContainer,

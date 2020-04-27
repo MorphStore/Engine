@@ -49,7 +49,7 @@ namespace morphstore{
         // otherwise compiler won't accept
         Vertex() {};
 
-        Vertex(uint64_t id, unsigned short int type){
+        Vertex(uint64_t id, unsigned short int type = 0){
             this->id = id;
             this->type = type;
             this->valid = true;

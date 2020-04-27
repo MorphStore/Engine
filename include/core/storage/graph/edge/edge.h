@@ -43,6 +43,7 @@ namespace morphstore{
         unsigned short int type;
 
         // delete flag
+        // TODO put as a std::bitset in vectorarray_container
         bool valid = false;
 
         uint64_t getNextEdgeId() const {

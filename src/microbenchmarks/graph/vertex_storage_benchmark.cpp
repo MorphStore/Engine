@@ -74,7 +74,7 @@ int main(void) {
 
         auto start = highResClock::now();
         for (int i = 0; i < vertex_count; i++) {
-          graph->add_vertex(i);
+          graph->add_vertex();
         }
         // loading time 
         measurement_entry += std::to_string(get_duration(start)) + " | ";

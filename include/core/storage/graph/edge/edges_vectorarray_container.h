@@ -85,7 +85,7 @@ namespace morphstore{
                 if (array_number >= edges.size()) {
                     throw std::runtime_error("Exceeded edge id limit: Edge id " +
                                              std::to_string(e.getId()) + " > " +
-                                             std::to_string(edges_per_array * edges.size()));
+                                             std::to_string(edges_per_array * edges.size() - 1));
                 }
 
                 /* if (edges.at(array_number)[array_pos].isValid()) {
@@ -102,10 +102,6 @@ namespace morphstore{
 
                 if (array_number >= edges.size())
                     return false;
-
-                std::cout << "edge_count " << edge_count() 
-                          << " id " << id 
-                          << " edge :" << edges.at(array_number).at(pos_in_array).to_string() << std::endl;
 
                 return edges.at(array_number)[pos_in_array].isValid();
             }
