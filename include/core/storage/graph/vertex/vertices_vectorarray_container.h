@@ -107,7 +107,7 @@ namespace morphstore{
             }
 
             bool exists_vertex(const uint64_t id) const override {
-                // assumes no deletion!
+                // assumes no deletion! else retrieve vertrex at position and check isValid()
                 return number_of_vertices > id;
             }
 

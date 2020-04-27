@@ -42,6 +42,9 @@ namespace morphstore{
         uint64_t sourceID, targetID, id;
         unsigned short int type;
 
+        // delete flag
+        bool valid = false;
+
         uint64_t getNextEdgeId() const {
             static uint64_t currentMaxEdgeId = 0;
             return currentMaxEdgeId++;
@@ -53,6 +56,7 @@ namespace morphstore{
             this->targetID = targetId;
             this->type = type;
             this->id = getNextEdgeId();
+            this->valid = true;
         }
 
         // this is needed for csr when doing edge_array[offset] = edge...
@@ -65,6 +69,8 @@ namespace morphstore{
             this->sourceID = edge.sourceID;
             this->targetID = edge.targetID;
             this->type = edge.type;
+            this->id = edge.id;
+            this->valid = edge.valid;
 
             // return the existing object so we can chain this operator
             return *this;
@@ -88,6 +94,10 @@ namespace morphstore{
             return type;
         }
 
+                bool isValid() const {
+            return valid;
+        }
+
         // function for sorting algorithms in the ldbc-importer:
         // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
         bool operator<(const Edge& e) const{
@@ -97,8 +107,9 @@ namespace morphstore{
         // get size of edge object in bytes:
         static size_t size_in_bytes() {
             size_t size = 0;
-            size += sizeof(uint64_t) * 2; // source- and target-id
+            size += sizeof(uint64_t) * 3; // id, source- and target-id
             size += sizeof(unsigned short int); // type
+            size += sizeof(bool); // valid flag
             return size;
         }
 

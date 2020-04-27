@@ -41,6 +41,9 @@ namespace morphstore{
         // optional: type, properties
         unsigned short int type;
 
+        // delete flag
+        bool valid = false;
+
     public:
         // default constr. needed for VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties)
         // otherwise compiler won't accept
@@ -49,6 +52,7 @@ namespace morphstore{
         Vertex(uint64_t id, unsigned short int type){
             this->id = id;
             this->type = type;
+            this->valid = true;
         }
 
         uint64_t getID() const {
@@ -57,6 +61,10 @@ namespace morphstore{
 
         unsigned short getType() const {
             return type;
+        }
+
+        bool isValid() const {
+            return valid;
         }
 
         // this is needed when using VerticesVectorArrayContainer when doing vertex_array[offset] = vertex
@@ -68,6 +76,7 @@ namespace morphstore{
             // do the copy
             this->id = vertex.id;
             this->type = vertex.type;
+            this->valid = vertex.valid;
 
             // return the existing object so we can chain this operator
             return *this;
@@ -78,6 +87,7 @@ namespace morphstore{
             size_t size = 0;
             size += sizeof(uint64_t); // id
             size += sizeof(unsigned short int); // entity
+            size += sizeof(bool); // valid flag
 
             return size;
         }
