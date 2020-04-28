@@ -86,15 +86,17 @@ function printHelp {
         echo "	     It is possible to specify multiple target names by providing a quoted white-space-separated list for TARGETNAME"
         echo "	     Defaults to \"all\", i.e., if omited, all targets of the selected target groups will be built"
 	echo ""
-        echo "features:"
+  echo "features:"
 	echo "	-avx512"
 	echo "	     Builds with avx512 and avx2 support"
 	echo "	-avxtwo"
 	echo "	     Builds with avx2 support"
-        echo "	-sse4"
+  echo "	-sse4"
 	echo "	     Builds with sse4.2 support"
-        echo "	-armneon"
+  echo "	-armneon"
 	echo "	     Builds with neon support (for ARM)"
+  echo "  --tvl PATH"
+  echo "       Provide an alternative path for the TVL"
         echo ""
         echo "energy:"
         echo "	-rapl"
@@ -122,6 +124,7 @@ qmmib="-UQMMIB"
 checkForLeaks="-UCHECK_LEAKING"
 runCtest=false
 enableMonitoring="-UENABLE_MONITORING"
+tvlpath="-UTVL_PATH"
 testAll="-DCTEST_ALL=False"
 testMemory="-DCTEST_MEMORY=False"
 testMorph="-DCTEST_MORPHING=False"
@@ -315,6 +318,14 @@ case $key in
         -odroid)
         odroid="-DCODROID=True"
 	shift # past argument
+  ;;
+	--tvl)
+	tvlpath="-DTVL_PATH=$2"
+#  echo "!!!!!!!!TVLPATH"
+#  echo $tvlpath
+#	tvlpath=$2
+	shift
+  shift
 	;;
 	--target)
 	target=$2
@@ -358,7 +369,7 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel $target\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon $tvlpath"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
@@ -367,7 +378,7 @@ addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1  $tvlpath -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 set +e
 

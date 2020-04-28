@@ -203,7 +203,11 @@ file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
 ########### Checking Defines />
 
-include_directories( ${PROJECT_SOURCE_DIR}/include )
+if ( DEFINED TVL_PATH)
+  include_directories(AFTER ${TVL_PATH}  ${PROJECT_SOURCE_DIR}/include)
+else ( DEFINED TVL_PATH)
+  include_directories(  ${PROJECT_SOURCE_DIR}/include )
+endif( DEFINED TVL_PATH)
 
 morph_flag("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
 morph_flag("-DGIT_BRANCH=${GIT_BRANCH}")
@@ -225,7 +229,6 @@ endif()
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
-include_directories( include )
 
 if( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
     add_subdirectory( src )
