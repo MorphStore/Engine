@@ -30,7 +30,7 @@
 #include <core/morphing/morph.h>
 #include <core/morphing/safe_morph.h>
 #include <core/morphing/rle.h>
-#include <core/morphing/delta.h>
+#include <core/morphing/default_formats.h>
 #include <core/morphing/for.h>
 #include <core/morphing/k_wise_ns.h>
 
@@ -170,40 +170,44 @@ namespace morphstore{
             // example layout: dynamic_vbp_f<512, 32, 8>
             
             using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
-            column<uncompr_f>* inCol = offset_column.get();
 
             switch (target_format)
             {
-/*             case GraphCompressionFormat::DELTA:
-                auto column = morph<ve, delta_f<512, 32, k_wise_ns_f<4>>, uncompr_f>(inCol);
-                std::cout << " values: " << column->get_count_values() 
-                          << " size in bytes: " << column->get_size_used_byte() 
-                          << " ?compressed bytes : " << column->get_size_compr_byte() << std::endl;
+            case GraphCompressionFormat::DELTA: {
+                auto compressed_offset_col = morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(offset_column.get());
+                auto compressed_edge_col = morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(edgeId_column.get());
+                std::cout << " offset col compression ratio: "
+                    << offset_column->get_size_used_byte() / (double)compressed_offset_col->get_size_used_byte() << std::endl
+                    << " edgeId col compression ratio: "
+                    << edgeId_column->get_size_used_byte() / (double)compressed_edge_col->get_size_used_byte() << std::endl;
                 break;
-            case GraphCompressionFormat::FOR:
-                auto column = morph<ve, for_f<512, 32, k_wise_ns_f<4>>, uncompr_f>(inCol);
-                std::cout << " values: " << column->get_count_values() 
-                          << " size in bytes: " << column->get_size_used_byte() 
-                          << " ?compressed bytes : " << column->get_size_compr_byte() << std::endl;
-                break; */
+            }
+           case GraphCompressionFormat::FOR: {
+                auto compressed_offset_col = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(offset_column.get());
+                auto compressed_edge_col = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(edgeId_column.get());
+                std::cout << " offset col compression ratio: "
+                    << offset_column->get_size_used_byte() / (double)compressed_offset_col->get_size_used_byte() << std::endl
+                    << " edgeId col compression ratio: "
+                    << edgeId_column->get_size_used_byte() / (double)compressed_edge_col->get_size_used_byte() << std::endl;
+                break;
+                }
+            // RLE never really finished .. do not use for now
             case GraphCompressionFormat::RLE: {
-                auto column = morph<ve, rle_f, uncompr_f>(inCol);
+                throw std::runtime_error("`Never really completed RLE implementation`");
+                auto column = morph<ve, rle_f, uncompr_f>(offset_column.get());
                 std::cout << " values: " << column->get_count_values()
                           << " size in bytes: " << column->get_size_used_byte()
-                          << " compression ratio: " << inCol->get_size_used_byte() / (double) column->get_size_used_byte() << std::endl;
+                          << " compression ratio: " << offset_column->get_size_used_byte() / (double) column->get_size_used_byte() << std::endl;
                 break;
             }
             default:
                 throw std::runtime_error("Could not compress yet");
                 break;
             }
-            
-            //auto column = safe_morph<out_format, uncompr_f>(inCol);
 
 
             // TODO: save them .. and correctly operate on the compressed column
-            // TODO: use normal morph (as vector extension is ignored) 
-            this->current_compression = target_format;
+            //this->current_compression = target_format;
         }
 
         // get size of storage format:

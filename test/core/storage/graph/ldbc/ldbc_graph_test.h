@@ -61,6 +61,8 @@ void ldbcGraphFormatTest (void) {
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
 
+    graph->compress(morphstore::GraphCompressionFormat::FOR);
+
     // measure degree distribution and write to file (file path as parameter):
     graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
 
