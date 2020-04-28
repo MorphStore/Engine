@@ -50,7 +50,7 @@ namespace morphstore {
             );
 #endif 
            // std::cout << "sizeof(t_layout) " <<sizeof(t_layout) << std::endl;
-            if(sizeof(t_layout) == 1){ //hardcoded mask, for decompression of 8 bit
+            if(sizeof(t_layout) == 1){ //hardcoded mask, for compression to 8 bit
             res[0] = 0;
             res[1] = 8;
             res[2] = 127;
@@ -70,7 +70,7 @@ namespace morphstore {
             res[16] = 127;
         	}
 
-            if(sizeof(t_layout) == 2){ //hardcoded mask, for decompression of 16 bit
+            if(sizeof(t_layout) == 2){ //hardcoded mask, for compression to 16 bit
             res[0] = 0;
             res[1] = 1;
             res[2] = 8;
@@ -90,7 +90,7 @@ namespace morphstore {
             res[16] = 127;
     	    }
 
-            if(sizeof(t_layout) == 4){ //hardcoded mask, for decompression of 32 bit
+            if(sizeof(t_layout) == 4){ //hardcoded mask, for compression to 32 bit
             res[0] = 0;
             res[1] = 1;
             res[2] = 2;
@@ -127,7 +127,7 @@ namespace morphstore {
             );
 #endif 
            // std::cout << "sizeof(t_layout) " <<sizeof(t_layout) << std::endl;
-            if(sizeof(t_layout) == 1){ //hardcoded mask, for compression to 8 bit
+            if(sizeof(t_layout) == 1){ //hardcoded mask, for decompression of 8 bit
             res[0] = 0;
             res[1] = 127;
             res[2] = 127;
@@ -147,7 +147,7 @@ namespace morphstore {
             res[16] = 127;
         	}
 
-            if(sizeof(t_layout) == 2){ //hardcoded mask, for compression to 16 bit
+            if(sizeof(t_layout) == 2){ //hardcoded mask, for decompression of 16 bit
             res[0] = 0;
             res[1] = 1;
             res[2] = 127;
@@ -167,7 +167,7 @@ namespace morphstore {
             res[16] = 127;
     	    }
 
-            if(sizeof(t_layout) == 4){ //hardcoded mask, for compression to 32 bit
+            if(sizeof(t_layout) == 4){ //hardcoded mask, for decompression of 32 bit
             res[0] = 0;
             res[1] = 1;
             res[2] = 2;
@@ -334,41 +334,58 @@ namespace morphstore {
     // Sequential read
     // ------------------------------------------------------------------------
     
-    // template<
-    //         class t_vector_extension,
-    //         class t_layout,
-    //         template<class, class...> class t_op_vector,
-    //         class ... t_extra_args
-    // >
-    // struct decompress_and_process_batch<
-    //         t_vector_extension,
-    //         type_packing_f<t_layout>,
-    //         t_op_vector,
-    //         t_extra_args ...
-    // > {
-    //     static void apply(
-    //             const uint8_t * & p_In8,
-    //             size_t p_CountInLog,
-    //             typename t_op_vector<
-    //                     t_vector_extension,
-    //                     t_extra_args ...
-    //             >::state_t & p_State
-    //     ) {
-    //     const size_t sizeByte = sizeof(t_layout);        	
-    //     for(size_t i = 0; i < p_CountInLog; i++){
-    //     	memcpy(p_Out8, p_In8, sizeByte); 
-    //     	p_In8 += sizeByte;
-    //     	p_Out8 +=8;
-    //     }         	
-    //         // decompress_and_process_batch<
-    //         //         t_vector_extension,
-    //         //         t_layout,
-    //         //         t_op_vector,
-    //         //         t_extra_args ...
-    //         // >::apply(p_In8, p_CountInLog, p_State);
-    //     }
-    // };
+#ifdef SSE
+    template<
+            class t_vector_extension,
+            class t_layout,
+            template<class, class...> class t_op_vector,
+            class ... t_extra_args
+    >
+    struct decompress_and_process_batch<
+            t_vector_extension,
+            type_packing_f<t_layout>,
+            t_op_vector,
+            t_extra_args ...
+    > {
+        using t_ve = vectorlib::sse<vectorlib::v128<uint64_t> >;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        
+        using in_f = type_packing_f<t_layout>;
+        
+        static void apply(
+                const uint8_t * & p_In8,
+                size_t p_CountInLog,
+                typename t_op_vector<
+                        t_vector_extension,
+                        t_extra_args ...
+                >::state_t & p_State
+        ) {
 
+            using namespace vectorlib;
+            const base_t * mask_base = reinterpret_cast<const base_t *>(in_f::m_maskDecompr); 
+            const size_t sizeByte = sizeof(t_layout);             
+
+            for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value) {
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        _mm_shuffle_epi8(
+                                load<
+                                        t_ve,
+                                        iov::UNALIGNED,
+                                        vector_size_bit::value
+                                >(reinterpret_cast<const base_t *>(p_In8)),
+                                load< //calls hardcoded mask
+                                        t_ve,
+                                        iov::ALIGNED,
+                                        vector_size_bit::value
+                                >(mask_base)
+                        ),
+                        p_State
+                );
+                p_In8 += sizeByte*2;
+            }
+        }
+    };
+#endif
 
 
 }
