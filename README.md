@@ -5,7 +5,7 @@ Get the source with *git clone https://github.com/MorphStore/Engine.git*
 
 Make sure to have __gcc/g++ >= version 8__ and __cmake >= version 3.10__ installed.
 
-Build a simple test query by *./build.sh –rel –bEx --target select_sum_query* from the root folder. This example uses no vectorization or compression. It can be used to test the basic functionality of MorphStore, e.g. memory management, and the general workflow.
+Build a simple test query by calling *./build.sh –rel –bEx --target select_sum_query* from the root folder. This example uses no vectorization or compression. It can be used to test the basic functionality of MorphStore, e.g. memory management, and the general workflow.
 The source code can be found in src/examples/select_sum_query.cpp, the binary can be found in build/src/examples/.
 
 Call *./build.sh -h* for more options.
