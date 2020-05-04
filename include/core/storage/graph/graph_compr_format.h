@@ -113,6 +113,10 @@ namespace morphstore{
     const column_uncompr* decompress_graph_col(const column_base* column, const GraphCompressionFormat src_f) {
         return static_cast<const column_uncompr *>(morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED));
     }
+
+    double compression_ratio(const column_base* column, GraphCompressionFormat col_format) {
+        return decompress_graph_col(column, col_format)->get_size_used_byte() / (double) column->get_size_used_byte();
+    }
 }
 
 #endif //MORPHSTORE_GRAPH_COMPR_FORMAT_H
