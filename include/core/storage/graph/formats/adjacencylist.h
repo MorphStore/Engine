@@ -24,20 +24,56 @@
 #ifndef MORPHSTORE_ADJACENCYLIST_H
 #define MORPHSTORE_ADJACENCYLIST_H
 
-#include "../graph.h"
-#include "../vertex/vertex.h"
+#include <core/storage/graph/graph.h>
 
 #include <iterator>
 #include <assert.h>
+#include <variant>
+#include <type_traits>
 
 namespace morphstore{
 
     class AdjacencyList: public Graph {
 
     private:
-        std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>> adjacencylistPerVertex;
+        using adjacency_column = column_base*; 
+        using adjacency_vector = std::vector<uint64_t>*;
+        using adjacency_list_variant = std::variant<adjacency_vector, adjacency_column>;
 
+        struct Adjacency_List_Size_Visitor {
+            size_t operator()(const adjacency_column c) const {
+                return c->get_size_used_byte();
+            }
+            size_t operator()(const adjacency_vector v) const {
+               return v->size();
+            }
+        };
+
+        // maps the outgoing edges (ids) per vertex
+        std::unordered_map<uint64_t, adjacency_list_variant> adjacencylistPerVertex;
+        
+        // indicating whether we have columns or vectors (columns after first compress() call)
+        // TODO: is this replace-able by just checking the type of the first element in the map? (via holds_alternative)
+        bool finalized = false;
+
+        // convert every adjVector to a adjColumn
+        void finalize() {
+            if (!finalized) { 
+                // use std::transform
+            }
+        }
     public:
+        ~AdjacencyList() {
+                for(auto entry: this->adjacencylistPerVertex) {
+                    if (finalized) {
+                        free(std::get<adjacency_column>(entry.second));
+                    }
+                    else {
+                        free(std::get<adjacency_vector>(entry.second));
+                    }
+            }
+        }
+
         AdjacencyList(EdgesContainerType edges_container_type)
             : Graph(VerticesContainerType::VectorArrayContainer, edges_container_type) {}
 
