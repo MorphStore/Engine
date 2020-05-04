@@ -58,7 +58,7 @@ void simpleGraphFormatTest (void) {
     // (DEBUG)
     graph->statistics();
     graph->print_edge_by_id(0);
-    graph->compress(morphstore::GraphCompressionFormat::RLE);
+    graph->compress(morphstore::GraphCompressionFormat::DELTA);
     graph->print_neighbors_of_vertex(v2);
     graph->statistics();
 

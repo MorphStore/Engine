@@ -44,7 +44,6 @@ enum class storage_persistence_type {
 
 // template-free base class
 // use-case: graph formats can change their column format at run-time via `compress(Format f)`
-// TODO: currently not useable as template argument deduction/substitution fails when f.i. morphing on column_base
 class column_base {
    public: 
       // todo: find a way to specify `inline`

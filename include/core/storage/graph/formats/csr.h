@@ -24,15 +24,7 @@
 #ifndef MORPHSTORE_CSR_H
 #define MORPHSTORE_CSR_H
 
-#include "../graph.h"
-#include "../vertex/vertex.h"
-#include <core/storage/column.h>
-#include <core/morphing/morph.h>
-#include <core/morphing/safe_morph.h>
-#include <core/morphing/rle.h>
-#include <core/morphing/default_formats.h>
-#include <core/morphing/for.h>
-#include <core/morphing/k_wise_ns.h>
+#include <core/storage/graph/graph.h>
 
 #include <stdexcept>
 #include <assert.h>
@@ -46,8 +38,8 @@ namespace morphstore{
          * offset column: index is vertex-id; column entry contains offset in edgeId array
          * edgeId column: contains edge id
          */
-        std::unique_ptr<column<uncompr_f>> offset_column;
-        std::unique_ptr<column<uncompr_f>> edgeId_column;
+        std::unique_ptr<column_base> offset_column;
+        std::unique_ptr<column_base> edgeId_column;
 
     public:
         CSR(EdgesContainerType edges_container_type)
@@ -61,6 +53,7 @@ namespace morphstore{
         }
 
         // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph topology arrays
+        // TODO: test that no data exists before (as this will get overwritten)
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
@@ -86,6 +79,9 @@ namespace morphstore{
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
             assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
+            // currently only read-only after compression (TODO allow writes on compressed data)
+            assert(current_compression == GraphCompressionFormat::UNCOMPRESSED);
+
             uint64_t* offset_data = offset_column->get_data();
             uint64_t offset = offset_data[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
@@ -114,7 +110,10 @@ namespace morphstore{
 
         // get number of edges of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
-            uint64_t* offset_data = offset_column->get_data();
+            // decompressing offset_column in order to read correct offset
+            // TODO: only decompress part as only offset_column[id] and offset_column[id+1] will be read
+            uint64_t* offset_data = decompress_graph_col(offset_column.get(), current_compression)->get_data();
+
             uint64_t offset = offset_data[id];
             // special case: last vertex id has no next offset
             uint64_t nextOffset;
@@ -134,14 +133,14 @@ namespace morphstore{
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
              std::vector<uint64_t> neighbourEdgeIds;
-             uint64_t* offset_data = offset_column->get_data();
+             uint64_t* offset_data = decompress_graph_col(offset_column.get(), current_compression)->get_data();
              uint64_t offset = offset_data[id];
              uint64_t numberEdges = get_out_degree(id);
 
              // avoiding out of bounds ...
              // TODO: use assert here, as this is only out of bounds if the offset 
              if( offset < getExpectedEdgeCount()){
-                 uint64_t* edgeId_data = edgeId_column->get_data();
+                 uint64_t* edgeId_data = decompress_graph_col(edgeId_column.get(), current_compression)->get_data();
                  neighbourEdgeIds.insert(neighbourEdgeIds.end(), edgeId_data+offset, edgeId_data+offset+numberEdges);
              }
 
@@ -158,53 +157,21 @@ namespace morphstore{
         }
 
         void compress(GraphCompressionFormat target_format) override {
-            std::cout << "Compressing graph format specific data structures via " << to_string(target_format)  << std::endl;
+            std::cout << "Morphing graph format specific data structures from " << to_string(current_compression) << " to " << to_string(target_format)  << std::endl;
             
 
             if (current_compression == target_format) {
                 std::cout << "Already in " << to_string(target_format);
                 return;
             }
-            
-            // TODO: allow also other vector extensions (switch from safe_morph to morph)
-            // example layout: dynamic_vbp_f<512, 32, 8>
-            
-            using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
 
-            switch (target_format)
-            {
-            case GraphCompressionFormat::DELTA: {
-                auto compressed_offset_col = morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(offset_column.get());
-                auto compressed_edge_col = morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(edgeId_column.get());
-                std::cout << " offset col compression ratio: "
-                    << offset_column->get_size_used_byte() / (double)compressed_offset_col->get_size_used_byte() << std::endl
-                    << " edgeId col compression ratio: "
-                    << edgeId_column->get_size_used_byte() / (double)compressed_edge_col->get_size_used_byte() << std::endl;
-                break;
-            }
-           case GraphCompressionFormat::FOR: {
-                auto compressed_offset_col = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(offset_column.get());
-                auto compressed_edge_col = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(edgeId_column.get());
-                std::cout << " offset col compression ratio: "
-                    << offset_column->get_size_used_byte() / (double)compressed_offset_col->get_size_used_byte() << std::endl
-                    << " edgeId col compression ratio: "
-                    << edgeId_column->get_size_used_byte() / (double)compressed_edge_col->get_size_used_byte() << std::endl;
-                break;
-                }
-            // RLE never really finished .. do not use for now
-            case GraphCompressionFormat::RLE: {
-                throw std::runtime_error("`Never really completed RLE implementation`");
-                auto column = morph<ve, rle_f, uncompr_f>(offset_column.get());
-                std::cout << " values: " << column->get_count_values()
-                          << " size in bytes: " << column->get_size_used_byte()
-                          << " compression ratio: " << offset_column->get_size_used_byte() / (double) column->get_size_used_byte() << std::endl;
-                break;
-            }
-            default:
-                throw std::runtime_error("Could not compress yet");
-                break;
-            }
+            const column_base* compressed_offset_col = morph_graph_col(offset_column.get(), current_compression, target_format);
+            const column_base* compressed_edge_col = morph_graph_col(edgeId_column.get(), current_compression, target_format);
 
+            std::cout << " offset col compression ratio: "
+                      << offset_column->get_size_used_byte() / (double)compressed_offset_col->get_size_used_byte() << std::endl
+                      << " edgeId col compression ratio: "
+                      << edgeId_column->get_size_used_byte() / (double)compressed_edge_col->get_size_used_byte() << std::endl;
 
             // TODO: save them .. and correctly operate on the compressed column
             //this->current_compression = target_format;
@@ -222,20 +189,22 @@ namespace morphstore{
         }
 
         // for debugging:
+        // TODO: simply by using a get_outgoing_edges(id) method
         void print_neighbors_of_vertex(uint64_t id) override{
             std::cout << "Neighbours for Vertex with id " << id << std::endl;
-            uint64_t* offset_data = offset_column->get_data();
+
+            uint64_t* offset_data = decompress_graph_col(offset_column.get(), current_compression)->get_data();
             uint64_t offset = offset_data[id];
             uint64_t numberEdges = get_out_degree(id);
             
-            uint64_t* edgeId_data = edgeId_column->get_data();
+            uint64_t* edgeId_data = decompress_graph_col(edgeId_column.get(), current_compression)->get_data();
             for(uint64_t i = offset; i < offset+numberEdges; ++i){
                 uint64_t edgeId = edgeId_data[i];
                 print_edge_by_id(edgeId);
             }
         }
 
-        std::string get_column_info(const column<uncompr_f> *column) {
+        std::string get_column_info(const column_base *column) {
             return " values: " + std::to_string(column->get_count_values()) + " size in bytes: " + std::to_string(column->get_size_used_byte());
         }
 

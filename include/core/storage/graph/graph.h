@@ -31,6 +31,7 @@
 #include "edge/edges_hashmap_container.h"
 #include "edge/edges_vectorarray_container.h"
 #include "property_type.h"
+#include <core/storage/graph/graph_compr_format.h>
 
 #include <map>
 #include <unordered_map>
@@ -45,28 +46,7 @@
 
 
 namespace morphstore{
-    enum class GraphCompressionFormat {DELTA, RLE, FOR, UNCOMPRESSED};
 
-    std::string to_string(GraphCompressionFormat format) {
-        std::string desc;
-
-        switch (format) {
-        case GraphCompressionFormat::DELTA:
-            desc = "Delta";
-            break;
-        case GraphCompressionFormat::UNCOMPRESSED:
-            desc = "Uncompressed";
-            break;
-        case GraphCompressionFormat::RLE:
-            desc = "Runtime length";
-            break;
-        case GraphCompressionFormat::FOR:
-            desc = "Frame of Reference";
-            break;
-        }
-
-        return desc;
-    }
     class Graph{
 
     protected:
