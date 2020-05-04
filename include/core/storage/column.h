@@ -42,8 +42,31 @@ enum class storage_persistence_type {
    queryScope
 };
 
+// template-free base class
+// use-case: graph formats can change their column format at run-time via `compress(Format f)`
+// TODO: currently not useable as template argument deduction/substitution fails when f.i. morphing on column_base
+class column_base {
+   public: 
+      // todo: find a way to specify `inline`
+      virtual voidptr_t get_data( void ) const = 0;
+      virtual size_t get_count_values( void ) const = 0;
+      virtual void set_count_values( size_t p_CountValues ) = 0;
+      virtual size_t get_size_used_byte( void ) const = 0;
+      virtual void set_size_used_byte( size_t p_SizeUsedByte ) = 0;
+      virtual size_t get_size_compr_byte( void ) const = 0;
+      virtual void set_size_compr_byte( size_t p_SizeComprByte ) = 0;
+      virtual void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte, size_t p_SizeComprByte ) = 0;
+      virtual void set_meta_data( size_t p_CountValues, size_t p_SizeUsedByte) = 0;
+
+      virtual const voidptr_t get_data_uncompr_start() const = 0;
+      virtual size_t get_count_values_uncompr() const = 0;
+      virtual size_t get_count_values_compr() const = 0;
+      // this is a template-method and cannot be defined here?
+      //virtual bool prepare_for_random_access() const = 0;
+};
+
 template< class F >
-class column {
+class column : public column_base {
    static_assert(
       std::is_base_of< format, F >::value,
       "column: template parameter F must be a subclass of format"
