@@ -65,7 +65,7 @@ void simpleGraphFormatTest (void) {
     assert(graph->get_out_degree(v1) == 1);
     assert(graph->get_out_degree(v2) == 2);
 
-    graph->compress(morphstore::GraphCompressionFormat::DELTA);
+    graph->morph(morphstore::GraphCompressionFormat::DELTA);
 
     graph->statistics();
 

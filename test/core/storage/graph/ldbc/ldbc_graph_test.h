@@ -61,7 +61,7 @@ void ldbcGraphFormatTest (void) {
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
 
-    graph->compress(morphstore::GraphCompressionFormat::DELTA);
+    graph->morph(morphstore::GraphCompressionFormat::DELTA);
 
     // some statistics (DEBUG)
     std::cout << "Some statistics" << std::endl;

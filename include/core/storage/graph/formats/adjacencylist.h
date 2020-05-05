@@ -202,9 +202,9 @@ namespace morphstore{
             return targetVertexIds;
         }
 
-        // compresses the adj-lists to the given target_format
+        // morphes the adj-lists to the given target_format
         // !!! first time overhead: as convert each vector to a column (finalizing) !!!
-        void compress(GraphCompressionFormat target_format) override {
+        void morph(GraphCompressionFormat target_format) override {
             if (!finalized) {
                 std::cout << "Transforming vectors into columns" << std::endl;
                 this->finalize();

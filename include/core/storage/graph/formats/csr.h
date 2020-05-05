@@ -158,7 +158,7 @@ namespace morphstore{
             return targetVertexIds;
         }
 
-        void compress(GraphCompressionFormat target_format) override {
+        void morph(GraphCompressionFormat target_format) override {
             std::cout << "Morphing graph format specific data structures from "
                       << to_string(current_compression) << " to " << to_string(target_format) << std::endl;
 
