@@ -39,12 +39,12 @@ namespace morphstore{
 
     private:
         // const column as after finalized only read_only
-        using adjacency_column = const column_base*; 
+        using adjacency_column = column_base*; 
         using adjacency_vector = std::vector<uint64_t>*;
         using adjacency_list_variant = std::variant<adjacency_vector, adjacency_column>;
 
         struct Adjacency_List_Size_Visitor {
-            size_t operator()(adjacency_column c) const {
+            size_t operator()(const adjacency_column c) const {
                 return c->get_size_used_byte();
             }
             size_t operator()(const adjacency_vector v) const {
@@ -53,15 +53,16 @@ namespace morphstore{
         };
 
         struct Adjacency_List_Finalizer {
-            adjacency_column operator()(const adjacency_column c) const {
+            adjacency_list_variant operator()(const adjacency_column c) const {
                 return c;
             }
-            adjacency_column operator()(const adjacency_vector v) const {
-               return make_column(v->data(), v->size(), true);
+            adjacency_list_variant operator()(const adjacency_vector v) const {
+                // const_cast as return type is not constant
+                return const_cast<column_uncompr *>(make_column(v->data(), v->size(), true));
             }
         };
 
-        // maps the outgoing edges (ids) per vertex
+        // maps the a list of outgoing edges (ids) to a vertex-id
         std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
             new std::unordered_map<uint64_t, adjacency_list_variant>();
 
@@ -69,24 +70,16 @@ namespace morphstore{
         // TODO: is this replace-able by just checking the type of the first element in the map? (via holds_alternative)
         bool finalized = false;
 
-        // convert every adjVector to a adjColumn
+        // convert every adj-vector to a adj-column
         void finalize() {
             if (!finalized) {
-                std::unordered_map<uint64_t, adjacency_list_variant> *adjacency_column_per_vertex =
-                    new std::unordered_map<uint64_t, adjacency_list_variant>();
-
-                adjacency_column_per_vertex->reserve(adjacencylistPerVertex->size());
-
                 for(auto [id, adj_list]: *adjacencylistPerVertex) {
-                    adjacency_column_per_vertex->insert({id, std::visit(Adjacency_List_Finalizer{}, adj_list)});
+                    (*adjacencylistPerVertex)[id] = std::visit(Adjacency_List_Finalizer{}, adj_list);
                 }
-
-                delete adjacencylistPerVertex;
-
-                this->adjacencylistPerVertex = adjacency_column_per_vertex;
                 this->finalized = true;
             }
         }
+
     public:
         ~AdjacencyList() {
                 for(auto [id, adj_list]: *this->adjacencylistPerVertex) {
@@ -181,7 +174,7 @@ namespace morphstore{
             auto entry = adjacencylistPerVertex->find(id);
             if (entry != adjacencylistPerVertex->end()) {
                 if (this->finalized) {
-                    adjacency_column col = decompress_graph_col(std::get<adjacency_column>(entry->second), current_compression);
+                    auto col = decompress_graph_col(std::get<adjacency_column>(entry->second), current_compression);
                     const size_t column_size = col->get_count_values();
                     // TODO: init vector via range-constructor / mem-cpy
                     //const uint8_t * end_addr = start_addr + sizeof(uint64_t) * out_degree;
@@ -218,20 +211,19 @@ namespace morphstore{
             }
 
             std::cout << "Compressing graph format specific data structures using: " << to_string(target_format) << std::endl;
-
-            std::unordered_map<uint64_t, adjacency_list_variant> *morphed_adj_columns =
-                new std::unordered_map<uint64_t, adjacency_list_variant>();
-            morphed_adj_columns->reserve(adjacencylistPerVertex->size());
-
+            
+            auto entry_count = adjacencylistPerVertex->size();
+            int progress = 0;
             for (auto const [id, adj_list] : *adjacencylistPerVertex) {
                 auto old_adj_col = std::get<adjacency_column>(adj_list);
-                adjacency_column morphed_adj_col = morph_graph_col(old_adj_col, current_compression, target_format, true);
-
-                morphed_adj_columns->insert({id, morphed_adj_col});
+                if (progress % 10000 == 0) {
+                    std::cout << "Compression Progress: " << progress << "/" << entry_count << std::endl;
+                }
+                // const_cast needed as map-value is not constant
+                (*adjacencylistPerVertex)[id] = const_cast<adjacency_column>(morph_graph_col(old_adj_col, current_compression, target_format, true));
+                progress++;
             }
             
-            delete adjacencylistPerVertex;
-            this->adjacencylistPerVertex = morphed_adj_columns;
             this->current_compression = target_format;
 
             // TODO: move into seperate function
