@@ -118,62 +118,55 @@ namespace morphstore{
         // get number of edges of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
             // decompressing offset_column in order to read correct offset
-            // TODO: only decompress part as only offset_column[id] and offset_column[id+1] will be read
-            uint64_t* offset_data = decompress_graph_col(offset_column, current_compression)->get_data();
+            // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
+            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
+            uint64_t* offset_data = uncompr_offset_col->get_data();
 
             uint64_t offset = offset_data[id];
-            // special case: last vertex id has no next offset
             uint64_t nextOffset;
 
-            // todo: `getExpectedVertexCount()` could be replaced by `offset_column->get_count_values()`
-            if(id == getExpectedVertexCount() -1){
-                nextOffset = getExpectedEdgeCount();
+            // special case: last vertex id has no next offset
+            if(id == getVertexCount() -1){
+                nextOffset = getEdgeCount();
             }else{
                 nextOffset = offset_data[id+1];
             }
 
-            if(offset == nextOffset) return 0;
-            uint64_t degree = nextOffset - offset;
-            return degree;
+            // deleting temporary column
+            if (uncompr_offset_col != offset_column) {
+                delete uncompr_offset_col;
+            }
+
+            // compute out_degree
+            if (offset == nextOffset)
+                return 0;
+            else {
+                return nextOffset - offset;
+            }
         }
 
         // function to return a vector of ids of neighbors for BFS alg.
         std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-             std::vector<uint64_t> neighbourEdgeIds;
-             uint64_t* offset_data = decompress_graph_col(offset_column, current_compression)->get_data();
-             uint64_t offset = offset_data[id];
-             uint64_t numberEdges = get_out_degree(id);
+            std::vector<uint64_t> targetVertexIds;
+            for (auto edge_id : get_outgoing_edge_ids(id)) {
+                assert(edges->exists_edge(edge_id));
+                targetVertexIds.push_back(edges->get_edge(edge_id).getTargetId());
+            }
 
-             // avoiding out of bounds ...
-             // TODO: use assert here, as this is only out of bounds if the offset 
-             if( offset < getExpectedEdgeCount()){
-                 uint64_t* edgeId_data = decompress_graph_col(edgeId_column, current_compression)->get_data();
-                 neighbourEdgeIds.insert(neighbourEdgeIds.end(), edgeId_data+offset, edgeId_data+offset+numberEdges);
-             }
-
-             std::vector<uint64_t> targetVertexIds;
-
-             // resolving each edgeId
-             for (auto edgeId: neighbourEdgeIds)
-             {
-                 assert(edges->exists_edge(edgeId));
-                 targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
-             }
-             
-             return targetVertexIds;
+            return targetVertexIds;
         }
 
         void compress(GraphCompressionFormat target_format) override {
-            std::cout << "Morphing graph format specific data structures from " << to_string(current_compression) << " to " << to_string(target_format)  << std::endl;
-            
+            std::cout << "Morphing graph format specific data structures from "
+                      << to_string(current_compression) << " to " << to_string(target_format) << std::endl;
 
             if (current_compression == target_format) {
                 std::cout << "Already in " << to_string(target_format);
                 return;
             }
 
-            offset_column = const_cast<column_base*>(morph_graph_col(offset_column, current_compression, target_format));
-            edgeId_column = const_cast<column_base*>(morph_graph_col(edgeId_column, current_compression, target_format));
+            offset_column = const_cast<column_base*>(morph_graph_col(offset_column, current_compression, target_format, true));
+            edgeId_column = const_cast<column_base*>(morph_graph_col(edgeId_column, current_compression, target_format, true));
 
             std::cout << " offset col compression ratio: "
                       << compression_ratio(offset_column, target_format) << std::endl
@@ -194,19 +187,38 @@ namespace morphstore{
             return {index_size, data_size};
         }
 
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
+            assert(vertices->exists_vertex(id));
+
+            std::vector<uint64_t> out_edge_ids;
+            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
+            uint64_t offset = ((uint64_t *)uncompr_offset_col->get_data())[id];
+
+            if (uncompr_offset_col != offset_column) {
+                delete uncompr_offset_col;
+            }
+
+            // TODO: decompressing offset_column twice this way
+            uint64_t numberEdges = get_out_degree(id);
+
+            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column, current_compression);
+            uint64_t *edgeId_data = uncompr_edgeId_col->get_data();
+            out_edge_ids.insert(out_edge_ids.end(), edgeId_data + offset, edgeId_data + offset + numberEdges);
+
+            if (uncompr_edgeId_col != edgeId_column) {
+                delete uncompr_edgeId_col;
+            }
+
+            return out_edge_ids;
+        }
+
         // for debugging:
         // TODO: simply by using a get_outgoing_edges(id) method
         void print_neighbors_of_vertex(uint64_t id) override{
             std::cout << "Neighbours for Vertex with id " << id << std::endl;
 
-            uint64_t* offset_data = decompress_graph_col(offset_column, current_compression)->get_data();
-            uint64_t offset = offset_data[id];
-            uint64_t numberEdges = get_out_degree(id);
-            
-            uint64_t* edgeId_data = decompress_graph_col(edgeId_column, current_compression)->get_data();
-            for(uint64_t i = offset; i < offset+numberEdges; ++i){
-                uint64_t edgeId = edgeId_data[i];
-                print_edge_by_id(edgeId);
+            for(auto const edge_id: get_outgoing_edge_ids(id)){
+                print_edge_by_id(edge_id);
             }
         }
 
