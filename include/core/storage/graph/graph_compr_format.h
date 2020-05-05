@@ -66,25 +66,29 @@ namespace morphstore{
     }
 
     // casting the column to the actual column type before morphing (as compiler could not derive it)
-    const column_base* morph_graph_col(const column_base* column, const GraphCompressionFormat src_f, const GraphCompressionFormat trg_f) {
+    // delete_old_col -> delete input column after morphing (if the result is not the input column)
+    const column_base* morph_graph_col(const column_base* column, const GraphCompressionFormat src_f, const GraphCompressionFormat trg_f, bool delete_in_col = false) {
         if (src_f == trg_f) {
             return column;
         }
+
+        const column_base *result;
 
         switch (src_f) {
         case GraphCompressionFormat::UNCOMPRESSED: {
             const column_uncompr *old_col = dynamic_cast<const column_uncompr *>(column);
             switch (trg_f) {
             case GraphCompressionFormat::DELTA:
-                return morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
+                result = morph<ve, DEFAULT_DELTA_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
                 break;
             case GraphCompressionFormat::FOR:
-                return morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
+                result = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
                 break;
             case GraphCompressionFormat::UNCOMPRESSED:
-                return old_col;
+                result = old_col;
                 break;
             }
+            return result;
             break;
         }
 
@@ -92,29 +96,52 @@ namespace morphstore{
         case GraphCompressionFormat::DELTA: {
             if (trg_f == GraphCompressionFormat::UNCOMPRESSED) {
                 const column_delta *old_col = dynamic_cast<const column_delta *>(column);
-                return morph<ve, uncompr_f, DEFAULT_DELTA_DYNAMIC_VBP_F(ve)>(old_col);
+                result = morph<ve, uncompr_f, DEFAULT_DELTA_DYNAMIC_VBP_F(ve)>(old_col);
             }
-            return morph_graph_col(morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED), GraphCompressionFormat::UNCOMPRESSED, trg_f);
+            else {
+                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
+                result = morph_graph_col(
+                    uncompr_col,
+                    GraphCompressionFormat::UNCOMPRESSED,
+                    trg_f);
+                delete uncompr_col;
+            }
             break;
         }
         case GraphCompressionFormat::FOR: {
             if (trg_f == GraphCompressionFormat::UNCOMPRESSED) {
                 const column_for *old_col = dynamic_cast<const column_for *>(column);
-                return morph<ve, uncompr_f, DEFAULT_FOR_DYNAMIC_VBP_F(ve)>(old_col);
+                result = morph<ve, uncompr_f, DEFAULT_FOR_DYNAMIC_VBP_F(ve)>(old_col);
             }
-            return morph_graph_col(morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED), GraphCompressionFormat::UNCOMPRESSED, trg_f);
+            else {
+                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
+                result = morph_graph_col(
+                    uncompr_col,
+                    GraphCompressionFormat::UNCOMPRESSED,
+                    trg_f);
+                delete uncompr_col;
+            }
             break;
         }
         }
 
-        throw std::runtime_error("Did not handle src: " + to_string(src_f) + " trg: " + to_string(trg_f));
+        if (result != column && delete_in_col){
+            delete column;
+        }
+
+        if (result == nullptr) {
+            throw std::runtime_error("Did not handle src: " + to_string(src_f) + " trg: " + to_string(trg_f));
+        }
+
+        return result; 
     }
 
-    const column_uncompr* decompress_graph_col(const column_base* column, const GraphCompressionFormat src_f) {
-        return static_cast<const column_uncompr *>(morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED));
+    const column_uncompr* decompress_graph_col(const column_base* column, const GraphCompressionFormat src_f, bool delete_in_col = false) {
+        return static_cast<const column_uncompr *>(morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col));
     }
 
     double compression_ratio(const column_base* column, GraphCompressionFormat col_format) {
+        // TODO: need to delete decompressed_col? 
         return decompress_graph_col(column, col_format)->get_size_used_byte() / (double) column->get_size_used_byte();
     }
 }
