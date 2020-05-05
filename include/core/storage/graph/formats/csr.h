@@ -86,7 +86,9 @@ namespace morphstore{
             assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
             // currently only read-only if compressed
             if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
-                throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " + to_string(current_compression));
+                throw std::runtime_error(
+                    "Edge insertion only allowed in uncompressed format. Current format: " +
+                    to_string(current_compression));
             }
 
             uint64_t* offset_data = offset_column->get_data();

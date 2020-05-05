@@ -134,11 +134,15 @@ namespace morphstore{
         }
 
 	    // function to return a list of pair < vertex id, degree > DESC:
+        // TODO: move into seperate header and use graph as input parameter
         std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC(){
             std::vector<std::pair<uint64_t, uint64_t>> vertexDegreeList;
-            vertexDegreeList.reserve(expectedVertexCount);
+            vertexDegreeList.reserve(getVertexCount());
             // fill the vector with every vertex key and his degree
-            for(uint64_t i = 0; i < expectedVertexCount; ++i){
+            for(uint64_t i = 0; i < getVertexCount(); ++i){
+                if (i % 1000 == 0) {
+                    std::cout << "Degree-List - Current Progress" << i << "/" << getVertexCount() << std::endl;
+                }
                 vertexDegreeList.push_back({i, this->get_out_degree(i)});
             }
             // sort the vector on degree DESC
@@ -150,6 +154,7 @@ namespace morphstore{
         }
 
         // function to measure graph characteristics (degree and count):
+        // TODO: move into seperate header and use graph as input parameter
         void measure_degree_count(std::string filePath){
             std::vector<std::pair<uint64_t, uint64_t>> verticesDegree = get_list_of_degree_DESC();
             // unordered map for mapping degree to count:

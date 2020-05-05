@@ -91,14 +91,13 @@ namespace morphstore{
             return result;
             break;
         }
-
-        // as direct morphing is not yet supported .. go via decompressing first
         case GraphCompressionFormat::DELTA: {
             if (trg_f == GraphCompressionFormat::UNCOMPRESSED) {
                 const column_delta *old_col = dynamic_cast<const column_delta *>(column);
                 result = morph<ve, uncompr_f, DEFAULT_DELTA_DYNAMIC_VBP_F(ve)>(old_col);
             }
             else {
+                // as direct morphing is not yet supported .. go via decompressing first
                 auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
                 result = morph_graph_col(
                     uncompr_col,
@@ -114,6 +113,7 @@ namespace morphstore{
                 result = morph<ve, uncompr_f, DEFAULT_FOR_DYNAMIC_VBP_F(ve)>(old_col);
             }
             else {
+                // as direct morphing is not yet supported .. go via decompressing first
                 auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
                 result = morph_graph_col(
                     uncompr_col,
