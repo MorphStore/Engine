@@ -62,8 +62,9 @@ namespace morphstore{
         };
 
         // maps the outgoing edges (ids) per vertex
-        std::unordered_map<uint64_t, adjacency_list_variant> adjacencylistPerVertex;
-        
+        std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
+            new std::unordered_map<uint64_t, adjacency_list_variant>();
+
         // indicating whether we have columns or vectors (columns after first compress() call)
         // TODO: is this replace-able by just checking the type of the first element in the map? (via holds_alternative)
         bool finalized = false;
@@ -71,26 +72,32 @@ namespace morphstore{
         // convert every adjVector to a adjColumn
         void finalize() {
             if (!finalized) {
-                std::unordered_map<uint64_t, adjacency_list_variant> adjacencyColumnPerVertex;
-                adjacencyColumnPerVertex.reserve(adjacencylistPerVertex.size());
+                std::unordered_map<uint64_t, adjacency_list_variant> *adjacency_column_per_vertex =
+                    new std::unordered_map<uint64_t, adjacency_list_variant>();
 
-                for(auto entry: adjacencylistPerVertex) {
-                    adjacencyColumnPerVertex.insert({entry.first, std::visit(Adjacency_List_Finalizer{}, entry.second)});
+                adjacency_column_per_vertex->reserve(adjacencylistPerVertex->size());
+
+                for(auto [id, adj_list]: *adjacencylistPerVertex) {
+                    adjacency_column_per_vertex->insert({id, std::visit(Adjacency_List_Finalizer{}, adj_list)});
                 }
 
-                this->adjacencylistPerVertex = adjacencyColumnPerVertex;
+                delete adjacencylistPerVertex;
+
+                this->adjacencylistPerVertex = adjacency_column_per_vertex;
                 this->finalized = true;
             }
         }
     public:
         ~AdjacencyList() {
-                for(auto entry: this->adjacencylistPerVertex) {
+                for(auto [id, adj_list]: *this->adjacencylistPerVertex) {
                     if (finalized) {
-                       delete std::get<adjacency_column>(entry.second);
+                       delete std::get<adjacency_column>(adj_list);
                     }
                     else {
-                        free(std::get<adjacency_vector>(entry.second));
+                        free(std::get<adjacency_vector>(adj_list));
                     }
+                
+                delete adjacencylistPerVertex;
             }
         }
 
@@ -106,7 +113,7 @@ namespace morphstore{
         // function: to set graph allocations
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
-            adjacencylistPerVertex.reserve(numberVertices);
+            adjacencylistPerVertex->reserve(numberVertices);
         }
 
         // adding a single edge to vertex:
@@ -131,11 +138,11 @@ namespace morphstore{
             }
 
             std::vector<uint64_t> *adjacencyList;
-            if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
-                adjacencyList = std::get<adjacency_vector>(adjacencylistPerVertex[sourceId]);
+            if (adjacencylistPerVertex->find(sourceId) != adjacencylistPerVertex->end()) {
+                adjacencyList = std::get<adjacency_vector>(adjacencylistPerVertex->at(sourceId));
             } else {
                 adjacencyList = new std::vector<uint64_t>();
-                adjacencylistPerVertex.insert({sourceId, adjacencyList});
+                adjacencylistPerVertex->insert({sourceId, adjacencyList});
             }
 
             adjacencyList->reserve(edgesToAdd.size());
@@ -152,14 +159,14 @@ namespace morphstore{
 
         // get number of neighbors of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
-            auto entry = adjacencylistPerVertex.find(id);
-            if (entry == adjacencylistPerVertex.end()) {
+            auto entry = adjacencylistPerVertex->find(id);
+            if (entry == adjacencylistPerVertex->end()) {
                 return 0;
             }
             else { 
                 uint64_t out_degree;
                 if (finalized) {
-                    // todo: verify that column can stay decompressod for retrieving count_values
+                    // todo: verify that column can stay compressod for retrieving count_values
                     out_degree = std::get<adjacency_column>(entry->second)->get_count_values();
                 }
                 else {
@@ -171,8 +178,8 @@ namespace morphstore{
 
         std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
             std::vector<uint64_t> edge_ids;
-            auto entry = adjacencylistPerVertex.find(id);
-            if (entry != adjacencylistPerVertex.end()) {
+            auto entry = adjacencylistPerVertex->find(id);
+            if (entry != adjacencylistPerVertex->end()) {
                 if (this->finalized) {
                     adjacency_column col = decompress_graph_col(std::get<adjacency_column>(entry->second), current_compression);
                     const size_t column_size = col->get_count_values();
@@ -180,6 +187,8 @@ namespace morphstore{
                     //const uint8_t * end_addr = start_addr + sizeof(uint64_t) * out_degree;
                     const uint64_t * start_addr = col->get_data();
                     edge_ids.insert(edge_ids.end(), start_addr, start_addr+column_size);
+                    
+                    delete col;
                 } else {
                     edge_ids = *std::get<adjacency_vector>(entry->second);
                 }
@@ -210,24 +219,26 @@ namespace morphstore{
 
             std::cout << "Compressing graph format specific data structures using: " << to_string(target_format) << std::endl;
 
-            std::unordered_map<uint64_t, adjacency_list_variant> morphedAdjColumns;
-            morphedAdjColumns.reserve(adjacencylistPerVertex.size());
+            std::unordered_map<uint64_t, adjacency_list_variant> *morphed_adj_columns =
+                new std::unordered_map<uint64_t, adjacency_list_variant>();
+            morphed_adj_columns->reserve(adjacencylistPerVertex->size());
 
-            for (auto const& [id, adjList] : adjacencylistPerVertex) {
-                auto old_adj_col = std::get<adjacency_column>(adjList);
-                adjacency_column morphed_adj_col = morph_graph_col(old_adj_col, current_compression, target_format);
-                delete old_adj_col;
-                morphedAdjColumns.insert({id, morphed_adj_col});
+            for (auto const [id, adj_list] : *adjacencylistPerVertex) {
+                auto old_adj_col = std::get<adjacency_column>(adj_list);
+                adjacency_column morphed_adj_col = morph_graph_col(old_adj_col, current_compression, target_format, true);
+
+                morphed_adj_columns->insert({id, morphed_adj_col});
             }
             
-            this->adjacencylistPerVertex = morphedAdjColumns;
+            delete adjacencylistPerVertex;
+            this->adjacencylistPerVertex = morphed_adj_columns;
             this->current_compression = target_format;
 
-            // TODO: move into seperate function (maybe returning map)
+            // TODO: move into seperate function
             std::vector<double> compr_ratios;
-            for (auto const& [id, adjList] : adjacencylistPerVertex) {
-                std::cout << "compression_ratio of adjlist of vertex " << id << std::endl;
-                compr_ratios.push_back(compression_ratio(std::get<adjacency_column>(adjList), current_compression));
+            for (auto const [id, adj_list] : *adjacencylistPerVertex) {
+                std::cout << "compression_ratio of adj_list of vertex " << id << std::endl;
+                compr_ratios.push_back(compression_ratio(std::get<adjacency_column>(adj_list), current_compression));
             }
 
             double avg_compr_ratio = std::accumulate(compr_ratios.begin(), compr_ratios.end(), 0.0) / compr_ratios.size();
@@ -242,10 +253,10 @@ namespace morphstore{
 
             // adjacencyListPerVertex
             index_size += sizeof(std::unordered_map<uint64_t, adjacency_list_variant>);
-            index_size += adjacencylistPerVertex.size() * (sizeof(uint64_t) + sizeof(adjacency_list_variant));
+            index_size += adjacencylistPerVertex->size() * (sizeof(uint64_t) + sizeof(adjacency_list_variant));
 
-            for(const auto iterator : adjacencylistPerVertex){
-                data_size += std::visit(Adjacency_List_Size_Visitor{}, iterator.second);
+            for(const auto [id, adj_list] : *adjacencylistPerVertex){
+                data_size += std::visit(Adjacency_List_Size_Visitor{}, adj_list);
             }
 
             return {index_size, data_size};
@@ -268,7 +279,7 @@ namespace morphstore{
 
         void statistics() override {
             Graph::statistics();
-            std::cout << "Number of adjacency lists:" << adjacencylistPerVertex.size() << std::endl;
+            std::cout << "Number of adjacency lists:" << adjacencylistPerVertex->size() << std::endl;
             std::string isFinal = (finalized) ? "true" : "false";
             std::cout << "AdjacencyLists finalized:" << isFinal << std::endl;
             std::cout << std::endl << std::endl;
