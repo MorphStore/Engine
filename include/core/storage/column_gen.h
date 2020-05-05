@@ -47,12 +47,13 @@ namespace morphstore {
  * elements.
  * 
  * @param vec The vector to initialize the column with.
+ * @param sudo Overrule limit of 20
  * @return An uncompressed column containing a copy of the data in the given
  * vector.
  */
-const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec) {
+const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec, bool sudo = false) {
     const size_t count = vec.size();
-    if(count > 20)
+    if(count > 20 && !sudo)
         throw std::runtime_error(
                 "make_column() is an inefficient convenience function and "
                 "should only be used for very small columns"
@@ -64,8 +65,8 @@ const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec) {
     return resCol;
 }
 
-const column<uncompr_f> * make_column(uint64_t const * const vec, size_t count) {
-   if(count > 400)
+const column<uncompr_f> * make_column(uint64_t const * const vec, size_t count, bool sudo = false) {
+   if(count > 400 && !sudo)
       throw std::runtime_error(
          "make_column() is an inefficient convenience function and "
          "should only be used for very small columns"

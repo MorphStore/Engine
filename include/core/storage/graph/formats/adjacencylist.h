@@ -25,6 +25,8 @@
 #define MORPHSTORE_ADJACENCYLIST_H
 
 #include <core/storage/graph/graph.h>
+#include <core/storage/column_gen.h>
+#include <core/storage/graph/graph_compr_format.h>
 
 #include <iterator>
 #include <assert.h>
@@ -49,6 +51,16 @@ namespace morphstore{
             }
         };
 
+        struct Adjacency_List_Finalizer {
+            adjacency_column operator()(const adjacency_column c) const {
+                return c;
+            }
+            adjacency_column operator()(const adjacency_vector v) const {
+                // const_cast to be able to assign colum to entry value
+               return const_cast<column_uncompr*>(make_column(v->data(), v->size(), true));
+            }
+        };
+
         // maps the outgoing edges (ids) per vertex
         std::unordered_map<uint64_t, adjacency_list_variant> adjacencylistPerVertex;
         
@@ -58,8 +70,16 @@ namespace morphstore{
 
         // convert every adjVector to a adjColumn
         void finalize() {
-            if (!finalized) { 
-                // use std::transform
+            if (!finalized) {
+                std::unordered_map<uint64_t, adjacency_list_variant> adjacencyColumnPerVertex;
+                adjacencyColumnPerVertex.reserve(adjacencylistPerVertex.size());
+
+                for(auto entry: adjacencylistPerVertex) {
+                    adjacencyColumnPerVertex.insert({entry.first, std::visit(Adjacency_List_Finalizer{}, entry.second)});
+                }
+
+                this->adjacencylistPerVertex = adjacencyColumnPerVertex;
+                this->finalized = true;
             }
         }
     public:
@@ -97,17 +117,28 @@ namespace morphstore{
 
         // function that adds multiple edges (list of neighbors) at once to vertex
         void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
+            if (finalized) {
+                throw std::runtime_error("Cannot add edges, if adj. lists are compressed");
+            }
+
             if (!vertices->exists_vertex(sourceId)) {
                 throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
             }
-            // TODO: remove shared pointer?
-            std::shared_ptr<std::vector<uint64_t>> adjacencyList;
-            if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
-                adjacencyList = adjacencylistPerVertex[sourceId];
-            } else {
-                adjacencyList = std::make_shared<std::vector<uint64_t>>();
-                adjacencylistPerVertex[sourceId] = adjacencyList;
+
+            // avoid inserting an empty adjacencyList (waste of memory)
+            if (edgesToAdd.size() == 0) {
+                return ;
             }
+
+            std::vector<uint64_t> *adjacencyList;
+            if (adjacencylistPerVertex.find(sourceId) != adjacencylistPerVertex.end()) {
+                adjacencyList = std::get<adjacency_vector>(adjacencylistPerVertex[sourceId]);
+            } else {
+                adjacencyList = new std::vector<uint64_t>();
+                adjacencylistPerVertex.insert({sourceId, adjacencyList});
+            }
+
+            adjacencyList->reserve(edgesToAdd.size());
 
             for (const auto edge : edgesToAdd) {
                 if (!vertices->exists_vertex(edge.getTargetId())) {
@@ -126,28 +157,57 @@ namespace morphstore{
                 return 0;
             }
             else { 
-                return entry->second->size();
+                uint64_t out_degree;
+                if (finalized) {
+                    out_degree = std::get<adjacency_column>(entry->second)->get_count_values();
+                }
+                else {
+                    out_degree = std::get<adjacency_vector>(entry->second)->size();
+                }
+                return out_degree;
             }
         }
 
-        // get the neighbors-ids into vector for BFS alg.
-        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-            std::vector<uint64_t> targetVertexIds = std::vector<uint64_t>();
-
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
+            std::vector<uint64_t> edge_ids;
             auto entry = adjacencylistPerVertex.find(id);
-            
             if (entry != adjacencylistPerVertex.end()) {
-                for(uint64_t const edgeId: *(entry->second)) {
-                    assert(edges->exists_edge(edgeId));
-                    targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
+                if (this->finalized) {
+                    adjacency_column col = std::get<adjacency_column>(entry->second);
+                    const size_t column_size = col->get_count_values();
+                    // TODO: init vector via range-constructor / mem-cpy
+                    //const uint8_t * end_addr = start_addr + sizeof(uint64_t) * out_degree;
+                    const uint64_t * start_addr = col->get_data();
+                    edge_ids.insert(edge_ids.end(), start_addr, start_addr+column_size);
+                } else {
+                    edge_ids = *std::get<adjacency_vector>(entry->second);
                 }
             }
-            
+            return edge_ids;
+        }
+
+        // get the neighbors-ids into vector for BFS alg.
+        // todo: this is actually format generic and can be pulled to graph.h
+        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
+            std::vector<uint64_t> targetVertexIds;
+
+            for (uint64_t const edgeId : get_outgoing_edge_ids(id)) {
+                assert(edges->exists_edge(edgeId));
+                targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
+            }
+
             return targetVertexIds;
         }
 
         void compress(GraphCompressionFormat target_format) override {
             std::cout << "Compressing graph format specific data structures using: " << to_string(target_format) << std::endl;
+            
+            if (!finalized) {
+                std::cout << "Transforming vectors into columns" << std::endl;
+                this->finalize();
+            }
+            
+            // TODO: convert column to target_format
 
             //this->current_compression = target_format;
         }
@@ -157,12 +217,11 @@ namespace morphstore{
             auto [index_size, data_size] = Graph::get_size_of_graph();
 
             // adjacencyListPerVertex
-            index_size += sizeof(std::unordered_map<uint64_t, std::shared_ptr<std::vector<uint64_t>>>);
-            index_size += adjacencylistPerVertex.size() * (sizeof(uint64_t) + sizeof(std::shared_ptr<std::vector<uint64_t>>));
+            index_size += sizeof(std::unordered_map<uint64_t, adjacency_list_variant>);
+            index_size += adjacencylistPerVertex.size() * (sizeof(uint64_t) + sizeof(adjacency_list_variant));
 
-            for(const auto& iterator : adjacencylistPerVertex){
-                // might be wrong in case of compression
-                data_size += sizeof(uint64_t) * iterator.second->size();
+            for(const auto iterator : adjacencylistPerVertex){
+                data_size += std::visit(Adjacency_List_Size_Visitor{}, iterator.second);
             }
 
             return {index_size, data_size};
@@ -170,13 +229,15 @@ namespace morphstore{
 
         // for debugging: print neighbors a vertex
         void print_neighbors_of_vertex(uint64_t id) override{
-            std::cout << "Neighbours for Vertex with id " << id << std::endl;
-            if(adjacencylistPerVertex.find(id) == adjacencylistPerVertex.end()) {
+            std::cout << std::endl << "Neighbours for Vertex with id " << id << std::endl;
+            auto edge_ids = get_outgoing_edge_ids(id);
+            
+            if(edge_ids.size() == 0) {
                 std::cout << "  No outgoing edges for vertex with id: " << id << std::endl;
             }
             else {
-                for (const auto edgeId : *adjacencylistPerVertex[id]) {
-                    print_edge_by_id(edgeId);
+                for (const auto edge_id : edge_ids) {
+                    print_edge_by_id(edge_id);
                 }
             }
         }
@@ -184,6 +245,8 @@ namespace morphstore{
         void statistics() override {
             Graph::statistics();
             std::cout << "Number of adjacency lists:" << adjacencylistPerVertex.size() << std::endl;
+            std::string isFinal = (finalized) ? "true" : "false";
+            std::cout << "AdjacencyLists finalized:" << isFinal << std::endl;
             std::cout << std::endl << std::endl;
         }
 
