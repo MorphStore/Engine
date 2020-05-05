@@ -46,6 +46,7 @@ enum class storage_persistence_type {
 // use-case: graph formats can change their column format at run-time via `compress(Format f)`
 class column_base {
    public: 
+      virtual ~column_base() {}
       // todo: find a way to specify `inline`
       virtual voidptr_t get_data( void ) const = 0;
       virtual size_t get_count_values( void ) const = 0;
