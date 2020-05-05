@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_VERTICES_CONTAINER_H
 #define MORPHSTORE_VERTICES_CONTAINER_H
 
-#include "vertex.h"
-#include "../property_type.h"
+#include <core/storage/graph/vertex/vertex.h>
+#include <core/storage/graph/property_type.h>
 
 #include <map>
 #include <unordered_map>

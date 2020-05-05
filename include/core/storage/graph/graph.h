@@ -140,9 +140,9 @@ namespace morphstore{
             vertexDegreeList.reserve(getVertexCount());
             // fill the vector with every vertex key and his degree
             for(uint64_t i = 0; i < getVertexCount(); ++i){
-                if (i % 1000 == 0) {
+/*                 if (i % 1000 == 0) {
                     std::cout << "Degree-List - Current Progress" << i << "/" << getVertexCount() << std::endl;
-                }
+                } */
                 vertexDegreeList.push_back({i, this->get_out_degree(i)});
             }
             // sort the vector on degree DESC

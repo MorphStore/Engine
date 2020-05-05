@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_EDGE_H
 #define MORPHSTORE_EDGE_H
 
-#include "../property_type.h"
+#include <core/storage/graph/property_type.h>
 
 #include <stdint.h>
 #include <utility>

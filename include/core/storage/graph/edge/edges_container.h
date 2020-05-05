@@ -24,8 +24,8 @@
 #ifndef MORPHSTORE_EDGES_CONTAINER_H
 #define MORPHSTORE_EDGES_CONTAINER_H
 
-#include "edge.h"
-#include "../property_type.h"
+#include <core/storage/graph/edge/edge.h>
+#include <core/storage/graph/property_type.h>
 
 #include <map>
 #include <unordered_map>

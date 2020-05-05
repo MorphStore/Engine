@@ -61,10 +61,7 @@ void ldbcGraphFormatTest (void) {
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
 
-    graph->compress(morphstore::GraphCompressionFormat::FOR);
-
-    // measure degree distribution and write to file (file path as parameter):
-    graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
+    graph->compress(morphstore::GraphCompressionFormat::DELTA);
 
     // some statistics (DEBUG)
     std::cout << "Some statistics" << std::endl;
@@ -74,4 +71,11 @@ void ldbcGraphFormatTest (void) {
     graph->print_vertex_by_id(1035174);
     graph->print_edge_by_id(10);
     graph->print_neighbors_of_vertex(1035174);
+
+    // measure degree distribution and write to file (file path as parameter):
+    // TODO: but this into benchmark or so .. not actual test
+    //std::cout << "Measure degree count" << std::endl;
+    //graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
+
+
 }
