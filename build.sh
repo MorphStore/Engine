@@ -95,6 +95,8 @@ function printHelp {
 	echo "	     Builds with sse4.2 support"
   echo "	-armneon"
 	echo "	     Builds with neon support (for ARM)"
+  echo "	-armsve"
+	echo "	     Builds with SVE support (for ARM, work in progress)"
   echo "  --tvl PATH"
   echo "       Provide an alternative path for the TVL"
         echo ""
@@ -144,6 +146,7 @@ sse4="-DCSSE=False"
 rapl="DCRAPL=False"
 odroid="DCODROID=False"
 neon="DCNEON=False"
+sve=="DCSVE=False"
 target="all"
 vbpLimitRoutinesForSSBSF1="-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1"
 
@@ -306,6 +309,10 @@ case $key in
         neon="-DCNEON=True"
 	shift # past argument
 	;;
+        -armsve)
+        sve="-DCSVE=True"
+	shift # past argument
+	;;
 	-tVt|--testVectoring)
 	runCtest=true
 	testVectors="-DCTEST_VECTOR=True"
@@ -369,7 +376,7 @@ fi
 printf "Using buildMode: $buildMode and make with: $makeParallel $target\n"
 
 if [ "$runCtest" = true ] ; then
-	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon $tvlpath"
+	addTests="-DRUN_CTESTS=True $testAll $testMemory $testMorph $testOps $testPers $testStorage $testUtils $testVectors $avx512 $avxtwo $odroid $rapl $neon $sve $tvlpath"
 	echo "AddTest String: $addTests"
 else
 	addTests="-DRUN_CTESTS=False"
@@ -378,7 +385,7 @@ addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1  $tvlpath -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $sve $vbpLimitRoutinesForSSBSF1  $tvlpath -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 set +e
 

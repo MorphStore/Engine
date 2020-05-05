@@ -48,7 +48,7 @@ namespace vectorlib{
          typename neon<v128<uint64_t>>::vector_t const & p_vec1,
          typename neon<v128<uint64_t>>::vector_t const & p_vec2
       ){
-         trace( "[VECTOR] - Add 64 bit integer values from two registers (neon)" );
+         trace( "[VECTOR] - Minimum of 64 bit integer values from two registers (neon)" );
          return vbslq_u64(vcltq_u64(p_vec1, p_vec2),p_vec1, p_vec2);
       }
    };
