@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_LDBC_SCHEMA_H
 #define MORPHSTORE_LDBC_SCHEMA_H
 
-#include "property_type.h"
+#include <core/storage/graph/property_type.h>
 
 #include <map>
 #include <iostream>

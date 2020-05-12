@@ -18,7 +18,7 @@
 /**
  * @file property_type.h
  * @brief variant of supported data types as a property 
- * @todo
+ * @todo Move into dedicated sub-folder (when different property mappings exists)
 */
 
 #ifndef MORPHSTORE_PROPERTY_TYPE_H

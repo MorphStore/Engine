@@ -21,7 +21,7 @@
  * @todo
  */
 
-#include <core/storage/graph/ldbc_import.h>
+#include <core/storage/graph/importer/ldbc_import.h>
 #include <core/storage/graph/formats/adjacencylist.h>
 
 void print_header(std::string storageFormat) {
