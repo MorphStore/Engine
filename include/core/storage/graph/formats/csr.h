@@ -92,7 +92,7 @@ namespace morphstore{
             if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
                 throw std::runtime_error(
                     "Edge insertion only allowed in uncompressed format. Current format: " +
-                    to_string(current_compression));
+                    graph_compr_f_to_string(current_compression));
             }
 
             uint64_t* offset_data = offset_column->get_data();
@@ -163,11 +163,14 @@ namespace morphstore{
         }
 
         void morph(GraphCompressionFormat target_format) override {
+#if DEBUG
             std::cout << "Morphing graph format specific data structures from "
-                      << to_string(current_compression) << " to " << to_string(target_format) << std::endl;
-
+                      << graph_compr_f_to_string(current_compression) << " to " << graph_compr_f_to_string(target_format) << std::endl;
+#endif
             if (current_compression == target_format) {
-                std::cout << "Already in " << to_string(target_format);
+#if DEBUG
+                std::cout << "Already in " << graph_compr_f_to_string(target_format);
+#endif
                 return;
             }
 

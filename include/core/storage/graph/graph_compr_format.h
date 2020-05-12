@@ -47,18 +47,18 @@ namespace morphstore{
     
     enum class GraphCompressionFormat {DELTA, FOR, UNCOMPRESSED};
 
-    std::string to_string(GraphCompressionFormat format) {
+    std::string graph_compr_f_to_string(GraphCompressionFormat format) {
         std::string desc;
 
         switch (format) {
         case GraphCompressionFormat::DELTA:
-            desc = "Delta";
+            desc = "Delta (Default)";
             break;
         case GraphCompressionFormat::UNCOMPRESSED:
             desc = "Uncompressed";
             break;
         case GraphCompressionFormat::FOR:
-            desc = "Frame of Reference";
+            desc = "Frame of Reference (Default)";
             break;
         }
 
@@ -102,6 +102,7 @@ namespace morphstore{
                     uncompr_col,
                     GraphCompressionFormat::UNCOMPRESSED,
                     trg_f);
+                
                 delete uncompr_col;
             }
             break;
@@ -129,7 +130,7 @@ namespace morphstore{
         }
 
         if (result == nullptr) {
-            throw std::runtime_error("Did not handle src: " + to_string(src_f) + " trg: " + to_string(trg_f));
+            throw std::runtime_error("Did not handle src: " + graph_compr_f_to_string(src_f) + " trg: " + graph_compr_f_to_string(trg_f));
         }
 
         return result; 
