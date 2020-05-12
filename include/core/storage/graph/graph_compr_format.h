@@ -72,7 +72,7 @@ namespace morphstore{
             return column;
         }
 
-        const column_base *result;
+        const column_base *result = column;
 
         switch (src_f) {
         case GraphCompressionFormat::UNCOMPRESSED: {
@@ -85,10 +85,9 @@ namespace morphstore{
                 result = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
                 break;
             case GraphCompressionFormat::UNCOMPRESSED:
-                result = old_col;
+                // handled by src_f == trg_f
                 break;
             }
-            return result;
             break;
         }
         case GraphCompressionFormat::DELTA: {
