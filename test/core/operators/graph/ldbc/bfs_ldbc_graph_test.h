@@ -38,9 +38,10 @@ template <class GRAPH_FORMAT>
 void bfs_ldbc_graph_test (void) {
 
     static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
-
+    
     std::string sourceDir = "";
     std::string targetDir = "";
+
 
     if (sourceDir.empty()) {
         throw std::invalid_argument("Where are the ldbc files??");
@@ -67,7 +68,7 @@ void bfs_ldbc_graph_test (void) {
     graph->statistics();
 
     auto bfs = std::make_unique<morphstore::BFS>(graph);
-
-    assert(bfs->do_BFS(0) == 229144);
+    // for scale factor 1 and including static as well as dynamic part of the graph
+    std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
     //bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
 }
