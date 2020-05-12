@@ -48,17 +48,17 @@ namespace morphstore{
                 return c->get_size_used_byte();
             }
             size_t operator()(const adjacency_vector v) const {
-               return v->size();
+                return v->size() * sizeof(uint64_t);
             }
         };
 
-        struct Adjacency_List_Finalizer {
-            adjacency_list_variant operator()(const adjacency_column c) const {
-                return c;
+        struct Adjacency_List_OutDegree_Visitor {
+            uint64_t operator()(const adjacency_column c) const {
+                // assuming compressed col has the same value count (would not work for RLE)
+                return c->get_count_values();
             }
-            adjacency_list_variant operator()(const adjacency_vector v) const {
-                // const_cast as return type is not constant
-                return const_cast<column_uncompr *>(make_column(v->data(), v->size(), true));
+            uint64_t operator()(const adjacency_vector v) const {
+                return v->size();
             }
         };
 
@@ -66,24 +66,53 @@ namespace morphstore{
         std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
             new std::unordered_map<uint64_t, adjacency_list_variant>();
 
-        // indicating whether we have columns or vectors (columns after first compress() call)
-        // TODO: is this replace-able by just checking the type of the first element in the map? (via holds_alternative)
-        bool finalized = false;
+        // as default formats allocate to much memory for small columns
+        // TODO: allow as parameter in compr
+        // TODO: as parameter this could provide issues when transforming from on format to another
+        //       handle edge-case by finalizing also checking and potentially converting to (old) current_format
+        //       other edge_case: might need to decompress some columns if min_compr_degree got larger
+        uint64_t min_compr_degree = 100;
 
-        // convert every adj-vector to a adj-column
+        // convert big-enough adj-vector to a (read-only) adj-column
         void finalize() {
-            if (!finalized) {
-                for(auto [id, adj_list]: *adjacencylistPerVertex) {
-                    (*adjacencylistPerVertex)[id] = std::visit(Adjacency_List_Finalizer{}, adj_list);
+            int vectors_transformed = 0;
+            for (auto [id, adj_list] : *adjacencylistPerVertex) {
+                if (std::holds_alternative<adjacency_vector>(adj_list)) {
+                    auto adj_vector = std::get<adjacency_vector>(adj_list);
+                    // this allows adding new edges to smaller adj_lists (even after morphing)
+                    if (adj_vector->size() >= min_compr_degree) {
+                        auto adj_col = const_cast<column_uncompr *>(make_column(
+                            adj_vector->data(),
+                            adj_vector->size(),
+                            true));
+
+                        (*adjacencylistPerVertex)[id] = adj_col;
+
+                        // as v is not needed anymore and allocated using new
+                        delete adj_vector;
+                        vectors_transformed++;
+                    }
                 }
-                this->finalized = true;
+            }
+#if DEBUG
+            std::cout << "Transformed " << vectors_transformed << " vectors into columns" << std::endl;
+#endif
+        }
+
+        const column_uncompr *decompress_adjacency_column(const adjacency_column col) const {
+            // assuming compressed col has the same value count (would not work for RLE)
+            if (min_compr_degree < col->get_count_values()) {
+                // decompress_graph_col just checks the format of the column here
+                return decompress_graph_col(col, GraphCompressionFormat::UNCOMPRESSED);
+            } else {
+                return decompress_graph_col(col, current_compression);
             }
         }
 
     public:
         ~AdjacencyList() {
                 for(auto [id, adj_list]: *this->adjacencylistPerVertex) {
-                    if (finalized) {
+                    if (std::holds_alternative<adjacency_column>(adj_list)) {
                        delete std::get<adjacency_column>(adj_list);
                     }
                     else {
@@ -97,8 +126,9 @@ namespace morphstore{
         AdjacencyList(EdgesContainerType edges_container_type)
             : Graph(VerticesContainerType::VectorArrayContainer, edges_container_type) {}
 
-        AdjacencyList(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer) : Graph(vertices_container_type) {}
-        
+        AdjacencyList(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer)
+            : Graph(vertices_container_type) {}
+
         std::string get_storage_format() const override {
             return "Adjacency_List";
         }
@@ -117,38 +147,37 @@ namespace morphstore{
 
         // function that adds multiple edges (list of neighbors) at once to vertex
         void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
-            if (finalized) {
-                throw std::runtime_error("Cannot add edges, if adj. lists are compressed");
-            }
-
             if (!vertices->exists_vertex(sourceId)) {
                 throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
             }
 
-            // avoid inserting an empty adjacencyList (waste of memory)
+            // avoid inserting an empty adjacencyVector (waste of memory)
             if (edgesToAdd.size() == 0) {
                 return ;
             }
 
-            std::vector<uint64_t> *adjacencyList;
-            if (adjacencylistPerVertex->find(sourceId) != adjacencylistPerVertex->end()) {
-                adjacencyList = std::get<adjacency_vector>(adjacencylistPerVertex->at(sourceId));
+            std::vector<uint64_t> *adjacencyVector;
+            if (auto entry = adjacencylistPerVertex->find(sourceId); entry != adjacencylistPerVertex->end()) {
+                if (std::holds_alternative<adjacency_column>(entry->second)) {
+                    throw std::runtime_error("Not implemented to add edges, if adj. list is a (compressed) column");
+                }
+
+                adjacencyVector = std::get<adjacency_vector>(entry->second);
             } else {
-                adjacencyList = new std::vector<uint64_t>();
-                adjacencylistPerVertex->insert({sourceId, adjacencyList});
+                adjacencyVector = new std::vector<uint64_t>();
+                adjacencylistPerVertex->insert({sourceId, adjacencyVector});
             }
 
-            adjacencyList->reserve(edgesToAdd.size());
+            adjacencyVector->reserve(edgesToAdd.size());
 
             for (const auto edge : edgesToAdd) {
                 if (!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found  :" + edge.to_string());
                 }
                 edges->add_edge(edge);
-                adjacencyList->push_back(edge.getId());
+                adjacencyVector->push_back(edge.getId());
             }
         }
-
 
         // get number of neighbors of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
@@ -157,35 +186,31 @@ namespace morphstore{
                 return 0;
             }
             else { 
-                uint64_t out_degree;
-                if (finalized) {
-                    // todo: verify that column can stay compressod for retrieving count_values
-                    out_degree = std::get<adjacency_column>(entry->second)->get_count_values();
-                }
-                else {
-                    out_degree = std::get<adjacency_vector>(entry->second)->size();
-                }
-                return out_degree;
+                return std::visit(Adjacency_List_OutDegree_Visitor{}, entry->second);
             }
         }
 
         std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
+            // basically column -> vector (as convinient to use in other methods)
+            // maybe better idea would be to return a uint64_t* instead (together with a size value)
             std::vector<uint64_t> edge_ids;
-            auto entry = adjacencylistPerVertex->find(id);
-            if (entry != adjacencylistPerVertex->end()) {
-                if (this->finalized) {
-                    auto col = decompress_graph_col(std::get<adjacency_column>(entry->second), current_compression);
-                    const size_t column_size = col->get_count_values();
+            if (auto entry = adjacencylistPerVertex->find(id); entry != adjacencylistPerVertex->end()) {
+                auto adj_list = entry->second;
+                if (std::holds_alternative<adjacency_column>(adj_list)) {
+                    auto uncompr_col = decompress_adjacency_column(std::get<adjacency_column>(adj_list));
+                    const size_t column_size = uncompr_col->get_count_values();
                     // TODO: init vector via range-constructor / mem-cpy
                     //const uint8_t * end_addr = start_addr + sizeof(uint64_t) * out_degree;
-                    const uint64_t * start_addr = col->get_data();
-                    edge_ids.insert(edge_ids.end(), start_addr, start_addr+column_size);
-                    
-                    delete col;
+                    const uint64_t *start_addr = uncompr_col->get_data();
+
+                    edge_ids.insert(edge_ids.end(), start_addr, start_addr + column_size);
+                    delete uncompr_col;
+
                 } else {
-                    edge_ids = *std::get<adjacency_vector>(entry->second);
+                    edge_ids = *std::get<adjacency_vector>(adj_list);
                 }
             }
+
             return edge_ids;
         }
 
@@ -205,38 +230,67 @@ namespace morphstore{
         // morphes the adj-lists to the given target_format
         // !!! first time overhead: as convert each vector to a column (finalizing) !!!
         void morph(GraphCompressionFormat target_format) override {
-            if (!finalized) {
-                std::cout << "Transforming vectors into columns" << std::endl;
-                this->finalize();
-            }
+            // transform big enough vectors into columns
+            this->finalize();
 
+#if DEBUG
             std::cout << "Compressing graph format specific data structures using: " << to_string(target_format) << std::endl;
-            
             auto entry_count = adjacencylistPerVertex->size();
             int progress = 0;
+# endif
             for (auto const [id, adj_list] : *adjacencylistPerVertex) {
-                auto old_adj_col = std::get<adjacency_column>(adj_list);
+#if DEBUG
                 if (progress % 10000 == 0) {
                     std::cout << "Compression Progress: " << progress << "/" << entry_count << std::endl;
                 }
-                // const_cast needed as map-value is not constant
-                (*adjacencylistPerVertex)[id] = const_cast<adjacency_column>(morph_graph_col(old_adj_col, current_compression, target_format, true));
                 progress++;
+# endif
+
+                // const_cast needed as map-value is not constant
+                if (std::visit(Adjacency_List_OutDegree_Visitor{}, adj_list) >= min_compr_degree) {
+                    auto old_adj_col = std::get<adjacency_column>(adj_list);
+                    (*adjacencylistPerVertex)[id] = const_cast<adjacency_column>(morph_graph_col(
+                        old_adj_col,
+                        current_compression,
+                        target_format,
+                        true));
+                }
             }
-            
+
             this->current_compression = target_format;
+        }
 
-            // TODO: move into seperate function
-            std::vector<double> compr_ratios;
+        double compr_ratio() const {
+            double total_compr_ratio = 0;
             for (auto const [id, adj_list] : *adjacencylistPerVertex) {
-                std::cout << "compression_ratio of adj_list of vertex " << id << std::endl;
-                compr_ratios.push_back(compression_ratio(std::get<adjacency_column>(adj_list), current_compression));
+                auto out_degree = std::visit(Adjacency_List_OutDegree_Visitor{}, adj_list);
+                double compr_ratio;
+                if (std::holds_alternative<adjacency_column>(adj_list)) {
+                    auto adj_col = std::get<adjacency_column>(adj_list);
+                    compr_ratio = compression_ratio(adj_col, current_compression);
+                } else {
+                    compr_ratio = 1;
+                }
+                auto weighted_ratio = compr_ratio * ((double)out_degree / getEdgeCount());
+                total_compr_ratio += weighted_ratio;
             }
 
-            double avg_compr_ratio = std::accumulate(compr_ratios.begin(), compr_ratios.end(), 0.0) / compr_ratios.size();
-            std::cout << "avg compression " << avg_compr_ratio << std::endl;
+            return total_compr_ratio;
+        }
 
+        double column_ratio() const {
+            if (getEdgeCount() == 0) {
+                return 1;
+            }
 
+            uint64_t column_count = 0;
+            for (auto const [id, adj_list] : *adjacencylistPerVertex) {
+                if (std::holds_alternative<adjacency_column>(adj_list)) {
+                    column_count++;
+                }
+            }
+
+            return (double) column_count / getEdgeCount();
         }
 
         // for measuring the size in bytes:
@@ -272,9 +326,11 @@ namespace morphstore{
         void statistics() override {
             Graph::statistics();
             std::cout << "Number of adjacency lists:" << adjacencylistPerVertex->size() << std::endl;
-            std::string isFinal = (finalized) ? "true" : "false";
-            std::cout << "AdjacencyLists finalized:" << isFinal << std::endl;
+            std::cout << "Colum ratio:" << column_ratio() << std::endl;
+            std::cout << "Compression ratio:" << compr_ratio() << std::endl;
+            std::cout << "--------------------------------------------" << std::endl;
             std::cout << std::endl << std::endl;
+            
         }
 
     };
