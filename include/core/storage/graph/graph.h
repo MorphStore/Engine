@@ -227,7 +227,6 @@ namespace morphstore{
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "Number of edges with properties:" << edges->edges_with_properties_count() << std::endl;
             std::cout << "Compression Format:" << to_string(current_compression) << std::endl;
-            std::cout << "--------------------------------------------" << std::endl;
         }
 
         void print_vertex_by_id(uint64_t id) {

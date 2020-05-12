@@ -83,7 +83,11 @@ namespace morphstore{
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
+            // TODO: throw error if not in order of vertex-ids ASC inserted (currently will only produce rubbish data)
+            // TODO: handle if sourceIDs are skipped 
+            // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and insert offsets for skipped vertices
             assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
+
             // currently only read-only if compressed
             if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
                 throw std::runtime_error(
@@ -170,11 +174,6 @@ namespace morphstore{
             offset_column = const_cast<column_base*>(morph_graph_col(offset_column, current_compression, target_format, true));
             edgeId_column = const_cast<column_base*>(morph_graph_col(edgeId_column, current_compression, target_format, true));
 
-            std::cout << " offset col compression ratio: "
-                      << compression_ratio(offset_column, target_format) << std::endl
-                      << " edgeId col compression ratio: "
-                      << compression_ratio(edgeId_column, target_format) << std::endl;
-
             this->current_compression = target_format;
         }
 
@@ -225,13 +224,17 @@ namespace morphstore{
         }
 
         std::string get_column_info(const column_base *column) {
-            return " values: " + std::to_string(column->get_count_values()) + " size in bytes: " + std::to_string(column->get_size_used_byte());
+            return " values: " + std::to_string(column->get_count_values()) +
+                   " size in bytes: " + std::to_string(column->get_size_used_byte()) +
+                   " compression ratio: " + std::to_string(compression_ratio(column, current_compression));
         }
 
         void statistics() override {
             Graph::statistics();
             std::cout << "offset column: " << get_column_info(offset_column) << std::endl;
             std::cout << "edgeId column: " << get_column_info(edgeId_column) << std::endl;
+            std::cout << "--------------------------------------------" << std::endl;
+            std::cout << std::endl << std::endl;
         }
     };
 }
