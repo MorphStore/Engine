@@ -23,24 +23,12 @@
 
 #include <core/storage/graph/formats/csr.h>
 #include <core/storage/graph/edge/edges_container.h>
-#include <chrono>
 #include <random>
-#include <algorithm>
+#include "benchmark_helper.h"
 
 
-typedef std::chrono::high_resolution_clock highResClock;
 using namespace morphstore;
 
-int64_t get_duration(std::chrono::time_point<std::chrono::system_clock> start) {
-    auto stop = highResClock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
-}
-
-int64_t get_median(std::vector<int64_t> values) {
-    assert(values.size() > 0);
-    std::nth_element(values.begin(), values.begin() + values.size()/2, values.end());
-    return values[values.size()/2];
-}
 
 int main(void) {
     // TODO: use core/utils/monitoring.h ? or a "time_it" function to stop a given function
