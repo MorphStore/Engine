@@ -28,6 +28,7 @@ set( LOG_FILE "recentMorphStoreProjectConf.log" )
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	morph_flag(-g)
+	morph_flag(-DNDEBUG)
 	message(STATUS "MorphStore is configured in DEBUG mode.")
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 	morph_flag(-O2)
