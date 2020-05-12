@@ -216,6 +216,14 @@ namespace morphstore{
             return out_edge_ids;
         }
 
+        double offset_column_compr_ratio() {
+            return compression_ratio(offset_column, current_compression);
+        }
+
+        double edgeId_column_compr_ratio() {
+            return compression_ratio(edgeId_column, current_compression);
+        }
+
         // for debugging:
         // TODO: simply by using a get_outgoing_edges(id) method
         void print_neighbors_of_vertex(uint64_t id) override{
