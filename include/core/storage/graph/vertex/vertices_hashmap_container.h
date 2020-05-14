@@ -19,7 +19,7 @@
  * @file vertices__hashmap_container.h
  * @brief storing vertices using a hashmap
  * @todo
-*/
+ */
 
 #ifndef MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
 #define MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
@@ -30,54 +30,45 @@
 #include <map>
 #include <unordered_map>
 
-namespace morphstore{
+namespace morphstore {
 
-    class VerticesHashMapContainer : public VerticesContainer{
-        protected:
-            std::unordered_map<uint64_t , Vertex> vertices;
+    class VerticesHashMapContainer : public VerticesContainer {
+    protected:
+        std::unordered_map<uint64_t, Vertex> vertices;
 
-        public:
-            std::string container_description() const override {
-                return "unordered_map<uint64_t , Vertex>";
+    public:
+        std::string container_description() const override { return "unordered_map<uint64_t , Vertex>"; }
+
+        void allocate(const uint64_t expected_vertices) override {
+            VerticesContainer::allocate(expected_vertices);
+            this->vertices.reserve(expected_vertices);
+        }
+
+        void insert_vertex(const Vertex v) override { vertices[v.getID()] = v; }
+
+        Vertex get_vertex(uint64_t id) override { return vertices[id]; }
+
+        bool exists_vertex(const uint64_t id) const override {
+            if (vertices.find(id) == vertices.end()) {
+                return false;
             }
+            return true;
+        }
 
-            void allocate(const uint64_t expected_vertices) override {
-                VerticesContainer::allocate(expected_vertices);
-                this->vertices.reserve(expected_vertices);
-            }
-            
-            void insert_vertex(const Vertex v) override {
-                vertices[v.getID()] = v;
-            }
+        uint64_t vertex_count() const { return vertices.size(); }
 
-            Vertex get_vertex(uint64_t id) override {
-                return vertices[id];
-            }
+        std::pair<size_t, size_t> get_size() const override {
+            auto [index_size, data_size] = VerticesContainer::get_size();
 
-            bool exists_vertex(const uint64_t id) const override {
-                if(vertices.find(id) == vertices.end()){
-                    return false;
-                }
-                return true;
-            }
+            // container for indexes:
+            index_size += sizeof(std::unordered_map<uint64_t, Vertex>);
+            // index size of vertex: size of id and sizeof pointer
+            index_size += vertices.size() * sizeof(uint64_t);
+            data_size += vertices.size() * Vertex::get_data_size_of_vertex();
 
-            uint64_t vertex_count() const {
-                return vertices.size();
-            }
-
-            std::pair<size_t, size_t> get_size() const override {
-                auto [index_size, data_size] = VerticesContainer::get_size();
-
-                // container for indexes:
-                index_size += sizeof(std::unordered_map<uint64_t, Vertex>);
-                // index size of vertex: size of id and sizeof pointer
-                index_size += vertices.size() * sizeof(uint64_t);
-                data_size += vertices.size() * Vertex::get_data_size_of_vertex();
-                
-
-                return {index_size, data_size};
-            }
+            return {index_size, data_size};
+        }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H
+#endif // MORPHSTORE_VERTICES_HASHMAP_CONTAINER_H

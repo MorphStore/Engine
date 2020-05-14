@@ -19,25 +19,25 @@
  * @file vertex.h
  * @brief abstract vertex class for storage formats
  * @todo
-*/
+ */
 
 #ifndef MORPHSTORE_VERTEX_H
 #define MORPHSTORE_VERTEX_H
 
 #include <core/storage/graph/property_type.h>
 
-#include <unordered_map>
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
-namespace morphstore{
+namespace morphstore {
 
-    class Vertex{
+    class Vertex {
 
     protected:
         // vertex: id,
-        uint64_t id;      
+        uint64_t id;
         // optional: type, properties
         unsigned short int type;
 
@@ -45,30 +45,24 @@ namespace morphstore{
         bool valid = false;
 
     public:
-        // default constr. needed for VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties)
-        // otherwise compiler won't accept
-        Vertex() {};
+        // default constr. needed for VertexWithProperties(Vertex vertex, const std::unordered_map<std::string,
+        // property_type> properties) otherwise compiler won't accept
+        Vertex(){};
 
-        Vertex(uint64_t id, unsigned short int type = 0){
+        Vertex(uint64_t id, unsigned short int type = 0) {
             this->id = id;
             this->type = type;
             this->valid = true;
         }
 
-        uint64_t getID() const {
-            return id;
-        }
+        uint64_t getID() const { return id; }
 
-        unsigned short getType() const {
-            return type;
-        }
+        unsigned short getType() const { return type; }
 
-        bool isValid() const {
-            return valid;
-        }
+        bool isValid() const { return valid; }
 
         // this is needed when using VerticesVectorArrayContainer when doing vertex_array[offset] = vertex
-        Vertex& operator= (const Vertex &vertex){
+        Vertex &operator=(const Vertex &vertex) {
             // self-assignment guard
             if (this == &vertex)
                 return *this;
@@ -82,12 +76,12 @@ namespace morphstore{
             return *this;
         }
 
-         // get size of vertex in bytes:
+        // get size of vertex in bytes:
         static size_t get_data_size_of_vertex() {
             size_t size = 0;
-            size += sizeof(uint64_t); // id
+            size += sizeof(uint64_t);           // id
             size += sizeof(unsigned short int); // entity
-            size += sizeof(bool); // valid flag
+            size += sizeof(bool);               // valid flag
 
             return size;
         }
@@ -95,28 +89,23 @@ namespace morphstore{
 
     // convinience class for returning whole vertices
     class VertexWithProperties {
-        private:
-            Vertex vertex;
-            std::unordered_map<std::string, property_type> properties;
-        public:
-            VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties) {
-                this->vertex = vertex;
-                this->properties = properties;
-            }
+    private:
+        Vertex vertex;
+        std::unordered_map<std::string, property_type> properties;
 
-            uint64_t getID() {
-                return vertex.getID();
-            }
+    public:
+        VertexWithProperties(Vertex vertex, const std::unordered_map<std::string, property_type> properties) {
+            this->vertex = vertex;
+            this->properties = properties;
+        }
 
-            unsigned short getType() const {
-                return vertex.getType();
-            }
+        uint64_t getID() { return vertex.getID(); }
 
-            std::unordered_map<std::string, property_type> getProperties() {
-                return properties;
-            }
+        unsigned short getType() const { return vertex.getType(); }
+
+        std::unordered_map<std::string, property_type> getProperties() { return properties; }
     };
 
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_VERTEX_H
+#endif // MORPHSTORE_VERTEX_H

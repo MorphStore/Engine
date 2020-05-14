@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -21,95 +21,91 @@
  * @todo Fix edge id generation for benchmark to work
  */
 
-#include <core/storage/graph/formats/csr.h>
-#include <core/storage/graph/edge/edges_container.h>
-#include <random>
 #include "benchmark_helper.h"
-
+#include <core/storage/graph/edge/edges_container.h>
+#include <core/storage/graph/formats/csr.h>
+#include <random>
 
 using namespace morphstore;
 
-
 int main(void) {
-    // TODO: use core/utils/monitoring.h ? or a "time_it" function to stop a given function
+    // use BenchmarkEntry struct instead of appending to string  
 
     int number_of_executions = 5;
 
     std::cout << "Test edge storage structure (median of 5 for full_iterate and random access)" << std::endl;
-    std::cout << "Container type | edge_count | loading time in μs | memory usage in bytes | full_iterate in μs | random access 1/10 of the edge count in μs" << std::endl;
+    std::cout << "Container type | edge_count | loading time in μs | memory usage in bytes | full_iterate in μs | "
+                 "random access 1/10 of the edge count in μs"
+              << std::endl;
 
-    std::vector<EdgesContainerType> storage_types = {
-        EdgesContainerType::HashMapContainer,
-        EdgesContainerType::VectorArrayContainer
-        };
+    std::vector<EdgesContainerType> storage_types = {EdgesContainerType::HashMapContainer,
+                                                     EdgesContainerType::VectorArrayContainer};
 
     std::vector<int> edge_counts = {10000, 100000, 1000000, 2000000, 5000000, 10000000, 15000000};
 
-    for (int edge_count: edge_counts) {
-      std::random_device rd;
-      std::uniform_int_distribution<uint64_t> dist(0, edge_count - 1);
-      std::vector<int> random_accesses;
-      for (int i = 0; i < edge_count; i++) {
-        random_accesses.push_back(dist(rd));
-      }
-
-      for (auto storage_type : storage_types) {
-        std::unique_ptr<CSR> graph = std::make_unique<CSR>(storage_type);
-        graph->allocate_graph_structure(1, edge_count);
-
-        std::string measurement_entry =
-            graph->edges_container_description() + " | ";
-        measurement_entry += std::to_string(edge_count) + " | ";
-
-        auto vertex_id = graph->add_vertex(0);
-        std::vector<Edge> edges;
-        
+    for (int edge_count : edge_counts) {
+        std::random_device rd;
+        std::uniform_int_distribution<uint64_t> dist(0, edge_count - 1);
+        std::vector<int> random_accesses;
         for (int i = 0; i < edge_count; i++) {
-          edges.push_back(Edge(i, vertex_id, vertex_id, 0));
+            random_accesses.push_back(dist(rd));
         }
 
-        auto start = highResClock::now();
-        graph->add_edges(vertex_id, edges);
-        // loading time 
-        measurement_entry += std::to_string(get_duration(start)) + " | ";
+        for (auto storage_type : storage_types) {
+            std::unique_ptr<CSR> graph = std::make_unique<CSR>(storage_type);
+            graph->allocate_graph_structure(1, edge_count);
 
-        // size
-        auto [index_size, data_size] = graph->get_size_of_graph();
-        measurement_entry += std::to_string(index_size + data_size) + " | ";
+            std::string measurement_entry = graph->edges_container_description() + " | ";
+            measurement_entry += std::to_string(edge_count) + " | ";
 
+            auto vertex_id = graph->add_vertex(0);
+            std::vector<Edge> edges;
 
-        std::vector<int64_t> durations;
+            for (int i = 0; i < edge_count; i++) {
+                edges.push_back(Edge(i, vertex_id, vertex_id, 0));
+            }
 
-        // full iterate
-        for (int exec = 0; exec < number_of_executions; exec++) {
-          auto start = highResClock::now();
-          // iterate
-          for (int i = 0; i < edge_count; i++) {
-            graph->get_edge(i);
-          }
-          durations.push_back(get_duration(start));
+            auto start = highResClock::now();
+            graph->add_edges(vertex_id, edges);
+            // loading time
+            measurement_entry += std::to_string(get_duration(start)) + " | ";
+
+            // size
+            auto [index_size, data_size] = graph->get_size_of_graph();
+            measurement_entry += std::to_string(index_size + data_size) + " | ";
+
+            std::vector<int64_t> durations;
+
+            // full iterate
+            for (int exec = 0; exec < number_of_executions; exec++) {
+                auto start = highResClock::now();
+                // iterate
+                for (int i = 0; i < edge_count; i++) {
+                    graph->get_edge(i);
+                }
+                durations.push_back(get_duration(start));
+            }
+
+            measurement_entry += std::to_string(get_median(durations)) + " | ";
+
+            // random access
+
+            durations.clear();
+
+            for (int exec = 0; exec < number_of_executions; exec++) {
+                auto start = highResClock::now();
+
+                for (int random_pos : random_accesses) {
+                    graph->get_edge(random_pos);
+                }
+
+                durations.push_back(get_duration(start));
+            }
+
+            measurement_entry += std::to_string(get_median(durations));
+
+            std::cout << measurement_entry << std::endl;
         }
-
-        measurement_entry += std::to_string(get_median(durations)) + " | ";
-
-        // random access
-
-        durations.clear();
-
-        for (int exec = 0; exec < number_of_executions; exec++) {
-          auto start = highResClock::now();
-
-          for (int random_pos : random_accesses) {
-            graph->get_edge(random_pos);
-          }
-
-          durations.push_back(get_duration(start));
-        }
-
-        measurement_entry += std::to_string(get_median(durations));
-
-        std::cout << measurement_entry << std::endl;
-      }
     }
 
     return 0;

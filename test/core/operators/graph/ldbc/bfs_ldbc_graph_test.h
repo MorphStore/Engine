@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -21,9 +21,9 @@
  * @todo
  */
 
-#include <core/storage/graph/importer/ldbc_import.h>
-#include <core/storage/graph/formats/adjacencylist.h>
 #include <core/operators/graph/top_down_bfs.h>
+#include <core/storage/graph/formats/adjacencylist.h>
+#include <core/storage/graph/importer/ldbc_import.h>
 
 void print_header(std::string storageFormat) {
 
@@ -34,21 +34,15 @@ void print_header(std::string storageFormat) {
     std::cout << "\n";
 }
 
-template <class GRAPH_FORMAT>
-void bfs_ldbc_graph_test (void) {
+template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
 
-    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
-    
+    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value,
+                  "type parameter of this method must be a graph format");
+
     std::string sourceDir = "";
-    std::string targetDir = "";
-
 
     if (sourceDir.empty()) {
         throw std::invalid_argument("Where are the ldbc files??");
-    }
-
-    if (targetDir.empty()) {
-        throw std::invalid_argument("Degree count has to be saved somewhere");
     }
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
@@ -58,7 +52,6 @@ void bfs_ldbc_graph_test (void) {
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
-
 
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
@@ -70,5 +63,5 @@ void bfs_ldbc_graph_test (void) {
     auto bfs = std::make_unique<morphstore::BFS>(graph);
     // for scale factor 1 and including static as well as dynamic part of the graph
     std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
-    //bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
+    // bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
 }

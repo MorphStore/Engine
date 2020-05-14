@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -20,8 +20,8 @@
  * @brief Base test for testing graph formats on a very simple graph
  * @todo
  */
-#include <core/storage/graph/graph.h>
 #include <assert.h>
+#include <core/storage/graph/graph.h>
 
 void print_header(std::string storageFormat) {
     std::cout << "\n";
@@ -31,14 +31,14 @@ void print_header(std::string storageFormat) {
     std::cout << "\n";
 }
 
-template <class GRAPH_FORMAT>
-void simpleGraphFormatTest (void) {
-    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
+template <class GRAPH_FORMAT> void simpleGraphFormatTest(void) {
+    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value,
+                  "type parameter of this method must be a graph format");
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
     print_header(graph->get_storage_format());
 
-     graph->allocate_graph_structure(3, 3);
+    graph->allocate_graph_structure(3, 3);
 
     std::map<unsigned short, std::string> edgeTypeMap = {{1, "knows"}, {2, "likes"}};
     std::map<unsigned short, std::string> vertexTypeMap = {{0, "Person"}};
@@ -79,4 +79,3 @@ void simpleGraphFormatTest (void) {
 
     //assert(false);
 }
-

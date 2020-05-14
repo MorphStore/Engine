@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -19,19 +19,19 @@
  * @file csr.h
  * @brief Derived CSR storage format class. Base: graph.h
  * @todo Edge_value_array should only store edge-ids (not whole objects)
-*/
+ */
 
 #ifndef MORPHSTORE_CSR_H
 #define MORPHSTORE_CSR_H
 
 #include <core/storage/graph/graph.h>
 
-#include <stdexcept>
 #include <assert.h>
+#include <stdexcept>
 
-namespace morphstore{
+namespace morphstore {
 
-    class CSR: public Graph{
+    class CSR : public Graph {
 
     private:
         /* graph topology:
@@ -53,11 +53,10 @@ namespace morphstore{
         CSR(VerticesContainerType vertices_container_type = VerticesContainerType::VectorArrayContainer)
             : Graph(vertices_container_type) {}
 
-        std::string get_storage_format() const override {
-            return "CSR";
-        }
+        std::string get_storage_format() const override { return "CSR"; }
 
-        // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph topology arrays
+        // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph
+        // topology arrays
         // TODO: test that no data exists before (as this will get overwritten)
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
@@ -71,7 +70,7 @@ namespace morphstore{
             edgeId_column->set_meta_data(numberEdges, edge_ids_size);
 
             // init node array:
-            uint64_t* offset_data = offset_column->get_data();
+            uint64_t *offset_data = offset_column->get_data();
             offset_data[0] = 0;
         }
 
@@ -84,18 +83,18 @@ namespace morphstore{
         // every vertex id contains a list of its neighbors
         void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
             // TODO: throw error if not in order of vertex-ids ASC inserted (currently will only produce rubbish data)
-            // TODO: handle if sourceIDs are skipped 
-            // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and insert offsets for skipped vertices
-            assert(expectedEdgeCount >= getEdgeCount()+edgesToAdd.size());
+            // TODO: handle if sourceIDs are skipped
+            // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and
+            // insert offsets for skipped vertices
+            assert(expectedEdgeCount >= getEdgeCount() + edgesToAdd.size());
 
             // currently only read-only if compressed
             if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
-                throw std::runtime_error(
-                    "Edge insertion only allowed in uncompressed format. Current format: " +
-                    graph_compr_f_to_string(current_compression));
+                throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " +
+                                         graph_compr_f_to_string(current_compression));
             }
 
-            uint64_t* offset_data = offset_column->get_data();
+            uint64_t *offset_data = offset_column->get_data();
             uint64_t offset = offset_data[sourceID];
             uint64_t nextOffset = offset + edgesToAdd.size();
 
@@ -105,9 +104,9 @@ namespace morphstore{
 
             // fill the arrays
             // TODO: fill array using memcpy? (put edgeIds into vector as prepare step)
-            uint64_t* edgeId_data = edgeId_column->get_data();
-            for(const auto& edge : edgesToAdd){
-                 if(!vertices->exists_vertex(edge.getTargetId())) {
+            uint64_t *edgeId_data = edgeId_column->get_data();
+            for (const auto &edge : edgesToAdd) {
+                if (!vertices->exists_vertex(edge.getTargetId())) {
                     throw std::runtime_error("Target not found " + edge.to_string());
                 }
                 edgeId_data[offset] = edge.getId();
@@ -116,8 +115,8 @@ namespace morphstore{
             }
 
             // to avoid buffer overflow:
-            if(sourceID < getExpectedVertexCount()-1){
-                offset_data[sourceID+1] = nextOffset;
+            if (sourceID < getExpectedVertexCount() - 1) {
+                offset_data[sourceID + 1] = nextOffset;
             }
         }
 
@@ -126,16 +125,16 @@ namespace morphstore{
             // decompressing offset_column in order to read correct offset
             // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
             auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
-            uint64_t* offset_data = uncompr_offset_col->get_data();
+            uint64_t *offset_data = uncompr_offset_col->get_data();
 
             uint64_t offset = offset_data[id];
             uint64_t nextOffset;
 
             // special case: last vertex id has no next offset
-            if(id == getVertexCount() -1){
+            if (id == getVertexCount() - 1) {
                 nextOffset = getEdgeCount();
-            }else{
-                nextOffset = offset_data[id+1];
+            } else {
+                nextOffset = offset_data[id + 1];
             }
 
             // deleting temporary column
@@ -165,7 +164,8 @@ namespace morphstore{
         void morph(GraphCompressionFormat target_format) override {
 #if DEBUG
             std::cout << "Morphing graph format specific data structures from "
-                      << graph_compr_f_to_string(current_compression) << " to " << graph_compr_f_to_string(target_format) << std::endl;
+                      << graph_compr_f_to_string(current_compression) << " to "
+                      << graph_compr_f_to_string(target_format) << std::endl;
 #endif
             if (current_compression == target_format) {
 #if DEBUG
@@ -174,15 +174,17 @@ namespace morphstore{
                 return;
             }
 
-            offset_column = const_cast<column_base*>(morph_graph_col(offset_column, current_compression, target_format, true));
-            edgeId_column = const_cast<column_base*>(morph_graph_col(edgeId_column, current_compression, target_format, true));
+            offset_column =
+                const_cast<column_base *>(morph_graph_col(offset_column, current_compression, target_format, true));
+            edgeId_column =
+                const_cast<column_base *>(morph_graph_col(edgeId_column, current_compression, target_format, true));
 
             this->current_compression = target_format;
         }
 
         // get size of storage format:
         std::pair<size_t, size_t> get_size_of_graph() const override {
-            
+
             auto [index_size, data_size] = Graph::get_size_of_graph();
 
             index_size += edgeId_column->get_size_used_byte();
@@ -216,20 +218,16 @@ namespace morphstore{
             return out_edge_ids;
         }
 
-        double offset_column_compr_ratio() {
-            return compression_ratio(offset_column, current_compression);
-        }
+        double offset_column_compr_ratio() { return compression_ratio(offset_column, current_compression); }
 
-        double edgeId_column_compr_ratio() {
-            return compression_ratio(edgeId_column, current_compression);
-        }
+        double edgeId_column_compr_ratio() { return compression_ratio(edgeId_column, current_compression); }
 
         // for debugging:
         // TODO: simply by using a get_outgoing_edges(id) method
-        void print_neighbors_of_vertex(uint64_t id) override{
+        void print_neighbors_of_vertex(uint64_t id) override {
             std::cout << "Neighbours for Vertex with id " << id << std::endl;
 
-            for(auto const edge_id: get_outgoing_edge_ids(id)){
+            for (auto const edge_id : get_outgoing_edge_ids(id)) {
                 print_edge_by_id(edge_id);
             }
         }
@@ -248,5 +246,5 @@ namespace morphstore{
             std::cout << std::endl << std::endl;
         }
     };
-}
-#endif //MORPHSTORE_CSR_H
+} // namespace morphstore
+#endif // MORPHSTORE_CSR_H

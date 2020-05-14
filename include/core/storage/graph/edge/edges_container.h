@@ -19,7 +19,7 @@
  * @file edges_container.h
  * @brief abstract class for storing edges
  * @todo an EntityContainer abstraction (reduce duplicated code)
-*/
+ */
 
 #ifndef MORPHSTORE_EDGES_CONTAINER_H
 #define MORPHSTORE_EDGES_CONTAINER_H
@@ -27,128 +27,120 @@
 #include <core/storage/graph/edge/edge.h>
 #include <core/storage/graph/property_type.h>
 
+#include <assert.h>
 #include <map>
 #include <unordered_map>
-#include <assert.h>
 #include <utility>
 
-namespace morphstore{
-    enum class EdgesContainerType {HashMapContainer, VectorArrayContainer};
+namespace morphstore {
+    enum class EdgesContainerType { HashMapContainer, VectorArrayContainer };
 
     class EdgesContainer {
-        protected:
-            uint64_t expected_edge_count = 0;
+    protected:
+        uint64_t expected_edge_count = 0;
 
-            std::map<unsigned short int, std::string> edge_type_dictionary;
+        std::map<unsigned short int, std::string> edge_type_dictionary;
 
-            // TODO: try other property storage formats than per vertex .. (triple-store or per property)
-            std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edge_properties;
+        // TODO: try other property storage formats than per vertex .. (triple-store or per property)
+        std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edge_properties;
 
-            std::string get_edge_type(unsigned short int type) const {
-                if (edge_type_dictionary.find(type) != edge_type_dictionary.end()) {
-                    return edge_type_dictionary.at(type);
-                }
-                else {
-                    return "No Matching of type-number in the database! For type " + std::to_string(type);
-                }
+        std::string get_edge_type(unsigned short int type) const {
+            if (edge_type_dictionary.find(type) != edge_type_dictionary.end()) {
+                return edge_type_dictionary.at(type);
+            } else {
+                return "No Matching of type-number in the database! For type " + std::to_string(type);
+            }
+        }
+
+    public:
+        virtual std::string container_description() const = 0;
+        virtual void insert_edge(Edge e) = 0;
+        virtual Edge get_edge(uint64_t id) = 0;
+        virtual bool exists_edge(const uint64_t id) const = 0;
+        virtual uint64_t edge_count() const = 0;
+
+        virtual void allocate(uint64_t expected_edges) {
+            edge_properties.reserve(expected_edges);
+            expected_edge_count += expected_edges;
+        }
+
+        void add_edge(Edge edge) { insert_edge(edge); }
+
+        bool has_properties(uint64_t id) { return edge_properties.find(id) != edge_properties.end(); }
+
+        void add_property_to_edge(uint64_t id, const std::pair<std::string, property_type> property) {
+            assert(exists_edge(id));
+            edge_properties[id].insert(property);
+        };
+
+        void set_edge_properties(uint64_t id, const std::unordered_map<std::string, property_type> properties) {
+            assert(exists_edge(id));
+
+            if (has_properties(id)) {
+                std::cout << "Overwritting existing properties for :";
+                print_edge_by_id(id);
+                std::cout << std::endl;
             }
 
-        public:
-            virtual std::string container_description() const = 0;
-            virtual void insert_edge(Edge e) = 0;
-            virtual Edge get_edge(uint64_t id) = 0;
-            virtual bool exists_edge(const uint64_t id) const = 0;
-            virtual uint64_t edge_count() const = 0;
+            edge_properties[id] = properties;
+        };
 
+        void set_edge_type_dictionary(const std::map<unsigned short, std::string> &types) {
+            assert(types.size() != 0);
+            this->edge_type_dictionary = types;
+        }
 
-            virtual void allocate(uint64_t expected_edges) {
-                edge_properties.reserve(expected_edges);
-                expected_edge_count += expected_edges;
+        const EdgeWithProperties get_edge_with_properties(uint64_t id) {
+            assert(exists_edge(id));
+            return EdgeWithProperties(get_edge(id), edge_properties[id]);
+        }
+
+        uint64_t edges_with_properties_count() { return edge_properties.size(); }
+
+        virtual std::pair<size_t, size_t> get_size() const {
+            size_t data_size = 0;
+            size_t index_size = 0;
+
+            // lookup type dicts
+            index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
+            for (auto &type_mapping : edge_type_dictionary) {
+                index_size += sizeof(unsigned short int);
+                index_size += sizeof(char) * (type_mapping.second.length());
             }
 
-            void add_edge(Edge edge) {
-                insert_edge(edge);
-            }
-
-            bool has_properties(uint64_t id){
-                return edge_properties.find(id) != edge_properties.end();
-            }
-
-            void add_property_to_edge(uint64_t id, const std::pair<std::string, property_type> property) {
-                assert(exists_edge(id));
-                edge_properties[id].insert(property);
-            };
-
-            void set_edge_properties(uint64_t id, const std::unordered_map<std::string, property_type> properties) {
-                assert(exists_edge(id));
-
-                if (has_properties(id)) {
-                    std::cout << "Overwritting existing properties for :";
-                    print_edge_by_id(id);
-                    std::cout << std::endl;
-                }
-
-                edge_properties[id] = properties;
-            };
-
-            void set_edge_type_dictionary(const std::map<unsigned short, std::string>& types) {
-                assert(types.size() != 0);
-                this->edge_type_dictionary = types;
-            }
-
-            const EdgeWithProperties get_edge_with_properties(uint64_t id) {
-                assert(exists_edge(id));
-                return EdgeWithProperties(get_edge(id), edge_properties[id]);
-            }
-
-            uint64_t edges_with_properties_count() {
-                return edge_properties.size();
-            }
-
-            virtual std::pair<size_t, size_t> get_size() const {
-                size_t data_size = 0;
-                size_t index_size = 0;
-
-                // lookup type dicts
-                index_size += 2 * sizeof(std::map<unsigned short int, std::string>);
-                for(auto& type_mapping : edge_type_dictionary){
-                    index_size += sizeof(unsigned short int);
-                    index_size += sizeof(char)*(type_mapping.second.length());
-                }
-
-                // edge-properties:
-                index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
-                for (const auto &property_mapping : edge_properties) {
-                    index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
-                    for (const auto &property : property_mapping.second) {
-                        data_size += sizeof(char) * property.first.length() + sizeof(property.second);
-                    }
-                }
-
-                return {index_size, data_size};
-            }
-
-            void print_type_dict(){
-                std::cout << "EdgeType-Dict: " << std::endl;
-                for (auto const &entry : edge_type_dictionary) {
-                    std::cout << entry.first << " -> " << entry.second << std::endl;
+            // edge-properties:
+            index_size += sizeof(std::unordered_map<uint64_t, std::unordered_map<std::string, std::string>>);
+            for (const auto &property_mapping : edge_properties) {
+                index_size += sizeof(uint64_t) + sizeof(std::unordered_map<std::string, std::string>);
+                for (const auto &property : property_mapping.second) {
+                    data_size += sizeof(char) * property.first.length() + sizeof(property.second);
                 }
             }
 
-            void print_edge_by_id(const uint64_t id) {
-                std::cout << "-------------- Edge ID: " << id << " --------------" << std::endl;
-                EdgeWithProperties e = get_edge_with_properties(id);
-                std::cout << e.getEdge().to_string() << std::endl;
-                std::cout << "Type: " << this->get_edge_type(e.getEdge().getType()) << std::endl;
-                std::cout << "Properties: ";
-                for (const auto entry : e.getProperties()) {
-                    auto value = entry.second;
-                    std::cout << "{" << entry.first << ": ";
-                    std::visit(PropertyValueVisitor{}, value);
-                    std::cout << "}";
-                }
+            return {index_size, data_size};
+        }
+
+        void print_type_dict() {
+            std::cout << "EdgeType-Dict: " << std::endl;
+            for (auto const &entry : edge_type_dictionary) {
+                std::cout << entry.first << " -> " << entry.second << std::endl;
             }
+        }
+
+        void print_edge_by_id(const uint64_t id) {
+            std::cout << "-------------- Edge ID: " << id << " --------------" << std::endl;
+            EdgeWithProperties e = get_edge_with_properties(id);
+            std::cout << e.getEdge().to_string() << std::endl;
+            std::cout << "Type: " << this->get_edge_type(e.getEdge().getType()) << std::endl;
+            std::cout << "Properties: ";
+            for (const auto entry : e.getProperties()) {
+                auto value = entry.second;
+                std::cout << "{" << entry.first << ": ";
+                std::visit(PropertyValueVisitor{}, value);
+                std::cout << "}";
+            }
+        }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_EDGES_CONTAINER_H
+#endif // MORPHSTORE_EDGES_CONTAINER_H

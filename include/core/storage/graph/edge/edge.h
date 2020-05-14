@@ -19,23 +19,23 @@
  * @file edge.h
  * @brief Edge class which represents an edge object between two vertices
  * @todo
-*/
+ */
 
 #ifndef MORPHSTORE_EDGE_H
 #define MORPHSTORE_EDGE_H
 
 #include <core/storage/graph/property_type.h>
 
-#include <stdint.h>
-#include <utility>
-#include <string>
 #include <iostream>
-#include <unordered_map>
 #include <memory>
+#include <stdint.h>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
-namespace morphstore{
+namespace morphstore {
 
-    class Edge{
+    class Edge {
 
     protected:
         // Edge characteristics
@@ -47,20 +47,21 @@ namespace morphstore{
         bool valid = false;
 
         uint64_t getNextEdgeId() const {
-            // Todo: enable resetting maxEdgeId 
-            // Ideal would be to pull id gen to graph.h but this requires rewriting Ldbc importer to use (edge property setting depends on it)
+            // Todo: enable resetting maxEdgeId
+            // Ideal would be to pull id gen to graph.h but this requires rewriting Ldbc importer to use (edge property
+            // setting depends on it)
             static uint64_t currentMaxEdgeId = 0;
             return currentMaxEdgeId++;
         }
 
     public:
         // default constr. needed for EdgeWithProperties constructor
-        Edge(){}
+        Edge() {}
 
         Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type)
             : Edge(getNextEdgeId(), sourceId, targetId, type) {}
 
-        Edge(uint64_t id, uint64_t sourceId, uint64_t targetId, unsigned short int type){
+        Edge(uint64_t id, uint64_t sourceId, uint64_t targetId, unsigned short int type) {
             this->sourceID = sourceId;
             this->targetID = targetId;
             this->type = type;
@@ -69,7 +70,7 @@ namespace morphstore{
         }
 
         // this is needed for csr when doing edge_array[offset] = edge...
-        Edge& operator= (const Edge &edge){
+        Edge &operator=(const Edge &edge) {
             // self-assignment guard
             if (this == &edge)
                 return *this;
@@ -87,66 +88,50 @@ namespace morphstore{
 
         // --------------- Getter and Setter ---------------
 
-        uint64_t getId() const {
-            return id;
-        }
+        uint64_t getId() const { return id; }
 
-        uint64_t getSourceId() const {
-            return sourceID;
-        }
+        uint64_t getSourceId() const { return sourceID; }
 
-        uint64_t getTargetId() const {
-            return targetID;
-        }
+        uint64_t getTargetId() const { return targetID; }
 
-        unsigned short getType() const {
-            return type;
-        }
+        unsigned short getType() const { return type; }
 
-        bool isValid() const {
-            return valid;
-        }
+        bool isValid() const { return valid; }
 
         // function for sorting algorithms in the ldbc-importer:
         // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
-        bool operator<(const Edge& e) const{
-            return getTargetId() < e.getTargetId();
-        }
+        bool operator<(const Edge &e) const { return getTargetId() < e.getTargetId(); }
 
         // get size of edge object in bytes:
         static size_t size_in_bytes() {
             size_t size = 0;
-            size += sizeof(uint64_t) * 3; // id, source- and target-id
+            size += sizeof(uint64_t) * 3;       // id, source- and target-id
             size += sizeof(unsigned short int); // type
-            size += sizeof(bool); // valid flag
+            size += sizeof(bool);               // valid flag
             return size;
         }
 
         std::string to_string() const {
-            return "(id:" + std::to_string(this->id) + " ," 
-            + std::to_string(this->sourceID) + "->" + std::to_string(this->targetID) + " ," 
-            + "valid: " + std::to_string(this->valid) + ")";
+            return "(id:" + std::to_string(this->id) + " ," + std::to_string(this->sourceID) + "->" +
+                   std::to_string(this->targetID) + " ," + "valid: " + std::to_string(this->valid) + ")";
         }
     };
 
     class EdgeWithProperties {
-        private:
-            Edge edge;
-            std::unordered_map<std::string, property_type> properties;
-        public:
-            EdgeWithProperties(Edge edge, const std::unordered_map<std::string, property_type> properties) {
-                this->edge = edge;
-                this->properties = properties;
-            }
+    private:
+        Edge edge;
+        std::unordered_map<std::string, property_type> properties;
 
-            Edge getEdge() {
-                return edge;
-            }
+    public:
+        EdgeWithProperties(Edge edge, const std::unordered_map<std::string, property_type> properties) {
+            this->edge = edge;
+            this->properties = properties;
+        }
 
-            std::unordered_map<std::string, property_type> getProperties() {
-                return properties;
-            }
+        Edge getEdge() { return edge; }
+
+        std::unordered_map<std::string, property_type> getProperties() { return properties; }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_EDGE_H
+#endif // MORPHSTORE_EDGE_H

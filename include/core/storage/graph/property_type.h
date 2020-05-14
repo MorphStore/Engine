@@ -17,32 +17,26 @@
 
 /**
  * @file property_type.h
- * @brief variant of supported data types as a property 
+ * @brief variant of supported data types as a property
  * @todo Move into dedicated sub-folder (when different property mappings exists)
-*/
+ */
 
 #ifndef MORPHSTORE_PROPERTY_TYPE_H
 #define MORPHSTORE_PROPERTY_TYPE_H
 
-#include <variant>
 #include <iostream>
+#include <variant>
 
-namespace morphstore{
+namespace morphstore {
     // only to used if properties are stored per node or triple store
     // TODO: handle date and datetime properties and maybe text
     using property_type = std::variant<std::string, uint64_t>;
 
     struct PropertyValueVisitor {
-            void operator()(const std::string &s) const {
-                std::cout << "(string) " << s;
-            }
-            void operator()(uint64_t i) const
-            {
-                std::cout << "(uint_64t) " << i;
-            }
+        void operator()(const std::string &s) const { std::cout << "(string) " << s; }
+        void operator()(uint64_t i) const { std::cout << "(uint_64t) " << i; }
     };
 
-}
+} // namespace morphstore
 
-
-#endif //MORPHSTORE_PROPERTY_TYPE_H
+#endif // MORPHSTORE_PROPERTY_TYPE_H

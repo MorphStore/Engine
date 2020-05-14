@@ -19,35 +19,34 @@
  * @file graph.h
  * @brief base graph class for any storage format --> CSR,ADJ
  * @todo
-*/
+ */
 
 #ifndef MORPHSTORE_GRAPH_H
 #define MORPHSTORE_GRAPH_H
 
-#include "vertex/vertex.h"
-#include "vertex/vertices_hashmap_container.h"
-#include "vertex/vertices_vectorarray_container.h"
 #include "edge/edge.h"
 #include "edge/edges_hashmap_container.h"
 #include "edge/edges_vectorarray_container.h"
 #include "property_type.h"
+#include "vertex/vertex.h"
+#include "vertex/vertices_hashmap_container.h"
+#include "vertex/vertices_vectorarray_container.h"
 #include <core/storage/graph/graph_compr_format.h>
 
-#include <map>
-#include <unordered_map>
-#include <iostream>
-#include <vector>
 #include <algorithm>
-#include <functional>
-#include <memory>
-#include <fstream>
-#include <sstream>
 #include <assert.h>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
 
+namespace morphstore {
 
-namespace morphstore{
-
-    class Graph{
+    class Graph {
 
     protected:
         GraphCompressionFormat current_compression = GraphCompressionFormat::UNCOMPRESSED;
@@ -83,98 +82,85 @@ namespace morphstore{
             }
         }
 
-        std::string vertices_container_description() {
-            return vertices->container_description();
-        }
+        std::string vertices_container_description() { return vertices->container_description(); }
 
-        std::string edges_container_description() {
-            return edges->container_description();
-        }
+        std::string edges_container_description() { return edges->container_description(); }
 
         // -------------------- Setters & Getters --------------------
 
-        void set_vertex_type_dictionary(const std::map<unsigned short, std::string>& types) {
+        void set_vertex_type_dictionary(const std::map<unsigned short, std::string> &types) {
             assert(types.size() != 0);
             this->vertices->set_vertex_type_dictionary(types);
         }
 
-        void setEdgeTypeDictionary(const std::map<unsigned short, std::string>& types) {
+        void setEdgeTypeDictionary(const std::map<unsigned short, std::string> &types) {
             assert(types.size() != 0);
             this->edges->set_edge_type_dictionary(types);
         }
 
-        uint64_t getExpectedVertexCount() const {
-            return expectedVertexCount;
-        }
+        uint64_t getExpectedVertexCount() const { return expectedVertexCount; }
 
-        uint64_t getVertexCount() const {
-            return vertices->vertex_count();
-        }
+        uint64_t getVertexCount() const { return vertices->vertex_count(); }
 
-        uint64_t getExpectedEdgeCount() const {
-            return expectedEdgeCount;
-        }
+        uint64_t getExpectedEdgeCount() const { return expectedEdgeCount; }
 
-        uint64_t getEdgeCount() const {
-            return edges->edge_count();
-        }
+        uint64_t getEdgeCount() const { return edges->edge_count(); }
 
-        uint64_t add_vertex(const unsigned short int type = 0, const std::unordered_map<std::string, property_type> props = {}) {
+        uint64_t add_vertex(const unsigned short int type = 0,
+                            const std::unordered_map<std::string, property_type> props = {}) {
             return vertices->add_vertex(type, props);
         };
 
         // function which returns a pointer to vertex by id
-        VertexWithProperties get_vertex(uint64_t id){
-            return vertices->get_vertex_with_properties(id);
-        }
+        VertexWithProperties get_vertex(uint64_t id) { return vertices->get_vertex_with_properties(id); }
 
         // function which returns a pointer to edge by id
-        EdgeWithProperties get_edge(uint64_t id){
-            return edges->get_edge_with_properties(id);
-        }
+        EdgeWithProperties get_edge(uint64_t id) { return edges->get_edge_with_properties(id); }
 
-	    // function to return a list of pair < vertex id, degree > DESC:
+        // function to return a list of pair < vertex id, degree > DESC:
         // TODO: move into seperate header and use graph as input parameter
-        std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC(){
+        std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC() {
             std::vector<std::pair<uint64_t, uint64_t>> vertexDegreeList;
             vertexDegreeList.reserve(getVertexCount());
             // fill the vector with every vertex key and his degree
-            for(uint64_t i = 0; i < getVertexCount(); ++i){
-/*                 if (i % 1000 == 0) {
-                    std::cout << "Degree-List - Current Progress" << i << "/" << getVertexCount() << std::endl;
-                } */
+            for (uint64_t i = 0; i < getVertexCount(); ++i) {
+                /*                 if (i % 1000 == 0) {
+                                    std::cout << "Degree-List - Current Progress" << i << "/" << getVertexCount() <<
+                   std::endl;
+                                } */
                 vertexDegreeList.push_back({i, this->get_out_degree(i)});
             }
             // sort the vector on degree DESC
-            std::sort(vertexDegreeList.begin(), vertexDegreeList.end(), [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t ,uint64_t> &right) {
-                return left.second > right.second;
-            });
+            std::sort(vertexDegreeList.begin(), vertexDegreeList.end(),
+                      [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t, uint64_t> &right) {
+                          return left.second > right.second;
+                      });
 
             return vertexDegreeList;
         }
 
         // function to measure graph characteristics (degree and count):
         // TODO: move into seperate header and use graph as input parameter
-        void measure_degree_count(std::string filePath){
+        void measure_degree_count(std::string filePath) {
             std::vector<std::pair<uint64_t, uint64_t>> verticesDegree = get_list_of_degree_DESC();
             // unordered map for mapping degree to count:
-	        std::unordered_map<uint64_t, uint64_t> results;
+            std::unordered_map<uint64_t, uint64_t> results;
 
-	        for(uint64_t i = 0; i < verticesDegree.size(); ++i){
-		        // increment count in results for a given degree:
-	    	    results[verticesDegree[i].second]++;
-	        }
+            for (uint64_t i = 0; i < verticesDegree.size(); ++i) {
+                // increment count in results for a given degree:
+                results[verticesDegree[i].second]++;
+            }
 
-	        // write to file:
-	        std::ofstream fs;
+            // write to file:
+            std::ofstream fs;
             std::stringstream ss;
             // open file for writing and delete existing stuff:
             fs.open(filePath, std::fstream::out | std::ofstream::trunc);
 
-            for(auto const& m : results){
+            for (auto const &m : results) {
                 ss << m.first << "," << m.second << "\n";
             }
-            fs << ss.str() ;
+            fs << ss.str();
             fs.close();
         }
 
@@ -195,7 +181,7 @@ namespace morphstore{
         virtual uint64_t get_out_degree(uint64_t id) = 0;
         virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
 
-	    virtual std::pair<size_t, size_t> get_size_of_graph() const {
+        virtual std::pair<size_t, size_t> get_size_of_graph() const {
             // including vertices + its properties + its type dict
             auto [index_size, data_size] = vertices->get_size();
 
@@ -210,7 +196,7 @@ namespace morphstore{
         virtual void allocate_graph_structure(uint64_t expected_vertices, uint64_t expected_edges) {
             this->expectedVertexCount = expected_vertices;
             this->expectedEdgeCount = expected_edges;
-            
+
             vertices->allocate(expected_vertices);
             edges->allocate(expected_edges);
         };
@@ -220,10 +206,11 @@ namespace morphstore{
         // for debugging
         virtual void print_neighbors_of_vertex(uint64_t id) = 0;
 
-        virtual void statistics(){
+        virtual void statistics() {
             std::cout << "---------------- Statistics ----------------" << std::endl;
             std::cout << "Number of vertices: " << getVertexCount() << std::endl;
-            std::cout << "Number of vertices with properties:" << vertices->vertices_with_properties_count() << std::endl;
+            std::cout << "Number of vertices with properties:" << vertices->vertices_with_properties_count()
+                      << std::endl;
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "Number of edges with properties:" << edges->edges_with_properties_count() << std::endl;
             std::cout << "Compression Format:" << graph_compr_f_to_string(current_compression) << std::endl;
@@ -237,18 +224,14 @@ namespace morphstore{
             std::cout << "-----------------------------------------------" << std::endl;
         }
 
-        void print_edge_by_id(uint64_t id) {
-            edges->print_edge_by_id(id);
-        }
+        void print_edge_by_id(uint64_t id) { edges->print_edge_by_id(id); }
 
-        void print_type_dicts(){
+        void print_type_dicts() {
             vertices->print_type_dict();
             edges->print_type_dict();
         }
-
     };
 
-}
+} // namespace morphstore
 
-
-#endif //MORPHSTORE_GRAPH_H
+#endif // MORPHSTORE_GRAPH_H

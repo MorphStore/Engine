@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -21,8 +21,8 @@
  * @todo
  */
 
-#include <core/storage/graph/importer/ldbc_import.h>
 #include <core/storage/graph/formats/adjacencylist.h>
+#include <core/storage/graph/importer/ldbc_import.h>
 
 void print_header(std::string storageFormat) {
     std::cout << "\n";
@@ -32,20 +32,15 @@ void print_header(std::string storageFormat) {
     std::cout << "\n";
 }
 
-template <class GRAPH_FORMAT>
-void ldbcGraphFormatTest (void) {
+template <class GRAPH_FORMAT> void ldbcGraphFormatTest(void) {
 
-    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
+    static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value,
+                  "type parameter of this method must be a graph format");
 
     std::string sourceDir = "";
-    std::string targetDir = "";
 
     if (sourceDir.empty()) {
         throw std::invalid_argument("Where are the ldbc files??");
-    }
-
-    if (targetDir.empty()) {
-        throw std::invalid_argument("Degree count has to be saved somewhere");
     }
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
@@ -56,7 +51,6 @@ void ldbcGraphFormatTest (void) {
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
-
 
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
@@ -73,8 +67,6 @@ void ldbcGraphFormatTest (void) {
 
     // measure degree distribution and write to file (file path as parameter):
     // TODO: but this into benchmark or so .. not actual test
-    //std::cout << "Measure degree count" << std::endl;
-    //graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
-
-
+    // std::cout << "Measure degree count" << std::endl;
+    // graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
 }

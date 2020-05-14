@@ -21,8 +21,8 @@
  * @todo
  */
 
-#include <core/storage/graph/formats/adjacencylist.h>
 #include "simple_graph_test.h"
+#include <core/storage/graph/formats/adjacencylist.h>
 
 int main(void) {
     simpleGraphFormatTest<morphstore::AdjacencyList>();

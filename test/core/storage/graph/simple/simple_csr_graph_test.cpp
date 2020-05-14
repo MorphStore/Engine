@@ -21,8 +21,8 @@
  * @todo
  */
 
-#include <core/storage/graph/formats/csr.h>
 #include "simple_graph_test.h"
+#include <core/storage/graph/formats/csr.h>
 
 int main(void) {
     simpleGraphFormatTest<morphstore::CSR>();

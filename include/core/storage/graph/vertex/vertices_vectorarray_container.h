@@ -19,7 +19,7 @@
  * @file vertices__vectorarray_container.h
  * @brief storing vertices using a vector of arrays
  * @todo
-*/
+ */
 
 #ifndef MORPHSTORE_VERTICES_VECTORARRAY_CONTAINER_H
 #define MORPHSTORE_VERTICES_VECTORARRAY_CONTAINER_H
@@ -27,116 +27,105 @@
 #include "vertex.h"
 #include "vertices_container.h"
 
-#include <vector>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
+#include <vector>
 
-namespace morphstore{
+namespace morphstore {
 
-    class VerticesVectorArrayContainer : public VerticesContainer{
-        protected:
-            std::vector<Vertex*> vertices;
+    class VerticesVectorArrayContainer : public VerticesContainer {
+    protected:
+        std::vector<Vertex *> vertices;
 
-            static const inline uint64_t vertex_array_size = 4096;
-            static const inline uint64_t vertices_per_array = vertex_array_size / sizeof(Vertex);
+        static const inline uint64_t vertex_array_size = 4096;
+        static const inline uint64_t vertices_per_array = vertex_array_size / sizeof(Vertex);
 
-            uint64_t number_of_vertices = 0;
-            Vertex* current_array;
-            uint64_t current_array_offset = 0;
+        uint64_t number_of_vertices = 0;
+        Vertex *current_array;
+        uint64_t current_array_offset = 0;
 
+        Vertex *allocate_vertex_array() {
+            auto array_pointer = (Vertex *)std::aligned_alloc(sizeof(Vertex), vertices_per_array * sizeof(Vertex));
 
-            Vertex* allocate_vertex_array() {
-                auto array_pointer = (Vertex *) std::aligned_alloc(
-                    sizeof(Vertex), 
-                    vertices_per_array * sizeof(Vertex));
+            vertices.push_back(array_pointer);
+            // std::cout << " Added a page" << std::endl;
+            // std::cout.flush();
 
-                vertices.push_back(array_pointer);
-                //std::cout << " Added a page" << std::endl;
-                //std::cout.flush();
+            return array_pointer;
+        }
 
-                return array_pointer;
+        inline uint64_t get_vertex_vector_number(uint64_t vertex_id) const { return vertex_id / vertices_per_array; }
+
+        inline uint64_t get_pos_in_array(uint64_t vertex_id) const { return vertex_id % vertices_per_array; }
+
+    public:
+        // TODO: make array_size based on constructor
+        // VerticesVectorArrayContainer(array_size)
+
+        ~VerticesVectorArrayContainer() {
+            // TODO: find memory leak (destructor seems not to be called)
+            std::cout << "freeing vertex pages";
+            for (auto array_pointer : this->vertices) {
+                free(array_pointer);
             }
+        }
 
-            inline uint64_t get_vertex_vector_number(uint64_t vertex_id) const {
-                return vertex_id / vertices_per_array;
+        std::string container_description() const override { return "vector<Vertex*>"; }
+
+        void allocate(const uint64_t expected_vertices) override {
+            VerticesContainer::allocate(expected_vertices);
+            this->vertices.reserve(std::ceil(expected_vertices / (double)vertices_per_array));
+
+            if (current_array == nullptr)
+                current_array = allocate_vertex_array();
+        }
+
+        void insert_vertex(Vertex v) {
+            // equals current array is full
+            if (current_array_offset == vertices_per_array) {
+                current_array = allocate_vertex_array();
+                current_array_offset = 0;
             }
+            // TODO: add check that there is no valid vertex stored there
+            //       need to solve problem that aligned_alloc randomaly inits Vertices (ignores default values)
+            current_array[current_array_offset] = v;
+            current_array_offset++;
+            number_of_vertices++;
+        }
 
-            inline uint64_t get_pos_in_array(uint64_t vertex_id) const {
-                return vertex_id % vertices_per_array;
-            }
+        Vertex get_vertex(uint64_t id) override {
+            uint64_t array_number = get_vertex_vector_number(id);
+            uint64_t pos_in_array = get_pos_in_array(id);
 
-        public:
-            // TODO: make array_size based on constructor
-            //VerticesVectorArrayContainer(array_size) 
+            // assert (pos_in_array < vertices_per_array);
+            assert(array_number < vertices.size());
 
-            ~VerticesVectorArrayContainer() {
-                // TODO: find memory leak (destructor seems not to be called)
-                std::cout << "freeing vertex pages";
-                for (auto array_pointer : this->vertices) {
-                    free(array_pointer);
-                }
-            }
+            return vertices.at(array_number)[pos_in_array];
+        }
 
-            std::string container_description() const override {
-                return "vector<Vertex*>";
-            }
+        bool exists_vertex(const uint64_t id) const override {
+            // assumes no deletion! else retrieve vertrex at position and check isValid()
+            return number_of_vertices > id;
+        }
 
-            void allocate(const uint64_t expected_vertices) override {
-                VerticesContainer::allocate(expected_vertices);
-                this->vertices.reserve(std::ceil(expected_vertices / (double) vertices_per_array));
+        uint64_t vertex_count() const override { return number_of_vertices; }
 
-                if (current_array == nullptr)
-                    current_array = allocate_vertex_array();
-            }
+        std::pair<size_t, size_t> get_size() const override {
+            auto [index_size, data_size] = VerticesContainer::get_size();
 
-            void insert_vertex(Vertex v) {
-                // equals current array is full
-                if (current_array_offset == vertices_per_array) {
-                    current_array = allocate_vertex_array();
-                    current_array_offset = 0;
-                }
-                // TODO: add check that there is no valid vertex stored there 
-                //       need to solve problem that aligned_alloc randomaly inits Vertices (ignores default values)
-                current_array[current_array_offset] = v;
-                current_array_offset++;
-                number_of_vertices++;
-            }
+            // vector count, current_array_offset
+            index_size += 2 * sizeof(uint64_t);
+            // current_array
+            index_size += sizeof(Vertex *);
 
-            Vertex get_vertex(uint64_t id) override {
-                uint64_t array_number = get_vertex_vector_number(id);
-                uint64_t pos_in_array = get_pos_in_array(id);
+            index_size += sizeof(std::vector<Vertex *>);
+            index_size += vertices.size() * sizeof(Vertex *);
+            // allocated memory for vertices
+            data_size += vertices.size() * Vertex::get_data_size_of_vertex() * vertices_per_array;
 
-                //assert (pos_in_array < vertices_per_array);
-                assert(array_number < vertices.size());
-
-                return vertices.at(array_number)[pos_in_array];
-            }
-
-            bool exists_vertex(const uint64_t id) const override {
-                // assumes no deletion! else retrieve vertrex at position and check isValid()
-                return number_of_vertices > id;
-            }
-
-            uint64_t vertex_count() const override {
-                return number_of_vertices;
-            }
-
-            std::pair<size_t, size_t> get_size() const override {
-                auto [index_size, data_size] = VerticesContainer::get_size();
-
-                // vector count, current_array_offset 
-                index_size += 2 * sizeof(uint64_t);
-                // current_array
-                index_size += sizeof(Vertex*);
-
-                index_size += sizeof(std::vector<Vertex*>);
-                index_size += vertices.size() * sizeof(Vertex*);
-                // allocated memory for vertices
-                data_size  += vertices.size() * Vertex::get_data_size_of_vertex() * vertices_per_array;
-                
-                return {index_size, data_size};
-            }
+            return {index_size, data_size};
+        }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_VERTICES_VECTORARRAY_CONTAINER_H
+#endif // MORPHSTORE_VERTICES_VECTORARRAY_CONTAINER_H

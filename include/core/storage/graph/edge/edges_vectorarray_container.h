@@ -18,8 +18,8 @@
 /**
  * @file edges__vectorarray_container.h
  * @brief storing edges using a vector of arrays
- * @todo 
-*/
+ * @todo
+ */
 
 #ifndef MORPHSTORE_EDGES_VECTORARRAY_CONTAINER_H
 #define MORPHSTORE_EDGES_VECTORARRAY_CONTAINER_H
@@ -27,111 +27,103 @@
 #include "edge.h"
 #include "edges_container.h"
 
-#include <vector>
-#include <cstdlib>
 #include <array>
+#include <cstdlib>
+#include <vector>
 
-namespace morphstore{
+namespace morphstore {
     // very different to VerticesVectorArrayContainer as edge ids are not given at insertion time!
     // and using std::array as aligned_alloc did not set invalid flag to false (could be solveable)
-    class EdgesVectorArrayContainer : public EdgesContainer{
-        protected:
-            static const inline uint64_t edge_array_size = 4096;
-            static const inline uint64_t edges_per_array = edge_array_size / sizeof(Edge);
+    class EdgesVectorArrayContainer : public EdgesContainer {
+    protected:
+        static const inline uint64_t edge_array_size = 4096;
+        static const inline uint64_t edges_per_array = edge_array_size / sizeof(Edge);
 
-            using edge_array = std::array<Edge, edges_per_array>;
-            std::vector<edge_array> edges;
+        using edge_array = std::array<Edge, edges_per_array>;
+        std::vector<edge_array> edges;
 
-            uint64_t number_of_edges = 0;
+        uint64_t number_of_edges = 0;
 
+        edge_array allocate_edge_array() {
+            edge_array array;
+            edges.push_back(array);
+            // std::cout << " Added a page" << std::endl;
+            // std::cout.flush();
 
-            edge_array allocate_edge_array() {
-                edge_array array;
-                edges.push_back(array);
-                //std::cout << " Added a page" << std::endl;
-                //std::cout.flush();
+            return array;
+        }
 
-                return array;
+        inline uint64_t get_edge_array_number(uint64_t edge_id) const { return edge_id / edges_per_array; }
+
+        inline uint64_t get_pos_in_array(uint64_t edge_id) const { return edge_id % edges_per_array; }
+
+    public:
+        std::string container_description() const override {
+            return "vector<array<Edge, " + std::to_string(edges_per_array) + ">>";
+        }
+
+        void allocate(const uint64_t expected_edges) override {
+            EdgesContainer::allocate(expected_edges);
+
+            auto array_count = std::ceil(expected_edges / (float)edges_per_array);
+            this->edges.reserve(array_count);
+
+            for (int i = 0; i < array_count; i++) {
+                allocate_edge_array();
+            }
+        }
+
+        void insert_edge(Edge e) {
+            auto array_number = get_edge_array_number(e.getId());
+            auto array_pos = get_pos_in_array(e.getId());
+
+            if (array_number >= edges.size()) {
+                throw std::runtime_error("Exceeded edge id limit: Edge id " + std::to_string(e.getId()) + " > " +
+                                         std::to_string(edges_per_array * edges.size() - 1));
             }
 
-            inline uint64_t get_edge_array_number(uint64_t edge_id) const {
-                return edge_id / edges_per_array;
-            }
+            /* if (edges.at(array_number)[array_pos].isValid()) {
+                throw std::runtime_error("Delete existing edge before overwriting it: edge-id " + e.to_string());
+            } */
 
-            inline uint64_t get_pos_in_array(uint64_t edge_id) const {
-                return edge_id % edges_per_array;
-            }      
+            edges.at(array_number)[array_pos] = e;
+            number_of_edges++;
+        }
 
-        public: 
-            std::string container_description() const override {
-                return "vector<array<Edge, " + std::to_string(edges_per_array) + ">>";
-            }
+        bool exists_edge(const uint64_t id) const override {
+            uint64_t array_number = get_edge_array_number(id);
+            uint64_t pos_in_array = get_pos_in_array(id);
 
-            void allocate(const uint64_t expected_edges) override {
-                EdgesContainer::allocate(expected_edges);
+            if (array_number >= edges.size())
+                return false;
 
-                auto array_count = std::ceil(expected_edges / (float) edges_per_array);
-                this->edges.reserve(array_count);
+            return edges.at(array_number)[pos_in_array].isValid();
+        }
 
-                for(int i = 0; i < array_count; i++) {
-                    allocate_edge_array();
-                }
-            }
+        Edge get_edge(uint64_t id) override {
+            uint64_t array_number = get_edge_array_number(id);
+            uint64_t pos_in_array = get_pos_in_array(id);
 
-            void insert_edge(Edge e) {
-                auto array_number = get_edge_array_number(e.getId());
-                auto array_pos = get_pos_in_array(e.getId());
+            assert(array_number < edges.size());
 
-                if (array_number >= edges.size()) {
-                    throw std::runtime_error("Exceeded edge id limit: Edge id " +
-                                             std::to_string(e.getId()) + " > " +
-                                             std::to_string(edges_per_array * edges.size() - 1));
-                }
+            return edges.at(array_number)[pos_in_array];
+        }
 
-                /* if (edges.at(array_number)[array_pos].isValid()) {
-                    throw std::runtime_error("Delete existing edge before overwriting it: edge-id " + e.to_string());
-                } */
- 
-                edges.at(array_number)[array_pos] = e;
-                number_of_edges++;
-            }
+        uint64_t edge_count() const override { return number_of_edges; }
 
-            bool exists_edge(const uint64_t id) const override {
-                uint64_t array_number = get_edge_array_number(id);
-                uint64_t pos_in_array = get_pos_in_array(id);
+        std::pair<size_t, size_t> get_size() const override {
+            auto [index_size, data_size] = EdgesContainer::get_size();
 
-                if (array_number >= edges.size())
-                    return false;
+            // vector count, current_array_offset
+            index_size += 2 * sizeof(uint64_t);
 
-                return edges.at(array_number)[pos_in_array].isValid();
-            }
+            index_size += sizeof(std::vector<edge_array>);
+            // allocated memory for edges
+            data_size += edges.size() * sizeof(edge_array);
 
-            Edge get_edge(uint64_t id) override {
-                uint64_t array_number = get_edge_array_number(id);
-                uint64_t pos_in_array = get_pos_in_array(id);
-
-                assert (array_number < edges.size());
-
-                return edges.at(array_number)[pos_in_array];
-            }
-
-            uint64_t edge_count() const override {
-                return number_of_edges;
-            }
-
-            std::pair<size_t, size_t> get_size() const override {
-                auto [index_size, data_size] = EdgesContainer::get_size();
-
-                // vector count, current_array_offset 
-                index_size += 2 * sizeof(uint64_t);
-
-                index_size += sizeof(std::vector<edge_array>);
-                // allocated memory for edges
-                data_size  += edges.size() * sizeof(edge_array);
-                
-                return {index_size, data_size};
-            }
+            return {index_size, data_size};
+        }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_EDGES_VECTORARRAY_CONTAINER_H
+#endif // MORPHSTORE_EDGES_VECTORARRAY_CONTAINER_H

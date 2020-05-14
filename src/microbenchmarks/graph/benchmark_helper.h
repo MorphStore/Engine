@@ -18,15 +18,15 @@
 /**
  * @file benchmark_helper.h
  * @brief Helper functions for graph benchmarks
- * @todo 
-*/
+ * @todo
+ */
 
 #ifndef BENCHMARK_HELPER
 #define BENCHMARK_HELPER
 
-#include <chrono>
 #include <algorithm>
 #include <assert.h>
+#include <chrono>
 
 namespace morphstore {
     using highResClock = std::chrono::high_resolution_clock;
@@ -43,4 +43,4 @@ namespace morphstore {
     }
 } // namespace morphstore
 
-#endif //BENCHMARK_HELPER
+#endif // BENCHMARK_HELPER
