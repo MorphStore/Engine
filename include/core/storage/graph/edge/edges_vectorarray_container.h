@@ -30,6 +30,7 @@
 #include <array>
 #include <cstdlib>
 #include <vector>
+#include <cmath>
 
 namespace morphstore {
     // very different to VerticesVectorArrayContainer as edge ids are not given at insertion time!

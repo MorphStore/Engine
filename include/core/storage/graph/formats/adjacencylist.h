@@ -222,7 +222,7 @@ namespace morphstore {
             this->finalize();
 
 #if DEBUG
-            std::cout << "Compressing graph format specific data structures using: " << to_string(target_format)
+            std::cout << "Compressing graph format specific data structures using: " << graph_compr_f_to_string(target_format)
                       << std::endl;
             auto entry_count = adjacencylistPerVertex->size();
             int progress = 0;
