@@ -35,15 +35,9 @@ void print_header(std::string storageFormat) {
 }
 
 template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
-
+#ifdef LDBC_DIR
     static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value,
                   "type parameter of this method must be a graph format");
-
-    std::string sourceDir = "";
-
-    if (sourceDir.empty()) {
-        throw std::invalid_argument("Where are the ldbc files??");
-    }
 
     std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
     std::string storageFormat = graph->get_storage_format();
@@ -51,7 +45,7 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     print_header(storageFormat);
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(sourceDir);
+    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(LDBC_DIR);
 
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
@@ -64,4 +58,7 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     // for scale factor 1 and including static as well as dynamic part of the graph
     std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
     // bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
+#else 
+    throw std::invalid_argument("Where are the ldbc files??");
+#endif
 }

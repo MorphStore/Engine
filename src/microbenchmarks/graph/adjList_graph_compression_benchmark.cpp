@@ -46,15 +46,10 @@ struct CompressionBenchmarkEntry {
 };
 
 int main(void) {
+#ifdef LDBC_DIR
     // could be also build parameters?
     const int number_of_executions = 5;
     const int number_of_random_access = 1000;
-    std::string sourceDir = "";
-
-    if (sourceDir.empty()) {
-        throw std::invalid_argument("Where are the ldbc files??");
-    }
-
 
     std::vector<GraphCompressionFormat> compr_formats = {
         GraphCompressionFormat::DELTA, 
@@ -64,7 +59,7 @@ int main(void) {
     
     // Load ldbc graph
     std::unique_ptr<AdjacencyList> graph = std::make_unique<AdjacencyList>();
-    std::unique_ptr<LDBCImport> ldbcImport = std::make_unique<LDBCImport>(sourceDir);
+    std::unique_ptr<LDBCImport> ldbcImport = std::make_unique<LDBCImport>(LDBC_DIR);
     ldbcImport->import(*graph);
 
     // prepare random-access
@@ -109,4 +104,7 @@ int main(void) {
     }
 
     return 0;
+#else 
+    throw std::invalid_argument("Where are the ldbc files??");
+#endif
 }
