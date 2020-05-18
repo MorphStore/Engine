@@ -64,7 +64,7 @@ namespace morphstore {
         // as default formats allocate to much memory for small columns
         // TODO: compress based on blocksize of format (as data smaller than blocksize gets not compressed?!)
         // TODO: as function parameter f.i. in change_min_compr_degree -> recall finalize and morph to current_compression
-        static const uint64_t min_compr_degree = 100;
+        uint64_t min_compr_degree = 1024;
 
         // convert big-enough adj-vector to a (read-only) adj-column
         void finalize() {
@@ -74,8 +74,13 @@ namespace morphstore {
                     auto adj_vector = std::get<adjacency_vector>(adj_list);
                     // this allows adding new edges to smaller adj_lists (even after morphing)
                     if (adj_vector->size() >= min_compr_degree) {
-                        auto adj_col =
+                        adjacency_column adj_col =
                             const_cast<column_uncompr *>(make_column(adj_vector->data(), adj_vector->size(), true));
+
+                        if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
+                            adj_col = const_cast<adjacency_column>(morph_graph_col(
+                                adj_col, GraphCompressionFormat::UNCOMPRESSED, current_compression, true));
+                        }
 
                         (*adjacencylistPerVertex)[id] = adj_col;
 
@@ -117,6 +122,15 @@ namespace morphstore {
             adjacencylistPerVertex->reserve(numberVertices);
         }
 
+        void set_min_compr_degree(uint64_t new_min_compr_degree) {
+            if (new_min_compr_degree > min_compr_degree) {
+                // allowing this would need re-transforming finalized columns to vectors
+                throw std::runtime_error("Only supporting an decreasing minimum compression degree");
+            }
+            this->min_compr_degree = new_min_compr_degree;
+            finalize();
+        }
+
         // adding a single edge to vertex:
         void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
             Edge e = Edge(sourceId, targetId, type);
@@ -156,6 +170,8 @@ namespace morphstore {
                 adjacencyVector->push_back(edge.getId());
             }
         }
+
+        uint64_t get_min_compr_degree() { return min_compr_degree; }
 
         // get number of neighbors of vertex with id
         uint64_t get_out_degree(uint64_t id) override {
