@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
+#include <vector>
 
 namespace morphstore {
     using highResClock = std::chrono::high_resolution_clock;
