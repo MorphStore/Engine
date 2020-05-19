@@ -49,18 +49,22 @@ template <class GRAPH_FORMAT> void simpleGraphFormatTest(void) {
     uint64_t v2 = graph->add_vertex(0);
     uint64_t v3 = graph->add_vertex(0);
 
-    auto e1 = morphstore::Edge(v1, v2, 1);
-
-    graph->add_edges(v1, {e1});
-    graph->set_edge_properties(e1.getId(), {{"rating", 42}, {"description", "has the answer to everything"}});
+    auto v1_edge_ids =
+        graph->add_edges(v1, {morphstore::EdgeWithProperties(
+                                 v1, v2, 1, {{"rating", 42}, {"description", "has the answer to everything"}})});
     graph->add_edges(v2, {morphstore::Edge(v2, v3, 2), morphstore::Edge(v2, v3, 1)});
 
     // (DEBUG)
     graph->statistics();
 
+    graph->print_neighbors_of_vertex(0);
+    /*     graph->print_neighbors_of_vertex(v1);
+        graph->print_neighbors_of_vertex(v2);
+        graph->print_neighbors_of_vertex(v3); */
+
     assert(graph->getVertexCount() == 3);
     assert(graph->getEdgeCount() == 3);
-    assert((int)graph->get_edge(e1.getId()).getProperties().size() == 2);
+    assert((int)graph->get_edge(v1_edge_ids[0]).getProperties().size() == 2);
     assert(graph->get_out_degree(v3) == 0);
     assert(graph->get_out_degree(v1) == 1);
     assert(graph->get_out_degree(v2) == 2);
@@ -69,13 +73,9 @@ template <class GRAPH_FORMAT> void simpleGraphFormatTest(void) {
 
     graph->statistics();
 
-/*     graph->print_neighbors_of_vertex(v1);
-    graph->print_neighbors_of_vertex(v2);
-    graph->print_neighbors_of_vertex(v3); */
-
     assert(graph->get_out_degree(v3) == 0);
     assert(graph->get_out_degree(v1) == 1);
     assert(graph->get_out_degree(v2) == 2);
 
-    //assert(false);
+    // assert(false);
 }

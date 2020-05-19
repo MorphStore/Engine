@@ -41,6 +41,41 @@ namespace morphstore {
         column_base *offset_column;
         column_base *edgeId_column;
 
+    protected:
+        // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
+        void add_to_vertex_edges_mapping(uint64_t sourceID, const std::vector<uint64_t> edge_ids) override {
+            // TODO: throw error if not in order of vertex-ids ASC inserted (currently will only produce rubbish data)
+            // TODO: handle if sourceIDs are skipped
+            // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and
+            // insert offsets for skipped vertices
+
+            // avoid writting more than reserved (as fixed sized columns)
+            assert(expectedEdgeCount >= getEdgeCount());
+
+            // currently only read-only if compressed
+            if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
+                throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " +
+                                         graph_compr_f_to_string(current_compression));
+            }
+
+            uint64_t *offset_data = offset_column->get_data();
+            uint64_t offset = offset_data[sourceID];
+            uint64_t nextOffset = offset + edge_ids.size();
+
+            uint64_t *edgeId_data = edgeId_column->get_data();
+            // TODO: get copy to work (should be faster than loop)
+            // std::copy(edge_ids.begin(), edge_ids.end(), edgeId_data);
+            for (auto edge_id : edge_ids) {
+                edgeId_data[offset] = edge_id;
+                offset++;
+            }
+
+            // to avoid buffer overflow:
+            if (sourceID < getExpectedVertexCount() - 1) {
+                offset_data[sourceID + 1] = nextOffset;
+            }
+        }
+
     public:
         ~CSR() {
             free(offset_column);
@@ -75,53 +110,12 @@ namespace morphstore {
         }
 
         // TODO: add a single edge in graph arrays -> needs a memory reallocating strategy
-        void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
+        uint64_t add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
             throw std::runtime_error("Singe edge addition not yet implemented for CSR" + sourceId + targetId + type);
         }
 
-        // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
-        // every vertex id contains a list of its neighbors
-        void add_edges(uint64_t sourceID, const std::vector<morphstore::Edge> edgesToAdd) override {
-            // TODO: throw error if not in order of vertex-ids ASC inserted (currently will only produce rubbish data)
-            // TODO: handle if sourceIDs are skipped
-            // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and
-            // insert offsets for skipped vertices
-            assert(expectedEdgeCount >= getEdgeCount() + edgesToAdd.size());
-
-            // currently only read-only if compressed
-            if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
-                throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " +
-                                         graph_compr_f_to_string(current_compression));
-            }
-
-            uint64_t *offset_data = offset_column->get_data();
-            uint64_t offset = offset_data[sourceID];
-            uint64_t nextOffset = offset + edgesToAdd.size();
-
-            if (!vertices->exists_vertex(sourceID)) {
-                throw std::runtime_error("Source-id not found " + std::to_string(sourceID));
-            }
-
-            // fill the arrays
-            // TODO: fill array using memcpy? (put edgeIds into vector as prepare step)
-            uint64_t *edgeId_data = edgeId_column->get_data();
-            for (const auto &edge : edgesToAdd) {
-                if (!vertices->exists_vertex(edge.getTargetId())) {
-                    throw std::runtime_error("Target not found " + edge.to_string());
-                }
-                edgeId_data[offset] = edge.getId();
-                edges->add_edge(edge);
-                ++offset;
-            }
-
-            // to avoid buffer overflow:
-            if (sourceID < getExpectedVertexCount() - 1) {
-                offset_data[sourceID + 1] = nextOffset;
-            }
-        }
-
         // get number of edges of vertex with id
-        uint64_t get_out_degree(uint64_t id) override {
+        uint64_t get_out_degree(uint64_t id) const override {
             // decompressing offset_column in order to read correct offset
             // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
             auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
@@ -148,17 +142,6 @@ namespace morphstore {
             else {
                 return nextOffset - offset;
             }
-        }
-
-        // function to return a vector of ids of neighbors for BFS alg.
-        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-            std::vector<uint64_t> targetVertexIds;
-            for (auto edge_id : get_outgoing_edge_ids(id)) {
-                assert(edges->exists_edge(edge_id));
-                targetVertexIds.push_back(edges->get_edge(edge_id).getTargetId());
-            }
-
-            return targetVertexIds;
         }
 
         void morph(GraphCompressionFormat target_format) override {
@@ -193,7 +176,7 @@ namespace morphstore {
             return {index_size, data_size};
         }
 
-        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
             assert(vertices->exists_vertex(id));
 
             std::vector<uint64_t> out_edge_ids;
@@ -221,16 +204,6 @@ namespace morphstore {
         double offset_column_compr_ratio() { return compression_ratio(offset_column, current_compression); }
 
         double edgeId_column_compr_ratio() { return compression_ratio(edgeId_column, current_compression); }
-
-        // for debugging:
-        // TODO: simply by using a get_outgoing_edges(id) method
-        void print_neighbors_of_vertex(uint64_t id) override {
-            std::cout << "Neighbours for Vertex with id " << id << std::endl;
-
-            for (auto const edge_id : get_outgoing_edge_ids(id)) {
-                print_edge_by_id(edge_id);
-            }
-        }
 
         std::string get_column_info(const column_base *column) {
             return " values: " + std::to_string(column->get_count_values()) +

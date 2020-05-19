@@ -70,7 +70,7 @@ int main(void) {
               << std::endl;
     std::cout << "Compression-Format | compression-time | offset-column compr. ratio"
               << " | edgeId-column compr. ratio | access of edges of "
-              << std::to_string(number_of_random_access) + " random vertices | full edge-list iterate" << std::endl;
+              << std::to_string(number_of_random_access) + " random vertices" << std::endl;
 
     for (auto current_f : compr_formats) {
         for (int exec = 0; exec < number_of_executions; exec++) {
@@ -101,6 +101,6 @@ int main(void) {
 
     return 0;
 #else
-        throw std::invalid_argument("Where are the ldbc files??");
+    throw std::invalid_argument("Where are the ldbc files??");
 #endif
 }

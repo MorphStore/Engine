@@ -35,68 +35,32 @@
 
 namespace morphstore {
 
+    // for loading
     class Edge {
 
     protected:
         // Edge characteristics
-        uint64_t sourceID, targetID, id;
+        uint64_t sourceId, targetId;
         unsigned short int type;
 
-        // delete flag
-        // TODO put as a std::bitset in vectorarray_container
-        bool valid = false;
-
-        uint64_t getNextEdgeId() const {
-            // Todo: enable resetting maxEdgeId
-            // Ideal would be to pull id gen to graph.h but this requires rewriting Ldbc importer to use (edge property
-            // setting depends on it)
-            static uint64_t currentMaxEdgeId = 0;
-            return currentMaxEdgeId++;
-        }
-
     public:
-        // default constr. needed for EdgeWithProperties constructor
         Edge() {}
 
-        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type)
-            : Edge(getNextEdgeId(), sourceId, targetId, type) {}
+        virtual ~Edge() = default;
 
-        Edge(uint64_t id, uint64_t sourceId, uint64_t targetId, unsigned short int type) {
-            this->sourceID = sourceId;
-            this->targetID = targetId;
+        Edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) {
+            this->sourceId = sourceId;
+            this->targetId = targetId;
             this->type = type;
-            this->id = id;
-            this->valid = true;
-        }
-
-        // this is needed for csr when doing edge_array[offset] = edge...
-        Edge &operator=(const Edge &edge) {
-            // self-assignment guard
-            if (this == &edge)
-                return *this;
-
-            // do the copy
-            this->sourceID = edge.sourceID;
-            this->targetID = edge.targetID;
-            this->type = edge.type;
-            this->id = edge.id;
-            this->valid = edge.valid;
-
-            // return the existing object so we can chain this operator
-            return *this;
         }
 
         // --------------- Getter and Setter ---------------
 
-        uint64_t getId() const { return id; }
+        uint64_t getSourceId() const { return sourceId; }
 
-        uint64_t getSourceId() const { return sourceID; }
-
-        uint64_t getTargetId() const { return targetID; }
+        uint64_t getTargetId() const { return targetId; }
 
         unsigned short getType() const { return type; }
-
-        bool isValid() const { return valid; }
 
         // function for sorting algorithms in the ldbc-importer:
         // compare target-ids and return if it's "lower" (we need the sorting for the CSR)
@@ -105,30 +69,107 @@ namespace morphstore {
         // get size of edge object in bytes:
         static size_t size_in_bytes() {
             size_t size = 0;
-            size += sizeof(uint64_t) * 3;       // id, source- and target-id
+            size += sizeof(uint64_t) * 2;       // source- and target-id
             size += sizeof(unsigned short int); // type
-            size += sizeof(bool);               // valid flag
             return size;
         }
 
-        std::string to_string() const {
-            return "(id:" + std::to_string(this->id) + " ," + std::to_string(this->sourceID) + "->" +
-                   std::to_string(this->targetID) + " ," + "valid: " + std::to_string(this->valid) + ")";
+        virtual std::string to_string() const {
+            return "(" + std::to_string(this->sourceId) + "->" + std::to_string(this->targetId) + ")";
         }
     };
 
-    class EdgeWithProperties {
+    // for internal usage
+    class EdgeWithId : public Edge {
     private:
-        Edge edge;
-        std::unordered_map<std::string, property_type> properties;
+        uint64_t id;
+
+        // delete flag
+        // TODO put as a std::bitset in vectorarray_container
+        bool valid = false;
 
     public:
-        EdgeWithProperties(Edge edge, const std::unordered_map<std::string, property_type> properties) {
-            this->edge = edge;
+        // default constr. needed for EdgeWithProperties constructor
+        EdgeWithId() {}
+
+        EdgeWithId(uint64_t id, uint64_t sourceId, uint64_t targetId, unsigned short int type)
+            : Edge(sourceId, targetId, type) {
+            this->id = id;
+            this->valid = true;
+        }
+
+        EdgeWithId(uint64_t id, Edge edge) : Edge(edge.getSourceId(), edge.getTargetId(), edge.getType()) {
+            this->id = id;
+            this->valid = true;
+        }
+
+        uint64_t getId() const { return id; }
+
+        bool isValid() const { return valid; }
+
+        // this is needed for edges_container when doing edges[id] = edge
+        EdgeWithId &operator=(const EdgeWithId &edge) {
+            // self-assignment guard
+            if (this == &edge)
+                return *this;
+
+            // do the copy
+            this->sourceId = edge.getSourceId();
+            this->targetId = edge.getTargetId();
+            this->type = edge.getType();
+            this->id = edge.getId();
+            this->valid = edge.isValid();
+
+            // return the existing object so we can chain this operator
+            return *this;
+        }
+
+        // edge size + id and valid flag
+        static size_t size_in_bytes() { return Edge::size_in_bytes() + sizeof(uint64_t) + sizeof(bool); }
+
+        std::string to_string() const override {
+            return "(id:" + std::to_string(this->id) + " ," + "valid: " + std::to_string(this->valid) +
+                   Edge::to_string() + ")";
+        }
+    };
+
+    // for loading
+    class EdgeWithProperties {
+    private:
+        std::unordered_map<std::string, property_type> properties;
+        // not using inheritance as vector<Edge> elements could not get cast to EdgeWithProperties
+        Edge edge;
+
+    public:
+        EdgeWithProperties(uint64_t sourceId, uint64_t targetId, unsigned short int type,
+                           const std::unordered_map<std::string, property_type> properties) {
+            this->edge = Edge(sourceId, targetId, type);
             this->properties = properties;
         }
 
-        Edge getEdge() { return edge; }
+        EdgeWithProperties(uint64_t sourceId, uint64_t targetId, unsigned short int type) {
+            this->edge = Edge(sourceId, targetId, type);
+        }
+
+        Edge getEdge() const { return edge; }
+
+        std::unordered_map<std::string, property_type> getProperties() { return properties; }
+
+        bool operator<(const EdgeWithProperties &e) const { return edge.getTargetId() < e.getEdge().getTargetId(); }
+    };
+
+    // for returning to user
+    class EdgeWithIdAndProperties {
+    private:
+        std::unordered_map<std::string, property_type> properties;
+        EdgeWithId edge;
+
+    public:
+        EdgeWithIdAndProperties(EdgeWithId edge, const std::unordered_map<std::string, property_type> properties) {
+            this->edge = edge;
+            this->properties = properties;
+        }
+        EdgeWithId getEdge() { return edge; }
 
         std::unordered_map<std::string, property_type> getProperties() { return properties; }
     };

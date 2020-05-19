@@ -34,17 +34,17 @@ namespace morphstore {
 
     class EdgesHashMapContainer : public EdgesContainer {
     protected:
-        std::unordered_map<uint64_t, Edge> edges;
+        std::unordered_map<uint64_t, EdgeWithId> edges;
 
     public:
-        std::string container_description() const override { return "unordered_map<uint64_t , Edge>"; }
+        std::string container_description() const override { return "unordered_map<uint64_t , EdgeWithId>"; }
 
         void allocate(const uint64_t expected_edges) override {
             EdgesContainer::allocate(expected_edges);
             this->edges.reserve(expected_edges);
         }
 
-        void insert_edge(const Edge e) override { edges[e.getId()] = e; }
+        void insert_edge(const EdgeWithId e) override { edges[e.getId()] = e; }
 
         bool exists_edge(const uint64_t id) const override {
             if (edges.find(id) == edges.end()) {
@@ -53,7 +53,7 @@ namespace morphstore {
             return true;
         }
 
-        Edge get_edge(uint64_t id) override { return edges[id]; }
+        EdgeWithId get_edge(uint64_t id) override { return edges[id]; }
 
         uint64_t edge_count() const { return edges.size(); }
 
@@ -61,10 +61,10 @@ namespace morphstore {
             auto [index_size, data_size] = EdgesContainer::get_size();
 
             // container for indexes:
-            index_size += sizeof(std::unordered_map<uint64_t, Edge>);
+            index_size += sizeof(std::unordered_map<uint64_t, EdgeWithId>);
             // index size of edge: size of id and sizeof pointer
             index_size += edges.size() * sizeof(uint64_t);
-            data_size += edges.size() * Edge::size_in_bytes();
+            data_size += edges.size() * EdgeWithId::size_in_bytes();
 
             return {index_size, data_size};
         }

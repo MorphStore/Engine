@@ -45,7 +45,9 @@ namespace morphstore {
 
         struct Adjacency_List_Size_Visitor {
             size_t operator()(const adjacency_column c) const { return c->get_size_used_byte(); }
-            size_t operator()(const adjacency_vector v) const { return sizeof(std::vector<uint64_t>) + (v->size() * sizeof(uint64_t)); }
+            size_t operator()(const adjacency_vector v) const {
+                return sizeof(std::vector<uint64_t>) + (v->size() * sizeof(uint64_t));
+            }
         };
 
         struct Adjacency_List_OutDegree_Visitor {
@@ -53,8 +55,7 @@ namespace morphstore {
                 // assuming compressed col has the same value count (would not work for RLE)
                 return c->get_count_values();
             }
-            uint64_t operator()(const adjacency_vector v) const { 
-                return v->size(); }
+            uint64_t operator()(const adjacency_vector v) const { return v->size(); }
         };
 
         // maps the a list of outgoing edges (ids) to a vertex-id
@@ -63,7 +64,8 @@ namespace morphstore {
 
         // as default formats allocate to much memory for small columns
         // TODO: compress based on blocksize of format (as data smaller than blocksize gets not compressed?!)
-        // TODO: as function parameter f.i. in change_min_compr_degree -> recall finalize and morph to current_compression
+        // TODO: as function parameter f.i. in change_min_compr_degree -> recall finalize and morph to
+        // current_compression
         uint64_t min_compr_degree = 1024;
 
         // convert big-enough adj-vector to a (read-only) adj-column
@@ -93,6 +95,30 @@ namespace morphstore {
 #if DEBUG
             std::cout << "Transformed " << vectors_transformed << " vectors into columns" << std::endl;
 #endif
+        }
+
+    protected:
+        // function that adds multiple edges (list of neighbors) at once to vertex
+        void add_to_vertex_edges_mapping(uint64_t sourceId, const std::vector<uint64_t> edge_ids) override {
+            // avoid inserting an empty adjacencyVector (waste of memory)
+            if (edge_ids.size() == 0) {
+                return;
+            }
+
+            std::vector<uint64_t> *adjacencyVector;
+            if (auto entry = adjacencylistPerVertex->find(sourceId); entry != adjacencylistPerVertex->end()) {
+                if (std::holds_alternative<adjacency_column>(entry->second)) {
+                    throw std::runtime_error("Not implemented to add edges, if adj. list is a (compressed) column");
+                }
+
+                adjacencyVector = std::get<adjacency_vector>(entry->second);
+            } else {
+                adjacencyVector = new std::vector<uint64_t>();
+                adjacencylistPerVertex->insert({sourceId, adjacencyVector});
+            }
+
+            adjacencyVector->reserve(edge_ids.size());
+            adjacencyVector->insert(adjacencyVector->end(), edge_ids.begin(), edge_ids.end());
         }
 
     public:
@@ -132,49 +158,15 @@ namespace morphstore {
         }
 
         // adding a single edge to vertex:
-        void add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
+        uint64_t add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
             Edge e = Edge(sourceId, targetId, type);
-            add_edges(sourceId, {e});
-        }
-
-        // function that adds multiple edges (list of neighbors) at once to vertex
-        void add_edges(uint64_t sourceId, const std::vector<morphstore::Edge> edgesToAdd) override {
-            if (!vertices->exists_vertex(sourceId)) {
-                throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
-            }
-
-            // avoid inserting an empty adjacencyVector (waste of memory)
-            if (edgesToAdd.size() == 0) {
-                return;
-            }
-
-            std::vector<uint64_t> *adjacencyVector;
-            if (auto entry = adjacencylistPerVertex->find(sourceId); entry != adjacencylistPerVertex->end()) {
-                if (std::holds_alternative<adjacency_column>(entry->second)) {
-                    throw std::runtime_error("Not implemented to add edges, if adj. list is a (compressed) column");
-                }
-
-                adjacencyVector = std::get<adjacency_vector>(entry->second);
-            } else {
-                adjacencyVector = new std::vector<uint64_t>();
-                adjacencylistPerVertex->insert({sourceId, adjacencyVector});
-            }
-
-            adjacencyVector->reserve(edgesToAdd.size());
-
-            for (const auto edge : edgesToAdd) {
-                if (!vertices->exists_vertex(edge.getTargetId())) {
-                    throw std::runtime_error("Target not found  :" + edge.to_string());
-                }
-                edges->add_edge(edge);
-                adjacencyVector->push_back(edge.getId());
-            }
+            return add_edges(sourceId, {e})[0];
         }
 
         uint64_t get_min_compr_degree() { return min_compr_degree; }
 
         // get number of neighbors of vertex with id
-        uint64_t get_out_degree(uint64_t id) override {
+        uint64_t get_out_degree(uint64_t id) const override {
             auto entry = adjacencylistPerVertex->find(id);
             if (entry == adjacencylistPerVertex->end()) {
                 return 0;
@@ -183,7 +175,7 @@ namespace morphstore {
             }
         }
 
-        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) {
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
             // basically column -> vector (as convinient to use in other methods)
             // maybe better idea would be to return a uint64_t* instead (together with a size value)
             std::vector<uint64_t> edge_ids;
@@ -210,19 +202,6 @@ namespace morphstore {
             return edge_ids;
         }
 
-        // get the neighbors-ids into vector for BFS alg.
-        // todo: this is actually format generic and can be pulled to graph.h
-        std::vector<uint64_t> get_neighbors_ids(uint64_t id) override {
-            std::vector<uint64_t> targetVertexIds;
-
-            for (uint64_t const edgeId : get_outgoing_edge_ids(id)) {
-                assert(edges->exists_edge(edgeId));
-                targetVertexIds.push_back(edges->get_edge(edgeId).getTargetId());
-            }
-
-            return targetVertexIds;
-        }
-
         // morphes the adj-lists to the given target_format
         // !!! first time overhead: as convert each vector to a column (finalizing) !!!
         void morph(GraphCompressionFormat target_format) override {
@@ -230,8 +209,8 @@ namespace morphstore {
             this->finalize();
 
 #if DEBUG
-            std::cout << "Compressing graph format specific data structures using: " << graph_compr_f_to_string(target_format)
-                      << std::endl;
+            std::cout << "Compressing graph format specific data structures using: "
+                      << graph_compr_f_to_string(target_format) << std::endl;
             auto entry_count = adjacencylistPerVertex->size();
             int progress = 0;
 #endif
@@ -301,20 +280,6 @@ namespace morphstore {
             }
 
             return {index_size, data_size};
-        }
-
-        // for debugging: print neighbors a vertex
-        void print_neighbors_of_vertex(uint64_t id) override {
-            std::cout << std::endl << "Neighbours for Vertex with id " << id << std::endl;
-            auto edge_ids = get_outgoing_edge_ids(id);
-
-            if (edge_ids.size() == 0) {
-                std::cout << "  No outgoing edges for vertex with id: " << id << std::endl;
-            } else {
-                for (const auto edge_id : edge_ids) {
-                    print_edge_by_id(edge_id);
-                }
-            }
         }
 
         void statistics() override {

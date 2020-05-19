@@ -38,6 +38,7 @@ namespace morphstore {
     class EdgesContainer {
     protected:
         uint64_t expected_edge_count = 0;
+        uint64_t current_max_edge_id = 0;
 
         std::map<unsigned short int, std::string> edge_type_dictionary;
 
@@ -52,10 +53,12 @@ namespace morphstore {
             }
         }
 
+        uint64_t get_next_edge_id() { return current_max_edge_id++; }
+
     public:
         virtual std::string container_description() const = 0;
-        virtual void insert_edge(Edge e) = 0;
-        virtual Edge get_edge(uint64_t id) = 0;
+        virtual void insert_edge(EdgeWithId e) = 0;
+        virtual EdgeWithId get_edge(uint64_t id) = 0;
         virtual bool exists_edge(const uint64_t id) const = 0;
         virtual uint64_t edge_count() const = 0;
 
@@ -64,7 +67,21 @@ namespace morphstore {
             expected_edge_count += expected_edges;
         }
 
-        void add_edge(Edge edge) { insert_edge(edge); }
+        uint64_t add_edge(Edge edge) {
+            auto id = get_next_edge_id();
+            insert_edge(EdgeWithId(id, edge));
+            return id;
+        }
+
+        uint64_t add_edge(EdgeWithProperties edge) {
+            auto id = add_edge(edge.getEdge());
+
+            if (auto properties = edge.getProperties(); !properties.empty()) {
+                edge_properties[id] = properties;
+            }
+
+            return id;
+        }
 
         bool has_properties(uint64_t id) { return edge_properties.find(id) != edge_properties.end(); }
 
@@ -90,9 +107,9 @@ namespace morphstore {
             this->edge_type_dictionary = types;
         }
 
-        const EdgeWithProperties get_edge_with_properties(uint64_t id) {
+        const EdgeWithIdAndProperties get_edge_with_properties(uint64_t id) {
             assert(exists_edge(id));
-            return EdgeWithProperties(get_edge(id), edge_properties[id]);
+            return EdgeWithIdAndProperties(get_edge(id), edge_properties[id]);
         }
 
         uint64_t edges_with_properties_count() { return edge_properties.size(); }
@@ -129,7 +146,7 @@ namespace morphstore {
 
         void print_edge_by_id(const uint64_t id) {
             std::cout << "-------------- Edge ID: " << id << " --------------" << std::endl;
-            EdgeWithProperties e = get_edge_with_properties(id);
+            auto e = get_edge_with_properties(id);
             std::cout << e.getEdge().to_string() << std::endl;
             std::cout << "Type: " << this->get_edge_type(e.getEdge().getType()) << std::endl;
             std::cout << "Properties: ";
@@ -139,6 +156,7 @@ namespace morphstore {
                 std::visit(PropertyValueVisitor{}, value);
                 std::cout << "}";
             }
+            std::cout << std::endl;
         }
     };
 } // namespace morphstore

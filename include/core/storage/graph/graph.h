@@ -57,6 +57,8 @@ namespace morphstore {
         std::unique_ptr<VerticesContainer> vertices;
         std::unique_ptr<EdgesContainer> edges;
 
+        virtual void add_to_vertex_edges_mapping(uint64_t sourceID, const std::vector<uint64_t> edge_ids) = 0;
+
     public:
         Graph(EdgesContainerType edges_container_type)
             : Graph(VerticesContainerType::VectorArrayContainer, edges_container_type) {}
@@ -111,11 +113,9 @@ namespace morphstore {
             return vertices->add_vertex(type, props);
         };
 
-        // function which returns a pointer to vertex by id
         VertexWithProperties get_vertex(uint64_t id) { return vertices->get_vertex_with_properties(id); }
 
-        // function which returns a pointer to edge by id
-        EdgeWithProperties get_edge(uint64_t id) { return edges->get_edge_with_properties(id); }
+        EdgeWithIdAndProperties get_edge(uint64_t id) { return edges->get_edge_with_properties(id); }
 
         // function to return a list of pair < vertex id, degree > DESC:
         // TODO: move into seperate header and use graph as input parameter
@@ -172,14 +172,60 @@ namespace morphstore {
             edges->set_edge_properties(id, properties);
         };
 
-        // -------------------- pure virtual functions --------------------
-
         virtual std::string get_storage_format() const = 0;
-        virtual void add_edge(uint64_t from, uint64_t to, unsigned short int rel) = 0;
-        virtual void add_edges(uint64_t sourceID, const std::vector<Edge> relations) = 0;
+        virtual uint64_t add_edge(uint64_t from, uint64_t to, unsigned short int type) = 0;
         virtual void morph(GraphCompressionFormat target_format) = 0;
-        virtual uint64_t get_out_degree(uint64_t id) = 0;
-        virtual std::vector<uint64_t> get_neighbors_ids(uint64_t id) = 0;
+        virtual std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const = 0;
+        virtual uint64_t get_out_degree(uint64_t id) const = 0;
+
+        // function to return a vector of ids of neighbors for BFS alg.
+        std::vector<uint64_t> get_neighbors_ids(uint64_t id) const {
+            std::vector<uint64_t> targetVertexIds;
+            for (auto edge_id : get_outgoing_edge_ids(id)) {
+                assert(edges->exists_edge(edge_id));
+                targetVertexIds.push_back(edges->get_edge(edge_id).getTargetId());
+            }
+
+            return targetVertexIds;
+        };
+
+        std::vector<uint64_t> add_edges(uint64_t sourceId, const std::vector<Edge> edges_to_add) {
+            std::vector<uint64_t> edge_ids;
+
+            if (!vertices->exists_vertex(sourceId)) {
+                throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
+            }
+
+            for (auto edge : edges_to_add) {
+                if (!vertices->exists_vertex(edge.getTargetId())) {
+                    throw std::runtime_error("Target not found  :" + edge.to_string());
+                }
+                edge_ids.push_back(edges->add_edge(edge));
+            }
+
+            add_to_vertex_edges_mapping(sourceId, edge_ids);
+
+            return edge_ids;
+        };
+
+        std::vector<uint64_t> add_edges(uint64_t sourceId, const std::vector<EdgeWithProperties> edges_to_add) {
+            std::vector<uint64_t> edge_ids;
+
+            if (!vertices->exists_vertex(sourceId)) {
+                throw std::runtime_error("Source-id not found " + std::to_string(sourceId));
+            }
+
+            for (auto edge_with_props : edges_to_add) {
+                if (auto edge = edge_with_props.getEdge(); !vertices->exists_vertex(edge.getTargetId())) {
+                    throw std::runtime_error("Target not found  :" + edge.to_string());
+                }
+                edge_ids.push_back(edges->add_edge(edge_with_props));
+            }
+
+            add_to_vertex_edges_mapping(sourceId, edge_ids);
+
+            return edge_ids;
+        };
 
         virtual std::pair<size_t, size_t> get_size_of_graph() const {
             // including vertices + its properties + its type dict
@@ -203,8 +249,18 @@ namespace morphstore {
 
         // -------------------- debugging functions --------------------
 
-        // for debugging
-        virtual void print_neighbors_of_vertex(uint64_t id) = 0;
+        void print_neighbors_of_vertex(uint64_t id) {
+            std::cout << std::endl << "Neighbours for Vertex with id " << id << std::endl;
+            auto edge_ids = get_outgoing_edge_ids(id);
+
+            if (edge_ids.size() == 0) {
+                std::cout << "  No outgoing edges for vertex with id: " << id << std::endl;
+            } else {
+                for (const auto edge_id : edge_ids) {
+                    print_edge_by_id(edge_id);
+                }
+            }
+        }
 
         virtual void statistics() {
             std::cout << "---------------- Statistics ----------------" << std::endl;

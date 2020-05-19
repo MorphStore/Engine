@@ -28,9 +28,9 @@
 #include "edges_container.h"
 
 #include <array>
+#include <cmath>
 #include <cstdlib>
 #include <vector>
-#include <cmath>
 
 namespace morphstore {
     // very different to VerticesVectorArrayContainer as edge ids are not given at insertion time!
@@ -38,9 +38,9 @@ namespace morphstore {
     class EdgesVectorArrayContainer : public EdgesContainer {
     protected:
         static const inline uint64_t edge_array_size = 4096;
-        static const inline uint64_t edges_per_array = edge_array_size / sizeof(Edge);
+        static const inline uint64_t edges_per_array = edge_array_size / sizeof(EdgeWithId);
 
-        using edge_array = std::array<Edge, edges_per_array>;
+        using edge_array = std::array<EdgeWithId, edges_per_array>;
         std::vector<edge_array> edges;
 
         uint64_t number_of_edges = 0;
@@ -60,7 +60,7 @@ namespace morphstore {
 
     public:
         std::string container_description() const override {
-            return "vector<array<Edge, " + std::to_string(edges_per_array) + ">>";
+            return "vector<array<EdgeWithId, " + std::to_string(edges_per_array) + ">>";
         }
 
         void allocate(const uint64_t expected_edges) override {
@@ -74,7 +74,7 @@ namespace morphstore {
             }
         }
 
-        void insert_edge(Edge e) {
+        void insert_edge(EdgeWithId e) {
             auto array_number = get_edge_array_number(e.getId());
             auto array_pos = get_pos_in_array(e.getId());
 
@@ -101,7 +101,7 @@ namespace morphstore {
             return edges.at(array_number)[pos_in_array].isValid();
         }
 
-        Edge get_edge(uint64_t id) override {
+        EdgeWithId get_edge(uint64_t id) override {
             uint64_t array_number = get_edge_array_number(id);
             uint64_t pos_in_array = get_pos_in_array(id);
 

@@ -64,8 +64,7 @@ namespace morphstore {
 
         // unordered_map for lookup system-id and its in the graph (for further processing, e.g. filling the edge_array
         // in the right order)
-        std::unordered_map<uint64_t, std::vector<morphstore::Edge>> vertexEdgesLookup;
-        std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edgeProperties;
+        std::unordered_map<uint64_t, std::vector<EdgeWithProperties>> vertexEdgesLookup;
 
     public:
         // directory including a static/ and dynamic/ directory like in /ldbc_snb_datagen/social_network/
@@ -303,7 +302,6 @@ namespace morphstore {
             edgeTypeLookup.clear();
             vertexTypeLookup.clear();
             edgesPaths.clear();
-            edgeProperties.clear();
             verticesPaths.clear();
             vertexEdgesLookup.clear();
         }
@@ -597,7 +595,7 @@ namespace morphstore {
 
                                         // insert edge into vertexRealtionsLookup:
                                         vertexEdgesLookup[sourceVertexId].push_back(
-                                            morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber));
+                                            EdgeWithProperties(sourceVertexId, targetVertexId, edgeTypeNumber));
                                     } else {
                                         // with properties means: toID is until the next delimiter, and then the value
                                         // for the property
@@ -607,10 +605,10 @@ namespace morphstore {
                                         value = row;
 
                                         // insert edge into vertexEdgesLookup with its edge-property:
-                                        auto edge = morphstore::Edge(sourceVertexId, targetVertexId, edgeTypeNumber);
-                                        vertexEdgesLookup[sourceVertexId].push_back(edge);
                                         // assuming all properties of an edge are defined in the same file
-                                        edgeProperties[edge.getId()] = {{propertyKey, value}};
+                                        auto edge = EdgeWithProperties(sourceVertexId, targetVertexId, edgeTypeNumber,
+                                                                       {{propertyKey, value}});
+                                        vertexEdgesLookup[sourceVertexId].push_back(edge);
                                     }
                                 }
                                 start = i; // set new starting point for buffer (otherwise it's concatenated)
@@ -647,12 +645,6 @@ namespace morphstore {
                 auto edges = vertexEdgesLookup[vertexID];
                 // add edge data:
                 graph.add_edges(vertexID, edges);
-                for (auto edge : edges) {
-                    auto entry = edgeProperties.find(edge.getId());
-                    if (entry != edgeProperties.end()) {
-                        graph.set_edge_properties(entry->first, entry->second);
-                    }
-                }
             }
         }
 

@@ -62,7 +62,7 @@ int main(void) {
             std::vector<Edge> edges;
 
             for (int i = 0; i < edge_count; i++) {
-                edges.push_back(Edge(i, vertex_id, vertex_id, 0));
+                edges.push_back(Edge(vertex_id, vertex_id, 0));
             }
 
             auto start = highResClock::now();
