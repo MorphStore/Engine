@@ -37,7 +37,7 @@ struct CompressionBenchmarkEntry {
     int64_t full_iterate;
 
     std::string to_string() {
-        return "|" + graph_compr_f_to_string(compr_format) + "|" + std::to_string(compression_time) + "|" +
+        return graph_compr_f_to_string(compr_format) + "|" + std::to_string(compression_time) + "|" +
                std::to_string(offset_col_compression_ratio) + "|" + std::to_string(edgeId_col_compression_ratio) +
                "|" + std::to_string(random_access_time);
     }

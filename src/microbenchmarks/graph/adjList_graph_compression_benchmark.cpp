@@ -38,9 +38,9 @@ struct CompressionBenchmarkEntry {
     int64_t full_iterate;
 
     std::string to_string() {
-        return "|" + graph_compr_f_to_string(compr_format) + "|" + std::to_string(min_compr_degree) + "|" +
+        return graph_compr_f_to_string(compr_format) + "|" + std::to_string(min_compr_degree) + "|" +
                std::to_string(compression_time) + "|" + std::to_string(compression_ratio) + "|" +
-               std::to_string(column_ratio) + "|" + std::to_string(random_access_time) + "|" + 
+               std::to_string(column_ratio) + "|" + std::to_string(random_access_time) + "|" +
                std::to_string(full_iterate);
     }
 };
@@ -72,7 +72,7 @@ int main(void) {
 
     std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access)" << std::endl;
     std::cout << "Compression-Format | minimum degree for compression | compression-time | "
-              << "compr. ratio | column ratio | access of edges of 5000 random vertices | full-iterate" << std::endl;
+              << "compr. ratio | column ratio | access of edges of 5000 random vertices | full-iterate " << std::endl;
 
     for (auto min_compr_degree : min_compr_degrees) {
         for (auto current_f : compr_formats) {
