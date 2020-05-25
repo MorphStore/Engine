@@ -38,7 +38,6 @@
 
 namespace morphstore {
     // TODO: allow also other vector extensions (switch from safe_morph to morph)
-    // example layout: dynamic_vbp_f<512, 32, 8>
     using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
 
     using column_uncompr = column<uncompr_f>;
@@ -67,6 +66,28 @@ namespace morphstore {
         }
 
         return desc;
+    }
+
+    // !! assuming using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>
+    size_t inline graph_compr_f_block_size(GraphCompressionFormat format) {
+        size_t block_size = 1;
+
+        switch (format) {
+        case GraphCompressionFormat::DELTA:
+            block_size = 1024;
+            break;
+        case GraphCompressionFormat::UNCOMPRESSED:
+            block_size = 1;
+            break;
+        case GraphCompressionFormat::FOR:
+            block_size = 1024;
+            break;
+        case GraphCompressionFormat::DYNAMIC_VBP:
+            block_size = 64;
+            break;
+        }
+
+        return block_size;
     }
 
     // casting the column to the actual column type before morphing (as compiler could not derive it)

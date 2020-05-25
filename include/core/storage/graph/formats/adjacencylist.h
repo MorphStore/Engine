@@ -62,9 +62,7 @@ namespace morphstore {
         std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
             new std::unordered_map<uint64_t, adjacency_list_variant>();
 
-        // as default formats allocate to much memory for small columns
-        // TODO: compress based on blocksize of format (as data smaller than blocksize gets not compressed?!)
-        // TODO: as function parameter f.i. in change_min_compr_degree -> recall finalize and morph to
+        // as formats allocate to much memory for small columns
         // current_compression
         uint64_t min_compr_degree = 1024;
 
@@ -86,7 +84,7 @@ namespace morphstore {
 
                         (*adjacencylistPerVertex)[id] = adj_col;
 
-                        // as v is not needed anymore and allocated using new
+                        // as vector is not needed anymore and allocated using new
                         delete adj_vector;
                         vectors_transformed++;
                     }
@@ -208,8 +206,17 @@ namespace morphstore {
         // morphes the adj-lists to the given target_format
         // !!! first time overhead: as convert each vector to a column (finalizing) !!!
         void morph(GraphCompressionFormat target_format) override {
-            // transform big enough vectors into columns
-            this->finalize();
+            morph(target_format, false);
+        }
+        
+        // as if blocksize > size of adjlist -> stays uncompressed but still allocates a whole block
+        void morph(GraphCompressionFormat target_format, bool blocksize_based_min_degree) {
+            if (blocksize_based_min_degree) {
+                set_min_compr_degree(graph_compr_f_block_size(target_format));
+            } else {
+                // transform big enough vectors into columns
+                this->finalize();
+            }
 
 #if DEBUG
             std::cout << "Compressing graph format specific data structures using: "
@@ -291,8 +298,8 @@ namespace morphstore {
             Graph::statistics();
             std::cout << "Number of adjacency lists:" << adjacencylistPerVertex->size() << std::endl;
             std::cout << "Min. degree for compression: " << min_compr_degree << std::endl;
-            std::cout << "Column ratio:" << column_ratio() << std::endl;
-            std::cout << "Compression ratio:" << compr_ratio() << std::endl;
+            std::cout << "Column/Vector ratio: " << column_ratio() << std::endl;
+            std::cout << "Compression ratio: " << compr_ratio() << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
             std::cout << std::endl << std::endl;
         }
