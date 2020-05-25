@@ -35,11 +35,13 @@ struct CompressionBenchmarkEntry {
     double compression_ratio;
     double column_ratio;
     int64_t random_access_time;
+    int64_t full_iterate;
 
     std::string to_string() {
         return "|" + graph_compr_f_to_string(compr_format) + "|" + std::to_string(min_compr_degree) + "|" +
                std::to_string(compression_time) + "|" + std::to_string(compression_ratio) + "|" +
-               std::to_string(column_ratio) + "|" + std::to_string(random_access_time);
+               std::to_string(column_ratio) + "|" + std::to_string(random_access_time) + "|" + 
+               std::to_string(full_iterate);
     }
 };
 
@@ -70,11 +72,12 @@ int main(void) {
 
     std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access)" << std::endl;
     std::cout << "Compression-Format | minimum degree for compression | compression-time | "
-              << "compr. ratio | column ratio | access of edges of 5000 random vertices" << std::endl;
+              << "compr. ratio | column ratio | access of edges of 5000 random vertices | full-iterate" << std::endl;
 
     for (auto min_compr_degree : min_compr_degrees) {
         for (auto current_f : compr_formats) {
-            if (min_compr_degree < 100 && (current_f != GraphCompressionFormat::DYNAMIC_VBP || current_f != GraphCompressionFormat::UNCOMPRESSED)) {
+            if (min_compr_degree < 100 && !(current_f == GraphCompressionFormat::DYNAMIC_VBP ||
+                                            current_f == GraphCompressionFormat::UNCOMPRESSED)) {
                 continue;
             }
 
@@ -103,6 +106,15 @@ int main(void) {
                     graph->get_outgoing_edge_ids(random_pos);
                 }
                 current_try.random_access_time = get_duration(start);
+
+                // full iterate
+                auto vertex_count = graph->getVertexCount();
+                start = highResClock::now();
+                for (uint64_t id = 0; id < vertex_count; id++) {
+                    graph->get_outgoing_edge_ids(id);
+                }
+
+                current_try.full_iterate = get_duration(start);
 
                 std::cout << current_try.to_string() << std::endl;
             }
