@@ -30,6 +30,7 @@
 #include <core/morphing/k_wise_ns.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/rle.h>
+#include <core/morphing/vbp_padding.h>
 #include <core/morphing/safe_morph.h>
 #include <core/storage/column.h>
 
@@ -40,12 +41,12 @@ namespace morphstore {
     // example layout: dynamic_vbp_f<512, 32, 8>
     using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
 
-    // TODO use column_base (currently not working as template argument deduction/substitution fails)
     using column_uncompr = column<uncompr_f>;
+    using column_dyn_vbp = column<DEFAULT_DYNAMIC_VBP_F(ve)>;
     using column_delta = column<DEFAULT_DELTA_DYNAMIC_VBP_F(ve)>;
     using column_for = column<DEFAULT_FOR_DYNAMIC_VBP_F(ve)>;
 
-    enum class GraphCompressionFormat { DELTA, FOR, UNCOMPRESSED };
+    enum class GraphCompressionFormat { DELTA, FOR, UNCOMPRESSED, DYNAMIC_VBP };
 
     std::string graph_compr_f_to_string(GraphCompressionFormat format) {
         std::string desc;
@@ -59,6 +60,9 @@ namespace morphstore {
             break;
         case GraphCompressionFormat::FOR:
             desc = "Frame of Reference (Default)";
+            break;
+        case GraphCompressionFormat::DYNAMIC_VBP:
+            desc = "Dynamic vertical bitpacking (Default)";
             break;
         }
 
@@ -85,6 +89,9 @@ namespace morphstore {
             case GraphCompressionFormat::FOR:
                 result = morph<ve, DEFAULT_FOR_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
                 break;
+            case GraphCompressionFormat::DYNAMIC_VBP:
+                result = morph<ve, DEFAULT_DYNAMIC_VBP_F(ve), uncompr_f>(old_col);
+                break;
             case GraphCompressionFormat::UNCOMPRESSED:
                 // handled by src_f == trg_f
                 break;
@@ -97,10 +104,8 @@ namespace morphstore {
                 result = morph<ve, uncompr_f, DEFAULT_DELTA_DYNAMIC_VBP_F(ve)>(old_col);
             } else {
                 // as direct morphing is not yet supported .. go via decompressing first
-                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
-                result = morph_graph_col(uncompr_col, GraphCompressionFormat::UNCOMPRESSED, trg_f);
-
-                delete uncompr_col;
+                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, false);
+                result = morph_graph_col(uncompr_col, GraphCompressionFormat::UNCOMPRESSED, trg_f, true);
             }
             break;
         }
@@ -110,14 +115,26 @@ namespace morphstore {
                 result = morph<ve, uncompr_f, DEFAULT_FOR_DYNAMIC_VBP_F(ve)>(old_col);
             } else {
                 // as direct morphing is not yet supported .. go via decompressing first
-                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, delete_in_col);
-                result = morph_graph_col(uncompr_col, GraphCompressionFormat::UNCOMPRESSED, trg_f);
-                delete uncompr_col;
+                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, false);
+                result = morph_graph_col(uncompr_col, GraphCompressionFormat::UNCOMPRESSED, trg_f, true);
+            }
+            break;
+        }
+        case GraphCompressionFormat::DYNAMIC_VBP: {
+            if (trg_f == GraphCompressionFormat::UNCOMPRESSED) {
+                const column_dyn_vbp *old_col = dynamic_cast<const column_dyn_vbp *>(column);
+                result = morph<ve, uncompr_f, DEFAULT_DYNAMIC_VBP_F(ve)>(old_col);
+            } else {
+                // as direct morphing is not yet supported .. go via decompressing first
+                auto uncompr_col = morph_graph_col(column, src_f, GraphCompressionFormat::UNCOMPRESSED, false);
+                // delete_in_col = true as temporary uncompr_col should always be deleted
+                result = morph_graph_col(uncompr_col, GraphCompressionFormat::UNCOMPRESSED, trg_f, true);
             }
             break;
         }
         }
 
+        // free input column if possible
         if (result != column && delete_in_col) {
             delete column;
         }

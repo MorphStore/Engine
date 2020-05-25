@@ -50,16 +50,17 @@ int main(void) {
     const int number_of_random_access = 1000;
 
     std::vector<GraphCompressionFormat> compr_formats = {GraphCompressionFormat::DELTA, GraphCompressionFormat::FOR,
+                                                         GraphCompressionFormat::DYNAMIC_VBP,
                                                          GraphCompressionFormat::UNCOMPRESSED};
 
-    std::vector<uint64_t> min_compr_degrees = {1024, 500, 100};
+    std::vector<uint64_t> min_compr_degrees = {1024, 500, 100, 64, 1};
 
     // Load ldbc graph
     std::unique_ptr<AdjacencyList> graph = std::make_unique<AdjacencyList>();
     std::unique_ptr<LDBCImport> ldbcImport = std::make_unique<LDBCImport>(LDBC_DIR);
     ldbcImport->import(*graph);
 
-    // prepare random-access
+    // prepare random-access (TODO: makes only sense if column_ratio is high enough) --> also measure full iterate here
     std::random_device rd;
     std::uniform_int_distribution<uint64_t> dist(0, graph->getVertexCount() - 1);
     std::vector<int> random_accesses;
@@ -73,6 +74,10 @@ int main(void) {
 
     for (auto min_compr_degree : min_compr_degrees) {
         for (auto current_f : compr_formats) {
+            if (min_compr_degree < 100 && (current_f != GraphCompressionFormat::DYNAMIC_VBP || current_f != GraphCompressionFormat::UNCOMPRESSED)) {
+                continue;
+            }
+
             graph->set_min_compr_degree(min_compr_degree);
 
             for (int exec = 0; exec < number_of_executions; exec++) {

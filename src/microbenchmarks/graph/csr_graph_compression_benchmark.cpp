@@ -50,7 +50,8 @@ int main(void) {
     const int number_of_random_access = 1000;
 
     std::vector<GraphCompressionFormat> compr_formats = {GraphCompressionFormat::UNCOMPRESSED,
-                                                         GraphCompressionFormat::DELTA, GraphCompressionFormat::FOR};
+                                                         GraphCompressionFormat::DELTA, GraphCompressionFormat::FOR,
+                                                         GraphCompressionFormat::DYNAMIC_VBP};
 
     // Load ldbc graph
     std::unique_ptr<CSR> graph = std::make_unique<CSR>();
