@@ -91,6 +91,9 @@ namespace morphstore {
                         vectors_transformed++;
                     }
                 }
+                // TODO: higher-min compr degree -> transform columns back to vector using:
+                // new std::vector<uint64_t>()
+                // adjacency_vector dest(src, src + n);
             }
 #if DEBUG
             std::cout << "Transformed " << vectors_transformed << " vectors into columns" << std::endl;
@@ -252,9 +255,11 @@ namespace morphstore {
             return total_compr_ratio;
         }
 
+        // ratio of adjacency columns (rest would be vectors)
         double column_ratio() const {
+            // neither coloumns or vectors
             if (getEdgeCount() == 0) {
-                return 1;
+                return -1;
             }
 
             uint64_t column_count = 0;
@@ -264,7 +269,7 @@ namespace morphstore {
                 }
             }
 
-            return (double)column_count / getEdgeCount();
+            return (double)column_count / adjacencylistPerVertex->size();
         }
 
         // for measuring the size in bytes:
