@@ -89,10 +89,11 @@ int main(void) {
                 current_try.min_compr_degree = graph->get_min_compr_degree();
 
                 // restore start state
-                graph->morph(GraphCompressionFormat::UNCOMPRESSED);
+                graph->morph(GraphCompressionFormat::UNCOMPRESSED, false);
 
                 auto start = highResClock::now();
-                graph->morph(current_f);
+                // "false" as otherwise blocksize would be set based on format
+                graph->morph(current_f, false);
                 // compression time
                 current_try.compression_time = get_duration(start);
 

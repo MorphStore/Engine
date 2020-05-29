@@ -91,7 +91,9 @@ namespace morphstore {
                 }
                 // TODO: higher-min compr degree -> transform columns back to vector using:
                 // new std::vector<uint64_t>()
-                // adjacency_vector dest(src, src + n);
+                // adjacency_vector adj_vec(src, src + n);
+                // (*adjacencylistPerVertex)[id] = adj_vec;
+                // delete old column
             }
 #if DEBUG
             std::cout << "Transformed " << vectors_transformed << " vectors into columns" << std::endl;
@@ -152,7 +154,9 @@ namespace morphstore {
         void set_min_compr_degree(uint64_t new_min_compr_degree) {
             if (new_min_compr_degree > min_compr_degree) {
                 // allowing this would need re-transforming finalized columns to vectors
-                throw std::runtime_error("Only supporting an decreasing minimum compression degree");
+                throw std::runtime_error("Only supporting an decreasing minimum compression degree (new: " +
+                                         std::to_string(new_min_compr_degree) +
+                                         ", current: " + std::to_string(min_compr_degree) + ")");
             }
             this->min_compr_degree = new_min_compr_degree;
             finalize();
@@ -204,14 +208,12 @@ namespace morphstore {
         }
 
         // morphes the adj-lists to the given target_format
-        // !!! first time overhead: as convert each vector to a column (finalizing) !!!
-        void morph(GraphCompressionFormat target_format) override {
-            morph(target_format, false);
-        }
-        
-        // as if blocksize > size of adjlist -> stays uncompressed but still allocates a whole block
+        void morph(GraphCompressionFormat target_format) override { morph(target_format, true); }
+
+        // ! vector<->column conversion overhead if min_degree is different 
         void morph(GraphCompressionFormat target_format, bool blocksize_based_min_degree) {
             if (blocksize_based_min_degree) {
+                // as if blocksize > size of adjlist -> stays uncompressed but still allocates a whole block
                 set_min_compr_degree(graph_compr_f_block_size(target_format));
             } else {
                 // transform big enough vectors into columns
@@ -231,8 +233,7 @@ namespace morphstore {
                 }
                 progress++;
 #endif
-                // currently min_compr_degree is final in adj_list and determines which adj-lists are
-                // are columns (and not a vector)
+                // adj. lists >= min_compr_degree are columns
                 if (std::holds_alternative<adjacency_column>(adj_list)) {
                     auto old_adj_col = std::get<adjacency_column>(adj_list);
                     // const_cast needed as map-value is not constant
