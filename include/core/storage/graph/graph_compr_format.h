@@ -68,22 +68,21 @@ namespace morphstore {
         return desc;
     }
 
-    // !! assuming using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>
     size_t inline graph_compr_f_block_size(GraphCompressionFormat format) {
         size_t block_size = 1;
 
         switch (format) {
         case GraphCompressionFormat::DELTA:
-            block_size = 1024;
+            block_size = DEFAULT_DELTA_DYNAMIC_VBP_F(ve)::m_BlockSize;
             break;
         case GraphCompressionFormat::UNCOMPRESSED:
-            block_size = 1;
+            block_size = uncompr_f::m_BlockSize;
             break;
         case GraphCompressionFormat::FOR:
-            block_size = 1024;
+            block_size = DEFAULT_FOR_DYNAMIC_VBP_F(ve)::m_BlockSize;
             break;
         case GraphCompressionFormat::DYNAMIC_VBP:
-            block_size = 64;
+            block_size = DEFAULT_DYNAMIC_VBP_F(ve)::m_BlockSize;
             break;
         }
 
