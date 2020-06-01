@@ -57,17 +57,17 @@ constexpr std::size_t log2( size_t n ) {
  * @param denominator
  * @return 
  */
-MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_up_div( unsigned numerator, unsigned denominator ) {
+MSV_CXX_ATTRIBUTE_INLINE constexpr size_t round_up_div( size_t numerator, size_t denominator ) {
     return ( numerator + denominator - 1 ) / denominator;
 }
 
-MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_up_to_multiple(
+MSV_CXX_ATTRIBUTE_INLINE constexpr size_t round_up_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
     return round_up_div(p_Size, p_Factor) * p_Factor;
 }
 
-MSV_CXX_ATTRIBUTE_INLINE constexpr unsigned round_down_to_multiple(
+MSV_CXX_ATTRIBUTE_INLINE constexpr size_t round_down_to_multiple(
         size_t p_Size, size_t p_Factor
 ) {
     return p_Size / p_Factor * p_Factor;
