@@ -308,29 +308,5 @@ class column : public column_base {
             );
       }
 };
-
-// used to only partial decompress column blocks (for random access)
-// blockoffsets should only be saved, if blocksize > 1 
-template< class F>
-struct column_with_blockoffsets {
-   const column<F> *  col;
-   // TODO: use std::optional
-   std::vector<uint8_t>* block_offsets;
-
-   column_with_blockoffsets(const column<F> * c) : column_with_blockoffsets(c, new std::vector<uint8_t>()) {}
-
-   column_with_blockoffsets(const column<F> * c, std::vector<uint8_t>* offsets) {
-      col = c;
-      block_offsets = offsets;
-   }
-
-   ~column_with_blockoffsets() {
-      // ? deleting the column might be not always wanted
-      delete col;
-      delete block_offsets;
-   }
-};
-
-
 }
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_H

@@ -27,6 +27,7 @@
 #include <core/morphing/format.h>
 #include <core/morphing/morph_batch.h>
 #include <core/storage/column.h>
+#include <core/storage/column_with_blockoffsets.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/morphing/morph.h>
@@ -119,14 +120,16 @@ struct morph_saving_offsets_t<t_vector_extension, t_dst_f, uncompr_f> {
     using src_f = uncompr_f;
 
     static column_with_blockoffsets<t_dst_f> *apply(const column<src_f> *inCol) {
-        if (src_f::m_BlockSize == 1) {
+        const size_t t_BlockSize = t_dst_f::m_BlockSize;
+
+        if (t_BlockSize == 1) {
             return new column_with_blockoffsets<t_dst_f>(morph<t_vector_extension, t_dst_f, src_f>(inCol));
         }
 
-        std::vector<uint8_t>* block_offsets = new std::vector<uint8_t>();
+        std::vector<const uint8_t *> *block_offsets = new std::vector<const uint8_t *>();
 
         const size_t countLog = inCol->get_count_values();
-        const size_t outCountLogCompr = round_down_to_multiple(countLog, t_dst_f::m_BlockSize);
+        const size_t outCountLogCompr = round_down_to_multiple(countLog, t_BlockSize);
         const size_t outSizeRestByte = uncompr_f::get_size_max_byte(countLog - outCountLogCompr);
         block_offsets->reserve(outCountLogCompr + 1);
 
@@ -136,12 +139,22 @@ struct morph_saving_offsets_t<t_vector_extension, t_dst_f, uncompr_f> {
                 get_size_max_byte_any_len<t_dst_f>(countLog)
         );
         uint8_t * out8 = outCol->get_data();
+        // so block_offset[x] is for x-th block 
+        block_offsets->push_back(out8);
         const uint8_t * const initOut8 = out8;
 
-        // TODO: save block_offsets (call morph_batch_t based on blocksize)
-        morph_batch<t_vector_extension, t_dst_f, src_f>(
-                in8, out8, outCountLogCompr
-        );
+        const size_t countBlocks = countLog / t_BlockSize;
+
+        // morphing each block and save the offset
+        for(size_t blockIdx = 0; blockIdx < countBlocks; blockIdx++) {
+                // only t_BlockSizeLog as only on block at a time should be morphed
+                morph_batch<t_vector_extension, t_dst_f, src_f>(
+                        in8, out8, t_BlockSize
+                );
+
+                block_offsets->push_back(out8);
+        }
+
         const size_t sizeComprByte = out8 - initOut8;
 
         // needed for last block
