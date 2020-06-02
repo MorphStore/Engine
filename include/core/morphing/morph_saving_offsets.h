@@ -91,12 +91,14 @@ column_with_blockoffsets<t_dst_f> *morph_saving_offsets(const column<t_src_f> *i
  * when the source and the destination format are the same.
  *
  * It merely returns the given column without doing any work.
+ * @todo: reneable this (currently this would be invalid, as potential block_offsets are not saved)
+ * currently has to be catched beforehand 
  */
-template <class t_vector_extension, class t_f> struct morph_saving_offsets_t<t_vector_extension, t_f, t_f> {
+/* template <class t_vector_extension, class t_f> struct morph_saving_offsets_t<t_vector_extension, t_f, t_f> {
     static column_with_blockoffsets<t_f> *apply(const column<t_f> *inCol) {
-        return column_with_blockoffsets<t_f>(inCol);
+        return new column_with_blockoffsets<t_f>(inCol);
     };
-};
+}; */
 
 /**
  * @brief A template specialization of the morph-operator handling the case
@@ -180,13 +182,10 @@ template<class t_vector_extension, class t_src_f>
 struct morph_saving_offsets_t<t_vector_extension, uncompr_f, t_src_f> {
     using dst_f = uncompr_f;
 
-    static
-    const column_with_blockoffsets<dst_f> *
-    apply(const column<t_src_f> * inCol) {
+    static column_with_blockoffsets<dst_f> *apply(const column<t_src_f> *inCol) {
         return new column_with_blockoffsets(morph<t_vector_extension, dst_f, t_src_f>(inCol));
     }
 };
-
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_MORPH_SAVING_OFFSETS_H
