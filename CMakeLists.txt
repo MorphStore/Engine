@@ -88,8 +88,8 @@ morph_flag(-march=native)
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
 
-# add resource directory for ldbc graph (something like "${HOME}/ldbc/ldbc_snb_datagen/social_network/")
-#morph_flag(-DLDBC_DIR="")
+# add resource directory for ldbc graph (something like "$ENV{HOME}/ldbc/ldbc_snb_datagen/social_network/")
+morph_flag(-DLDBC_DIR="$ENV{HOME}/ldbc/ldbc_snb_datagen/social_network/")
 
 # general compiler settings, meant for all subdirectories and tests
 morph_flag(-Werror)

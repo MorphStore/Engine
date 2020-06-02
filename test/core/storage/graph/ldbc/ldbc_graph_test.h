@@ -65,6 +65,6 @@ template <class GRAPH_FORMAT> void ldbcGraphFormatTest(void) {
     // std::cout << "Measure degree count" << std::endl;
     // graph->measure_degree_count(targetDir + "graph_degree_count_" + storageFormat + "SF1.csv");
 #else
-        throw std::invalid_argument("Where are the ldbc files??");
+        throw std::invalid_argument("You forgot to define/uncomment the LDBC_DIR (at CMakeList.txt)"); 
 #endif
 }

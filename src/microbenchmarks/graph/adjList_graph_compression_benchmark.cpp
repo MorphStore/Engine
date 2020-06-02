@@ -124,6 +124,6 @@ int main(void) {
 
     return 0;
 #else
-    throw std::invalid_argument("Where are the ldbc files??");
+    throw std::invalid_argument("You forgot to define/uncomment the LDBC_DIR (at CMakeList.txt)");
 #endif
 }

@@ -59,6 +59,6 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
     // bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
 #else 
-    throw std::invalid_argument("Where are the ldbc files??");
+    throw std::invalid_argument("You forgot to define/uncomment the LDBC_DIR (at CMakeList.txt)");
 #endif
 }
