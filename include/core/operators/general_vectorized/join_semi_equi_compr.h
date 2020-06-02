@@ -26,6 +26,10 @@
 #include <cstdint>
 #include <tuple>
 
+//
+#include <core/morphing/default_formats.h>
+#include <core/storage/replicated_column.h>
+
 namespace morphstore {
    using namespace vectorlib;
 
@@ -169,7 +173,8 @@ namespace morphstore {
 
          if(inBuildDataSizeComprByte != inBuildDataSizeUsedByte) {
             inBuildDataPtr = p_InDataLCol->get_data_uncompr_start();
-            size_t const inBuildSizeRestByte = startBuildDataPtr + inBuildDataSizeUsedByte - inBuildDataPtr;
+            //size_t const inBuildSizeRestByte = startBuildDataPtr + inBuildDataSizeUsedByte - inBuildDataPtr;
+            size_t const inBuildSizeRestByte = (p_InDataLCol->get_count_values() - p_InDataLCol->get_count_values_compr()) * sizeof(uint64_t);
 
             const size_t inBuildDataSizeUncomprVecByte = round_down_to_multiple(
                inBuildSizeRestByte, vector_size_byte::value
@@ -239,7 +244,8 @@ namespace morphstore {
             outCountLog = witProbeComprState.m_WitOutData.get_count_values();
          } else {
             inProbeDataPtr = inProbeDataRest8;
-            size_t const inProbeSizeRestByte = startProbeDataPtr + inProbeDataSizeUsedByte - inProbeDataPtr;
+            //size_t const inProbeSizeRestByte = startProbeDataPtr + inProbeDataSizeUsedByte - inProbeDataPtr;
+            size_t const inProbeSizeRestByte = (p_InDataRCol->get_count_values() - p_InDataRCol->get_count_values_compr()) * sizeof(uint64_t);
             const size_t inProbeDataSizeUncomprVecByte = round_down_to_multiple(
                inProbeSizeRestByte, vector_size_byte::value
             );
@@ -298,6 +304,104 @@ namespace morphstore {
          return outPosCol;
       }
    };
+
+// Replication
+
+template<
+      class VectorExtension,
+      class DataStructure,
+      class OutFormatCol,
+      class InFormatCol
+>
+   struct semi_equi_join_repl_t {
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+
+      // Left column is a replicated one
+      static
+      column< OutFormatCol > const *
+      apply(
+         replicated_column * const p_InDataLCol,
+         const column< InFormatCol > * const p_InDataRCol,
+         size_t const outCountEstimate = 0
+      ) {
+        void* col;
+        size_t format;
+        col = p_InDataLCol->get_column<VectorExtension>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, uncompr_f, InFormatCol>::apply(
+             return semi_join<VectorExtension, OutFormatCol, uncompr_f, InFormatCol>(
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32), InFormatCol>::apply(
+             return semi_join<VectorExtension, OutFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32), InFormatCol>(
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(VectorExtension, 32)>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension), InFormatCol>::apply(
+             return semi_join<VectorExtension, OutFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension), InFormatCol>(
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(VectorExtension)>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+        }
+      }
+
+      // Right column is a replicated one
+      static
+      column< OutFormatCol > const *
+      apply(
+         const column< InFormatCol > * const p_InDataLCol,
+         replicated_column * const p_InDataRCol,
+         size_t const outCountEstimate = 0
+      ) {
+        void* col;
+        size_t format;
+        col = p_InDataRCol->get_column<VectorExtension>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, InFormatCol, uncompr_f>::apply(
+             return semi_join<VectorExtension, OutFormatCol, InFormatCol, uncompr_f>(
+               p_InDataLCol,
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               outCountEstimate
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, InFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32)>::apply(
+             return semi_join<VectorExtension, OutFormatCol, InFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32)>(
+               p_InDataLCol,
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(VectorExtension, 32)>*>(col),
+               outCountEstimate
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             //return semi_equi_join_t<VectorExtension, DataStructure, OutFormatCol, InFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension)>::apply(
+             return semi_join<VectorExtension, OutFormatCol, InFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension)>(
+               p_InDataLCol,
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(VectorExtension)>*>(col),
+               outCountEstimate
+             );
+          }
+        }
+      }
+};
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_JOIN_SEMI_EQUI_COMPR_H

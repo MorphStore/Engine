@@ -28,14 +28,17 @@
 #define MORPHSTORE_CORE_MORPHING_DEFAULT_FORMATS_H
 
 #include <core/utils/preprocessor.h>
+#include "static_vbp.h"
+#include "dynamic_vbp.h"
 
 namespace morphstore {
     
+// bw = 32
 #define DEFAULT_STATIC_VBP_F(ve, bw) \
     SINGLE_ARG(static_vbp_f< \
             vbp_l<bw, ve::vector_helper_t::element_count::value> \
     >)
-
+// ve
 #define DEFAULT_DYNAMIC_VBP_F(ve) \
     SINGLE_ARG(dynamic_vbp_f< \
             ve::vector_helper_t::size_bit::value, \

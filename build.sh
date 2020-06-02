@@ -115,6 +115,8 @@ buildModeSet=0
 logging="-UNOLOGGING"
 debugMalloc="-UDEBUG_MALLOC"
 selfManagedMemory="-UNO_SELF_MANAGING"
+countThreads="-UCOUNT_THREADS"
+runTime="-USSB_RUNTIME"
 qmmes="-UQMMMES"
 qmmis="-UQMMIS"
 qmmae="-DQMMAE=True"
@@ -171,6 +173,16 @@ case $key in
 	-noSelfManaging)
 	selfManagedMemory="-DNO_SELF_MANAGING=True"
 	shift # past argument
+	;;
+	-ct|countThreads)
+	countThreads="-DSSB_COUNT_THREADS=$2"
+	shift # past argument
+	shift
+	;;
+	-rt|runTime)
+	runTime="-DSSB_RUNTIME=$2"
+	shift # past argument
+	shift
 	;;
 	-lc|--leakCheck)
 	checkForLeaks="-DCHECK_LEAKING=True"
@@ -367,7 +379,7 @@ addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $countThreads $runTime $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $vbpLimitRoutinesForSSBSF1 -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 set +e
 

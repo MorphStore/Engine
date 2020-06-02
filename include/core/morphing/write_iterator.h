@@ -74,7 +74,7 @@ namespace morphstore {
         // than 2048 logical data elements respectively 16ki bytes of
         // uncompressed data.
         // @todo Think about the buffer size.
-        static const size_t m_CountBuffer = round_up_to_multiple(
+        static const size_t m_CountBuffer = round_up_to_multiple(// 2048
                 t_format::m_BlockSize, 2048
         );
         // @todo We could also align it to a cache line.
@@ -91,8 +91,8 @@ namespace morphstore {
         void compress_buffer() {
             const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                     m_StartBuffer
-            );
-            morph_batch<t_ve, t_format, uncompr_f>(
+            );// buffer - pointer
+            morph_batch<t_ve, t_format, uncompr_f>(//st, dy bp pointers def_form.h, macros for def
                     buffer8, m_Out, m_CountBuffer
             );
             size_t overflow = m_Buffer - m_EndBuffer;
@@ -135,7 +135,7 @@ namespace morphstore {
          *    only meant to be used for size calculations, not for appending
          *    more data elements.
          */
-        std::tuple<size_t, uint8_t *, uint8_t *> done() {
+        std::tuple<size_t, uint8_t *, uint8_t *> done() {  // here dump to uncompr buffer
             const size_t countLog = m_Buffer - m_StartBuffer;
             size_t outSizeComprByte;
             uint8_t * outAppendUncompr;
@@ -147,7 +147,7 @@ namespace morphstore {
                 const uint8_t * buffer8 = reinterpret_cast<uint8_t *>(
                         m_StartBuffer
                 );
-                morph_batch<t_ve, t_format, uncompr_f>(
+                morph_batch<t_ve, t_format, uncompr_f>( //same as in compress
                     buffer8, m_Out, outCountLogCompr
                 );
                 outSizeComprByte = m_Out - m_InitOut;
@@ -157,8 +157,8 @@ namespace morphstore {
                     m_Out = column<t_format>::create_data_uncompr_start(m_Out);
                     const size_t sizeOutLogRest =
                             uncompr_f::get_size_max_byte(outCountLogRest);
-                    memcpy(
-                            m_Out,
+                    memcpy(  // to all replicas, 4kb per uncompr part(4096)
+                                                m_Out,
                             m_StartBuffer + outCountLogCompr,
                             sizeOutLogRest
                     );
@@ -291,17 +291,17 @@ namespace morphstore {
          * 
          * @param p_Data
          */
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data) {
-            vectorlib::store<
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data) {  //p_Data - uint64_t pointer
+            vectorlib::store< //reduce mb++ = pdata
                     t_ve,
                     vectorlib::iov::ALIGNED,
                     vector_base_t_granularity::value
             >(this->m_Buffer, p_Data);
             this->m_Buffer += vector_element_count::value;
-            if(MSV_CXX_ATTRIBUTE_UNLIKELY(this->m_Buffer >= this->m_EndBuffer))
-                this->compress_buffer();
-        }
-    };
-
+            if(MSV_CXX_ATTRIBUTE_UNLIKELY(this->m_Buffer >= this->m_EndBuffer))//end?
+                this->compress_buffer(); // here write to all buffers
+}
+};
+// append
 }
 #endif //MORPHSTORE_CORE_MORPHING_WRITE_ITERATOR_H

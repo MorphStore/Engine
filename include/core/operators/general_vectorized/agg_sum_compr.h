@@ -38,6 +38,10 @@
 #include <vector/vector_primitives.h>
 #include <cstdint>
 
+//
+#include <core/morphing/default_formats.h>
+#include <core/storage/replicated_column.h>
+
 namespace morphstore {
    using namespace vectorlib;
 
@@ -111,7 +115,8 @@ namespace morphstore {
             *outPtr = agg_sum_processing_unit_wit<VectorExtension>::finalize( witState );
          } else {
             inDataPtr = p_InDataCol->get_data_uncompr_start();
-            size_t const inSizeRestByte = startDataPtr + inDataSizeUsedByte - inDataPtr;
+            //size_t const inSizeRestByte = startDataPtr + inDataSizeUsedByte - inDataPtr;
+            size_t const inSizeRestByte = (p_InDataCol->get_count_values() - p_InDataCol->get_count_values_compr()) * sizeof(uint64_t);
             size_t const inDataSizeUncomprVecByte = round_down_to_multiple(
                inSizeRestByte, vector_size_byte::value
             );
@@ -151,7 +156,44 @@ namespace morphstore {
          return  outCol;
       }
    };
-   
+
+// Replication
+  template<
+      class VectorExtension
+   >
+   struct agg_sum_repl_t {
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      static
+      column< uncompr_f > const *
+      apply(
+         replicated_column * const p_InDataCol
+      ) {
+        void* col;
+        size_t format;
+        col = p_InDataCol->get_column<VectorExtension>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             return agg_sum_t<VectorExtension, uncompr_f>::apply(
+               reinterpret_cast<const column<uncompr_f>*>(col)
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             return agg_sum_t<VectorExtension, DEFAULT_STATIC_VBP_F(VectorExtension, 32)>::apply(
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(VectorExtension, 32)>*>(col)
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             return agg_sum_t<VectorExtension, DEFAULT_DYNAMIC_VBP_F(VectorExtension)>::apply(
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(VectorExtension)>*>(col)
+             );
+          }
+        }
+      }
+   };
 }
 
 #endif /* MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H */

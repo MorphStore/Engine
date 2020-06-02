@@ -216,7 +216,7 @@ class two_value_distribution {
  * `std::normal_distribution`.
  */
 template<template<typename> class t_distr>
-const column<uncompr_f> * generate_with_distr(
+column<uncompr_f> * generate_with_distr(
         size_t countValues,
         t_distr<uint64_t> distr,
         bool sorted,

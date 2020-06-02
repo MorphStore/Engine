@@ -26,6 +26,10 @@
 #include <cstdint>
 #include <tuple>
 
+//
+#include <core/morphing/default_formats.h>
+#include <core/storage/replicated_column.h>
+
 namespace morphstore {
    using namespace vectorlib;
 
@@ -149,14 +153,14 @@ namespace morphstore {
 
          uint8_t const * const   inProbeDataRest8           = p_InDataRCol->get_data_uncompr_start();
          const size_t inProbeCountLogRest                   = convert_size<uint8_t, uint64_t>(
-            inProbeDataSizeUsedByte - (inProbeDataRest8 - inProbeDataPtr)
+            inProbeDataSizeUsedByte - (inProbeDataRest8 - inProbeDataPtr) //
          );
          const size_t inProbeCountLogCompr = inProbeDataCountLog - inProbeCountLogRest;
 
 
          uint8_t const * const   inBuildDataRest8           = p_InDataLCol->get_data_uncompr_start();
          const size_t inBuildCountLogRest                   = convert_size<uint8_t, uint64_t>(
-            inBuildDataSizeUsedByte - (inBuildDataRest8 - inBuildDataPtr)
+            inBuildDataSizeUsedByte - (inBuildDataRest8 - inBuildDataPtr)// get uncomp
          );
          const size_t inBuildCountLogCompr = inBuildDataCountLog - inBuildCountLogRest;
 
@@ -207,7 +211,8 @@ namespace morphstore {
 
          if(inBuildDataSizeComprByte != inBuildDataSizeUsedByte) {
             inBuildDataPtr = inBuildDataRest8;
-            size_t const inBuildSizeRestByte = startBuildDataPtr + inBuildDataSizeUsedByte - inBuildDataPtr;
+            //size_t const inBuildSizeRestByte = startBuildDataPtr + inBuildDataSizeUsedByte - inBuildDataPtr;
+            size_t const inBuildSizeRestByte = (p_InDataLCol->get_count_values() - p_InDataLCol->get_count_values_compr()) * sizeof(uint64_t);
 
             const size_t inBuildDataSizeUncomprVecByte = round_down_to_multiple(
                inBuildSizeRestByte, vector_size_byte::value
@@ -285,7 +290,8 @@ namespace morphstore {
             outCountLog = witProbeComprState.m_WitOutLData.get_count_values();
          } else {
             inProbeDataPtr = inProbeDataRest8;
-            size_t const inProbeSizeRestByte = startProbeDataPtr + inProbeDataSizeUsedByte - inProbeDataPtr;
+            //size_t const inProbeSizeRestByte = startProbeDataPtr + inProbeDataSizeUsedByte - inProbeDataPtr;
+            size_t const inProbeSizeRestByte = (p_InDataRCol->get_count_values() - p_InDataRCol->get_count_values_compr()) * sizeof(uint64_t);
             const size_t inProbeDataSizeUncomprVecByte = round_down_to_multiple(
                inProbeSizeRestByte, vector_size_byte::value
             );
@@ -359,6 +365,110 @@ namespace morphstore {
       }
    };
 
+// Replication
+
+template<
+      class VectorExtension,
+      class DataStructure,
+      class OutFormatLCol,
+      class OutFormatRCol,
+      class InFormatCol
+>
+   struct natural_equi_join_repl_t {
+      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+
+      // Left column is a replicated one
+      static
+      std::tuple<
+      column< OutFormatLCol > const *,
+      column< OutFormatRCol > const *
+      > const
+      apply(
+         replicated_column * const p_InDataLCol,
+         column< InFormatCol > const * const p_InDataRCol,
+         size_t const outCountEstimate = 0
+      ) {
+        void* col;
+        size_t format;
+        col = p_InDataLCol->get_column<VectorExtension>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, uncompr_f, InFormatCol>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, uncompr_f, InFormatCol>(
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32), InFormatCol>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32), InFormatCol>(
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(VectorExtension, 32)>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension), InFormatCol>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension), InFormatCol>(
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(VectorExtension)>*>(col),
+               p_InDataRCol,
+               outCountEstimate
+             );
+          }
+        }
+      }
+
+      // Right column is a replicated one
+      static
+      std::tuple<
+      column< OutFormatLCol > const *,
+      column< OutFormatRCol > const *
+      > const
+      apply(
+         column< InFormatCol > const * const p_InDataLCol,
+         replicated_column * const p_InDataRCol,
+         size_t const outCountEstimate = 0
+      ) {
+        void* col;
+        size_t format;
+        col = p_InDataRCol->get_column<VectorExtension>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, InFormatCol, uncompr_f>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, InFormatCol, uncompr_f>(
+               p_InDataLCol,
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               outCountEstimate
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, InFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32)>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, InFormatCol, DEFAULT_STATIC_VBP_F(VectorExtension, 32)>(
+               p_InDataLCol,
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(VectorExtension, 32)>*>(col),
+               outCountEstimate
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             //return natural_equi_join_t<VectorExtension, DataStructure, OutFormatLCol, OutFormatRCol, InFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension)>::apply(
+             return join<VectorExtension, OutFormatLCol, OutFormatRCol, InFormatCol, DEFAULT_DYNAMIC_VBP_F(VectorExtension)>(
+               p_InDataLCol,
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(VectorExtension)>*>(col),
+               outCountEstimate
+             );
+          }
+        }
+      }
+};
 
 
 

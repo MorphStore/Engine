@@ -38,6 +38,10 @@
 
 #include <cstdint>
 
+//
+#include <core/morphing/default_formats.h>
+#include <core/storage/replicated_column.h>
+
 namespace morphstore {
 
 // @todo It would be nice if the core-operator's template argument for the
@@ -134,6 +138,7 @@ struct my_select_wit_t {
                 : get_size_max_byte_any_len<t_out_pos_f>(inDataCountLog)
         );
         uint8_t * outPos = outPosCol->get_data();
+        //std::cout<<numa_preferred()<<std::endl;
         const uint8_t * const initOutPos = outPos;
         size_t outCountLog;
         size_t outSizeComprByte;
@@ -177,8 +182,9 @@ struct my_select_wit_t {
             // the input column's uncompressed rest part.
             inData = inDataCol->get_data_uncompr_start();
             // The size of the input column's uncompressed rest part.
-            const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
-            
+            //const size_t inSizeRestByte = initInData + inDataSizeUsedByte - inData;
+            size_t const inSizeRestByte = (inDataCol->get_count_values() - inDataCol->get_count_values_compr()) * sizeof(uint64_t);
+             
             // Vectorized processing of the input column's uncompressed rest
             // part using the specified vector extension, compressed output.
             const size_t inDataSizeUncomprVecByte = round_down_to_multiple(
@@ -258,6 +264,60 @@ struct my_select_wit_t {
         return outPosCol;
     }
 };
+
+// Replication
+template<
+        template<class, int> class t_compare,
+        class t_vector_extension,
+        class t_out_pos_f
+>
+struct my_select_repl_wit_t {
+    using t_ve = t_vector_extension;
+    IMPORT_VECTOR_BOILER_PLATE(t_ve)
+#ifndef COMPARE_OP_AS_TEMPLATE_CLASS
+    using t_compare_special_ve = t_compare<t_ve, vector_base_t_granularity::value>;
+    using t_compare_special_sc = t_compare<vectorlib::scalar<vectorlib::v64<uint64_t>>, vectorlib::scalar<vectorlib::v64<uint64_t>>::vector_helper_t::granularity::value>;
+#endif
+    static const column<t_out_pos_f> * apply(
+            replicated_column * const inDataCol,
+            const uint64_t val,
+            const size_t outPosCountEstimate = 0
+    ) {
+        using namespace vectorlib;
+        void* col;
+        size_t format;
+        col = inDataCol->get_column<t_ve>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             return my_select_wit_t<t_compare, t_vector_extension, t_out_pos_f, uncompr_f>::apply(
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               val,
+               outPosCountEstimate
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             return my_select_wit_t<t_compare, t_vector_extension, t_out_pos_f, DEFAULT_STATIC_VBP_F(t_ve, 32)>::apply(
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(t_ve, 32)>*>(col),
+               val,
+               outPosCountEstimate
+             );
+          }
+          case 2: // DYNAMICBP
+          {
+             return my_select_wit_t<t_compare, t_vector_extension, t_out_pos_f, DEFAULT_DYNAMIC_VBP_F(t_ve)>::apply(
+               reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(t_ve)>*>(col),
+               val,
+               outPosCountEstimate
+             );
+          }
+        }
+
+    }
+};
+
 
 #undef COMPARE_OP_AS_TEMPLATE_CLASS
 

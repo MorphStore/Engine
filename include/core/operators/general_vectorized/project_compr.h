@@ -39,6 +39,11 @@
 #include <cstdint>
 #include <cstring>
 
+//
+#include <core/morphing/default_formats.h>
+#include <core/storage/replicated_column.h>
+//#include <core/operators/interfaces/project.h>
+
 namespace morphstore {
 
 template<
@@ -83,16 +88,16 @@ public:
     ) {
         using namespace vectorlib;
         
-        if(inDataCol->template prepare_for_random_access<t_ve>())
+        //if(inDataCol->template prepare_for_random_access<t_ve>())
             // @todo It would be nice to use warn() from the logger, but this
             // always outputs to cout, which interferes with our checks of the
             // program's output.
-            std::cerr
-                    << "[warn]: a project-operator's input data column was "
-                       "prepared for random access within the "
-                       "project-operator, which might corrupt measurements of "
-                       "the operator's execution time"
-                    << std::endl;
+            //std::cerr
+            //        << "[warn]: a project-operator's input data column was "
+            //           "prepared for random access within the "
+            //           "project-operator, which might corrupt measurements of "
+            //           "the operator's execution time"
+            //        << std::endl;
         
         const base_t * inData = inDataCol->get_data();
         
@@ -149,9 +154,10 @@ public:
             // the input position column's uncompressed rest part.
             inPos = inPosRest8;
             // The size of the input column's uncompressed rest part.
-            const size_t inPosSizeRestByte =
-                    initInPos + inPosSizeUsedByte - inPos;
-            
+            //const size_t inPosSizeRestByte =
+            //        initInPos + inPosSizeUsedByte - inPos;
+            size_t const inPosSizeRestByte = (inPosCol->get_count_values() - inPosCol->get_count_values_compr()) * sizeof(uint64_t);
+
             // Vectorized processing of the input positions column's
             // uncompressed rest part using the specified vector extension,
             // compressed output.
@@ -258,6 +264,54 @@ public:
         return outDataCol;
     }
 };
+
+// Replication
+template<
+        class t_vector_extension,
+        class t_out_data_f,
+        class t_in_pos_f
+>
+class my_project_repl_wit_t {
+    using t_ve = t_vector_extension;
+    IMPORT_VECTOR_BOILER_PLATE(t_ve)
+public:
+    static const column<t_out_data_f> * apply(
+            replicated_column * const inDataCol,
+            const column<t_in_pos_f> * const inPosCol
+    ) {
+        using namespace vectorlib;
+        void* col;
+        size_t format;
+        col = inDataCol->get_column<t_ve>(format);
+        switch (format)
+        {
+          case 0: // UNCOMPR
+          {
+             return my_project_wit_t<t_vector_extension, t_out_data_f, uncompr_f, t_in_pos_f>::apply(
+               reinterpret_cast<const column<uncompr_f>*>(col),
+               inPosCol
+             );
+          }
+          case 1: // STATICBP 32
+          {
+             return my_project_wit_t<t_vector_extension, t_out_data_f, DEFAULT_STATIC_VBP_F(t_ve, 32), t_in_pos_f>::apply(
+               reinterpret_cast<const column<DEFAULT_STATIC_VBP_F(t_ve, 32)>*>(col),
+               inPosCol
+             );
+          }
+          //case 2: // DYNAMICBP
+        //{
+        //     return my_project_wit_t<t_vector_extension, t_out_data_f, DEFAULT_DYNAMIC_VBP_F(t_ve), t_in_pos_f>::apply(
+        //       reinterpret_cast<const column<DEFAULT_DYNAMIC_VBP_F(t_ve)>*>(col),
+        //       inPosCol
+        //     );
+         // }
+        }
+
+    }
+};
+
+// Replication
 
 }
 #endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_COMPR_H
