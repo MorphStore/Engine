@@ -27,6 +27,7 @@
 #include <core/storage/column_gen.h>
 #include <core/storage/graph/graph.h>
 #include <core/storage/graph/graph_compr_format.h>
+#include <core/morphing/graph/morph_graph_col.h>
 
 #include <assert.h>
 #include <iterator>
