@@ -47,10 +47,10 @@ int main(void) {
 
     auto col_with_offsets = morph_saving_offsets<ve, compr_f, uncompr_f>(origCol);
 
-    assert(col_with_offsets->block_offsets->size() == 3);
+    assert(col_with_offsets->get_block_offsets()->size() == 3);
 
-    const uint8_t * second_block_offset = col_with_offsets->block_offsets->at(1);
-    auto block_size = compr_f::m_BlockSize; 
+    const uint8_t * second_block_offset = col_with_offsets->get_block_offset(1);
+    auto block_size = col_with_offsets->get_block_size(); 
     auto alloc_size = block_size * sizeof(uint64_t);
     auto decompr_col_block = new column<uncompr_f>(alloc_size);
     decompr_col_block->set_meta_data(block_size, alloc_size);

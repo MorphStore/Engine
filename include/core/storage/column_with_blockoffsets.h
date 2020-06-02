@@ -27,25 +27,53 @@
 
 namespace morphstore {
 
+// interface (needed as current Graph formats don't use templates)
+class column_with_blockoffsets_base {
+    public:
+        virtual ~column_with_blockoffsets_base() {}
+
+        virtual const std::vector<const uint8_t *> *get_block_offsets() = 0;
+        virtual const uint8_t *get_block_offset(size_t pos) = 0;
+        virtual const column_base *get_column() = 0;
+        virtual size_t get_block_size() = 0;
+        virtual size_t get_size_used_byte() = 0;
+};
+
 // used to allow only partial decompression of column blocks (for random access)
 // blockoffsets should only be saved, if blocksize > 1
-template <class F> struct column_with_blockoffsets {
-    const column<F> *col;
-    // TODO: use std::optional
-    std::vector<const uint8_t *> *block_offsets;
+template <class F> class column_with_blockoffsets : public column_with_blockoffsets_base {
+    static_assert(std::is_base_of<format, F>::value, "column: template parameter F must be a subclass of format");
 
-    column_with_blockoffsets(const column<F> *c) : column_with_blockoffsets(c, new std::vector<const uint8_t *>()) {}
+    private:
+        const column<F> *col;
+        // TODO: use std::optional
+        const std::vector<const uint8_t *> *block_offsets;
 
-    column_with_blockoffsets(const column<F> *c, std::vector<const uint8_t *> *offsets) {
-        col = c;
-        block_offsets = offsets;
-    }
+    public:
+        column_with_blockoffsets(const column<F> *c)
+            : column_with_blockoffsets(c, new std::vector<const uint8_t *>()) {}
 
-    ~column_with_blockoffsets() {
-        // ? deleting the column might be not always wanted
-        delete col;
-        delete block_offsets;
-    }
+        column_with_blockoffsets(const column<F> *c, std::vector<const uint8_t *> *offsets) {
+            col = c;
+            block_offsets = offsets;
+        }
+
+        ~column_with_blockoffsets() {
+            // ? deleting the column might be not always wanted
+            delete col;
+            delete block_offsets;
+        }
+
+        const std::vector<const uint8_t *> *get_block_offsets() { return block_offsets; }
+        const uint8_t *get_block_offset(size_t pos) { return block_offsets->at(pos); }
+
+        const column<F> *get_column() { return col; }
+
+        size_t get_block_size() { return F::m_BlockSize; }
+
+        size_t get_size_used_byte() {
+            return col->get_size_used_byte() + (block_offsets->size() * sizeof(uint8_t *));
+        }
 };
-}
+} // namespace morphstore
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_WITH_BLOCKOFFSETS_H
