@@ -25,6 +25,7 @@
 #define MORPHSTORE_CSR_H
 
 #include <core/storage/graph/graph.h>
+#include <core/morphing/graph/morph_saving_offsets_graph_col.h>
 
 #include <assert.h>
 #include <stdexcept>
@@ -38,8 +39,8 @@ namespace morphstore {
          * offset column: index is vertex-id; column entry contains offset in edgeId array
          * edgeId column: contains edge id
          */
-        column_base *offset_column;
-        column_base *edgeId_column;
+        column_with_blockoffsets_base *offset_column;
+        column_with_blockoffsets_base *edgeId_column;
 
     protected:
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
@@ -58,11 +59,11 @@ namespace morphstore {
                                          graph_compr_f_to_string(current_compression));
             }
 
-            uint64_t *offset_data = offset_column->get_data();
+            uint64_t *offset_data = offset_column->get_column()->get_data();
             uint64_t offset = offset_data[sourceID];
             uint64_t nextOffset = offset + edge_ids.size();
 
-            uint64_t *edgeId_data = edgeId_column->get_data();
+            uint64_t *edgeId_data = edgeId_column->get_column()->get_data();
             // TODO: get copy to work (should be faster than loop)
             // std::copy(edge_ids.begin(), edge_ids.end(), edgeId_data);
             for (auto edge_id : edge_ids) {
@@ -76,10 +77,29 @@ namespace morphstore {
             }
         }
 
+        // DEBUG function to look into column:
+        void print_column(const column_base *col, int start, int end) const {
+            // validate interval (fix otherwise)
+            int col_size =  col->get_count_values();
+            if (start < 0 || col_size < start) {
+                start = 0;
+            }
+            if (col_size <= end) {
+                end = col->get_count_values() - 1;
+            }
+
+            std::cout << "Printing column from " << start << " to " << end << std::endl;
+            const uint64_t *data = col->get_data();
+
+            for (auto pos = start; pos <= end; pos++) {
+                std::cout << "Index: " << pos << " Value:" << data[pos] << std::endl;
+            }
+        }
+
     public:
         ~CSR() {
-            free(offset_column);
-            free(edgeId_column);
+            delete offset_column;
+            delete edgeId_column;
         }
 
         CSR(EdgesContainerType edges_container_type)
@@ -97,15 +117,19 @@ namespace morphstore {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
             const size_t offset_size = numberVertices * sizeof(uint64_t);
-            offset_column = new column<uncompr_f>(offset_size);
-            offset_column->set_meta_data(numberVertices, offset_size);
+            auto offset_col = new column<uncompr_f>(offset_size);
+            offset_col->set_meta_data(numberVertices, offset_size);
+            // wrapping offset_column
+            offset_column = new column_with_blockoffsets<uncompr_f>(offset_col);
 
             const size_t edge_ids_size = numberEdges * sizeof(uint64_t);
-            edgeId_column = new column<uncompr_f>(edge_ids_size);
-            edgeId_column->set_meta_data(numberEdges, edge_ids_size);
+            auto edgeId_col = new column<uncompr_f>(edge_ids_size);
+            edgeId_col->set_meta_data(numberEdges, edge_ids_size);
+            // wrapping edgeId_column
+            edgeId_column = new column_with_blockoffsets<uncompr_f>(edgeId_col);
 
             // init node array:
-            uint64_t *offset_data = offset_column->get_data();
+            uint64_t *offset_data = offset_col->get_data();
             offset_data[0] = 0;
         }
 
@@ -118,7 +142,8 @@ namespace morphstore {
         uint64_t get_out_degree(uint64_t id) const override {
             // decompressing offset_column in order to read correct offset
             // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
-            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
+            // return only relevant block and than work on that
+            auto uncompr_offset_col = decompress_graph_col(offset_column->get_column(), current_compression);
             uint64_t *offset_data = uncompr_offset_col->get_data();
 
             uint64_t offset = offset_data[id];
@@ -132,7 +157,7 @@ namespace morphstore {
             }
 
             // deleting temporary column
-            if (uncompr_offset_col != offset_column) {
+            if (uncompr_offset_col != offset_column->get_column()) {
                 delete uncompr_offset_col;
             }
 
@@ -142,6 +167,49 @@ namespace morphstore {
             else {
                 return nextOffset - offset;
             }
+        }
+
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
+            assert(vertices->exists_vertex(id));
+
+            std::vector<uint64_t> out_edge_ids;
+            // TODO: only decompress relevant block
+            auto uncompr_offset_col = decompress_graph_col(offset_column->get_column(), current_compression);
+            uint64_t offset = ((uint64_t *)uncompr_offset_col->get_data())[id];
+
+
+            // TODO: remove
+            print_column(uncompr_offset_col, id - 20, id + 20);
+
+            if (uncompr_offset_col != offset_column->get_column()) {
+                delete uncompr_offset_col;
+            }
+
+            // TODO: decompressing offset_column twice this way (should not be a problem if block cache exists)
+            uint64_t out_degree = get_out_degree(id);
+
+            out_edge_ids.reserve(out_degree);
+
+            // TODO: only decompress relevant blocks
+            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column->get_column(), current_compression);
+            uint64_t *edgeId_data = uncompr_edgeId_col->get_data();
+
+            // TODO: remove
+            print_column(uncompr_edgeId_col, 1'000'000, 1'000'020);
+            std::cout << std::endl <<  "edge id column offset: " << offset;
+            std::cout << " vertex out degree: " << out_degree;
+            std::cout << " edge id column size: " << uncompr_edgeId_col->get_count_values();
+            std::cout.flush();
+
+            assert(offset + out_degree < uncompr_edgeId_col->get_count_values());
+
+            out_edge_ids.insert(out_edge_ids.end(), edgeId_data + offset, edgeId_data + offset + out_degree);
+
+            if (uncompr_edgeId_col != edgeId_column->get_column()) {
+                delete uncompr_edgeId_col;
+            }
+
+            return out_edge_ids;
         }
 
         void morph(GraphCompressionFormat target_format) override {
@@ -157,10 +225,8 @@ namespace morphstore {
                 return;
             }
 
-            offset_column =
-                const_cast<column_base *>(morph_graph_col(offset_column, current_compression, target_format, true));
-            edgeId_column =
-                const_cast<column_base *>(morph_graph_col(edgeId_column, current_compression, target_format, true));
+            offset_column = morph_saving_offsets_graph_col(offset_column, current_compression, target_format, true);
+            edgeId_column = morph_saving_offsets_graph_col(edgeId_column, current_compression, target_format, true);
 
             this->current_compression = target_format;
         }
@@ -169,46 +235,26 @@ namespace morphstore {
         std::pair<size_t, size_t> get_size_of_graph() const override {
 
             auto [index_size, data_size] = Graph::get_size_of_graph();
-
+            
+            // column_meta_data, prepared_for_random_access, .. not included in get_size_used_byte;
+            index_size += 2 * sizeof(column<uncompr_f>);
             index_size += edgeId_column->get_size_used_byte();
             index_size += offset_column->get_size_used_byte();
 
             return {index_size, data_size};
         }
 
-        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
-            assert(vertices->exists_vertex(id));
-
-            std::vector<uint64_t> out_edge_ids;
-            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
-            uint64_t offset = ((uint64_t *)uncompr_offset_col->get_data())[id];
-
-            if (uncompr_offset_col != offset_column) {
-                delete uncompr_offset_col;
-            }
-
-            // TODO: decompressing offset_column twice this way
-            uint64_t numberEdges = get_out_degree(id);
-
-            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column, current_compression);
-            uint64_t *edgeId_data = uncompr_edgeId_col->get_data();
-            out_edge_ids.insert(out_edge_ids.end(), edgeId_data + offset, edgeId_data + offset + numberEdges);
-
-            if (uncompr_edgeId_col != edgeId_column) {
-                delete uncompr_edgeId_col;
-            }
-
-            return out_edge_ids;
-        }
-
         double offset_column_compr_ratio() { return compression_ratio(offset_column, current_compression); }
 
         double edgeId_column_compr_ratio() { return compression_ratio(edgeId_column, current_compression); }
 
-        std::string get_column_info(const column_base *column) {
-            return " values: " + std::to_string(column->get_count_values()) +
-                   " size in bytes: " + std::to_string(column->get_size_used_byte()) +
-                   " compression ratio: " + std::to_string(compression_ratio(column, current_compression));
+        std::string get_column_info(column_with_blockoffsets_base *col_with_offsets) {
+            auto col = col_with_offsets->get_column();
+
+            return " values: " + std::to_string(col->get_count_values()) +
+                   " size in bytes: " + std::to_string(col->get_size_used_byte()) +
+                   " compression ratio: " + std::to_string(compression_ratio(col_with_offsets, current_compression)) +
+                   " number of blocks (if blocksize > 1): " + std::to_string(col_with_offsets->get_block_offsets()->size());
         }
 
         void statistics() override {
