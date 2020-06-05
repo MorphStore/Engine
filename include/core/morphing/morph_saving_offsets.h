@@ -160,8 +160,8 @@ struct morph_saving_offsets_t<t_vector_extension, t_dst_f, uncompr_f> {
 
         // needed for last block (if incomplete data stays uncompressed)
         if(outSizeRestByte) {
-            block_offsets->push_back(out8);
             out8 = column<t_dst_f>::create_data_uncompr_start(out8);
+            block_offsets->push_back(out8);
             memcpy(out8, in8, outSizeRestByte);
         }
 
