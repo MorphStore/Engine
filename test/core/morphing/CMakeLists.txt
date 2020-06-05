@@ -1,8 +1,10 @@
 if ( CTEST_ALL OR CTEST_MORPHING )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/morph_saving_offsets_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/morph_saving_offsets_test_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/morph_column_block_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/vbp_test_app )
 	
-	add_executable( morph_saving_offsets_app morph_saving_offsets_test.cpp )
+	add_executable( morph_saving_offsets_test_app morph_saving_offsets_test.cpp )
+	add_executable( morph_column_block_test_app morph_column_block_test.cpp )
 	add_executable( vbp_test_app vbp_test.cpp )
 	
 	if (SSE)
@@ -31,8 +33,8 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	)
 
 	target_link_libraries( vbp_test_app PRIVATE "-ldl" )
-	target_link_libraries( morph_saving_offsets_app PRIVATE "-ldl" )
 
-	add_test( morph_saving_offsets_test morph_saving_offsets_app )
+	add_test( morph_column_block_test morph_column_block_test_app )
+	add_test( morph_saving_offsets_test morph_saving_offsets_test_app )
 	add_test( vbp_test vbp_test_app )
 endif()

@@ -37,6 +37,9 @@ class column_with_blockoffsets_base {
         virtual const column_base *get_column() = 0;
         virtual size_t get_block_size() = 0;
         virtual size_t get_size_used_byte() = 0;
+        bool last_block_compressed() {
+            return get_column()->get_count_values_uncompr() == 0;
+        }
 };
 
 // used to allow only partial decompression of column blocks (for random access)
@@ -69,7 +72,7 @@ template <class F> class column_with_blockoffsets : public column_with_blockoffs
 
         const column<F> *get_column() { return col; }
 
-        size_t get_block_size() { return F::m_BlockSize; }
+        inline size_t get_block_size() { return F::m_BlockSize; }
 
         size_t get_size_used_byte() {
             return col->get_size_used_byte() + (block_offsets->size() * sizeof(uint8_t *));

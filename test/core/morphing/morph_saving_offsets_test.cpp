@@ -47,69 +47,25 @@ int main(void) {
     // 3 whole blocks 
     // TODO: also check for partial block 
     // for last block only morph_batch if it is complete ... (as incomplete block are still uncompressed)
-    auto origCol = generate_sorted_unique(3072);
+    auto orig_col = generate_sorted_unique(3072);
 
-    // !! morph saving offsets needs to look if last block can be actually morphed (if not complet -> undefined behaviour?)
+    auto compr_col_with_offsets = morph_saving_offsets<ve, compr_f, uncompr_f>(orig_col);
+    assert(compr_col_with_offsets->get_block_offsets()->size() == 3);
+    assert(compr_col_with_offsets->last_block_compressed());
 
-    auto col_with_offsets = morph_saving_offsets<ve, compr_f, uncompr_f>(origCol);
+    std::cout << "Checking morph_saving_offset() result column equals the one from morph()" << std::endl;
+    // BUG: more bytes used with morph_saving_offsets
+    auto compr_col = morph<ve, compr_f, uncompr_f>(orig_col);
+    assert_columns_equal(compr_col, compr_col_with_offsets->get_column());
 
-    assert(col_with_offsets->get_block_offsets()->size() == 3);
 
-    auto decompr_col = morph_saving_offsets<ve, uncompr_f, compr_f>(col_with_offsets->get_column())->get_column();
-
-    // asserting correctness of operator
-    equality_check ec0(decompr_col, origCol);
-    std::cout << ec0;
-
-    assert(ec0.m_CountValuesEqual);
-    assert(ec0.m_SizeUsedByteEqual);
-
-    uint64_t* expected =  origCol->get_data();
-    uint64_t* actual =  decompr_col->get_data();
-
-    // for finding point of error
-    for (uint64_t i = 0; i < origCol->get_count_values(); i++) {
-        bool equals = expected[i] == actual[i];
-        if (!equals) {
-            std::cout << "actual: " << actual[i] << " expected: " << expected[i] << std::endl;
-            std::cout.flush();
-        }
-    }
-    
-    // findings: block 0 correctly decompressed, block 1 is off by 1023, block 2 is again correctly decompressed
-/*     print_columns(
-          print_buffer_base::decimal,
-          decompr_col,                              
-          "whole decompressed column");  */
-
-    
-    //assert(ec0.good());
- 
-
-    // asserting correctness of decompressing a single block
-    auto block_size = col_with_offsets->get_block_size();
-    auto alloc_size = block_size * sizeof(uint64_t);
-    for (uint64_t block = 0; block < col_with_offsets->get_block_offsets()->size(); block++) {
-        std::cout << "Checking block " << block << "range: " << block * block_size << " .. " << ((block +1) * block_size) - 1  << std::endl;
-        auto expected_col = generate_sorted_unique(1024, block * 1024);
-
-        const uint8_t *block_offset = col_with_offsets->get_block_offset(block);
-        auto decompr_col_block = new column<uncompr_f>(alloc_size);
-        decompr_col_block->set_meta_data(block_size, alloc_size);
-        uint8_t *out8 = decompr_col_block->get_data();
-
-        // decompress a single block of a column
-        morph_batch<ve, uncompr_f, compr_f>(block_offset, out8, block_size);
-
-        equality_check ec_block(expected_col, decompr_col_block);
-
-        std::cout << ec_block;
-
-        if (!ec_block.good()) {
-            print_columns(print_buffer_base::decimal, decompr_col_block, expected_col, "actual", "expected");
-            assert(ec_block.good());
-        }
-    }
+    // TODO: get this one to work !!
+    // currently BUG: 0. block: ok , 1. block: +1023, 2. block: + 3070 
+    std::cout << "Checking morph_saving_offset() decompressed equals original column" << std::endl;
+    auto decompr_col = morph_saving_offsets<ve, uncompr_f, compr_f>(compr_col_with_offsets->get_column());
+    // uncompr_f blocksize == 1 --> no need to save block offsets
+    assert(decompr_col->get_block_offsets()->size() == 0);
+    assert_columns_equal(orig_col, decompr_col->get_column());
 
     return 0;
 }

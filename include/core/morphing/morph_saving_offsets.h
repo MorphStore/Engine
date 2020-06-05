@@ -141,26 +141,26 @@ struct morph_saving_offsets_t<t_vector_extension, t_dst_f, uncompr_f> {
                 get_size_max_byte_any_len<t_dst_f>(countLog)
         );
         uint8_t * out8 = outCol->get_data();
-        // so block_offset[x] is for x-th block 
-        block_offsets->push_back(out8);
         const uint8_t * const initOut8 = out8;
 
         const size_t countBlocks = countLog / t_BlockSize;
 
         // morphing each block and save the offset
         for(size_t blockIdx = 0; blockIdx < countBlocks; blockIdx++) {
+                // saving the start address of the block
+                block_offsets->push_back(out8);
+
                 // only t_BlockSizeLog as only on block at a time should be morphed
                 morph_batch<t_vector_extension, t_dst_f, src_f>(
                         in8, out8, t_BlockSize
                 );
-
-                block_offsets->push_back(out8);
         }
 
         const size_t sizeComprByte = out8 - initOut8;
 
-        // needed for last block
+        // needed for last block (if incomplete data stays uncompressed)
         if(outSizeRestByte) {
+            block_offsets->push_back(out8);
             out8 = column<t_dst_f>::create_data_uncompr_start(out8);
             memcpy(out8, in8, outSizeRestByte);
         }
