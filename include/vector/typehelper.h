@@ -1,3 +1,5 @@
+#ifndef MORPHSTORE_VECTOR_TYPEHELPER_H
+#define MORPHSTORE_VECTOR_TYPEHELPER_H
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -19,3 +21,4 @@ public:
     typedef T1<T2<N, T4> > newbasetype;
 };
 
+#endif

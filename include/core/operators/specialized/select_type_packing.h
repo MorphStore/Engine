@@ -11,7 +11,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/typehelper.h>
-
+#include <core/operators/interfaces/select.h>
 
 namespace morphstore {
 
@@ -21,7 +21,7 @@ template<
         template<class, int> class t_compare,
         class t_vector_extension
 >
-struct select_t//<t_vector_extension, type_packing_f<uint64_t >, type_packing_f<uint64_t >>  
+struct select_t<t_compare, t_vector_extension, type_packing_f<uint64_t >, type_packing_f<uint64_t >>  
     {
     using t_ve = t_vector_extension;
     IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -31,10 +31,9 @@ struct select_t//<t_vector_extension, type_packing_f<uint64_t >, type_packing_f<
             column<type_packing_f<uint64_t >> const * const inDataCol,
             uint64_t const val,
             const size_t outPosCountEstimate = 0
-    ) {
+    ) {        
         size_t const inDataCount = inDataCol->get_count_values();
         uint64_t const * inData = inDataCol->get_data();
-        uint64_t const * inDataOriginal = inDataCol->get_data();
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
@@ -42,9 +41,9 @@ struct select_t//<t_vector_extension, type_packing_f<uint64_t >, type_packing_f<
         auto outPosCol = new column<type_packing_f<uint64_t >>(
                 bool(outPosCountEstimate)
                 // use given estimate
-                ? (outPosCountEstimate * sizeof(uint64_t))
+                ? get_size_max_byte_any_len<type_packing_f<uint64_t >>(outPosCountEstimate)
                 // use pessimistic estimate
-                : inDataCol->get_size_used_byte()
+                : get_size_max_byte_any_len<type_packing_f<uint64_t >>(inDataCount)
         );
 
         uint64_t * outPos = outPosCol->get_data();
@@ -56,57 +55,63 @@ struct select_t//<t_vector_extension, type_packing_f<uint64_t >, type_packing_f<
         vector_t const predicateVector = set1<t_ve, vector_base_t_granularity::value>(val);
         vector_t positionVector = set_sequence<t_ve, vector_base_t_granularity::value>(startid,1);
         vector_t const addVector = set1<t_ve, vector_base_t_granularity::value>(vector_element_count::value);
-        for(size_t i = 0; i < vectorCount; ++i) { //selection 
+        for(size_t i = 0; i < vectorCount; ++i) { //selection for compressed part
             vector_t dataVector = load<t_ve, iov::ALIGNED, vector_size_bit::value>(inData);
             vector_mask_t resultMask =
                 t_compare<t_ve,vector_base_t_granularity::value>::apply(dataVector, predicateVector);
-            compressstore<t_ve, iov::UNALIGNED, vector_size_bit::value>(outPos, positionVector, resultMask);
+            compressstore<t_ve, iov::UNALIGNED, vector_base_t_granularity::value>(outPos, positionVector, resultMask);
             positionVector = add<t_ve, vector_base_t_granularity::value>::apply(positionVector,addVector);
-
             outPos += count_matches<t_ve>::apply( resultMask );
+            //std::cout<< "outpos address: " << outPos << std::endl;
+            //std::cout<< "outpos value: " << *outPos << std::endl;
             inData += vector_element_count::value;
         }        
 
-        
+        int startidOffsetScalar = vectorCount*vector_element_count::value;      
+        uint64_t const * inDataRemainder = inDataCol->get_data_uncompr_start(); 
+        size_t const vecElCont = vector_element_count::value;
+
         //selection for scalar rest
-        // int startidOffsetScalar = vectorCount*vector_element_count::value;       
-        // using t_ve_scalar = scalar<v64<uint64_t>>;    
-        // IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)            
-        // vector_t const predicateVectorScalar = set1<t_ve_scalar, 64>(val);
-        // vector_t positionVectorScalar = set_sequence<t_ve_scalar, 64>(startidOffsetScalar,1);
-        // vector_t const addVectorScalar = set1<t_ve_scalar, 64>(1);        
-
-        // for(size_t i = 0; i < remainderCount; ++i){ 
-        //     vector_t dataVectorScalar = load<t_ve_scalar, iov::ALIGNED, 64>(inData);
-        //     vector_mask_t resultMaskScalar =
-        //         t_compare<t_ve_scalar,64>::apply(dataVectorScalar, predicateVectorScalar);
-        //     compressstore<t_ve_scalar, iov::UNALIGNED, 64>(outPos, positionVectorScalar, resultMaskScalar);
-        //     positionVectorScalar = add<t_ve_scalar, 64>::apply(positionVectorScalar,addVectorScalar);
-
-        //     outPos += count_matches<t_ve_scalar>::apply( resultMaskScalar );
-        //     inData += 1; 
-        // }
-       
-        int startidOffsetScalar = vectorCount*vector_element_count::value;       
         using t_ve_scalar = scalar<v64<uint64_t>>;    
-        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)            
-        for(uint64_t i = startidOffsetScalar; i < startidOffsetScalar+remainderCount; i++){
-            //std::cout<< "startidOffsetScalar" << startidOffsetScalar << std::endl;
-            //std::cout<< "inDataOriginal[i]" << inDataOriginal[i] << std::endl;
-            if(t_compare<t_ve_scalar,64>::apply(inDataOriginal[i], val)) {
-                *outPos = i;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)     
+        for(uint64_t i = 0; i < remainderCount; i++){
+            if(t_compare<t_ve_scalar,64>::apply(inDataRemainder[i], val)) {
+                *outPos = i + startidOffsetScalar;
+                outPos++;
+                //std::cout<< "outpos scalar: " << outPos << std::endl;
+            }
+        }
+        size_t const outPosCount = outPos - initOutPos;
+        //std::cout<< "outPosCount: " << outPosCount << std::endl;
+        size_t const uncomprValuesCnt = outPosCount % vecElCont;
+        size_t const comprValuesCnt = outPosCount - uncomprValuesCnt; 
+        //std::cout<< "outPosOld value: " << *outPos << std::endl;
+        
+        outPos = outPos - uncomprValuesCnt;
+        //std::cout<< "outPosNew: " << outPos << std::endl;
+        //std::cout<< "outPosNew value: " << *outPos << std::endl;
+
+        size_t sizeComprByte = comprValuesCnt * sizeof(uint64_t);
+        //create padding
+        uint64_t * outPosUncompr = reinterpret_cast< uint64_t *>(outPosCol->create_data_uncompr_start(reinterpret_cast< uint8_t *>(outPos) ) );
+        //std::cout<< "outPosUncompr: " << outPosUncompr << std::endl;
+        //std::cout<< "outPosUncompr value: " << *outPosUncompr << std::endl;
+
+        //write in uncompressed part of the output
+        if (comprValuesCnt != 0){
+            for(size_t i = 0; i < uncomprValuesCnt; i++){
+                *outPosUncompr = *outPos;
+                outPosUncompr++;
                 outPos++;
             }
         }
 
-        size_t const outPosCount = outPos - initOutPos;
-        outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
-
+        // #log, sizeByte , sizeComprByte
+        outPosCol->set_meta_data(uncomprValuesCnt + comprValuesCnt, (outPosUncompr - initOutPos) * sizeof(uint64_t), sizeComprByte);
         return outPosCol;        
 
     }
 };
-
 
 }
 #endif 

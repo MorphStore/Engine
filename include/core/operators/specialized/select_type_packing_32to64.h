@@ -10,6 +10,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/typehelper.h>
+#include <core/operators/interfaces/select.h>
 
 namespace morphstore {
 
@@ -19,7 +20,7 @@ template<
         template<class, int> class t_compare,
         class t_vector_extension
 >
-struct select_t//<t_vector_extension, type_packing_f<uint32_t>, type_packing_f<uint32_t>>  
+struct select_t<t_compare, t_vector_extension, type_packing_f<uint64_t >, type_packing_f<uint32_t >>  
     {
     using t_in_ve = typename TypeHelper<t_vector_extension, uint32_t>::newbasetype;
     using t_out_ve = typename TypeHelper<t_vector_extension, uint64_t>::newbasetype;
@@ -31,12 +32,11 @@ struct select_t//<t_vector_extension, type_packing_f<uint32_t>, type_packing_f<u
     
     static column<type_packing_f<uint64_t >> const * apply(
             column<type_packing_f<uint32_t >> const * const inDataCol,
-            in_base_t const val,
+            uint64_t const val,
             const size_t outPosCountEstimate = 0
     ) {
         size_t const inDataCount = inDataCol->get_count_values();
         in_base_t const * inData = inDataCol->get_data();
-        in_base_t const * inDataOriginal = inDataCol->get_data();
 
         // If no estimate is provided: Pessimistic allocation size (for
         // uncompressed data), reached only if all input data elements pass the
@@ -58,53 +58,52 @@ struct select_t//<t_vector_extension, type_packing_f<uint32_t>, type_packing_f<u
         in_vector_t const predicateVector = set1<t_in_ve, in_vector_base_t_granularity::value>(val);
         out_vector_t positionVector = set_sequence<t_out_ve, out_vector_base_t_granularity::value>(startid,1);
         out_vector_t const addVector = set1<t_out_ve, out_vector_base_t_granularity::value>(out_vector_element_count::value);
-        for(size_t i = 0; i < vectorCount; ++i) { //selection 
+        for(size_t i = 0; i < vectorCount; ++i) { //selection for compressed part 
             in_vector_t dataVector = load<t_in_ve, iov::ALIGNED, in_vector_size_bit::value>(inData);
             in_vector_mask_t resultMask = t_compare<t_in_ve,in_vector_base_t_granularity::value>::apply(dataVector, predicateVector);
-            out_vector_mask_t resultMaskLow = resultMask & 3; //for the last two values of resultMask
-            out_vector_mask_t resultMaskHigh = (resultMask & 12) >> 2; //for value three and four of resultMask
-            compressstore<t_out_ve, iov::UNALIGNED, out_vector_size_bit::value>(outPos, positionVector, resultMaskLow);
+            out_vector_mask_t resultMaskLow = ((1 << out_vector_element_count::value) - 1) & resultMask; //for last half of values of resultMask
+            out_vector_mask_t resultMaskHigh = resultMask >> out_vector_element_count::value; //for first half of values of resultMask
+            compressstore<t_out_ve, iov::UNALIGNED, out_vector_base_t_granularity::value>(outPos, positionVector, resultMaskLow);
+            outPos += count_matches<t_out_ve>::apply( resultMaskLow );
             positionVector = add<t_out_ve, out_vector_base_t_granularity::value>::apply(positionVector,addVector);       
-            compressstore<t_out_ve, iov::UNALIGNED, out_vector_size_bit::value>(outPos, positionVector, resultMaskHigh);
+            compressstore<t_out_ve, iov::UNALIGNED, out_vector_base_t_granularity::value>(outPos, positionVector, resultMaskHigh);
+            outPos += count_matches<t_out_ve>::apply( resultMaskHigh );
             positionVector = add<t_out_ve, out_vector_base_t_granularity::value>::apply(positionVector,addVector);
-
-            outPos += count_matches<t_in_ve>::apply( resultMask );
             inData += in_vector_element_count::value;
-
             //std::cout<< "i: " << i << " resultMask: " << resultMask << " resultMaskLow: " << resultMaskLow << " resultMaskHigh: " << resultMaskHigh <<std::endl;
-        }        
+        }  
+        
+        size_t const vecElCont = out_vector_element_count::value;
+        int startidOffsetScalar = vectorCount*vecElCont;      
+        uint32_t const * inDataRemainder = inDataCol->get_data_uncompr_start(); 
 
         //selection for scalar rest 
-        // int startidOffsetScalar = vectorCount*vector_element_count::value;       
-        // using t_ve_scalar = scalar<v32<uint32_t>>;    
-        // IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)            
-        // vector_t const predicateVectorScalar = set1<t_ve_scalar, 32>(val);
-        // vector_t positionVectorScalar = set_sequence<t_ve_scalar, 32>(startidOffsetScalar,1);
-        // vector_t const addVectorScalar = set1<t_ve_scalar, 32>(1);        
-
-        // for(size_t i = 0; i < remainderCount; ++i){ 
-        //     vector_t dataVectorScalar = load<t_ve_scalar, iov::ALIGNED, 32>(inData);
-        //     vector_mask_t resultMaskScalar =
-        //         t_compare<t_ve_scalar,32>::apply(dataVectorScalar, predicateVectorScalar);
-        //     compressstore<t_ve_scalar, iov::UNALIGNED, 32>(outPos, positionVectorScalar, resultMaskScalar);
-        //     positionVectorScalar = add<t_ve_scalar, 32>::apply(positionVectorScalar,addVectorScalar);
-
-        //     outPos += count_matches<t_ve_scalar>::apply( resultMaskScalar );
-        //     inData += 1; 
-        // }
-       
-        int startidOffsetScalar = vectorCount*in_vector_element_count::value;       
         using t_ve_scalar = scalar<v32<uint32_t>>;    
-        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)            
-        for(uint64_t i = startidOffsetScalar; i < startidOffsetScalar+remainderCount; i++){
-            if(t_compare<t_ve_scalar,32>::apply(inDataOriginal[i], val)) {
-                *outPos = i;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)     
+        for(size_t i = 0; i < remainderCount; i++){
+            if(t_compare<t_ve_scalar,32>::apply(inDataRemainder[i], val)) {
+                *outPos = i + startidOffsetScalar;
                 outPos++;
             }
         }
-
         size_t const outPosCount = outPos - initOutPos;
-        outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
+        size_t const uncomprValuesCnt = outPosCount % vecElCont;
+        size_t const comprValuesCnt = outPosCount - uncomprValuesCnt; 
+        outPos = outPos - uncomprValuesCnt;
+        size_t sizeComprByte = comprValuesCnt * sizeof(uint64_t);
+        
+        //create padding
+        uint64_t * outPosUncompr = reinterpret_cast< uint64_t *>(outPosCol->create_data_uncompr_start(reinterpret_cast< uint8_t *>(outPos) ) );
+
+        //write in uncompressed part of the output
+        if (comprValuesCnt != 0){
+            for(size_t i = 0; i < uncomprValuesCnt; i++){
+                *outPosUncompr = *outPos;
+                outPosUncompr++;
+                outPos++;
+            }
+        }
+        outPosCol->set_meta_data(uncomprValuesCnt + comprValuesCnt, (outPosUncompr - initOutPos) * sizeof(uint64_t), sizeComprByte);
 
         return outPosCol;        
 
