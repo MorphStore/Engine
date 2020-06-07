@@ -1,3 +1,6 @@
+#ifndef MORPHSTORE_CORE_MORPHING_TYPE_PACKING_VERTICAL_H
+#define MORPHSTORE_CORE_MORPHING_TYPE_PACKING_VERTICAL_H
+
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph.h>
@@ -25,11 +28,11 @@ namespace morphstore {
     // ************************************************************************
         template<class t_layout>
     	struct type_packing_vertical_f : public format {
-       
+
         static size_t get_size_max_byte(size_t p_CountValues) {
             return p_CountValues * sizeof(t_layout);
         }
-        static const size_t m_BlockSize = 1;
+        static const size_t m_BlockSize = 8;
         template<class t_ve>
         static void print_vector(t_ve& tmp, const char* tag){
          	std::cout << tag<< ":";
@@ -156,8 +159,8 @@ namespace morphstore {
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);
             base_t * outBase = reinterpret_cast<base_t *>(out8);
             
-       		const size_t sizeByte = sizeof(t_layout);
-            const size_t blockSizeVec = vector_size_byte::value / (sizeByte * 2) ;
+       		//const size_t sizeByte = sizeof(t_layout);
+            const size_t blockSizeVec = sizeof(base_t) / sizeof(t_layout);//vector_size_byte::value / (sizeByte * 2) ;
             const size_t byte_to_bit = 8;
             //std::cout << "sizeByte" << sizeByte << std::endl;
             // std::cout << "blockSizeVec" << blockSizeVec << std::endl;
@@ -224,8 +227,8 @@ namespace morphstore {
             
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);
             base_t * outBase = reinterpret_cast<base_t *>(out8);            
-       		const size_t sizeByte = sizeof(t_layout);
-            const size_t blockSizeVec = vector_size_byte::value / (sizeByte * 2) ;
+       		//const size_t sizeByte = sizeof(t_layout);
+            const size_t blockSizeVec = sizeof(base_t) / sizeof(t_layout);//vector_size_byte::value / (sizeByte * 2) ;
             const size_t byte_to_bit = 8;
 
             for(size_t i = 0; i < countLog;) {
@@ -265,6 +268,7 @@ namespace morphstore {
             t_vector_extension,
             t_vector_extension::vector_helper_t::granularity::value
     >(
+            //bitwidth_max<typename t_vector_extension::base_t>(std::numeric_limits<uint64_t>::digits)
             bitwidth_max<typename t_vector_extension::base_t>(8) 
     );
 
@@ -296,9 +300,9 @@ namespace morphstore {
         ) {
             using namespace vectorlib;        
             const base_t * inBase = reinterpret_cast<const base_t *>(in8);  
-       		const size_t sizeByte = sizeof(t_layout);
+       		//const size_t sizeByte = sizeof(t_layout);
             const size_t byte_to_bit = 8;        
-            const size_t blockSizeVec = vector_size_byte::value / (sizeByte * 2) ;
+            const size_t blockSizeVec = sizeof(base_t) / sizeof(t_layout);//vector_size_byte::value / (sizeByte * 2) ;
             
             for(size_t i = 0; i < countInLog;) { 
                 const vector_t tmp = load<
@@ -339,9 +343,11 @@ namespace morphstore {
             t_vector_extension,
             t_vector_extension::vector_helper_t::granularity::value
     >(
+    	   // bitwidth_max<typename t_vector_extension::base_t>(std::numeric_limits<uint64_t>::digits)
             bitwidth_max<typename t_vector_extension::base_t>(8)
     );
      
 
 
 }
+#endif

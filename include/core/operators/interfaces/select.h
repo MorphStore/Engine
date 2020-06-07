@@ -26,7 +26,8 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 #include <cstdint>
 
 namespace morphstore {
@@ -36,7 +37,8 @@ namespace morphstore {
  * partial template specialization.
  */
 template<
-        template<typename> class t_op,
+        template<class, int> class t_compare,
+        //template<typename> class t_op,
         class t_vector_extension,
         class t_out_pos_f,
         class t_in_data_f
@@ -71,7 +73,8 @@ struct select_t {
 };
 
 template<
-        template<typename> class t_op,
+        template<class, int> class t_compare,
+        //template<typename> class t_op,
         class t_vector_extension,
         class t_out_pos_f,
         class t_in_data_f
@@ -83,7 +86,7 @@ select(
         const uint64_t val,
         const size_t outPosCountEstimate = 0
 ) {
-    return select_t<t_op,
+    return select_t<t_compare, //t_op,
         t_vector_extension,
         t_out_pos_f,
         t_in_data_f>::apply(

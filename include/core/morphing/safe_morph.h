@@ -45,6 +45,7 @@
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/uncompr.h>
+#include <core/morphing/type_packing.h>
 #include <core/morphing/vbp.h>
 #include <core/morphing/vbp_padding.h>
 #include <core/storage/column.h>
@@ -448,6 +449,38 @@ namespace morphstore {
 #endif
             
     #undef MAKE_SAFE_MORPH_FOR_DECOMPR
+
+    // ------------------------------------------------------------------------
+    // Format type_packing_f
+    // ------------------------------------------------------------------------
+    // Compression
+
+    template<class t_layout> \
+    struct safe_morph_t< type_packing_f< t_layout >, uncompr_f> { \
+        using dst_f = type_packing_f<t_layout>; \
+        using src_f = uncompr_f; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vectorlib::scalar<vectorlib::v64<uint64_t>>, dst_f, src_f>(inCol); \
+        }; \
+    };
+    
+    //Decompression
+
+    template<class t_layout> \
+    struct safe_morph_t<uncompr_f, type_packing_f<t_layout> > { \
+        using dst_f = uncompr_f; \
+        using src_f = type_packing_f<t_layout>; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vectorlib::scalar<vectorlib::v64<uint64_t>>, dst_f, src_f>(inCol); \
+        }; \
+    };
+
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_SAFE_MORPH_H
