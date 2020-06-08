@@ -33,10 +33,14 @@ class column_with_blockoffsets_base {
         virtual ~column_with_blockoffsets_base() {}
 
         virtual const std::vector<const uint8_t *> *get_block_offsets() = 0;
-        virtual const uint8_t *get_block_offset(size_t pos) = 0;
+        virtual const uint8_t *get_block_offset(size_t block_number) = 0;
         virtual const column_base *get_column() = 0;
         virtual size_t get_block_size() = 0;
-        virtual size_t get_size_used_byte() = 0;
+
+        size_t get_size_used_byte() {
+            return get_column()->get_size_used_byte() + (get_block_offsets()->size() * sizeof(uint8_t *));
+        }
+
         bool last_block_compressed() {
             return get_column()->get_count_values_uncompr() == 0;
         }
@@ -70,15 +74,11 @@ template <class F> class column_with_blockoffsets : public column_with_blockoffs
         }
 
         const std::vector<const uint8_t *> *get_block_offsets() { return block_offsets; }
-        const uint8_t *get_block_offset(size_t pos) { return block_offsets->at(pos); }
+        const uint8_t *get_block_offset(size_t block_number) { return block_offsets->at(block_number); }
 
         const column<F> *get_column() { return col; }
 
         inline size_t get_block_size() { return F::m_BlockSize; }
-
-        size_t get_size_used_byte() {
-            return col->get_size_used_byte() + (block_offsets->size() * sizeof(uint8_t *));
-        }
 };
 } // namespace morphstore
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_WITH_BLOCKOFFSETS_H

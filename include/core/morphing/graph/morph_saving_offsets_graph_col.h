@@ -30,6 +30,7 @@
 #include <core/storage/graph/graph_compr_format.h>
 
 #include <core/morphing/morph_saving_offsets.h>
+#include <core/morphing/decompress_column_block.h>
 
 #include <memory>
 
@@ -123,10 +124,28 @@ namespace morphstore {
         return result;
     }
 
-/*     const column_with_offsets_uncompr *decompress_part_of_graph_col(const column_base *col, const GraphCompressionFormat src_f) {
-        // TODO
-        throw std::runtime_error("Not implemented decompressing a single block");
-    } */
+    const column_uncompr *decompress_column_block(column_with_blockoffsets_base *col,
+                                                  const GraphCompressionFormat src_f, uint64_t block) {
+        switch (src_f) {
+        case GraphCompressionFormat::DELTA: {
+            auto casted_col = dynamic_cast<column_with_offsets_delta *>(col);
+            return decompress_column_block<ve, default_delta>(casted_col, block);
+        }
+        case GraphCompressionFormat::FOR: {
+            auto casted_col = dynamic_cast<column_with_offsets_for *>(col);
+            return decompress_column_block<ve, default_for>(casted_col, block);
+        }
+        case GraphCompressionFormat::DYNAMIC_VBP: {
+            auto casted_col = dynamic_cast<column__with_offsets_dyn_vbp *>(col);
+            return decompress_column_block<ve, default_vbp>(casted_col, block);
+        }
+        case GraphCompressionFormat::UNCOMPRESSED: {
+            throw std::runtime_error("Decompress a single block of size 1 is meaningless .. access directly");
+        }
+        default:
+            throw std::runtime_error("Unexpected compression format" + graph_compr_f_to_string(src_f));
+        }
+    }
 
     column_with_offsets_uncompr *decompress_graph_col(column_with_blockoffsets_base *col,
                                                             const GraphCompressionFormat src_f) {

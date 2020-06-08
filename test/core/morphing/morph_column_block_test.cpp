@@ -25,8 +25,8 @@
 #include <core/morphing/delta.h>
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/format.h>
-#include <core/morphing/morph_batch.h>
 #include <core/morphing/morph_saving_offsets.h>
+#include <core/morphing/decompress_column_block.h>
 #include <core/morphing/uncompr.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
@@ -53,49 +53,34 @@ int main(void) {
     // behaviour?)
 
     auto compr_col_with_offsets = morph_saving_offsets<ve, compr_f, uncompr_f>(orig_col);
-    assert(compr_col_with_offsets->get_block_offsets()->size() == round_up_div(orig_column_size, compr_f::m_BlockSize));
+    auto block_count = compr_col_with_offsets->get_block_offsets()->size();
+    assert(block_count == round_up_div(orig_column_size, compr_f::m_BlockSize));
     assert(compr_col_with_offsets->last_block_compressed() == (orig_column_size % compr_f::m_BlockSize == 0));
 
     // asserting correctness of decompressing a single block
+
     auto block_size = compr_col_with_offsets->get_block_size();
 
     for (uint64_t block = 0; block < compr_col_with_offsets->get_block_offsets()->size(); block++) {
         auto value_count = block_size;
 
-        bool last_block = (block == (compr_col_with_offsets->get_block_offsets()->size() - 1));
-        bool last_block_uncompressed = !compr_col_with_offsets->last_block_compressed();
-        const uint8_t *block_offset = compr_col_with_offsets->get_block_offset(block);
-
-        if (last_block && last_block_uncompressed) {
+        if (block == block_count -1 && !compr_col_with_offsets->last_block_compressed()) {
             value_count = compr_col_with_offsets->get_column()->get_count_values() % block_size;
         }
 
         std::cout << "Checking block " << block << " range: " << block * block_size << " .. "
-                  << (block * block_size + value_count) - 1 << std::endl;
+                  << (block * block_size + block_size) - 1 << std::endl;
 
-        auto alloc_size = value_count * sizeof(uint64_t);
-
-        // TODO: refactor into general function:
-        // checking if block size == 1 (then direct mem_copy)
-        // checking if last block -> direct mem_copy + right meta data setting (value count < block_size)
-        // column<trg> morph_column_block<ve, trg, src>(column_with_offset<src> col_with_offsets, ?block_number)
-        // block then used for get_pos() inside of CSR graph (when this works -> caching of blocks in CSR)
-
-        auto decompr_col_block = new column<uncompr_f>(alloc_size);
-        decompr_col_block->set_meta_data(value_count, alloc_size);
-        uint8_t *out8 = decompr_col_block->get_data();
-    
-
-        if (last_block && last_block_uncompressed) {
-            auto outSizeRestByte = uncompr_f::get_size_max_byte(value_count);
-            memcpy(out8, block_offset, outSizeRestByte);
-        } else {
-            morph_batch<ve, uncompr_f, compr_f>(block_offset, out8, block_size);
-        }
+        auto decompr_col_block = decompress_column_block<ve, compr_f>(compr_col_with_offsets, block);
 
         auto expected_col = generate_sorted_unique(value_count, block * 1024);
         assert_columns_equal(expected_col, decompr_col_block);
     }
+
+    // checking decompressing multiple sequentiell blocks
+    std::cout << "Checking decompressing multiple blocks " << std::endl;
+    auto multiple_col_blocks = decompress_column_blocks<ve, compr_f>(compr_col_with_offsets, 0, block_count - 1);
+    assert_columns_equal(orig_col, multiple_col_blocks);
 
     return 0;
 }
