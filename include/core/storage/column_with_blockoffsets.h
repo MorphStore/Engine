@@ -54,7 +54,9 @@ template <class F> class column_with_blockoffsets : public column_with_blockoffs
 
     public:
         column_with_blockoffsets(const column<F> *c)
-            : column_with_blockoffsets(c, new std::vector<const uint8_t *>()) {}
+            : column_with_blockoffsets(c, new std::vector<const uint8_t *>()) {
+            static_assert(F::m_BlockSize == 1, "need block offsets if block-size > 1");
+        }
 
         column_with_blockoffsets(const column<F> *c, std::vector<const uint8_t *> *offsets) {
             col = c;

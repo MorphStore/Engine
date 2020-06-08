@@ -44,19 +44,17 @@ using ve = scalar<v64<uint64_t>>;
 using compr_f = DEFAULT_DELTA_DYNAMIC_VBP_F(ve);
 
 int main(void) {
-    // 3 whole blocks
-    // TODO: also check for partial block .. 2 test variants (column_size 3000 and 3072)
-    // 3000 not working yet
-    auto column_size = 3000;
+    // TODO: 2 test variants (column_size 3000 and 3072)
+    auto orig_column_size = 3000;
 
-    auto orig_col = generate_sorted_unique(column_size);
+    auto orig_col = generate_sorted_unique(orig_column_size);
 
     // !! morph saving offsets needs to look if last block can be actually morphed (if not complete -> undefined
     // behaviour?)
 
     auto compr_col_with_offsets = morph_saving_offsets<ve, compr_f, uncompr_f>(orig_col);
-    assert(compr_col_with_offsets->get_block_offsets()->size() == 3);
-    assert(compr_col_with_offsets->last_block_compressed() == (column_size % compr_f::m_BlockSize == 0));
+    assert(compr_col_with_offsets->get_block_offsets()->size() == round_up_div(orig_column_size, compr_f::m_BlockSize));
+    assert(compr_col_with_offsets->last_block_compressed() == (orig_column_size % compr_f::m_BlockSize == 0));
 
     // asserting correctness of decompressing a single block
     auto block_size = compr_col_with_offsets->get_block_size();
@@ -80,7 +78,8 @@ int main(void) {
         // TODO: refactor into general function:
         // checking if block size == 1 (then direct mem_copy)
         // checking if last block -> direct mem_copy + right meta data setting (value count < block_size)
-        // column<trg> morph_block<ve, trg, src>(column_with_offset<src> col_with_offsets)
+        // column<trg> morph_column_block<ve, trg, src>(column_with_offset<src> col_with_offsets, ?block_number)
+        // block then used for get_pos() inside of CSR graph (when this works -> caching of blocks in CSR)
 
         auto decompr_col_block = new column<uncompr_f>(alloc_size);
         decompr_col_block->set_meta_data(value_count, alloc_size);

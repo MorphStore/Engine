@@ -103,7 +103,8 @@ namespace morphstore {
             uint64_t *expected = expected_col->get_data();
             uint64_t *actual = actual_col->get_data();
 
-            assert(expected_col->get_count_values() == actual_col->get_count_values());
+            assert(ec.m_CountValuesEqual);
+            assert(ec.m_SizeUsedByteEqual);
 
             // printing only different entries
             for (uint64_t i = 0; i < expected_col->get_count_values(); i++) {

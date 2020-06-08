@@ -143,8 +143,8 @@ namespace morphstore {
             // decompressing offset_column in order to read correct offset
             // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
             // return only relevant block and than work on that
-            auto uncompr_offset_col = decompress_graph_col(offset_column->get_column(), current_compression);
-            uint64_t *offset_data = uncompr_offset_col->get_data();
+            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
+            uint64_t *offset_data = uncompr_offset_col->get_column()->get_data();
 
             uint64_t offset = offset_data[id];
             uint64_t nextOffset;
@@ -157,7 +157,7 @@ namespace morphstore {
             }
 
             // deleting temporary column
-            if (uncompr_offset_col != offset_column->get_column()) {
+            if (uncompr_offset_col != offset_column) {
                 delete uncompr_offset_col;
             }
 
@@ -174,12 +174,8 @@ namespace morphstore {
 
             std::vector<uint64_t> out_edge_ids;
             // TODO: only decompress relevant block
-            auto uncompr_offset_col = decompress_graph_col(offset_column->get_column(), current_compression);
+            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression)->get_column();
             uint64_t offset = ((uint64_t *)uncompr_offset_col->get_data())[id];
-
-
-            // TODO: remove
-            print_column(uncompr_offset_col, id - 20, id + 20);
 
             if (uncompr_offset_col != offset_column->get_column()) {
                 delete uncompr_offset_col;
@@ -191,17 +187,10 @@ namespace morphstore {
             out_edge_ids.reserve(out_degree);
 
             // TODO: only decompress relevant blocks
-            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column->get_column(), current_compression);
+            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column, current_compression)->get_column();
             uint64_t *edgeId_data = uncompr_edgeId_col->get_data();
 
-            // TODO: remove
-            print_column(uncompr_edgeId_col, 1'000'000, 1'000'020);
-            std::cout << std::endl <<  "edge id column offset: " << offset;
-            std::cout << " vertex out degree: " << out_degree;
-            std::cout << " edge id column size: " << uncompr_edgeId_col->get_count_values();
-            std::cout.flush();
-
-            assert(offset + out_degree < uncompr_edgeId_col->get_count_values());
+            //assert(offset + out_degree < uncompr_edgeId_col->get_count_values());
 
             out_edge_ids.insert(out_edge_ids.end(), edgeId_data + offset, edgeId_data + offset + out_degree);
 
