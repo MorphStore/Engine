@@ -172,7 +172,7 @@ namespace morphstore {
         uint64_t get_min_compr_degree() { return min_compr_degree; }
 
         // get number of neighbors of vertex with id
-        uint64_t get_out_degree(uint64_t id) const override {
+        uint64_t get_out_degree(uint64_t id) override {
             auto entry = adjacencylistPerVertex->find(id);
             if (entry == adjacencylistPerVertex->end()) {
                 return 0;
@@ -181,7 +181,7 @@ namespace morphstore {
             }
         }
 
-        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) override {
             // basically column -> vector (as convinient to use in other methods)
             // maybe better idea would be to return a uint64_t* instead (together with a size value)
             std::vector<uint64_t> edge_ids;

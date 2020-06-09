@@ -24,13 +24,40 @@
 #ifndef MORPHSTORE_CSR_H
 #define MORPHSTORE_CSR_H
 
-#include <core/storage/graph/graph.h>
 #include <core/morphing/graph/morph_saving_offsets_graph_col.h>
+#include <core/storage/graph/graph.h>
+
+#include <optional>
 
 #include <assert.h>
 #include <stdexcept>
 
 namespace morphstore {
+
+    // simple cache of size 1 (to avoid decompressing the same block multiple times .. f.i. for getting the degree of a
+    // vertex)
+    class ColumnBlockCache {
+    private:
+        uint64_t block_number;
+        const column<uncompr_f> *decompressed_block;
+
+    public:
+        ColumnBlockCache(uint64_t block_number, const column<uncompr_f> *decompressed_block) {
+            this->block_number = block_number;
+            this->decompressed_block = decompressed_block;
+        }
+
+        ~ColumnBlockCache() {
+            // always valid, as columns in uncompressed format should not use the cache
+            delete decompressed_block;
+        }
+
+        uint64_t get_block_number() const { return block_number; }
+
+        const column<uncompr_f> * get() const {
+            return decompressed_block;
+        }
+    };
 
     class CSR : public Graph {
 
@@ -41,6 +68,10 @@ namespace morphstore {
          */
         column_with_blockoffsets_base *offset_column;
         column_with_blockoffsets_base *edgeId_column;
+
+        // for faster sequentiell access (not respected in memory usage yet)
+        std::unique_ptr<ColumnBlockCache> offset_block_cache = nullptr;
+        std::unique_ptr<ColumnBlockCache> edgeIds_block_cache = nullptr;
 
     protected:
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
@@ -77,7 +108,7 @@ namespace morphstore {
             }
         }
 
-        uint64_t get_offset(uint64_t id) const {
+        uint64_t get_offset(uint64_t id) {
             // TODO: use cache
 
             auto block_size = offset_column->get_block_size();
@@ -91,14 +122,22 @@ namespace morphstore {
 
                 assert(block_number < offset_column->get_block_offsets()->size());
 
-                auto uncompr_block = decompress_column_block(offset_column, current_compression, block_number);
+                const column_uncompr* uncompr_block;
+                if (offset_block_cache && offset_block_cache->get_block_number() == block_number) {
+                    //std::cout << "cache hit" << std::endl;
+                    uncompr_block = offset_block_cache->get();
+                } 
+                else {
+                    //std::cout << "cache miss" << std::endl;
+                    uncompr_block = decompress_column_block(offset_column, current_compression, block_number);
+
+                    // update cache
+                    offset_block_cache = std::make_unique<ColumnBlockCache>(block_number, uncompr_block);
+                } 
 
                 uint64_t *block_data = uncompr_block->get_data();
 
                 auto offset = block_data[block_pos];
-
-                // deleting temporary column
-                delete uncompr_block;
 
                 return offset;
             }
@@ -107,7 +146,7 @@ namespace morphstore {
         // DEBUG function to look into column:
         void print_column(const column_base *col, int start, int end) const {
             // validate interval (fix otherwise)
-            int col_size =  col->get_count_values();
+            int col_size = col->get_count_values();
             if (start < 0 || col_size < start) {
                 start = 0;
             }
@@ -166,7 +205,7 @@ namespace morphstore {
         }
 
         // get number of edges of vertex with id
-        uint64_t get_out_degree(uint64_t id) const override {
+        uint64_t get_out_degree(uint64_t id) override {
             uint64_t offset = get_offset(id);
             uint64_t nextOffset;
 
@@ -186,7 +225,7 @@ namespace morphstore {
             }
         }
 
-        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
+        std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) override {
             assert(vertices->exists_vertex(id));
 
             std::vector<uint64_t> result;
@@ -220,8 +259,8 @@ namespace morphstore {
                 auto end_block = end / block_size;
                 auto end_block_pos = end % block_size;
 
-                 assert(start_block < edgeId_column->get_block_offsets()->size());
-                 assert(end_block < edgeId_column->get_block_offsets()->size());
+                assert(start_block < edgeId_column->get_block_offsets()->size());
+                assert(end_block < edgeId_column->get_block_offsets()->size());
 
                 // case that end is the first value of another block (should not decompress that block than)
                 if (end_block_pos == 0) {
@@ -275,6 +314,13 @@ namespace morphstore {
             offset_column = morph_saving_offsets_graph_col(offset_column, current_compression, target_format, true);
             edgeId_column = morph_saving_offsets_graph_col(edgeId_column, current_compression, target_format, true);
 
+            if (offset_block_cache) {
+                offset_block_cache = nullptr;
+            }
+            if (edgeIds_block_cache) {
+                edgeIds_block_cache = nullptr;
+            }
+
             this->current_compression = target_format;
         }
 
@@ -282,7 +328,7 @@ namespace morphstore {
         std::pair<size_t, size_t> get_size_of_graph() const override {
 
             auto [index_size, data_size] = Graph::get_size_of_graph();
-            
+
             // column_meta_data, prepared_for_random_access, .. not included in get_size_used_byte;
             index_size += 2 * sizeof(column<uncompr_f>);
             index_size += edgeId_column->get_size_used_byte();
@@ -301,7 +347,8 @@ namespace morphstore {
             return " values: " + std::to_string(col->get_count_values()) +
                    " size in bytes: " + std::to_string(col->get_size_used_byte()) +
                    " compression ratio: " + std::to_string(compression_ratio(col_with_offsets, current_compression)) +
-                   " number of blocks (if blocksize > 1): " + std::to_string(col_with_offsets->get_block_offsets()->size());
+                   " number of blocks (if blocksize > 1): " +
+                   std::to_string(col_with_offsets->get_block_offsets()->size());
         }
 
         void statistics() override {

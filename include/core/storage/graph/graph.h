@@ -51,6 +51,7 @@ namespace morphstore {
     protected:
         GraphCompressionFormat current_compression = GraphCompressionFormat::UNCOMPRESSED;
 
+        // TODO: actually just needed for CSR format (could be moved)
         uint64_t expectedVertexCount;
         uint64_t expectedEdgeCount;
 
@@ -175,11 +176,11 @@ namespace morphstore {
         virtual std::string get_storage_format() const = 0;
         virtual uint64_t add_edge(uint64_t from, uint64_t to, unsigned short int type) = 0;
         virtual void morph(GraphCompressionFormat target_format) = 0;
-        virtual std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const = 0;
-        virtual uint64_t get_out_degree(uint64_t id) const = 0;
+        virtual std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) = 0;
+        virtual uint64_t get_out_degree(uint64_t id) = 0;
 
         // function to return a vector of ids of neighbors for BFS alg.
-        std::vector<uint64_t> get_neighbors_ids(uint64_t id) const {
+        std::vector<uint64_t> get_neighbors_ids(uint64_t id) {
             std::vector<uint64_t> targetVertexIds;
             for (auto edge_id : get_outgoing_edge_ids(id)) {
                 assert(edges->exists_edge(edge_id));
