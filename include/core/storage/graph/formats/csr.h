@@ -77,6 +77,33 @@ namespace morphstore {
             }
         }
 
+        uint64_t get_offset(uint64_t id) const {
+            // TODO: use cache
+
+            auto block_size = offset_column->get_block_size();
+
+            if (current_compression == GraphCompressionFormat::UNCOMPRESSED) {
+                uint64_t *col_data = offset_column->get_column()->get_data();
+                return col_data[id];
+            } else {
+                auto block_number = id / block_size;
+                auto block_pos = id % block_size;
+
+                assert(block_number < offset_column->get_block_offsets()->size());
+
+                auto uncompr_block = decompress_column_block(offset_column, current_compression, block_number);
+
+                uint64_t *block_data = uncompr_block->get_data();
+
+                auto offset = block_data[block_pos];
+
+                // deleting temporary column
+                delete uncompr_block;
+
+                return offset;
+            }
+        }
+
         // DEBUG function to look into column:
         void print_column(const column_base *col, int start, int end) const {
             // validate interval (fix otherwise)
@@ -140,28 +167,18 @@ namespace morphstore {
 
         // get number of edges of vertex with id
         uint64_t get_out_degree(uint64_t id) const override {
-            // decompressing offset_column in order to read correct offset
-            // TODO: only decompress part of the column as only offset_column[id] and offset_column[id+1] will be read
-            // return only relevant block and than work on that
-            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression);
-            uint64_t *offset_data = uncompr_offset_col->get_column()->get_data();
-
-            uint64_t offset = offset_data[id];
+            uint64_t offset = get_offset(id);
             uint64_t nextOffset;
 
             // special case: last vertex id has no next offset
             if (id == getVertexCount() - 1) {
                 nextOffset = getEdgeCount();
             } else {
-                nextOffset = offset_data[id + 1];
-            }
-
-            // deleting temporary column
-            if (uncompr_offset_col != offset_column) {
-                delete uncompr_offset_col;
+                nextOffset = get_offset(id + 1);
             }
 
             // compute out_degree
+            // TODO: simplify this line
             if (offset == nextOffset)
                 return 0;
             else {
@@ -172,33 +189,74 @@ namespace morphstore {
         std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) const override {
             assert(vertices->exists_vertex(id));
 
-            std::vector<uint64_t> out_edge_ids;
-            // TODO: only decompress relevant block
-            auto uncompr_offset_col = decompress_graph_col(offset_column, current_compression)->get_column();
-            uint64_t offset = ((uint64_t *)uncompr_offset_col->get_data())[id];
+            std::vector<uint64_t> result;
 
-            if (uncompr_offset_col != offset_column->get_column()) {
-                delete uncompr_offset_col;
+            uint64_t start = get_offset(id);
+            uint64_t degree = get_out_degree(id);
+
+            // TODO: use cache
+            result.reserve(degree);
+
+            // end is not included in the result
+            auto end = start + degree;
+
+            assert(start <= end);
+            assert(getEdgeCount() >= end);
+
+            if (degree == 0) {
+                return result;
             }
 
-            // TODO: decompressing offset_column twice this way (should not be a problem if block cache exists)
-            uint64_t out_degree = get_out_degree(id);
+            auto block_size = edgeId_column->get_block_size();
 
-            out_edge_ids.reserve(out_degree);
+            if (current_compression == GraphCompressionFormat::UNCOMPRESSED) {
+                uint64_t *col_data = edgeId_column->get_column()->get_data();
+                result.insert(result.end(), col_data + start, col_data + end);
+            } else {
+                // getting one block at a time as most of the time only one block is needed
+                // also allows to use block cache (would need to inject cache into decompress_block otherwise)
+                auto start_block = start / block_size;
+                auto start_block_pos = start % block_size;
+                auto end_block = end / block_size;
+                auto end_block_pos = end % block_size;
 
-            // TODO: only decompress relevant blocks
-            auto uncompr_edgeId_col = decompress_graph_col(edgeId_column, current_compression)->get_column();
-            uint64_t *edgeId_data = uncompr_edgeId_col->get_data();
+                 assert(start_block < edgeId_column->get_block_offsets()->size());
+                 assert(end_block < edgeId_column->get_block_offsets()->size());
 
-            //assert(offset + out_degree < uncompr_edgeId_col->get_count_values());
+                // case that end is the first value of another block (should not decompress that block than)
+                if (end_block_pos == 0) {
+                    end_block--;
+                    end_block_pos = block_size + 1;
+                }
 
-            out_edge_ids.insert(out_edge_ids.end(), edgeId_data + offset, edgeId_data + offset + out_degree);
+                for (auto block_number = start_block; block_number <= end_block; block_number++) {
+                    auto uncompr_block = decompress_column_block(edgeId_column, current_compression, block_number);
+                    uint64_t *block_data = uncompr_block->get_data();
 
-            if (uncompr_edgeId_col != edgeId_column->get_column()) {
-                delete uncompr_edgeId_col;
+                    // all edge ids in the same block
+                    if (start_block == end_block) {
+                        result.insert(result.end(), block_data + start_block_pos, block_data + end_block_pos);
+                    } else if (block_number == end_block) {
+                        // only insert until end_pos
+                        result.insert(result.end(), block_data, block_data + end_block_pos);
+                    } else if (block_number == start_block) {
+                        // don't insert values before start
+                        auto block_end = block_data + block_size;
+                        result.insert(result.end(), block_data + start_block_pos, block_end);
+                    } else {
+                        // insert whole block (should be very rare)
+                        auto block_end = block_data + block_size;
+                        result.insert(result.end(), block_data, block_end);
+                    }
+
+                    // deleting temporary column
+                    delete uncompr_block;
+                }
             }
 
-            return out_edge_ids;
+            assert(result.size() == degree);
+
+            return result;
         }
 
         void morph(GraphCompressionFormat target_format) override {

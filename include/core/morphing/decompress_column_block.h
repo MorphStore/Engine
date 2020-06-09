@@ -50,8 +50,8 @@ namespace morphstore {
 
         // validating range
         assert(start <= end);
-        assert(start <= block_count);
-        assert(end <= block_count);
+        assert(start < block_count);
+        assert(end < block_count);
 
         bool last_block_uncompressed = !inCol->last_block_compressed();
         bool last_block_included = end == (block_count - 1);

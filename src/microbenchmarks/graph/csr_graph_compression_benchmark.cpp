@@ -39,7 +39,7 @@ struct CompressionBenchmarkEntry {
     std::string to_string() {
         return graph_compr_f_to_string(compr_format) + "|" + std::to_string(compression_time) + "|" +
                std::to_string(offset_col_compression_ratio) + "|" + std::to_string(edgeId_col_compression_ratio) +
-               "|" + std::to_string(random_access_time);
+               "|" + std::to_string(random_access_time) + "|" + std::to_string(full_iterate);
     }
 };
 
@@ -71,7 +71,8 @@ int main(void) {
               << std::endl;
     std::cout << "Compression-Format | compression-time | offset-column compr. ratio"
               << " | edgeId-column compr. ratio | access of edges of "
-              << std::to_string(number_of_random_access) + " random vertices" << std::endl;
+              << std::to_string(number_of_random_access) + " random vertices"
+              << " | full iterate" << std::endl;
 
     for (auto current_f : compr_formats) {
         for (int exec = 0; exec < number_of_executions; exec++) {
@@ -95,6 +96,15 @@ int main(void) {
                 graph->get_outgoing_edge_ids(random_pos);
             }
             current_try.random_access_time = get_duration(start);
+
+            // full iterate
+            auto vertex_count = graph->getVertexCount();
+            start = highResClock::now();
+            for (uint64_t id = 0; id < vertex_count; id++) {
+                graph->get_outgoing_edge_ids(id);
+            }
+
+            current_try.full_iterate = get_duration(start);
 
             std::cout << current_try.to_string() << std::endl;
         }
