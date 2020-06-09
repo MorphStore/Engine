@@ -69,8 +69,10 @@ namespace morphstore {
         column_with_blockoffsets_base *offset_column;
         column_with_blockoffsets_base *edgeId_column;
 
-        // for faster sequentiell access (not respected in memory usage yet)
+        // for faster sequentiell access (not respected in memory usage yet) .. ideally encapsulated in an iterator
+        // as already for getting edge-ids the same block is decompressed 3x otherwise
         std::unique_ptr<ColumnBlockCache> offset_block_cache = nullptr;
+        // assuming most degrees are << block-size
         std::unique_ptr<ColumnBlockCache> edgeIds_block_cache = nullptr;
 
     protected:
@@ -122,6 +124,7 @@ namespace morphstore {
 
                 assert(block_number < offset_column->get_block_offsets()->size());
 
+                // TODO refactor this cache logic into a method
                 const column_uncompr* uncompr_block;
                 if (offset_block_cache && offset_block_cache->get_block_number() == block_number) {
                     //std::cout << "cache hit" << std::endl;
@@ -176,8 +179,7 @@ namespace morphstore {
 
         std::string get_storage_format() const override { return "CSR"; }
 
-        // this function gets the number of vertices/edges and allocates memory for the vertices-map and the graph
-        // topology arrays
+        // this function gets the number of vertices/edges and allocates memory for the graph-topology arrays
         // TODO: test that no data exists before (as this will get overwritten)
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
@@ -265,31 +267,62 @@ namespace morphstore {
                 // case that end is the first value of another block (should not decompress that block than)
                 if (end_block_pos == 0) {
                     end_block--;
-                    end_block_pos = block_size + 1;
+                    // setting it one step further than actually possible to read from (vector.insert excludes the end)
+                    end_block_pos = block_size;
                 }
 
+                // most of the case only one block accessed -> might be worth to seperate from for loop (start_block == end_block)
                 for (auto block_number = start_block; block_number <= end_block; block_number++) {
-                    auto uncompr_block = decompress_column_block(edgeId_column, current_compression, block_number);
+                    const column_uncompr *uncompr_block;
+                    // to avoid wrongly deleting a cached block (which could be used by the next access)
+                    // by creating new unique ptr or direct delete (alternatively use a shared_pointer .. might be a
+                    // very good idea)
+                    bool cache_hit = false;
+                    // only looking at cache for first block (as we assume sequential read)
+                    if (block_number == start_block && edgeIds_block_cache &&
+                        edgeIds_block_cache->get_block_number() == block_number) {
+                        // std::cout << "edgeId_col cache hit" << std::endl;
+                        uncompr_block = edgeIds_block_cache->get();
+                        cache_hit = true;
+                    } else {
+                        // std::cout << "edgeId_col cache miss" << std::endl;
+                        uncompr_block = decompress_column_block(edgeId_column, current_compression, block_number);
+                    }
+
                     uint64_t *block_data = uncompr_block->get_data();
 
-                    // all edge ids in the same block
+                    // all edge ids in the same block (implicitly end_block == block_number == start_block)
                     if (start_block == end_block) {
                         result.insert(result.end(), block_data + start_block_pos, block_data + end_block_pos);
+                        // update cache
+                        if (!cache_hit) {
+                            edgeIds_block_cache = std::make_unique<ColumnBlockCache>(block_number, uncompr_block);
+                        }
                     } else if (block_number == end_block) {
                         // only insert until end_pos
                         result.insert(result.end(), block_data, block_data + end_block_pos);
+                        // update cache
+                        if (!cache_hit) {
+                            edgeIds_block_cache = std::make_unique<ColumnBlockCache>(block_number, uncompr_block);
+                        }
                     } else if (block_number == start_block) {
                         // don't insert values before start
                         auto block_end = block_data + block_size;
                         result.insert(result.end(), block_data + start_block_pos, block_end);
+
+                        // deleting temporary column if not cached
+                        if (!cache_hit) {
+                            delete uncompr_block;
+                        }
                     } else {
                         // insert whole block (should be very rare)
                         auto block_end = block_data + block_size;
                         result.insert(result.end(), block_data, block_end);
-                    }
 
-                    // deleting temporary column
-                    delete uncompr_block;
+                        // deleting temporary column (does not matter if cached as following block will overwrite the
+                        // cache)
+                        delete uncompr_block;
+                    }
                 }
             }
 
@@ -314,11 +347,12 @@ namespace morphstore {
             offset_column = morph_saving_offsets_graph_col(offset_column, current_compression, target_format, true);
             edgeId_column = morph_saving_offsets_graph_col(edgeId_column, current_compression, target_format, true);
 
+            // invalidating caches
             if (offset_block_cache) {
-                offset_block_cache = nullptr;
+                offset_block_cache.reset();
             }
             if (edgeIds_block_cache) {
-                edgeIds_block_cache = nullptr;
+                edgeIds_block_cache.reset();
             }
 
             this->current_compression = target_format;
