@@ -18,8 +18,8 @@
 /**
  * @file adjacencylist.h
  * @brief Derived adj. list storage format class. Base: graph.h
- * @todo Adjust get_size_of_graph(), ?replace unordered_map with a fixed sized array
- */
+ * @todo try replacing unordered_map with a fixed sized array; read more into std::variant not allowing references (seems to work though)
+*/
 
 #ifndef MORPHSTORE_ADJACENCYLIST_H
 #define MORPHSTORE_ADJACENCYLIST_H
@@ -133,9 +133,9 @@ namespace morphstore {
                 } else {
                     delete std::get<adjacency_vector>(adj_list);
                 }
-
-                delete adjacencylistPerVertex;
             }
+
+            delete this->adjacencylistPerVertex;
         }
 
         AdjacencyList(EdgesContainerType edges_container_type)
@@ -284,6 +284,9 @@ namespace morphstore {
         // for measuring the size in bytes:
         std::pair<size_t, size_t> get_size_of_graph() const override {
             auto [index_size, data_size] = Graph::get_size_of_graph();
+            
+            // min_compr_degree
+            index_size += sizeof(uint64_t);
 
             // adjacencyListPerVertex
             index_size += sizeof(std::unordered_map<uint64_t, adjacency_list_variant>);
