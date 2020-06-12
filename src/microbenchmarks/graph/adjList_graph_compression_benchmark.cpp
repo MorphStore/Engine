@@ -70,7 +70,7 @@ int main(void) {
         random_accesses.push_back(dist(rd));
     }
 
-    std::cout << "Test vertex storage structure (median of 5 for full_iterate and random access)" << std::endl;
+    std::cout << "Test compression of adjacency-list format" << std::endl;
     std::cout << "Compression-Format | minimum degree for compression | compression-time | "
               << "compr. ratio | column ratio | access of edges of 5000 random vertices | full-iterate " << std::endl;
 
