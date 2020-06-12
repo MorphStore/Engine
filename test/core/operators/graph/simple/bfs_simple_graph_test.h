@@ -39,7 +39,7 @@ void bfs_simple_graph_test (void) {
 
     static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value, "type parameter of this method must be a graph format");
 
-    std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
+    std::shared_ptr<morphstore::Graph> graph = std::make_shared<GRAPH_FORMAT>();
     print_header(graph->get_storage_format());
 
     graph->allocate_graph_structure(4, 4);
@@ -61,9 +61,13 @@ void bfs_simple_graph_test (void) {
     std::cout << "Some statistics" << std::endl;
     graph->statistics();
 
+    assert(graph->getVertexCount() == 4);
+    assert(graph->getEdgeCount() == 4);
+
     auto bfs = std::make_unique<morphstore::BFS>(graph);
 
-    //assert(graph->getVertexCount() == 4);
-    //assert(graph->getEdgeCount() == 3);
+
     assert(bfs->do_BFS(v1) == 2);
+    assert(bfs->do_BFS(v2) == 1);
+    assert(bfs->do_BFS(v3) == 1);
 }

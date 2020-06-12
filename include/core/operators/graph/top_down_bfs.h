@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2019-2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -24,52 +24,44 @@
 #ifndef MORPHSTORE_TOP_DOWN_BFS
 #define MORPHSTORE_TOP_DOWN_BFS
 
-#include "../../storage/graph/graph.h"
+#include <core/operators/graph/degree_measurement.h>
+#include <core/storage/graph/graph.h>
 
 #include <chrono>
 
-namespace morphstore{
-
-    class BFS{
+namespace morphstore {
+    class BFS {
 
     private:
-        std::unique_ptr<morphstore::Graph> graph;
-        uint64_t graphSize;
-    
+        std::shared_ptr<morphstore::Graph> graph;
+
     public:
-
         // constructor with smart pointer to graph as parameter/reference
-        BFS(std::unique_ptr<morphstore::Graph>& g) : graph(std::move(g)){
-            graphSize = graph->getVertexCount();
-        }
-
-        uint64_t get_graph_size(){
-            return graphSize;
-        }
+        BFS(std::shared_ptr<morphstore::Graph> &g) : graph(g) {}
 
         // ------------------------------------------ BFS algorithm ------------------------------------------
 
         // actual BFS algorithm: takes the start-node id and returns the number of explored vertices
-        uint64_t do_BFS(uint64_t startVertex){
+        uint64_t do_BFS(uint64_t startVertex) {
             std::vector<uint64_t> frontier;
             std::vector<uint64_t> next;
-	        std::vector<bool> visited(graphSize, false);
+            std::vector<bool> visited(graph->getVertexCount(), false);
             uint64_t exploredVertices = 0;
 
             frontier.push_back(startVertex);
             visited[startVertex] = true;
 
-            while(!frontier.empty()){
+            while (!frontier.empty()) {
                 // Loop through current layer of vertices in the frontier
-                for(uint64_t i = 0; i < frontier.size(); ++i){
+                for (uint64_t i = 0; i < frontier.size(); ++i) {
                     uint64_t currentVertex = frontier[i];
                     // get list of a vertex's adjacency
-		            std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
+                    std::vector<uint64_t> neighbors = graph->get_neighbors_ids(currentVertex);
 
                     // Loop through all of neighbors of current vertex
-                    for(uint64_t j = 0; j < neighbors.size(); ++j){
-			            // check if neighbor has been visited, if not -> put into frontier and mark as visit = true
-                        if(!visited[neighbors[j]]){
+                    for (uint64_t j = 0; j < neighbors.size(); ++j) {
+                        // check if neighbor has been visited, if not -> put into frontier and mark as visit = true
+                        if (!visited[neighbors[j]]) {
                             next.push_back(neighbors[j]);
                             visited[neighbors[j]] = true;
                             ++exploredVertices;
@@ -88,7 +80,7 @@ namespace morphstore{
 
         // function that measures the number of explored vertices and time in ms:
         // results are written into a file; cycle determines the ith vertex from list
-        void do_measurements(uint64_t cycle, std::string pathToFile){
+        void do_measurements(uint64_t cycle, std::string pathToFile) {
             // list of measurement candidates: the parameter means the ith vertex in total
             std::vector<uint64_t> candidates = get_list_of_every_ith_vertex(cycle);
 
@@ -96,15 +88,15 @@ namespace morphstore{
             std::vector<std::pair<uint64_t, uint64_t>> results;
             results.reserve(candidates.size());
 
-
-            for(uint64_t i = 0; i < candidates.size(); ++i){
+            for (uint64_t i = 0; i < candidates.size(); ++i) {
                 // start measuring bfs time:
                 auto startBFSTime = std::chrono::high_resolution_clock::now();
 
                 uint64_t exploredVertices = do_BFS(candidates[i]);
 
                 auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
-                auto elapsedBFSTime = std::chrono::duration_cast< std::chrono::milliseconds >( finishBFSTime - startBFSTime ).count();
+                auto elapsedBFSTime =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(finishBFSTime - startBFSTime).count();
 
                 // write to intermediate array:
                 results.push_back({exploredVertices, elapsedBFSTime});
@@ -117,26 +109,26 @@ namespace morphstore{
             // open file for writing and delete existing stuff:
             fs.open(filename, std::fstream::out | std::ofstream::trunc);
 
-            for(uint64_t j = 0; j < results.size(); ++j){
+            for (uint64_t j = 0; j < results.size(); ++j) {
                 ss << results[j].first << "," << results[j].second << "\n";
                 ++j;
             }
-            fs << ss.str() ;
+            fs << ss.str();
 
             fs.close();
         }
 
         // function which returns a list of every ith vertex which is sorted by degree DESC
-        std::vector< uint64_t > get_list_of_every_ith_vertex(uint64_t cycle){
-            std::vector< uint64_t > measurementCandidates;
-            std::vector< std::pair<uint64_t, uint64_t> > totalListOfVertices = graph->get_list_of_degree_DESC();
-            for(uint64_t i = 0; i < totalListOfVertices.size(); i = i + cycle){
+        std::vector<uint64_t> get_list_of_every_ith_vertex(uint64_t cycle) {
+            std::vector<uint64_t> measurementCandidates;
+            std::vector<std::pair<uint64_t, uint64_t>> totalListOfVertices =
+                DegreeMeasurement::get_list_of_degree_DESC(graph);
+            for (uint64_t i = 0; i < totalListOfVertices.size(); i = i + cycle) {
                 measurementCandidates.push_back(totalListOfVertices[i].first);
             }
             return measurementCandidates;
         }
     };
-}
+} // namespace morphstore
 
-#endif //MORPHSTORE_TOP_DOWN_BFS
-
+#endif // MORPHSTORE_TOP_DOWN_BFS

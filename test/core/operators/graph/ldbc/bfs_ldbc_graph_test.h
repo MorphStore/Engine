@@ -39,13 +39,13 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     static_assert(std::is_base_of<morphstore::Graph, GRAPH_FORMAT>::value,
                   "type parameter of this method must be a graph format");
 
-    std::unique_ptr<morphstore::Graph> graph = std::make_unique<GRAPH_FORMAT>();
+    std::shared_ptr<morphstore::Graph> graph = std::make_shared<GRAPH_FORMAT>();
     std::string storageFormat = graph->get_storage_format();
 
     print_header(storageFormat);
 
     // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
-    std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(LDBC_DIR);
+    std::shared_ptr<morphstore::LDBCImport> ldbcImport = std::make_shared<morphstore::LDBCImport>(LDBC_DIR);
 
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
@@ -57,7 +57,6 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     auto bfs = std::make_unique<morphstore::BFS>(graph);
     // for scale factor 1 and including static as well as dynamic part of the graph
     std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
-    // bfs->do_measurements(10000, targetDir + "bfs_" + storageFormat);
 #else 
     throw std::invalid_argument("You forgot to define/uncomment the LDBC_DIR (at CMakeList.txt)");
 #endif

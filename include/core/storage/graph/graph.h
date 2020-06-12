@@ -118,53 +118,6 @@ namespace morphstore {
 
         EdgeWithIdAndProperties get_edge(uint64_t id) { return edges->get_edge_with_properties(id); }
 
-        // function to return a list of pair < vertex id, degree > DESC:
-        // TODO: move into seperate header and use graph as input parameter
-        std::vector<std::pair<uint64_t, uint64_t>> get_list_of_degree_DESC() {
-            std::vector<std::pair<uint64_t, uint64_t>> vertexDegreeList;
-            vertexDegreeList.reserve(getVertexCount());
-            // fill the vector with every vertex key and his degree
-            for (uint64_t i = 0; i < getVertexCount(); ++i) {
-                /*                 if (i % 1000 == 0) {
-                                    std::cout << "Degree-List - Current Progress" << i << "/" << getVertexCount() <<
-                   std::endl;
-                                } */
-                vertexDegreeList.push_back({i, this->get_out_degree(i)});
-            }
-            // sort the vector on degree DESC
-            std::sort(vertexDegreeList.begin(), vertexDegreeList.end(),
-                      [](const std::pair<uint64_t, uint64_t> &left, const std::pair<uint64_t, uint64_t> &right) {
-                          return left.second > right.second;
-                      });
-
-            return vertexDegreeList;
-        }
-
-        // function to measure graph characteristics (degree and count):
-        // TODO: move into seperate header and use graph as input parameter
-        void measure_degree_count(std::string filePath) {
-            std::vector<std::pair<uint64_t, uint64_t>> verticesDegree = get_list_of_degree_DESC();
-            // unordered map for mapping degree to count:
-            std::unordered_map<uint64_t, uint64_t> results;
-
-            for (uint64_t i = 0; i < verticesDegree.size(); ++i) {
-                // increment count in results for a given degree:
-                results[verticesDegree[i].second]++;
-            }
-
-            // write to file:
-            std::ofstream fs;
-            std::stringstream ss;
-            // open file for writing and delete existing stuff:
-            fs.open(filePath, std::fstream::out | std::ofstream::trunc);
-
-            for (auto const &m : results) {
-                ss << m.first << "," << m.second << "\n";
-            }
-            fs << ss.str();
-            fs.close();
-        }
-
         void add_property_to_vertex(uint64_t id, const std::pair<std::string, property_type> property) {
             vertices->add_property_to_vertex(id, property);
         };
