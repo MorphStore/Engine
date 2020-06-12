@@ -80,6 +80,7 @@ namespace morphstore {
         void add_to_vertex_edges_mapping(uint64_t sourceID, const std::vector<uint64_t> edge_ids) override {
             // TODO: throw error if not in order of vertex-ids ASC inserted (currently will only produce rubbish data)
             // TODO: handle if sourceIDs are skipped
+            // TODO: !!! handle if last vertex has no edges (wrong offset currently)
             // potential solution: add last_seen_vertex_id as class field .. check based on that .. assert order and
             // insert offsets for skipped vertices
 
@@ -218,13 +219,11 @@ namespace morphstore {
                 nextOffset = get_offset(id + 1);
             }
 
+            // if this fails, than alloc_graph has probably the wrong values
+            assert(offset <= nextOffset);
+
             // compute out_degree
-            // TODO: simplify this line
-            if (offset == nextOffset)
-                return 0;
-            else {
-                return nextOffset - offset;
-            }
+            return nextOffset - offset;
         }
 
         std::vector<uint64_t> get_outgoing_edge_ids(uint64_t id) override {
