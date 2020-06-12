@@ -63,11 +63,8 @@ void bfs_simple_graph_test (void) {
 
     assert(graph->getVertexCount() == 4);
     assert(graph->getEdgeCount() == 4);
-
-    auto bfs = std::make_unique<morphstore::BFS>(graph);
-
-
-    assert(bfs->do_BFS(v1) == 2);
-    assert(bfs->do_BFS(v2) == 1);
-    assert(bfs->do_BFS(v3) == 1);
+    
+    assert(morphstore::BFS::compute(graph, v1) == 2);
+    assert(morphstore::BFS::compute(graph, v2) == 1);
+    assert(morphstore::BFS::compute(graph, v3) == 1);
 }

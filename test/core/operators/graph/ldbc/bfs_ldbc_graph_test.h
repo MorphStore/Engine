@@ -54,9 +54,8 @@ template <class GRAPH_FORMAT> void bfs_ldbc_graph_test(void) {
     std::cout << "Some statistics" << std::endl;
     graph->statistics();
 
-    auto bfs = std::make_unique<morphstore::BFS>(graph);
     // for scale factor 1 and including static as well as dynamic part of the graph
-    std::cout << "Based on Vertex with id 0: " << bfs->do_BFS(0) << " vertices could be explored via BFS";
+    std::cout << "Based on Vertex with id 0: " << morphstore::BFS::compute(graph, 0) << " vertices could be explored via BFS";
 #else 
     throw std::invalid_argument("You forgot to define/uncomment the LDBC_DIR (at CMakeList.txt)");
 #endif

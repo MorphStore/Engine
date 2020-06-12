@@ -32,17 +32,9 @@
 namespace morphstore {
     class BFS {
 
-    private:
-        std::shared_ptr<morphstore::Graph> graph;
-
     public:
-        // constructor with smart pointer to graph as parameter/reference
-        BFS(std::shared_ptr<morphstore::Graph> &g) : graph(g) {}
-
-        // ------------------------------------------ BFS algorithm ------------------------------------------
-
         // actual BFS algorithm: takes the start-node id and returns the number of explored vertices
-        uint64_t do_BFS(uint64_t startVertex) {
+        static uint64_t compute(std::shared_ptr<Graph> graph, uint64_t startVertex) {
             std::vector<uint64_t> frontier;
             std::vector<uint64_t> next;
             std::vector<bool> visited(graph->getVertexCount(), false);
@@ -80,9 +72,9 @@ namespace morphstore {
 
         // function that measures the number of explored vertices and time in ms:
         // results are written into a file; cycle determines the ith vertex from list
-        void do_measurements(uint64_t cycle, std::string pathToFile) {
+        static void do_measurements(std::shared_ptr<Graph> graph, uint64_t cycle, std::string pathToFile) {
             // list of measurement candidates: the parameter means the ith vertex in total
-            std::vector<uint64_t> candidates = get_list_of_every_ith_vertex(cycle);
+            std::vector<uint64_t> candidates = get_list_of_every_ith_vertex(graph, cycle);
 
             // Intermediate data structure: (explored vertices, time in ms)
             std::vector<std::pair<uint64_t, uint64_t>> results;
@@ -92,7 +84,7 @@ namespace morphstore {
                 // start measuring bfs time:
                 auto startBFSTime = std::chrono::high_resolution_clock::now();
 
-                uint64_t exploredVertices = do_BFS(candidates[i]);
+                uint64_t exploredVertices = compute(graph, candidates[i]);
 
                 auto finishBFSTime = std::chrono::high_resolution_clock::now(); // For measuring the execution time
                 auto elapsedBFSTime =
@@ -109,9 +101,10 @@ namespace morphstore {
             // open file for writing and delete existing stuff:
             fs.open(filename, std::fstream::out | std::ofstream::trunc);
 
-            for (uint64_t j = 0; j < results.size(); ++j) {
+            ss << "explored vertices | time in ms \n";
+
+            for (uint64_t j = 0; j < results.size(); j++) {
                 ss << results[j].first << "," << results[j].second << "\n";
-                ++j;
             }
             fs << ss.str();
 
@@ -119,7 +112,7 @@ namespace morphstore {
         }
 
         // function which returns a list of every ith vertex which is sorted by degree DESC
-        std::vector<uint64_t> get_list_of_every_ith_vertex(uint64_t cycle) {
+        static std::vector<uint64_t> get_list_of_every_ith_vertex(std::shared_ptr<Graph> graph, uint64_t cycle) {
             std::vector<uint64_t> measurementCandidates;
             std::vector<std::pair<uint64_t, uint64_t>> totalListOfVertices =
                 DegreeMeasurement::get_list_of_degree_DESC(graph);
