@@ -49,7 +49,7 @@ namespace morphstore {
             std::string converged_str = converged ? "True" : "False";
             return "Input-Parameters: { damping-factor: " + std::to_string(damping_factor) +
                    ", max-iterations: " + std::to_string(max_iterations) +
-                   ", tolerance: " + std::to_string(tolerance) + "} \n\t\t" +
+                   ", tolerance: " + std::to_string(tolerance) + "} \n\t\t\t" +
                    "Computed: { converged: " + converged_str + ", ran_iterations: " + std::to_string(ran_iterations) +
                    "}";
         }
@@ -65,10 +65,10 @@ namespace morphstore {
             const uint64_t vertex_count = graph->getVertexCount();
             std::vector<float> scores(vertex_count, 1.0 / vertex_count);
 
-            uint64_t iteration = 0;
+            uint64_t iteration;
             bool converged = false;
 
-            for (; iteration < max_iterations; iteration++) {
+            for (iteration = 0; iteration < max_iterations; iteration++) {
                 // init scores of current iteration
                 std::vector<float> new_scores(vertex_count, (1.0 - damping_factor) / vertex_count);
 
@@ -85,8 +85,6 @@ namespace morphstore {
                     }
                 }
 
-                // TODO: add a tolerance (as another condition to terminate besides max_iterations)
-                // would check if scores - new_scores > tolerance (break otherwise)
                 if (std::equal(scores.begin(), scores.end(), new_scores.begin(), new_scores.end(),
                                [tolerance](float score, float other_score) {
                                    return std::abs(score - other_score) < tolerance;
