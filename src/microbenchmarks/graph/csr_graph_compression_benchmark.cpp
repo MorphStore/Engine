@@ -18,7 +18,7 @@
 /**
  * @file csr_graph_compression_benchmark.cpp
  * @brief A benchmark of the csr-graph compression (using the ldbc graph)
- * @todo allow different compression formats for the two csr columns; add full_iterate
+ * @todo allow different compression formats for the two csr columns
  */
 
 #include "benchmark_helper.h"

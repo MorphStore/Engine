@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -16,12 +16,12 @@
  **********************************************************************************************/
 
 /**
- * @file bfs_benchmark.cpp
- * @brief A benchmark evaluating the impact of graph compression on breadth first search (using the ldbc graph)
+ * @file page_rank_benchmark.cpp
+ * @brief A benchmark evaluating the impact of graph compression on PageRank (using the ldbc graph)
  */
 
 #include "benchmark_helper.h"
-#include <core/operators/graph/top_down_bfs.h>
+#include <core/operators/graph/page_rank.h>
 #include <core/storage/graph/formats/adjacencylist.h>
 #include <core/storage/graph/formats/csr.h>
 #include <core/storage/graph/importer/ldbc_import.h>
@@ -33,12 +33,10 @@ using namespace morphstore;
 struct CompressionBenchmarkEntry {
     std::string graph_format;
     std::string compr_format;
-    int64_t bfs_time;
-    int64_t visited_vertices;
+    uint64_t page_rank_time, ran_iterations;
 
     std::string to_string() {
-        return graph_format + "|" + compr_format + "|" + std::to_string(bfs_time) + "|" +
-               std::to_string(visited_vertices);
+        return graph_format + "|" + compr_format + "|" + std::to_string(page_rank_time) + "|" + std::to_string(ran_iterations);
     }
 };
 
@@ -50,7 +48,6 @@ template <class GRAPH_FORMAT> void benchmark() {
 #ifdef LDBC_DIR
     // could be also build parameters?
     const int number_of_executions = 5;
-    const int number_of_start_vertices = 10;
 
     // order based on block-size (as adj-list format currently only supports decreasing blocksizes at `morph()`)
     std::vector<GraphCompressionFormat> compr_formats = {GraphCompressionFormat::DELTA, GraphCompressionFormat::FOR,
@@ -65,11 +62,9 @@ template <class GRAPH_FORMAT> void benchmark() {
     ldbcImport->import(*graph);
     std::cout << std::endl << std::endl;
 
-    const int cycle_size = graph->getVertexCount() / number_of_start_vertices;
-    auto start_vertex_ids = BFS::get_list_of_every_ith_vertex(graph, cycle_size);
     
     std::cout << "Test impact of compression on BFS" << std::endl;
-    std::cout << "Graph-Format | Compression-Format | bfs-time | visited vertices" << std::endl;
+    std::cout << "Graph-Format | Compression-Format | page_rank-time in ms | iterations ran" << std::endl;
 
     for (auto current_f : compr_formats) {
         for (int exec = 0; exec < number_of_executions; exec++) {
@@ -82,14 +77,13 @@ template <class GRAPH_FORMAT> void benchmark() {
             // morphing into desired format
             graph->morph(current_f);
 
-            for (auto id : start_vertex_ids) {
-                auto start = highResClock::now();
-                current_try.visited_vertices = morphstore::BFS::compute(graph, id);
-                current_try.bfs_time = get_duration(start);
+            auto start = highResClock::now();
+            // current default values for PageRank: max_iterations = 20, damping_factor = 0.85, tolerance = 0.0001
+            current_try.ran_iterations = morphstore::PageRank::compute(graph).ran_iterations;
+            current_try.page_rank_time = get_duration(start);
 
-                // for saving into csv file, just use "> xyz.csv" at execution 
-                std::cout << current_try.to_string() << std::endl;
-            }
+            // for saving into csv file, just use "> xyz.csv" at execution 
+            std::cout << current_try.to_string() << std::endl;
 
         }
     }
