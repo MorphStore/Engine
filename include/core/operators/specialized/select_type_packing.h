@@ -48,9 +48,14 @@ struct select_t<t_compare, t_vector_extension, type_packing_f<uint64_t >, type_p
 
         uint64_t * outPos = outPosCol->get_data();
         uint64_t * const initOutPos = outPos; 
-        size_t const vectorCount = inDataCount / vector_element_count::value;
-        size_t const remainderCount = inDataCount % vector_element_count::value;
-       
+        size_t const blockSize = type_packing_f<uint64_t >::m_BlockSize;
+        //std::cout<< "blockSize: " << blockSize << std::endl;
+        size_t const vectorMultiplier = blockSize / vector_element_count::value;
+        size_t const vectorCount = (inDataCount / blockSize) * vectorMultiplier;
+        //std::cout<< "Vectorcount: " << vectorCount << std::endl;
+        size_t const remainderCount = inDataCount % blockSize;
+        //std::cout<< "remainderCount: " << remainderCount << std::endl;
+
         int startid = 0;      
         vector_t const predicateVector = set1<t_ve, vector_base_t_granularity::value>(val);
         vector_t positionVector = set_sequence<t_ve, vector_base_t_granularity::value>(startid,1);
@@ -67,30 +72,23 @@ struct select_t<t_compare, t_vector_extension, type_packing_f<uint64_t >, type_p
             inData += vector_element_count::value;
         }        
 
-        int startidOffsetScalar = vectorCount*vector_element_count::value;      
+        int startidOffsetScalar = vectorCount*vector_element_count::value; 
+        //std::cout<< "startidOffsetScalar: " << startidOffsetScalar << std::endl;
         uint64_t const * inDataRemainder = inDataCol->get_data_uncompr_start(); 
-        size_t const vecElCont = vector_element_count::value;
 
         //selection for scalar rest
         using t_ve_scalar = scalar<v64<uint64_t>>;    
-        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)     
+        IMPORT_VECTOR_BOILER_PLATE(t_ve_scalar)  
         for(uint64_t i = 0; i < remainderCount; i++){
             if(t_compare<t_ve_scalar,64>::apply(inDataRemainder[i], val)) {
                 *outPos = i + startidOffsetScalar;
                 outPos++;
-                //std::cout<< "outpos scalar: " << outPos << std::endl;
             }
         }
         size_t const outPosCount = outPos - initOutPos;
-        //std::cout<< "outPosCount: " << outPosCount << std::endl;
-        size_t const uncomprValuesCnt = outPosCount % vecElCont;
+        size_t const uncomprValuesCnt = outPosCount % blockSize;
         size_t const comprValuesCnt = outPosCount - uncomprValuesCnt; 
-        //std::cout<< "outPosOld value: " << *outPos << std::endl;
-        
-        outPos = outPos - uncomprValuesCnt;
-        //std::cout<< "outPosNew: " << outPos << std::endl;
-        //std::cout<< "outPosNew value: " << *outPos << std::endl;
-
+        outPos = outPos - uncomprValuesCnt;   
         size_t sizeComprByte = comprValuesCnt * sizeof(uint64_t);
         //create padding
         uint64_t * outPosUncompr = reinterpret_cast< uint64_t *>(outPosCol->create_data_uncompr_start(reinterpret_cast< uint8_t *>(outPos) ) );
@@ -98,12 +96,12 @@ struct select_t<t_compare, t_vector_extension, type_packing_f<uint64_t >, type_p
         //std::cout<< "outPosUncompr value: " << *outPosUncompr << std::endl;
 
         //write in uncompressed part of the output
-        if (comprValuesCnt != 0){
-            for(size_t i = 0; i < uncomprValuesCnt; i++){
-                *outPosUncompr = *outPos;
-                outPosUncompr++;
-                outPos++;
-            }
+        for(size_t i = 0; i < uncomprValuesCnt; i++){
+            //std::cout << " in uncompressed part" << std::endl;
+            //std::cout<< "outPosUncompr value: " << *outPos << std::endl;               
+            *outPosUncompr = *outPos;
+            outPosUncompr++;
+            outPos++;
         }
 
         // #log, sizeByte , sizeComprByte

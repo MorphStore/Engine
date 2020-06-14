@@ -19,4 +19,9 @@ if( BUILD_ALL OR BUILD_EXAMPLES )
     target_compile_options( test_type_packing PRIVATE
                             $<$<CONFIG:DEBUG>:-DDEBUG> )
     target_link_libraries( test_type_packing PRIVATE "-ldl" )
+    
+    add_executable( select_variants_microbenchmark select_variants_microbenchmark.cpp )
+    target_compile_options( select_variants_microbenchmark PRIVATE
+                            $<$<CONFIG:DEBUG>:-DDEBUG> )
+    target_link_libraries( select_variants_microbenchmark PRIVATE "-ldl" )    
 endif( BUILD_ALL OR BUILD_EXAMPLES )
