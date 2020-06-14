@@ -17,7 +17,7 @@
 
 /**
  * @file bfs_simple__adj_graph_test.cpp
- * @brief Test for bfs of social network graph in adj list format
+ * @brief Test bfs on adj-list graph format
  * @todo
  */
 #include <core/storage/graph/formats/adjacencylist.h>

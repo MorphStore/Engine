@@ -44,21 +44,28 @@ template <class GRAPH_FORMAT> void ldbcGraphFormatTest(void) {
 
     print_header(storageFormat);
 
-    // ldbc importer: path to csv files as parameter: (don't forget the last '/' in adress path)
     std::unique_ptr<morphstore::LDBCImport> ldbcImport = std::make_unique<morphstore::LDBCImport>(LDBC_DIR);
 
     // generate vertices & edges from LDBC files and insert into graph structure
     ldbcImport->import(*graph);
     graph->statistics();
 
+    graph->print_vertex_by_id(1035174);
+    graph->print_edge_by_id(10);
+    graph->print_neighbors_of_vertex(1035174);
+
     graph->morph(morphstore::GraphCompressionFormat::DELTA);
 
     graph->statistics();
 
-    // (DEBUG) Test Vertex, which contains edges with properties (SERVER):
     graph->print_vertex_by_id(1035174);
     graph->print_edge_by_id(10);
     graph->print_neighbors_of_vertex(1035174);
+
+    // DEBUGGING
+    //for(uint64_t id = 0; id < graph->getEdgeCount(); id++) {
+    //    graph->get_outgoing_edge_ids(id);
+    //}
 
     // measure degree distribution and write to file (file path as parameter):
     // TODO: but this into benchmark or so .. not actual test

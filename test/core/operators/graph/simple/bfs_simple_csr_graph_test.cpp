@@ -17,7 +17,7 @@
 
 /**
  * @file bfs_simple_csr_graph_test.cpp
- * @brief Test for bfs of social network graph in csr list format
+ * @brief Test for bfs on csr graph format
  * @todo
  */
 #include <core/storage/graph/formats/csr.h>

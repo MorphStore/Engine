@@ -68,8 +68,27 @@ template <class GRAPH_FORMAT> void benchmark() {
     const int cycle_size = graph->getVertexCount() / number_of_start_vertices;
     auto start_vertex_ids = BFS::get_list_of_every_ith_vertex(graph, cycle_size);
     
-    std::cout << "Test impact of compression on BFS" << std::endl;
-    std::cout << "Graph-Format | Compression-Format | bfs-time | visited vertices" << std::endl;
+    std::cout << "Test impact of compression on BFS (10 start-nodes (evenly distributed regarding degree); 5x excutions)" << std::endl;
+    std::cout << "Graph-Format | Compression-Format | bfs-time in ms| visited vertices" << std::endl;
+
+    // for AdjacencyList format a version, where all lists are stored as vectors (not morphed -> nothing finalized)
+    if (std::is_same<GRAPH_FORMAT, AdjacencyList>::value) {
+        for (int exec = 0; exec < number_of_executions; exec++) {
+            CompressionBenchmarkEntry current_try;
+            current_try.graph_format = graph->get_storage_format();
+            current_try.compr_format =
+                graph_compr_f_to_string(GraphCompressionFormat::UNCOMPRESSED) + " (all vectors)";
+
+            for (auto id : start_vertex_ids) {
+                auto start = highResClock::now();
+                current_try.visited_vertices = morphstore::BFS::compute(graph, id);
+                current_try.bfs_time = get_duration(start);
+
+                // for saving into csv file, just use "> xyz.csv" at execution
+                std::cout << current_try.to_string() << std::endl;
+            }
+        }
+    }
 
     for (auto current_f : compr_formats) {
         for (int exec = 0; exec < number_of_executions; exec++) {

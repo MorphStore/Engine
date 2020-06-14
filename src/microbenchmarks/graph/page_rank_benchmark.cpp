@@ -63,8 +63,26 @@ template <class GRAPH_FORMAT> void benchmark() {
     std::cout << std::endl << std::endl;
 
     
-    std::cout << "Test impact of compression on BFS" << std::endl;
+    std::cout << "Test impact of compression on PageRank (5x executions)" << std::endl;
     std::cout << "Graph-Format | Compression-Format | page_rank-time in ms | iterations ran" << std::endl;
+
+    // for adj-list a version, where all lists are stored as vectors (not morphed -> nothing finalized)
+    if (std::is_same<GRAPH_FORMAT, AdjacencyList>::value) {
+        for (int exec = 0; exec < number_of_executions; exec++) {
+            CompressionBenchmarkEntry current_try;
+            current_try.graph_format = graph->get_storage_format();
+            current_try.compr_format =
+                graph_compr_f_to_string(GraphCompressionFormat::UNCOMPRESSED) + " (all vectors)";
+
+            auto start = highResClock::now();
+            // current default values for PageRank: max_iterations = 20, damping_factor = 0.85, tolerance = 0.0001
+            current_try.ran_iterations = morphstore::PageRank::compute(graph).ran_iterations;
+            current_try.page_rank_time = get_duration(start);
+
+            // for saving into csv file, just use "> xyz.csv" at execution
+            std::cout << current_try.to_string() << std::endl;
+        }
+    }
 
     for (auto current_f : compr_formats) {
         for (int exec = 0; exec < number_of_executions; exec++) {

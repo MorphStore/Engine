@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2020 by MorphStore-Team                                                      *
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -36,6 +36,8 @@ namespace morphstore {
 
     // simple cache of size 1 (to avoid decompressing the same block multiple times .. f.i. for getting the degree of a
     // vertex)
+    // ! poor mans approach and should be changed, if multi-threaded executions are done 
+    //  (cache per thread maybe .. inside a `for_all` iterator maybe)
     class ColumnBlockCache {
     private:
         uint64_t block_number;
@@ -64,7 +66,7 @@ namespace morphstore {
     private:
         /* graph topology:
          * offset column: index is vertex-id; column entry contains offset in edgeId array
-         * edgeId column: contains edge id
+         * edgeId column: contains edge ids
          */
         column_with_blockoffsets_base *offset_column;
         column_with_blockoffsets_base *edgeId_column;
@@ -88,6 +90,7 @@ namespace morphstore {
             assert(expectedEdgeCount >= getEdgeCount());
 
             // currently only read-only if compressed
+            // for write it would be necessary to decompress the last block; write and compress again
             if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
                 throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " +
                                          graph_compr_f_to_string(current_compression));
@@ -112,8 +115,6 @@ namespace morphstore {
         }
 
         uint64_t get_offset(uint64_t id) {
-            // TODO: use cache
-
             auto block_size = offset_column->get_block_size();
 
             if (current_compression == GraphCompressionFormat::UNCOMPRESSED) {
@@ -140,14 +141,12 @@ namespace morphstore {
                 } 
 
                 uint64_t *block_data = uncompr_block->get_data();
-
                 auto offset = block_data[block_pos];
-
                 return offset;
             }
         }
 
-        // DEBUG function to look into column:
+        // DEBUG function to look into a column:
         void print_column(const column_base *col, int start, int end) const {
             // validate interval (fix otherwise)
             int col_size = col->get_count_values();
@@ -180,8 +179,8 @@ namespace morphstore {
 
         std::string get_storage_format() const override { return "CSR"; }
 
-        // this function gets the number of vertices/edges and allocates memory for the graph-topology arrays
-        // TODO: test that no data exists before (as this will get overwritten)
+        // this function gets the number of vertices/edges and allocates memory for the graph-topology columns
+        // TODO: test that no data exists before (as this gets overwritten)
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
 
@@ -346,7 +345,7 @@ namespace morphstore {
             offset_column = morph_saving_offsets_graph_col(offset_column, current_compression, target_format, true);
             edgeId_column = morph_saving_offsets_graph_col(edgeId_column, current_compression, target_format, true);
 
-            // invalidating caches
+            // invalidating caches (as block-size may differ)
             if (offset_block_cache) {
                 offset_block_cache.reset();
             }

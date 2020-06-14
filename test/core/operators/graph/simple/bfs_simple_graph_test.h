@@ -17,11 +17,9 @@
 
 /**
  * @file bfs_simple_graph_test.cpp
- * @brief Test methods for bfs on social network graph
+ * @brief Test methods for bfs on simple graph
  * @todo
  */
-
-#include <core/storage/graph/formats/adjacencylist.h>
 #include <core/operators/graph/top_down_bfs.h>
 #include <assert.h>
 

@@ -18,7 +18,7 @@
 /**
  * @file edges_container.h
  * @brief abstract class for storing edges
- * @todo an EntityContainer abstraction (reduce duplicated code)
+ * @todo an EntityContainer abstraction (reduce duplicated code to vertices_container.h)
  */
 
 #ifndef MORPHSTORE_EDGES_CONTAINER_H
@@ -38,21 +38,24 @@ namespace morphstore {
     class EdgesContainer {
     protected:
         uint64_t expected_edge_count = 0;
+        // ! this should be an atomic one, if multi-threaded insertion is of interest
         uint64_t current_max_edge_id = 0;
 
         std::map<unsigned short int, std::string> edge_type_dictionary;
 
-        // TODO: try other property storage formats than per vertex .. (triple-store or per property)
+        // TODO: try other property storage formats than per edge .. (triple-store or per property)
         std::unordered_map<uint64_t, std::unordered_map<std::string, property_type>> edge_properties;
 
         std::string get_edge_type(unsigned short int type) const {
             if (edge_type_dictionary.find(type) != edge_type_dictionary.end()) {
                 return edge_type_dictionary.at(type);
             } else {
+                // could also throw an error here
                 return "No Matching of type-number in the database! For type " + std::to_string(type);
             }
         }
 
+        // for assigning ids
         uint64_t get_next_edge_id() { return current_max_edge_id++; }
 
     public:

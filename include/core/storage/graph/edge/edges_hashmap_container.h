@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
@@ -18,7 +18,7 @@
 /**
  * @file edges__hashmap_container.h
  * @brief storing edges using a hashmap
- * @todo an EntityHashMapContainer abstraction (reduce duplicated code)
+ * @todo an EntityHashMapContainer abstraction (reduce duplicated code to VertexHashMapContainer)
  */
 
 #ifndef MORPHSTORE_EDGES_HASHMAP_CONTAINER_H
@@ -34,6 +34,8 @@ namespace morphstore {
 
     class EdgesHashMapContainer : public EdgesContainer {
     protected:
+        // mapping edge id -> edge
+        // currently saving the id twice 
         std::unordered_map<uint64_t, EdgeWithId> edges;
 
     public:
@@ -44,6 +46,7 @@ namespace morphstore {
             this->edges.reserve(expected_edges);
         }
 
+        // TODO: unpack EdgeWithId to just Edge (avoid saving edge-id twice)
         void insert_edge(const EdgeWithId e) override { edges[e.getId()] = e; }
 
         bool exists_edge(const uint64_t id) const override {
@@ -57,6 +60,8 @@ namespace morphstore {
 
         uint64_t edge_count() const { return edges.size(); }
 
+        // memory estimation 
+        // returns a pair of index-size, data-size
         std::pair<size_t, size_t> get_size() const override {
             auto [index_size, data_size] = EdgesContainer::get_size();
 

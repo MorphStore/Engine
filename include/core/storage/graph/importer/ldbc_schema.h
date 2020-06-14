@@ -19,7 +19,7 @@
  * @file lbc_schema.h
  * @brief Schema of the LDBC graph based on
  * https://raw.githubusercontent.com/ldbc/ldbc_snb_docs/dev/figures/schema-comfortable.png
- * @todo
+ * @todo search for an existing Graph-Schema language (graph schemas should be stored in the resource folder)
  */
 
 #ifndef MORPHSTORE_LDBC_SCHEMA_H

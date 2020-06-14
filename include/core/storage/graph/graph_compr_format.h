@@ -18,7 +18,7 @@
 /**
  * @file graph_compr_format.h
  * @brief helper for specifying compression of graph format specific columns
- * @todo
+ * @todo remove need for extra graph-compression format
  */
 
 #ifndef MORPHSTORE_GRAPH_COMPR_FORMAT_H
@@ -36,7 +36,7 @@
 #include <memory>
 
 namespace morphstore {
-    // TODO: allow also other vector extensions (switch from safe_morph to morph)
+    // TODO: allow also other vector extensions (regard build flag)
     using ve = vectorlib::scalar<vectorlib::v64<uint64_t>>;
 
     using default_vbp = DEFAULT_DYNAMIC_VBP_F(ve);
@@ -65,7 +65,9 @@ namespace morphstore {
 
         return desc;
     }
-
+    
+    // gets m_BlockSize using the corresponding format  
+    // as GraphCompressionFormat is just a simple enum
     size_t inline graph_compr_f_block_size(GraphCompressionFormat format) {
         size_t block_size = 1;
 

@@ -18,7 +18,7 @@
 /**
  * @file top_down_bfs.h
  * @brief top down BFS implementation to traverse graph
- * @todo implement vectorized BFS (AVX2, AVX-512)
+ * @todo implement vectorized BFS (AVX2, AVX-512) ; return list of visited nodes + visiting depth maybe
  */
 
 #ifndef MORPHSTORE_TOP_DOWN_BFS
@@ -112,6 +112,7 @@ namespace morphstore {
         }
 
         // function which returns a list of every ith vertex which is sorted by degree DESC
+        // TODO: could be seen as a generell helper function -> move into seperate header
         static std::vector<uint64_t> get_list_of_every_ith_vertex(std::shared_ptr<Graph> graph, uint64_t cycle) {
             std::vector<uint64_t> measurementCandidates;
             std::vector<std::pair<uint64_t, uint64_t>> totalListOfVertices =

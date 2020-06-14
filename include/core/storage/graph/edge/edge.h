@@ -35,7 +35,7 @@
 
 namespace morphstore {
 
-    // for loading
+    // for loading a graph
     class Edge {
 
     protected:
@@ -79,13 +79,13 @@ namespace morphstore {
         }
     };
 
-    // for internal usage
+    // for internal usage (inside the edges-container)
     class EdgeWithId : public Edge {
     private:
         uint64_t id;
 
         // delete flag
-        // TODO put as a std::bitset in vectorarray_container
+        // TODO: put as a std::bitset in vectorarray_container (as hashmap-container does not need the valid flag)
         bool valid = false;
 
     public:
@@ -158,7 +158,7 @@ namespace morphstore {
         bool operator<(const EdgeWithProperties &e) const { return edge.getTargetId() < e.getEdge().getTargetId(); }
     };
 
-    // for returning to user
+    // for returning an edge to the user
     class EdgeWithIdAndProperties {
     private:
         std::unordered_map<std::string, property_type> properties;

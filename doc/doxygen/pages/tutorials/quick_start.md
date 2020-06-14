@@ -23,7 +23,7 @@ Ensure that you have the following tools installed before trying to build:
 - g++ >= version 8.2
 - cmake >= version 3.10
 
-Older versions may not build all test cases. Note that C++14 is necessary.
+Older versions may not build all test cases. Note that C++17 is necessary.
 
 
 To facilitate building and testing MorphStore, there is a script <i>build.sh</i> in the root folder.

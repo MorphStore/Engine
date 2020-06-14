@@ -42,8 +42,10 @@ namespace morphstore {
         // const column as after finalized only read_only
         using adjacency_column = column_base *;
         using adjacency_vector = std::vector<uint64_t> *;
+        // an adjacency-list can be either a column or a vector
         using adjacency_list_variant = std::variant<adjacency_vector, adjacency_column>;
 
+        // visitor for accessing std::variant
         struct Adjacency_List_Size_Visitor {
             size_t operator()(const adjacency_column c) const { return c->get_size_used_byte(); }
             size_t operator()(const adjacency_vector v) const {
@@ -51,23 +53,25 @@ namespace morphstore {
             }
         };
 
+        // visitor for accessing std::variant
         struct Adjacency_List_OutDegree_Visitor {
             uint64_t operator()(const adjacency_column c) const {
-                // assuming compressed col has the same value count (would not work for RLE)
+                // assuming compressed col has the same value count (would not work for RLE?)
                 return c->get_count_values();
             }
             uint64_t operator()(const adjacency_vector v) const { return v->size(); }
         };
 
-        // maps the a list of outgoing edges (ids) to a vertex-id
+        // maps the a list of outgoing edges (ids) to a vertex-id (representing the graph topology)
+        // TODO: try using a vector instead an unordered_map (? faster access, but needs more memory for empty adj.-lists ?)
         std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
             new std::unordered_map<uint64_t, adjacency_list_variant>();
 
         // as formats allocate to much memory for small columns
-        // current_compression
+        // adj-lists with a lower degree, are stored as vectors (others are columns)
         uint64_t min_compr_degree = 1024;
 
-        // convert big-enough adj-vector to a (read-only) adj-column
+        // convert big-enough adj-vector to a (read-only) adj-column (based on the min_compr_degree)
         void finalize() {
             int vectors_transformed = 0;
             for (auto [id, adj_list] : *adjacencylistPerVertex) {
@@ -114,7 +118,6 @@ namespace morphstore {
                 if (std::holds_alternative<adjacency_column>(entry->second)) {
                     throw std::runtime_error("Not implemented to add edges, if adj. list is a (compressed) column");
                 }
-
                 adjacencyVector = std::get<adjacency_vector>(entry->second);
             } else {
                 adjacencyVector = new std::vector<uint64_t>();
@@ -127,6 +130,7 @@ namespace morphstore {
 
     public:
         ~AdjacencyList() {
+            // as vectors and columns are allocated using new -> need to delete them manually
             for (auto [id, adj_list] : *this->adjacencylistPerVertex) {
                 if (std::holds_alternative<adjacency_column>(adj_list)) {
                     delete std::get<adjacency_column>(adj_list);
@@ -150,20 +154,24 @@ namespace morphstore {
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
             Graph::allocate_graph_structure(numberVertices, numberEdges);
             adjacencylistPerVertex->reserve(numberVertices);
-        }
+        }   
 
+        // currently new_min_compr_degree must be smaller or equal than the current min_compr_degree 
         void set_min_compr_degree(uint64_t new_min_compr_degree) {
             if (new_min_compr_degree > min_compr_degree) {
                 // allowing this would need re-transforming finalized columns to vectors
+                // when this is allowed, the min_compr_degree should be enough as an function parameter for finalize
                 throw std::runtime_error("Only supporting an decreasing minimum compression degree (new: " +
                                          std::to_string(new_min_compr_degree) +
                                          ", current: " + std::to_string(min_compr_degree) + ")");
             }
             this->min_compr_degree = new_min_compr_degree;
+            // applying the new min_compr_degree
             finalize();
         }
 
         // adding a single edge to vertex:
+        // graph-format specific, as CSR is currently limited to bulk inserts
         uint64_t add_edge(uint64_t sourceId, uint64_t targetId, unsigned short int type) override {
             Edge e = Edge(sourceId, targetId, type);
             return add_edges(sourceId, {e})[0];
@@ -171,7 +179,7 @@ namespace morphstore {
 
         uint64_t get_min_compr_degree() { return min_compr_degree; }
 
-        // get number of neighbors of vertex with id
+        // get number of outgoing edges for the vertex with the given id
         uint64_t get_out_degree(uint64_t id) override {
             auto entry = adjacencylistPerVertex->find(id);
             if (entry == adjacencylistPerVertex->end()) {
@@ -199,12 +207,10 @@ namespace morphstore {
                     if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
                         delete uncompr_col;
                     }
-
                 } else {
                     edge_ids = *std::get<adjacency_vector>(adj_list);
                 }
             }
-
             return edge_ids;
         }
 
@@ -212,12 +218,13 @@ namespace morphstore {
         void morph(GraphCompressionFormat target_format) override { morph(target_format, true); }
 
         // ! vector<->column conversion overhead if min_degree is different 
+        // ! morphing to UNCOMPRESSED results in all adj-lists being columns (instead of vectors)
         void morph(GraphCompressionFormat target_format, bool blocksize_based_min_degree) {
             if (blocksize_based_min_degree) {
                 // as if blocksize > size of adjlist -> stays uncompressed but still allocates a whole block
                 set_min_compr_degree(graph_compr_f_block_size(target_format));
             } else {
-                // transform big enough vectors into columns
+                // transform big enough vectors into columns (based on the min_compr_degree)
                 this->finalize();
             }
 
@@ -265,6 +272,7 @@ namespace morphstore {
         }
 
         // ratio of adjacency columns (rest would be vectors)
+        // depends on the min_compr_degree
         double column_ratio() const {
             // neither coloumns or vectors
             if (getEdgeCount() == 0) {
@@ -283,6 +291,7 @@ namespace morphstore {
 
         // for measuring the size in bytes:
         std::pair<size_t, size_t> get_size_of_graph() const override {
+            // graph-format agnostic memory usage (like storage for entities)
             auto [index_size, data_size] = Graph::get_size_of_graph();
             
             // min_compr_degree
@@ -290,6 +299,7 @@ namespace morphstore {
 
             // adjacencyListPerVertex
             index_size += sizeof(std::unordered_map<uint64_t, adjacency_list_variant>);
+            // overhead for each map-entry
             index_size += adjacencylistPerVertex->size() * (sizeof(uint64_t) + sizeof(adjacency_list_variant));
 
             for (const auto [id, adj_list] : *adjacencylistPerVertex) {

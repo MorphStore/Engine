@@ -17,7 +17,7 @@
 
 /**
  * @file edges__vectorarray_container.h
- * @brief storing edges using a vector of arrays
+ * @brief storing edges using a vector of arrays; assuming a consecutive id space
  * @todo
  */
 
@@ -33,7 +33,8 @@
 #include <vector>
 
 namespace morphstore {
-    // very different to VerticesVectorArrayContainer as edge ids are not given at insertion time!
+    // very different to VerticesVectorArrayContainer as edge ids are not given at insertion time! 
+    // (not anymore, but not considered in current implementation)
     // and using std::array as aligned_alloc did not set invalid flag to false (could be solveable)
     class EdgesVectorArrayContainer : public EdgesContainer {
     protected:
@@ -65,7 +66,7 @@ namespace morphstore {
 
         void allocate(const uint64_t expected_edges) override {
             EdgesContainer::allocate(expected_edges);
-
+            // rounding up ..  only whole arrays can be allocated 
             auto array_count = std::ceil(expected_edges / (float)edges_per_array);
             this->edges.reserve(array_count);
 
@@ -75,9 +76,12 @@ namespace morphstore {
         }
 
         void insert_edge(EdgeWithId e) {
+            // not assuming sequentiell insertion (could be changed to just insert at a given position)
+            // and only assert that the given position matches
             auto array_number = get_edge_array_number(e.getId());
             auto array_pos = get_pos_in_array(e.getId());
-
+            
+            // second time to assert that expected edge count is not exceeded ?
             if (array_number >= edges.size()) {
                 throw std::runtime_error("Exceeded edge id limit: Edge id " + std::to_string(e.getId()) + " > " +
                                          std::to_string(edges_per_array * edges.size() - 1));
@@ -112,6 +116,8 @@ namespace morphstore {
 
         uint64_t edge_count() const override { return number_of_edges; }
 
+        // memory estimation 
+        // returns a pair of index-size, data-size
         std::pair<size_t, size_t> get_size() const override {
             auto [index_size, data_size] = EdgesContainer::get_size();
 

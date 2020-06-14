@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Copyright (C) 2019 by MorphStore-Team                                                      *
+ * Copyright (C) 2020 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
  *                                                                                            *
