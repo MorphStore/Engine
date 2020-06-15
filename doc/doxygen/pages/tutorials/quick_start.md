@@ -42,8 +42,28 @@ build/src/examples/example_query
 ~~~
 
 This builds some example queries in debug mode and runs them. The source code of these queries can be found in the folder src/examples.
-They are runnig in scalar mode. Thus, every system providing C++14 support should be able to build and run them regardless of any (not) 
+They are runnig in scalar mode. Thus, every system providing C++17 support should be able to build and run them regardless of any (not) 
 available vector extensions.
+
+
+The Graph Module
+======================
+
+The graph module mainly contains the two different graph storage formats, which differ in their representation of the graph topology `Compressed Sparse Row (CSR)` and `Adjacency-List`. 
+These underlying graph model is a multi-graph, with properties for vertices and edges as well as types for both.
+The model is very similar to the Property-Graph model, except that vertices can only have one type (instead of multiple labels). 
+
+The columns describing the graph topology can be compressed using formats from the MorphStore. 
+Besides there exists simple implementations of the graph algorithms `breadth-first search (bfs)` and `PageRank`.
+
+
+To run all the test and micro-benchmarks, a LDBC graph has to be generated.
+Instructions of how to generate the graph, can be found at `https://github.com/ldbc/ldbc_snb_datagen`.
+By default the ldbc graph is expected to be at `"$HOME/ldbc_snb_datagen/social_network/"`. 
+This can be changed at `/Morphstore/Engine/CMakeLists.txt`.
+
+
+
 
 Test Vector Extensions
 ======================
