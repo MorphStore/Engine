@@ -31,15 +31,15 @@ namespace vectorlib {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename neon< v128< U > >::vector_t
       set1( uint64_t a0) {
-         trace( "[VECTOR] - set1 sse register." );
+         trace( "[VECTOR] - set1 neon register." );
          return vdupq_n_u64(a0);
       }
    
       template< typename U = T, typename std::enable_if< std::is_integral< U >::value, int >::type = 0 >
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static typename neon< v128< U > >::vector_t
-      set_sequence( int a, int b) {
-         trace( "[VECTOR] - set_sequence sse register." );
+      set_sequence( uint64_t a, uint64_t b) {
+         trace( "[VECTOR] - set_sequence neon register." );
          neon< v128< uint64_t > >::vector_t result = vmovq_n_u64(0);
          result = vsetq_lane_u64(a, result, 0); 
          return vsetq_lane_u64(a+b, result, 1);

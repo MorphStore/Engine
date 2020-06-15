@@ -69,11 +69,19 @@ IF(CAVX512)
 ENDIF(CAVX512)
 
 IF(CNEON)
-        morph_flag(-DNEON)
+  morph_flag(-DNEON)
 	morph_flag(-mfpu=neon)
 	morph_flag(-flax-vector-conversions)
-        message(STATUS "NEON support switched on")
+  message(STATUS "NEON support switched on")
 ENDIF(CNEON)
+
+IF(CSVE)
+  morph_flag(-DSVE)
+  morph_flag(-march=armv8-a+sve)
+  message(STATUS "SVE support switched on")
+ELSE()
+  morph_flag(-march=native)
+ENDIF(CSVE)
 
 IF(CRAPL)
     morph_flag(-DRAPL)
@@ -83,7 +91,6 @@ IF(CODROID)
     morph_flag(-DODROID)
 ENDIF(CODROID)
 
-morph_flag(-march=native)
 
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
@@ -204,12 +211,25 @@ else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
 	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
 endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
 
+if ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF100 is set to to TRUE\n" )
+	morph_flag("-DVBP_LIMIT_ROUTINES_FOR_SSB_SF100")
+	set( ignoreMe ${VBP_LIMIT_ROUTINES_FOR_SSB_SF100} )
+else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF100 is set to FALSE\n" )
+	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF100")
+endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
+
 MESSAGE( ${MorphStoreProjectConf} )
 file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
 ########### Checking Defines />
 
-include_directories( ${PROJECT_SOURCE_DIR}/include )
+if ( DEFINED TVL_PATH)
+  include_directories(AFTER ${TVL_PATH}  ${PROJECT_SOURCE_DIR}/include)
+else ( DEFINED TVL_PATH)
+  include_directories(  ${PROJECT_SOURCE_DIR}/include )
+endif( DEFINED TVL_PATH)
 
 morph_flag("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
 morph_flag("-DGIT_BRANCH=${GIT_BRANCH}")
@@ -231,7 +251,6 @@ endif()
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
-include_directories( include )
 
 if( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
     add_subdirectory( src )
