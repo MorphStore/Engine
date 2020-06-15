@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file edges__vectorarray_container.h
+ * @file edges_vectorarray_container.h
  * @brief storing edges using a vector of arrays; assuming a consecutive id space
  * @todo
  */

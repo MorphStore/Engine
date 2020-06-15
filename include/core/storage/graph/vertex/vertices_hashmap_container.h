@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file vertices__hashmap_container.h
+ * @file vertices_hashmap_container.h
  * @brief storing vertices using a hashmap
  * @todo
  */

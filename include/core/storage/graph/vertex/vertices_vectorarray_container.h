@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file vertices__vectorarray_container.h
+ * @file vertices_vectorarray_container.h
  * @brief storing vertices using a vector of arrays
  * @todo
  */

@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file edges__hashmap_container.h
+ * @file edges_hashmap_container.h
  * @brief storing edges using a hashmap
  * @todo an EntityHashMapContainer abstraction (reduce duplicated code to VertexHashMapContainer)
  */
