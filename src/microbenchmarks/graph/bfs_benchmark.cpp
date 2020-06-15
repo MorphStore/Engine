@@ -69,7 +69,7 @@ template <class GRAPH_FORMAT> void benchmark() {
     auto start_vertex_ids = BFS::get_list_of_every_ith_vertex(graph, cycle_size);
     
     std::cout << "Test impact of compression on BFS (10 start-nodes (evenly distributed regarding degree); 5x excutions)" << std::endl;
-    std::cout << "Graph-Format | Compression-Format | bfs-time in ms| visited vertices" << std::endl;
+    std::cout << "Graph-Format | Compression-Format | bfs-time in micro seconds| visited vertices" << std::endl;
 
     // for AdjacencyList format a version, where all lists are stored as vectors (not morphed -> nothing finalized)
     if (std::is_same<GRAPH_FORMAT, AdjacencyList>::value) {

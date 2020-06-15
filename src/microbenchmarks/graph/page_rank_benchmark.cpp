@@ -64,7 +64,7 @@ template <class GRAPH_FORMAT> void benchmark() {
 
     
     std::cout << "Test impact of compression on PageRank (5x executions)" << std::endl;
-    std::cout << "Graph-Format | Compression-Format | page_rank-time in ms | iterations ran" << std::endl;
+    std::cout << "Graph-Format | Compression-Format | page_rank-time in micro seconds | iterations ran" << std::endl;
 
     // for adj-list a version, where all lists are stored as vectors (not morphed -> nothing finalized)
     if (std::is_same<GRAPH_FORMAT, AdjacencyList>::value) {
