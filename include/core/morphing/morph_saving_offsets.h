@@ -17,7 +17,7 @@
 
 /**
  * @file morph_saving_offset.h
- * @brief based on morph.h, just calling morph_batch_t for every block (if blocksize > 1)
+ * @brief based on morph.h, just calling morph_batch_t for every block and saving its offset (if blocksize > 1)
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_MORPH_SAVING_OFFSETS_H
@@ -133,8 +133,9 @@ namespace morphstore {
     struct morph_saving_offsets_t<t_vector_extension, t_dst_f, uncompr_f> {
         using src_f = uncompr_f;
 
+        // saving the offsets for every value would have an unacceptable overhead
         static_assert(t_dst_f::m_BlockSize != 1,
-                      "Blocksize of 1 is only expected for uncompr_f .. block-wise morph is useless in that case");
+                      "Blocksize of 1 is only expected for uncompr_f .. block-wise morph is useless in this case");
 
         static column_with_blockoffsets<t_dst_f> *apply(column_with_blockoffsets<src_f> *inCol_with_offsets) {
 
@@ -147,8 +148,7 @@ namespace morphstore {
             const size_t countLog = inCol->get_count_values();
             const size_t outCountLogCompr = round_down_to_multiple(countLog, t_BlockSize);
             const size_t outSizeRestByte = uncompr_f::get_size_max_byte(countLog - outCountLogCompr);
-            block_offsets->reserve(outCountLogCompr + 1);
-
+            
             const uint8_t *in8 = inCol->get_data();
 
             auto outCol = new column<t_dst_f>(get_size_max_byte_any_len<t_dst_f>(countLog));
@@ -156,7 +156,8 @@ namespace morphstore {
             const uint8_t *const initOut8 = out8;
 
             const size_t countBlocks = countLog / t_BlockSize;
-
+            block_offsets->reserve(countBlocks);
+            
             // morphing each block and save the offset
             for (size_t blockIdx = 0; blockIdx < countBlocks; blockIdx++) {
                 // saving the start address of the block

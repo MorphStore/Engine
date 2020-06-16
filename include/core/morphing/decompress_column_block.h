@@ -17,7 +17,7 @@
 
 /**
  * @file decompress_column_block.h
- * @brief Decompressing column blocks based on column_with_blockoffsets.
+ * @brief Decompressing single blocks of a column based on column_with_blockoffsets.
  */
 
 #ifndef MORPHSTORE_CORE_MORPHING_DECOMPRESS_COLUMN_BLOCK_H

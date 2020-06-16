@@ -49,7 +49,7 @@ available vector extensions.
 The Graph Module
 ======================
 
-The graph module mainly contains the two different graph storage formats, which differ in their representation of the graph topology `Compressed Sparse Row (CSR)` and `Adjacency-List`. 
+The graph module mainly contains the two different graph storage formats `Compressed Sparse Row (CSR)` and `Adjacency-List`, which differ in their representation of the graph topology . 
 These underlying graph model is a multi-graph, with properties for vertices and edges as well as types for both.
 The model is very similar to the Property-Graph model, except that vertices can only have one type (instead of multiple labels). 
 
