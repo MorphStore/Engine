@@ -49,8 +49,6 @@ namespace morphstore {
     class Graph {
 
     protected:
-        GraphCompressionFormat current_compression = GraphCompressionFormat::UNCOMPRESSED;
-
         // TODO: actually just needed for CSR format (could be moved)
         uint64_t expectedVertexCount;
         uint64_t expectedEdgeCount;
@@ -142,6 +140,7 @@ namespace morphstore {
 
         // human-readable form of the graph storage format
         virtual std::string get_storage_format() const = 0;
+        virtual std::string get_compression_format() const = 0;
         virtual uint64_t add_edge(uint64_t from, uint64_t to, unsigned short int type) = 0;
         // changing the compression format
         virtual void morph(GraphCompressionFormat target_format) = 0;
@@ -255,7 +254,7 @@ namespace morphstore {
                       << std::endl;
             std::cout << "Number of edges: " << getEdgeCount() << std::endl;
             std::cout << "Number of edges with properties:" << edges->edges_with_properties_count() << std::endl;
-            std::cout << "Compression Format:" << graph_compr_f_to_string(current_compression) << std::endl;
+            std::cout << "Compression Format:" << get_compression_format() << std::endl;
         }
 
         void print_vertex_by_id(uint64_t id) {

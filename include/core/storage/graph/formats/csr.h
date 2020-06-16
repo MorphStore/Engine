@@ -71,11 +71,20 @@ namespace morphstore {
         column_with_blockoffsets_base *offset_column;
         column_with_blockoffsets_base *edgeId_column;
 
+        // current compression formats (to be removed when class accepts template parameters for the formats)
+        GraphCompressionFormat offsets_compression = GraphCompressionFormat::UNCOMPRESSED;
+        GraphCompressionFormat edgeIds_compression = GraphCompressionFormat::UNCOMPRESSED;
+
         // for faster sequentiell access (not respected in memory usage yet) .. ideally encapsulated in an iterator
         // as already for getting edge-ids the same block is decompressed 3x otherwise
         std::unique_ptr<ColumnBlockCache> offset_block_cache = nullptr;
         // assuming most degrees are << block-size
         std::unique_ptr<ColumnBlockCache> edgeIds_block_cache = nullptr;
+
+        bool is_uncompressed() {
+            return offsets_compression == GraphCompressionFormat::UNCOMPRESSED &&
+                   edgeIds_compression == GraphCompressionFormat::UNCOMPRESSED;
+        }
 
     protected:
         // this function fills the graph-topology-arrays sequentially in the order of vertex-ids ASC
@@ -91,9 +100,9 @@ namespace morphstore {
 
             // currently only read-only if compressed
             // for write it would be necessary to decompress the last block; write and compress again
-            if (current_compression != GraphCompressionFormat::UNCOMPRESSED) {
+            if (!is_uncompressed()) {
                 throw std::runtime_error("Edge insertion only allowed in uncompressed format. Current format: " +
-                                         graph_compr_f_to_string(current_compression));
+                                         get_compression_format());
             }
 
             uint64_t *offset_data = offset_column->get_column()->get_data();
@@ -117,7 +126,7 @@ namespace morphstore {
         uint64_t get_offset(uint64_t id) {
             auto block_size = offset_column->get_block_size();
 
-            if (current_compression == GraphCompressionFormat::UNCOMPRESSED) {
+            if (offsets_compression == GraphCompressionFormat::UNCOMPRESSED) {
                 uint64_t *col_data = offset_column->get_column()->get_data();
                 return col_data[id];
             } else {
@@ -134,7 +143,7 @@ namespace morphstore {
                 } 
                 else {
                     //std::cout << "cache miss" << std::endl;
-                    uncompr_block = decompress_column_block(offset_column, current_compression, block_number);
+                    uncompr_block = decompress_column_block(offset_column, offsets_compression, block_number);
 
                     // update cache
                     offset_block_cache = std::make_unique<ColumnBlockCache>(block_number, uncompr_block);
@@ -178,6 +187,11 @@ namespace morphstore {
             : Graph(vertices_container_type) {}
 
         std::string get_storage_format() const override { return "CSR"; }
+
+        std::string get_compression_format() const override {
+            return "offsets: " + graph_compr_f_to_string(offsets_compression) +
+                   ", edgeIds: " + graph_compr_f_to_string(edgeIds_compression);
+        }
 
         // this function gets the number of vertices/edges and allocates memory for the graph-topology columns
         // TODO: test that no data exists before (as this gets overwritten)
@@ -248,7 +262,7 @@ namespace morphstore {
 
             auto block_size = edgeId_column->get_block_size();
 
-            if (current_compression == GraphCompressionFormat::UNCOMPRESSED) {
+            if (edgeIds_compression == GraphCompressionFormat::UNCOMPRESSED) {
                 uint64_t *col_data = edgeId_column->get_column()->get_data();
                 result.insert(result.end(), col_data + start, col_data + end);
             } else {
@@ -284,7 +298,7 @@ namespace morphstore {
                         cache_hit = true;
                     } else {
                         // std::cout << "edgeId_col cache miss" << std::endl;
-                        uncompr_block = decompress_column_block(edgeId_column, current_compression, block_number);
+                        uncompr_block = decompress_column_block(edgeId_column, edgeIds_compression, block_number);
                     }
 
                     uint64_t *block_data = uncompr_block->get_data();
@@ -330,30 +344,32 @@ namespace morphstore {
         }
 
         void morph(GraphCompressionFormat target_format) override {
+            morph(target_format, target_format);
+        }        
+
+        // allowing different compressions for offset column and edgeId column
+        void morph(GraphCompressionFormat target_offset_format, GraphCompressionFormat target_edgeId_format) {
 #if DEBUG
             std::cout << "Morphing graph format specific data structures from "
-                      << graph_compr_f_to_string(current_compression) << " to "
-                      << graph_compr_f_to_string(target_format) << std::endl;
+                      << graph_compr_f_to_string(get_compression_format()) << " to "
+                      << "offsets: " graph_compr_f_to_string(target_offset_format)
+                      << " edgeIds: " << graph_compr_f_to_string(target_edgeId_format) << std::endl;
 #endif
-            if (current_compression == target_format) {
-#if DEBUG
-                std::cout << "Already in " << graph_compr_f_to_string(target_format);
-#endif
-                return;
-            }
 
-            offset_column = morph_saving_offsets_graph_col(offset_column, current_compression, target_format, true);
-            edgeId_column = morph_saving_offsets_graph_col(edgeId_column, current_compression, target_format, true);
+            offset_column = morph_saving_offsets_graph_col(offset_column, offsets_compression, target_offset_format, true);
+            edgeId_column = morph_saving_offsets_graph_col(edgeId_column, edgeIds_compression, target_edgeId_format, true);
 
             // invalidating caches (as block-size may differ)
             if (offset_block_cache) {
                 offset_block_cache.reset();
             }
+
             if (edgeIds_block_cache) {
                 edgeIds_block_cache.reset();
             }
 
-            this->current_compression = target_format;
+            this->offsets_compression = target_offset_format;
+            this->edgeIds_compression = target_edgeId_format;
         }
 
         // get size of storage format:
@@ -369,24 +385,24 @@ namespace morphstore {
             return {index_size, data_size};
         }
 
-        double offset_column_compr_ratio() { return compression_ratio(offset_column, current_compression); }
+        double offset_column_compr_ratio() { return compression_ratio(offset_column, offsets_compression); }
 
-        double edgeId_column_compr_ratio() { return compression_ratio(edgeId_column, current_compression); }
+        double edgeId_column_compr_ratio() { return compression_ratio(edgeId_column, edgeIds_compression); }
 
-        std::string get_column_info(column_with_blockoffsets_base *col_with_offsets) {
+        std::string get_column_info(column_with_blockoffsets_base *col_with_offsets, GraphCompressionFormat format) {
             auto col = col_with_offsets->get_column();
 
             return " values: " + std::to_string(col->get_count_values()) +
                    " size in bytes: " + std::to_string(col->get_size_used_byte()) +
-                   " compression ratio: " + std::to_string(compression_ratio(col_with_offsets, current_compression)) +
+                   " compression ratio: " + std::to_string(compression_ratio(col_with_offsets, format)) +
                    " number of blocks (if blocksize > 1): " +
                    std::to_string(col_with_offsets->get_block_offsets()->size());
         }
 
         void statistics() override {
             Graph::statistics();
-            std::cout << "offset column: " << get_column_info(offset_column) << std::endl;
-            std::cout << "edgeId column: " << get_column_info(edgeId_column) << std::endl;
+            std::cout << "offset column: " << get_column_info(offset_column, offsets_compression) << std::endl;
+            std::cout << "edgeId column: " << get_column_info(edgeId_column, edgeIds_compression) << std::endl;
             std::cout << "--------------------------------------------" << std::endl;
             std::cout << std::endl << std::endl;
         }

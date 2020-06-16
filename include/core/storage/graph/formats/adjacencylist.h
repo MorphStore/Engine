@@ -62,6 +62,8 @@ namespace morphstore {
             uint64_t operator()(const adjacency_vector v) const { return v->size(); }
         };
 
+        GraphCompressionFormat current_compression = GraphCompressionFormat::UNCOMPRESSED;
+
         // maps the a list of outgoing edges (ids) to a vertex-id (representing the graph topology)
         // TODO: try using a vector instead an unordered_map (? faster access, but needs more memory for empty adj.-lists ?)
         std::unordered_map<uint64_t, adjacency_list_variant> *adjacencylistPerVertex =
@@ -149,6 +151,8 @@ namespace morphstore {
             : Graph(vertices_container_type) {}
 
         std::string get_storage_format() const override { return "Adjacency_List"; }
+
+        std::string get_compression_format() const override { return graph_compr_f_to_string(current_compression); }
 
         // function: to set graph allocations
         void allocate_graph_structure(uint64_t numberVertices, uint64_t numberEdges) override {
