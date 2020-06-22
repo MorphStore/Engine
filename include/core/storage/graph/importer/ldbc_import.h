@@ -203,8 +203,10 @@ namespace morphstore {
                                 property_key = row.substr(last, next - last);
                                 data_type = get_data_type(vertexType, property_key);
                                 if (data_type == Ldbc_Data_Type::ERROR) {
-                                    throw std::invalid_argument(file.string() + ":" + vertexType + ":" + property_key +
-                                                                " could not be found in schema");
+                                    std::cout 
+                                        << "Unexpected property: in " << file.string() 
+                                        << ":" << vertexType << ":" << property_key << " could not be found in schema";
+                                    data_type = Ldbc_Data_Type::STRING;
                                 }
                                 attributes.push_back(std::make_pair(property_key, data_type));
                                 last = next + 1;
@@ -213,8 +215,10 @@ namespace morphstore {
                             property_key = row.substr(last);
                             data_type = get_data_type(vertexType, property_key);
                             if (data_type == Ldbc_Data_Type::ERROR) {
-                                throw std::invalid_argument(file.string() + ":" + vertexType + ":" + property_key +
-                                                            " could not be found in schema");
+                                    std::cout 
+                                        << "Unexpected property: in " << file.string() 
+                                        << ":" << vertexType << ":" << property_key << " could not be found in schema";
+                                    data_type = Ldbc_Data_Type::STRING;
                             }
                             attributes.push_back(std::make_pair(property_key, data_type));
                         } else {
@@ -518,10 +522,12 @@ namespace morphstore {
                                 if (start == 0) {
                                     propertyKey = row.substr(row.find(delimiter) + 1);
                                     data_type = get_data_type(sourceVertexType, propertyKey);
-                                    if (data_type == Ldbc_Data_Type::ERROR)
-                                        throw std::invalid_argument(file.string() + ":" + edgeType + ":" +
-                                                                    propertyKey + " could not be found in schema");
-
+                                    if (data_type == Ldbc_Data_Type::ERROR) {
+                                        std::cout 
+                                            << "Unexpected property: in " << file.string() 
+                                            << ":" << edgeType << ":" << propertyKey << " could not be found in schema";
+                                        data_type = Ldbc_Data_Type::STRING;
+                                    }
                                 } else {
                                     // (1) write data to vector: if key is already present, over write value
                                     // (simplicity: we take the newest one)
