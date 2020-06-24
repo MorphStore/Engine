@@ -332,9 +332,6 @@ case $key in
   ;;
 	--tvl)
 	tvlpath="-DTVL_PATH=$2"
-#  echo "!!!!!!!!TVLPATH"
-#  echo $tvlpath
-#	tvlpath=$2
 	shift
   shift
 	;;
