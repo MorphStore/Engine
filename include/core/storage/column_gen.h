@@ -263,6 +263,7 @@ const column<uncompr_f> * generate_exact_number(
         size_t p_CountMatches,
         uint64_t p_ValMatch,
         uint64_t p_ValOther,
+        bool p_Sorted,
         size_t p_Seed = 0
 ) {
     if(p_CountMatches > p_CountValues)
@@ -274,37 +275,51 @@ const column<uncompr_f> * generate_exact_number(
                 "p_ValMatch and p_ValOther must be different"
         );
     
-    // If the relative frequency is above 50%, then swap things to be more
-    // efficient.
-    if(p_CountMatches > p_CountValues / 2)
-        return generate_exact_number(
-                p_CountValues,
-                p_CountValues - p_CountMatches,
-                p_ValOther,
-                p_ValMatch,
-                p_Seed
-        );
-    
     const size_t allocationSize = p_CountValues * sizeof(uint64_t);
     auto resCol = new column<uncompr_f>(allocationSize);
     uint64_t * const res = resCol->get_data();
     
-    for(size_t i = 0; i < p_CountValues; i++)
-        res[i] = p_ValOther;
-    
-    if(p_Seed == 0)
-       p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(p_Seed);
-    std::uniform_int_distribution<size_t> rnd(0, p_CountValues - 1);
-    
-    for(size_t i = 0; i < p_CountMatches; i++)
-        while(true) {
-            const size_t pos = rnd(generator);
-            if(res[pos] != p_ValMatch) {
-                res[pos] = p_ValMatch;
-                break;
-            }
+    if(p_Sorted) {
+        if(p_ValMatch < p_ValOther) {
+            for(size_t i = 0; i < p_CountMatches; i++)
+                res[i] = p_ValMatch;
+            for(size_t i = p_CountMatches; i < p_CountValues; i++)
+                res[i] = p_ValOther;
         }
+        else {
+            for(size_t i = 0; i < p_CountValues - p_CountMatches; i++)
+                res[i] = p_ValOther;
+            for(size_t i = p_CountValues - p_CountMatches; i < p_CountValues; i++)
+                res[i] = p_ValMatch;
+        }
+    }
+    else {
+        // If the relative frequency is above 50%, then swap things to be more
+        // efficient.
+        if(p_CountMatches > p_CountValues / 2) {
+            p_CountMatches = p_CountValues - p_CountMatches;
+            const uint64_t tmp = p_ValMatch;
+            p_ValMatch = p_ValOther;
+            p_ValOther = tmp;
+        }
+        
+        for(size_t i = 0; i < p_CountValues; i++)
+            res[i] = p_ValOther;
+
+        if(p_Seed == 0)
+           p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        std::default_random_engine generator(p_Seed);
+        std::uniform_int_distribution<size_t> rnd(0, p_CountValues - 1);
+
+        for(size_t i = 0; i < p_CountMatches; i++)
+            while(true) {
+                const size_t pos = rnd(generator);
+                if(res[pos] != p_ValMatch) {
+                    res[pos] = p_ValMatch;
+                    break;
+                }
+            }
+    }
     
     resCol->set_meta_data(p_CountValues, allocationSize);
     

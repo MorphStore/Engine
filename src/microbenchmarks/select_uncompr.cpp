@@ -85,7 +85,8 @@ int main( void ) {
                         inDataCount,
                         countMatches,
                         0,
-                        bitwidth_max<uint64_t>(64)
+                        bitwidth_max<uint64_t>(64),
+                        false
                 );
                 varex.print_datagen_done();
         

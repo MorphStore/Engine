@@ -296,7 +296,8 @@ int main(void) {
                         countValues,
                         countMatches,
                         pred,
-                        bitwidth_max<uint64_t>(bw)
+                        bitwidth_max<uint64_t>(bw),
+                        false
                 );
                 varex.print_datagen_done();
 
