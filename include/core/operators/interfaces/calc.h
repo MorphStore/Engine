@@ -35,7 +35,8 @@ namespace morphstore {
  * to enable partial template specialization.
  */
 template<
-        template<typename> class t_unary_op,
+        template<class, int> class t_unary_op,
+        //template<typename> class t_unary_op,
         class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f
@@ -55,9 +56,16 @@ struct calc_unary_t {
      * whereby the i-th data element is the result of the operation t_unary_op
      * applied to to the i-th data element of input column.
      */
-    static
-    const column<t_out_data_f> *
-    apply(const column<t_in_data_f> * const inDataCol);
+    // static
+    // const column<t_out_data_f> *
+    // apply(const column<t_in_data_f> * const inDataCol);
+        static
+        const column<t_out_data_f> *
+        apply(
+            const column<t_in_data_f> * const inDataCol,
+            const uint64_t val,
+            const size_t outPosCountEstimate = 0
+        );    
 };
     
 /**
@@ -119,19 +127,34 @@ const column<t_out_data_f> *
 }
 
 template<
-        template<typename> class t_binary_op,
+        template<class, int> class t_unary_op,
+        //template<typename> class t_binary_op,
         class t_vector_extension,
         class t_out_data_f,
         class t_in_data_f
 >
 
 const column<t_out_data_f> *
-    calc_unary(const column<t_in_data_f> * const inDataLCol){
+    calc_unary(
+        const column<t_in_data_f> * const inDataLCol,
+        const uint64_t val,
+        const size_t outPosCountEstimate = 0
+    ){
 
 
-    return calc_unary_t<t_binary_op,t_vector_extension,t_out_data_f,t_in_data_f>::apply(
-            inDataLCol
+    return calc_unary_t<t_unary_op,t_vector_extension,t_out_data_f,t_in_data_f>::apply(
+            inDataLCol,
+            val,
+            outPosCountEstimate
     );
+
+// const column<t_out_data_f> *
+//     calc_unary(const column<t_in_data_f> * const inDataLCol){
+
+
+//     return calc_unary_t<t_binary_op,t_vector_extension,t_out_data_f,t_in_data_f>::apply(
+//             inDataLCol
+//     );    
 }
 
 }

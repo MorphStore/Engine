@@ -9,7 +9,7 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/typehelper.h>
+#include <vector/type_helper.h>
 #include <core/operators/interfaces/select.h>
 
 namespace morphstore {

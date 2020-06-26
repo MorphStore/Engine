@@ -45,7 +45,8 @@
 #include <random>
 
 #include <core/morphing/type_packing.h>
-
+#include <core/morphing/type_packing_vertical.h>
+#include <core/utils/monitoring.h>
 
 #include <core/operators/general_vectorized/agg_sum_uncompr.h>
 #include <core/operators/general_vectorized/project_uncompr.h>
@@ -64,6 +65,66 @@ using namespace vectorlib;
 // ****************************************************************************
 
 
+//int main( void ) {
+    // ************************************************************************
+    // * Generation of the synthetic base data
+    // ************************************************************************
+    // MONITORING_CREATE_MONITOR(
+    //     MONITORING_MAKE_MONITOR("uint32_t", "byte-perm"),
+    //     {"type", "variant"});
+
+ //    std::cout << "Base data generation started... ";
+ //    std::cout.flush();
+    
+ //    const size_t countValues = 10;//1000000;  
+ //    const column<uncompr_f> * const baseCol1 = generate_with_distr(
+ //            countValues,
+ //            std::uniform_int_distribution<uint64_t>(10, 199),
+ //            false,
+ //            3
+ //    );
+
+ //    print_columns(print_buffer_base::hexadecimal, baseCol1, "baseCol1");
+ //  //  using ve = scalar<v64<uint64_t> >;
+ //    //using ve = sse<v128<uint64_t> >;
+ //    using ve = avx2<v256<uint64_t>>;
+ //    //using ve = avx512<v512<uint64_t>>;
+ //    //compression
+
+ // //   MONITORING_START_INTERVAL_FOR("time", "uint32_t", "byte-perm");
+ //    auto baseCol1Compr = morph<ve, type_packing_f<uint64_t > >(baseCol1);
+ // //   MONITORING_END_INTERVAL_FOR("time", "uint32_t", "byte-perm");
+ // //   MONITORING_PRINT_MONITORS(monitorCsvLog);
+ //    //std::cout << "get_size_compr_byte baseCol1 " << baseCol1Compr->get_size_compr_byte() << std::endl;
+ //    print_columns(print_buffer_base::hexadecimal, baseCol1Compr, "baseCol1Compr");
+ //    //decompression
+ //    auto baseCol1Decompr = morph<ve, uncompr_f >(baseCol1Compr);
+ //    print_columns(print_buffer_base::hexadecimal, baseCol1Decompr, "baseCol1Decompr");
+
+ //    std::cout << "done." << std::endl;
+    
+
+ //    return 0;
+
+
+    // { //test add
+    // using ps1 = avx2<v256<uint64_t>>;
+    // IMPORT_VECTOR_BOILER_PLATE_PREFIX(ps1, ps_)
+
+    //  ps_vector_t sequence1 = set_sequence<ps1, ps_vector_base_t_granularity::value>(0,1); //0,1,2,...,7
+    //  ps_vector_t sequence2 = set1<ps1, ps_vector_base_t_granularity::value>(1);     //1,1,...,1
+    //  std::cout<< "using avx2, 32bit" << std::endl;  
+    //  ps_vector_t added = add<ps1, ps_vector_base_t_granularity::value>::apply(sequence1, sequence2); //1,2,...,8
+    //  uint64_t number1 = 0;
+    //  for(int i=0; i < 4; i++){
+    //      number1 = extract_value<ps1,ps_vector_base_t_granularity::value>(added, i);
+    //      std::cout << number1 << std::endl;
+    //  }
+    // }    
+
+    
+//}
+
 int main( void ) {
     // ************************************************************************
     // * Generation of the synthetic base data
@@ -72,7 +133,7 @@ int main( void ) {
     std::cout << "Base data generation started... ";
     std::cout.flush();
     
-    const size_t countValues = 10; 
+    const size_t countValues = 100; 
     const column<uncompr_f> * const baseCol1 = generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(100, 199),
@@ -83,9 +144,10 @@ int main( void ) {
     print_columns(print_buffer_base::hexadecimal, baseCol1, "SUM(baseCol1)");
   //  using ve = scalar<v64<uint64_t> >;
     using ve = sse<v128<uint64_t> >;
+    //using ve = avx2<v256<uint64_t> >;
 
     //compression
-    auto baseCol1Compr = morph<ve, type_packing_f<uint32_t > >(baseCol1);
+    auto baseCol1Compr = morph<ve, type_packing_f<uint8_t > >(baseCol1);
     std::cout << "get_size_compr_byte baseCol1 " << baseCol1Compr->get_size_compr_byte() << std::endl;
     print_columns(print_buffer_base::hexadecimal, baseCol1Compr, "SUM(baseCol1)");
     //decompression
@@ -97,6 +159,8 @@ int main( void ) {
 
     return 0;
 }
+
+
 
 
 

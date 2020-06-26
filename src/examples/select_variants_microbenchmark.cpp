@@ -34,6 +34,10 @@
 #include <core/operators/specialized/select_type_packing_32to32.h>
 #include <core/operators/specialized/select_type_packing_32to64.h>
 #include <core/operators/specialized/select_type_packing_64to32.h>
+#include <core/operators/specialized/calc_unary_type_packing.h>
+#include <core/operators/specialized/calc_unary_type_packing_16to32.h>
+#include <core/operators/specialized/calc_unary_type_packing_32to8.h>
+
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
 #include <core/utils/basic_types.h>
@@ -81,12 +85,12 @@ int main(void) {
     
     const uint64_t pred = 0;
     
-    const size_t countValues = 10000000;///799;//10000000;//18;;//17;//50000007;
+    const size_t countValues = 799;///799;//10000000;//18;;//17;//50000007;
 
     std::vector<varex_t::variant_t> variants = {
         //MAKE_VARIANT(my_select_wit_t, equal, sse<v128<uint64_t>>, uncompr_f, SINGLE_ARG(static_vbp_f<vbp_l<32, 2> >)),          
-        MAKE_VARIANT(my_select_wit_t, equal, sse<v128<uint64_t>>, uncompr_f, uncompr_f),
-        MAKE_VARIANT(my_select_wit_t, equal, sse<v128<uint64_t>>, uncompr_f, SINGLE_ARG(static_vbp_f<vbp_l<32, 2> >)),
+        // MAKE_VARIANT(my_select_wit_t, equal, sse<v128<uint64_t>>, uncompr_f, uncompr_f),
+        // MAKE_VARIANT(my_select_wit_t, equal, sse<v128<uint64_t>>, uncompr_f, SINGLE_ARG(static_vbp_f<vbp_l<32, 2> >)),
         // MAKE_VARIANT(my_select_wit_t, equal, avx2<v256<uint64_t>>, uncompr_f, uncompr_f),
         // MAKE_VARIANT(my_select_wit_t, equal, avx512<v512<uint64_t>>, uncompr_f, uncompr_f),
 
@@ -106,34 +110,40 @@ int main(void) {
         // MAKE_VARIANT(my_select_wit_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >))  
 
 
-        MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
-        MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
-        MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
-        MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >)),   
+        // MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
+        // MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
+        // MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
+        // MAKE_VARIANT(select_t, equal, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >)),   
 
-        MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
-        MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
-        MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
-        MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >)),   
+        // MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
+        // MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
+        // MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
+        // MAKE_VARIANT(select_t, equal, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >))  
 
-        MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)),                            
-        MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
-        MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
-        MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >))   
+        // MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)),                            
+        // MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint32_t >)),
+        // MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint64_t >)),
+        // MAKE_VARIANT(select_t, equal, avx512<v512<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint32_t >))   
+        
+         MAKE_VARIANT(calc_unary_t, add, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
+         MAKE_VARIANT(calc_unary_t, add, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint64_t >), SINGLE_ARG(type_packing_f<uint64_t >)), 
+         MAKE_VARIANT(calc_unary_t, add, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint16_t >)), 
+         MAKE_VARIANT(calc_unary_t, add, avx2<v256<uint64_t>>, SINGLE_ARG(type_packing_f<uint32_t >), SINGLE_ARG(type_packing_f<uint16_t >)), 
+         MAKE_VARIANT(calc_unary_t, add, sse<v128<uint64_t>>, SINGLE_ARG(type_packing_f<uint8_t >), SINGLE_ARG(type_packing_f<uint32_t >)), 
 
     };
     
     for(float selectivity : {
-        0.01,
-        0.1,
-        0.2,
-        0.3,
-        0.4,
-        0.5,
-        0.6,
-        0.7,
-        0.8,
-        0.9
+        //0.01,
+        //0.1,
+        0.2//,
+        // 0.3,
+        // 0.4,
+        // 0.5,
+        // 0.6,
+        // 0.7,
+        // 0.8,
+        // 0.9
     }) {
         varex.print_datagen_started();
         const size_t countMatches = static_cast<size_t>(
@@ -143,7 +153,7 @@ int main(void) {
                 countValues,
                 countMatches,
                 pred,
-                bitwidth_max<uint64_t>(16)
+                bitwidth_max<uint64_t>(8)
         );
         varex.print_datagen_done();
 
