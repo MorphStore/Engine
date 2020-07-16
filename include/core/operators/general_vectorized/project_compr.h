@@ -83,6 +83,7 @@ public:
     ) {
         using namespace vectorlib;
         
+#ifndef PROJECT_ASSUME_PREPARED
         if(inDataCol->template prepare_for_random_access<t_ve>())
             // @todo It would be nice to use warn() from the logger, but this
             // always outputs to cout, which interferes with our checks of the
@@ -93,6 +94,7 @@ public:
                        "project-operator, which might corrupt measurements of "
                        "the operator's execution time"
                     << std::endl;
+#endif
         
         const base_t * inData = inDataCol->get_data();
         

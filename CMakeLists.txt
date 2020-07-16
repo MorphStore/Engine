@@ -214,6 +214,15 @@ else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
 	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF100")
 endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
 
+if ( DEFINED PROJECT_ASSUME_PREPARED )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tPROJECT_ASSUME_PREPARED is set to to TRUE\n" )
+	morph_flag("-DPROJECT_ASSUME_PREPARED")
+	set( ignoreMe ${PROJECT_ASSUME_PREPARED} )
+else ( DEFINED PROJECT_ASSUME_PREPARED )
+	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tPROJECT_ASSUME_PREPARED is set to FALSE\n" )
+	morph_flag("-UPROJECT_ASSUME_PREPARED")
+endif ( DEFINED PROJECT_ASSUME_PREPARED )
+
 MESSAGE( ${MorphStoreProjectConf} )
 file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 

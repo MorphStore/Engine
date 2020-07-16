@@ -112,6 +112,9 @@ function printHelp {
         echo "       These are also sufficient for scale factor 10"
         echo "	--vbpLimitRoutinesForSSBSF100"
         echo "	     Build the vertical bit-packing routines only for the bit widths required for executing SSB at scale factor 100, to speed up the build."
+        echo "misc:"
+        echo "	--projectAssumePrepared"
+        echo "	     The project operator on compressed data will not check whether its input data column was prepared for random access."
 }
 
 buildType=""
@@ -153,6 +156,7 @@ sve=="DCSVE=False"
 target="all"
 vbpLimitRoutinesForSSBSF1="-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1"
 vbpLimitRoutinesForSSBSF100="-UVBP_LIMIT_ROUTINES_FOR_SSB_SF100"
+projectAssumePrepared="-UPROJECT_ASSUME_PREPARED"
 
 numCores=`nproc`
 if [ $numCores != 1 ]
@@ -348,6 +352,10 @@ case $key in
         vbpLimitRoutinesForSSBSF100="-DVBP_LIMIT_ROUTINES_FOR_SSB_SF100=True"
         shift # past argument
         ;;
+        --projectAssumePrepared)
+        projectAssumePrepared="-DPROJECT_ASSUME_PREPARED=True"
+        shift # past argument
+        ;;
 	*)
 	optCatch='^-j'
 	if ! [[ $1 =~ $optCatch ]]
@@ -390,7 +398,7 @@ addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build
-cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $sve $vbpLimitRoutinesForSSBSF1 $vbpLimitRoutinesForSSBSF100 $tvlpath -G "Unix Makefiles" ../
+cmake -E chdir build/ cmake $buildMode $logging $selfManagedMemory $qmmes $qmmis $qmmae $qmmib $debugMalloc $checkForLeaks $setMemoryAlignment $enableMonitoring $addTests $addBuilds $avx512 $avxtwo $sse4 $odroid $rapl $neon $sve $vbpLimitRoutinesForSSBSF1 $vbpLimitRoutinesForSSBSF100 $tvlpath $projectAssumePrepared -G "Unix Makefiles" ../
 make -C build/ VERBOSE=1 $makeParallel $target
 set +e
 
