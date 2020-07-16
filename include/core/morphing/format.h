@@ -191,7 +191,7 @@ struct decompress_and_process_batch {
             typename t_op_vector<
                     t_vector_extension, t_extra_args ...
             >::state_t & p_State
-    );
+    ) = delete;
 };
 
 template<class t_vector_extension, class t_format>
