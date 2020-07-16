@@ -179,13 +179,13 @@ def generateDecomprRoutine(bw):
     print("    }")
     print("};")
     
-def generateDecomprAndProcessRoutine(bw):
+def generateDecomprAndProcessRoutine(bw, factor):
     cycleLenVec = minimumCycleLen(bw)
 
     print("template<class t_vector_extension, template<class, class ...> class t_op_vector, class ... t_extra_args>")
     print("class decompress_and_process_batch<")
     print("        t_vector_extension,")
-    print("        vbp_l<{}, t_vector_extension::vector_helper_t::element_count::value>,".format(bw))
+    print("        vbp_l<{}, t_vector_extension::vector_helper_t::element_count::value * {}>,".format(bw, factor))
     print("        t_op_vector,")
     print("        t_extra_args ...")
     print("> {")
@@ -194,7 +194,7 @@ def generateDecomprAndProcessRoutine(bw):
     print()
     print("    static const unsigned m_Bw = {};".format(bw))
     print()
-    print("    using src_l = vbp_l<m_Bw, t_vector_extension::vector_helper_t::element_count::value>;")
+    print("    using src_l = vbp_l<m_Bw, t_vector_extension::vector_helper_t::element_count::value * {}>;".format(factor))
     print()
     print("public:")
     print("#ifdef VBP_FORCE_INLINE_UNPACK")
@@ -206,30 +206,34 @@ def generateDecomprAndProcessRoutine(bw):
     print("        using namespace vectorlib;")
     print()
     print("        const vector_t mask = set1<t_ve, vector_base_t_granularity::value>(bitwidth_max<base_t>(m_Bw));")
-    print("        vector_t tmp = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);")
-    print("        vector_t nextOut = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);")
+    for i in range(factor):
+        print("        vector_t tmp{} = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);".format(i))
+        print("        vector_t nextOut{} = vectorlib::set1<t_ve, vector_base_t_granularity::value>(0);".format(i))
     print()
     print("        const base_t * inBase = reinterpret_cast<const base_t *>(in8);")
     print()
     print("        const size_t cycleLenVec = {};".format(cycleLenVec))
     print("        const size_t cycleLenBase =")
     print("                cycleLenVec * vector_element_count::value;")
-    print("        for(size_t i = 0; i < countInLog; i += cycleLenBase) {")
+    print("        for(size_t i = 0; i < countInLog; i += cycleLenBase * {}) {{".format(factor))
 
     bitpos = 0
     for posInCycle in range(0, cycleLenVec):
         if (posInCycle * bw) % COUNT_BITS == 0:
-            print("            tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(inBase);")
-            print("            inBase += vector_element_count::value;")
-            print("            nextOut = bitwise_and<t_ve>(mask, tmp);")
+            for i in range(factor):
+                print("            tmp{} = load<t_ve, iov::ALIGNED, vector_size_bit::value>(inBase);".format(i))
+                print("            inBase += vector_element_count::value;")
+                print("            nextOut{} = bitwise_and<t_ve>(mask, tmp{});".format(i, i))
             bitpos = bw
         elif int(posInCycle * bw / COUNT_BITS) < int(((posInCycle + 1) * bw - 1) / COUNT_BITS):
-            print("            tmp = load<t_ve, iov::ALIGNED, vector_size_bit::value>(inBase);")
-            print("            inBase += vector_element_count::value;")
-            print("            nextOut = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(tmp, {}), nextOut));".format(COUNT_BITS - bitpos + bw))
+            for i in range(factor):
+                print("            tmp{} = load<t_ve, iov::ALIGNED, vector_size_bit::value>(inBase);".format(i))
+                print("            inBase += vector_element_count::value;")
+                print("            nextOut{} = bitwise_and<t_ve>(mask, bitwise_or<t_ve>(shift_left<t_ve>::apply(tmp{}, {}), nextOut{}));".format(i, i, COUNT_BITS - bitpos + bw, i))
             bitpos -= COUNT_BITS
-        print("            t_op_vector<t_ve, t_extra_args ...>::apply(nextOut, opState);")
-        print("            nextOut = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(tmp, {}));".format(bitpos))
+        for i in range(factor):
+            print("            t_op_vector<t_ve, t_extra_args ...>::apply(nextOut{}, opState);".format(i))
+            print("            nextOut{} = bitwise_and<t_ve>(mask, shift_right<t_ve>::apply(tmp{}, {}));".format(i, i, bitpos))
         bitpos += bw;
 
     print("        }")
@@ -263,7 +267,10 @@ if __name__ == "__main__":
 
     printHeader("Decompression and processing")
     for bw in range(1, COUNT_BITS + 1):
-        generateDecomprAndProcessRoutine(bw)
+        generateDecomprAndProcessRoutine(bw, 1)
+        generateDecomprAndProcessRoutine(bw, 2)
+        generateDecomprAndProcessRoutine(bw, 4)
+        generateDecomprAndProcessRoutine(bw, 8)
         print()
         print()
         
