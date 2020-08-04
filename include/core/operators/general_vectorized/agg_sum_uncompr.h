@@ -112,7 +112,7 @@ namespace morphstore {
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
 
-         static base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
+         base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
          typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState(
          t
          );
