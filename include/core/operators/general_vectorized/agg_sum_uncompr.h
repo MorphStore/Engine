@@ -53,6 +53,7 @@ namespace morphstore {
    template<class VectorExtension>
    struct agg_sum_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      
       struct state_t {
          vector_t resultVec;
          state_t(void): resultVec( vectorlib::set1<VectorExtension, vector_base_t_granularity::value>( 0 ) ) { }
@@ -61,7 +62,9 @@ namespace morphstore {
          //TODO replace by set
       };
       
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      void apply(
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
@@ -69,10 +72,11 @@ namespace morphstore {
             p_State.resultVec, p_DataVector
          );
       }
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static base_t finalize(
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static base_t finalize(
          typename agg_sum_processing_unit<VectorExtension>::state_t & p_State
       ) {
-          
+         
          return vectorlib::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
@@ -80,9 +84,10 @@ namespace morphstore {
    template<class VectorExtension>
    struct agg_sum_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static
-      base_t
-      apply(
+      
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      base_t apply(
          base_t const *& p_DataPtr,
          size_t const p_Count,
          typename agg_sum_processing_unit<VectorExtension>::state_t &p_State
@@ -102,9 +107,10 @@ namespace morphstore {
    template<class VectorExtension>
    struct agg_sum_t<VectorExtension, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static
-      const column<uncompr_f> *
-      apply(
+      
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      const column<uncompr_f> * apply(
          column< uncompr_f > const * const p_DataColumn
       ) {
          typename agg_sum_processing_unit<VectorExtension>::state_t vectorState;
@@ -112,12 +118,10 @@ namespace morphstore {
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
 
-         static base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
-         typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState(
-         t
-         );
+         base_t t = agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
+         typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState( t );
 
-        base_t result =
+         base_t result =
             agg_sum_batch<scalar < v64 < uint64_t > >>::apply( dataPtr, remainderCount, scalarState );
 
          auto outDataCol = new column<uncompr_f>(sizeof(base_t));
