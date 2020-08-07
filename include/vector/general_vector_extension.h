@@ -37,6 +37,16 @@ namespace vectorlib {
    using v256 = vector_view<256, T>;
    template<typename T>
    using v512 = vector_view<512, T>;
+   template<typename T>
+   using v1024 = vector_view<1024, T>;
+   template<typename T>
+   using v2048 = vector_view<2048, T>;
+   template<typename T>
+   using v4096 = vector_view<4096, T>;
+   template<typename T>
+   using v8192 = vector_view<8192, T>;
+   template<typename T>
+   using v16384 = vector_view<16384, T>;
 
 }
 
