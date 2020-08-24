@@ -302,7 +302,7 @@ int main(int argc, char ** argv) {
     
     if(argc != 2)
         throw std::runtime_error(
-                "this calibration benchmark expect the number of repetitions "
+                "this calibration benchmark expects the number of repetitions "
                 "as its only argument"
         );
     const int countRepetitions = atoi(argv[1]);
