@@ -88,4 +88,10 @@ if( BUILD_ALL OR BUILD_MICROBMS )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( select_sum_benchmark PRIVATE "-ldl" )
+
+    add_executable( otf_morphing_example_1 otf_morphing_example_1.cpp )
+    target_compile_options( otf_morphing_example_1 PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( otf_morphing_example_1 PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )
