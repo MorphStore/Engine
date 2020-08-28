@@ -300,16 +300,14 @@ const column<t_out_pos_f> * measure_select_and_morphs(
 template<class t_varex_t, unsigned t_OutBw, unsigned t_InBw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
-        // Compressed variants.
-        MAKE_VARIANTS_VE(scalar<v64<uint64_t>>, t_OutBw, t_InBw),
-#ifdef SSE
-        MAKE_VARIANTS_VE(sse<v128<uint64_t>>, t_OutBw, t_InBw),
-#endif
-#ifdef AVXTWO
-        MAKE_VARIANTS_VE(avx2<v256<uint64_t>>, t_OutBw, t_InBw),
-#endif
 #ifdef AVX512
         MAKE_VARIANTS_VE(avx512<v512<uint64_t>>, t_OutBw, t_InBw),
+#elif defined(AVXTWO)
+        MAKE_VARIANTS_VE(avx2<v256<uint64_t>>, t_OutBw, t_InBw),
+#elif defined(SSE)
+        MAKE_VARIANTS_VE(sse<v128<uint64_t>>, t_OutBw, t_InBw),
+#else
+        MAKE_VARIANTS_VE(scalar<v64<uint64_t>>, t_OutBw, t_InBw),
 #endif
     };
 }
@@ -510,5 +508,5 @@ int main(void) {
     MONITORING_PRINT_MONITORS(monitorCsvLog);
 #endif
     
-    return 0;
+    return !varex.good();
 }

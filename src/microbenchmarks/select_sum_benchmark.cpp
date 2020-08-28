@@ -315,27 +315,24 @@ template<
 >
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
-#if 0
+#ifdef AVX512
         MAKE_VARIANTS_VARY_INDATAXF(
-                scalar<v64<uint64_t>>,
+                avx512<v512<uint64_t>>,
                 t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
         ),
-#ifdef SSE
-        MAKE_VARIANTS_VARY_INDATAXF(
-                sse<v128<uint64_t>>,
-                t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
-        ),
-#endif
-#ifdef AVXTWO
+#elif defined(AVXTWO)
         MAKE_VARIANTS_VARY_INDATAXF(
                 avx2<v256<uint64_t>>,
                 t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
         ),
-#endif
-#endif
-#ifdef AVX512
+#elif defined(SSE)
         MAKE_VARIANTS_VARY_INDATAXF(
-                avx512<v512<uint64_t>>,
+                sse<v128<uint64_t>>,
+                t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
+        ),
+#else
+        MAKE_VARIANTS_VARY_INDATAXF(
+                scalar<v64<uint64_t>>,
                 t_InDataXBw, t_InDataYBw, t_MidPosXCBw, t_MidDataYCBw
         ),
 #endif
@@ -503,5 +500,5 @@ int main(void) {
     
     varex.done();
     
-    return 0;
+    return !varex.good();
 }
