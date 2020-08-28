@@ -383,18 +383,20 @@ int main(void) {
         MSV_CXX_ATTRIBUTE_PPUNUSED bool inDataAssumedUnique;
         
         for(auto params : {
+            // Cx (Cy): number in PD's PhD thesis (number in the PVLDB-paper).
+            
             // Unsorted, small numbers, no outliers -> good for static_vbp.
-            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C2
+            std::make_tuple(false, _0, _63, _0, _0, 0.0, false), // C2 (C1)
             // Unsorted, small numbers, very rare outliers -> good for dynamic_vbp.
-            std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001, false), // C3
+            std::make_tuple(false, _0, _63, max63bit, max63bit, 0.0001, false), // C3 (C2)
             // Unsorted, huge numbers in narrow range, no outliers -> good for for+dynamic_vbp.
-            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false), // C4
+            std::make_tuple(false, min63bit, min63bit + 63, _0, _0, 0.0, false), // C4 (C3)
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, _0, _100k, _0, _0, 0.0, false), // C5
+            std::make_tuple(true, _0, _100k, _0, _0, 0.0, false), // C5 (not used)
             // Sorted, large numbers -> good for delta+dynamic_vbp.
-            std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0, false), // C6
+            std::make_tuple(true, min48bit, min48bit + _100k, _0, _0, 0.0, false), // C6 (C4)
             // Unsorted, random numbers -> good for nothing/uncompr.
-            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C7
+            std::make_tuple(false, _0, max63bit, _0, _0, 0.0, true), // C7 (C5)
         }) {
             datasetIdx++;
             
