@@ -326,15 +326,14 @@ int main(int argc, char ** argv) {
     const size_t blockSize = 1024;
     
     std::vector<varex_t::variant_t> variants = {
-        MAKE_VARIANTS(scalar<v64<uint64_t>>),
-#ifdef SSE
-        MAKE_VARIANTS(sse<v128<uint64_t>>),
-#endif
-#ifdef AVXTWO
-        MAKE_VARIANTS(avx2<v256<uint64_t>>),
-#endif
 #ifdef AVX512
         MAKE_VARIANTS(avx512<v512<uint64_t>>),
+#elif defined(AVXTWO)
+        MAKE_VARIANTS(avx2<v256<uint64_t>>),
+#elif defined(SSE)
+        MAKE_VARIANTS(sse<v128<uint64_t>>),
+#else
+        MAKE_VARIANTS(scalar<v64<uint64_t>>),
 #endif
     };
 

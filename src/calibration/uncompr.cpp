@@ -201,15 +201,14 @@ int main(int argc, char ** argv) {
     const size_t countValues = 128 * 1024 * 1024;
     
     std::vector<varex_t::variant_t> variants = {
-        MAKE_VARIANT(scalar<v64<uint64_t>>),
-#ifdef SSE
-        MAKE_VARIANT(sse<v128<uint64_t>>),
-#endif
-#ifdef AVXTWO
-        MAKE_VARIANT(avx2<v256<uint64_t>>),
-#endif
 #ifdef AVX512
         MAKE_VARIANT(avx512<v512<uint64_t>>),
+#elif defined(AVXTWO)
+        MAKE_VARIANT(avx2<v256<uint64_t>>),
+#elif defined(SSE)
+        MAKE_VARIANT(sse<v128<uint64_t>>),
+#else
+        MAKE_VARIANT(scalar<v64<uint64_t>>),
 #endif
     };
 
