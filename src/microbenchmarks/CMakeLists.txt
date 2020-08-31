@@ -94,4 +94,10 @@ if( BUILD_ALL OR BUILD_MICROBMS )
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
     target_link_libraries( otf_morphing_example_1 PRIVATE "-ldl" )
+
+    add_executable( compression_data_benchmark compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark PRIVATE
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( compression_data_benchmark PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )
