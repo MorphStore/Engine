@@ -32,10 +32,12 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <vector>
-#include <iostream>
 
 namespace morphstore {
     
@@ -231,9 +233,7 @@ const column<uncompr_f> * generate_with_distr(
     if( seed == 0 ) {
        seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     }
-    std::default_random_engine generator(
-         seed
-    );
+    std::default_random_engine generator(seed);
     for(unsigned i = 0; i < countValues; i++)
         res[i] = distr(generator);
     
@@ -241,6 +241,183 @@ const column<uncompr_f> * generate_with_distr(
     
     if(sorted)
         std::sort(res, res + countValues);
+    
+    return resCol;
+}
+
+namespace generate_with_bitwidth_histogram_helpers {
+    /**
+     * @brief Reads bit width weights to be used with
+     * `generate_with_bitwidth_histogram` from a binary file.
+     * 
+     * The file contents must be a concatenation of any number of 64-byte
+     * units, each of which represents one bit width histogram. Within each
+     * unit, the i-th byte is the weight of bit width i in the bit width
+     * histogram.
+     * 
+     * For the in-memory representation, we use a uint64_t for each weight.
+     * Thus, the file contents are expanded.
+     * 
+     * @param p_BwWeightsFilePath The path to the file containing the bit width
+     * weights.
+     * @return A pair of (1) a pointer to the buffer containing the weights and
+     * (2) the number of histograms in that buffer.
+     * @todo The file layout should not be limited to one byte per weight.
+     */
+    std::pair<uint64_t *, size_t> read_bw_weights(
+            const std::string & p_BwWeightsFilePath
+    ) {
+        std::ifstream ifs(
+                p_BwWeightsFilePath, std::ios::in | std::ios::binary
+        );
+        if(ifs.good()) {
+            ifs.seekg(0, std::ios_base::end);
+            const size_t sizeByte = ifs.tellg();
+            if(sizeByte % std::numeric_limits<uint64_t>::digits)
+                throw std::runtime_error(
+                        "the number of weights must be a multiple of 64"
+                );
+            ifs.seekg(0, std::ios_base::beg);
+
+            uint8_t * wsBufTmp = new uint8_t[sizeByte];
+            ifs.read(reinterpret_cast<char*>(wsBufTmp), sizeByte);
+            if(!ifs.good())
+                throw std::runtime_error("could not read weights data from file");
+
+            // As many uint64_t as there are bytes in the file.
+            uint64_t * wsBuf = new uint64_t[sizeByte];
+            for(size_t i = 0; i < sizeByte; i++)
+                wsBuf[i] = wsBufTmp[i];
+
+            delete[] wsBufTmp;
+
+            return std::make_pair(
+                    wsBuf, sizeByte / std::numeric_limits<uint64_t>::digits
+            );
+        }
+        else
+            throw std::runtime_error("could not open weights file for reading");
+    }
+    
+    MSV_CXX_ATTRIBUTE_INLINE
+    uint64_t get_value(uint64_t x, unsigned bwMinus1) {
+        return (
+            (
+                // random 64-bit number
+                x
+                // ensure that there are at most (bw-1) effective bits
+                & ~(std::numeric_limits<uint64_t>::max() << bwMinus1)
+            )
+            // ensure that there are at least bw effective bits
+            | (static_cast<uint64_t>(1) << bwMinus1)
+            // ensured that there are exactly bw effective bits
+        );
+    }
+}
+
+/**
+ * @brief Creates an uncompressed column and fills its data buffer with values
+ * generated according to the specified bit width histogram.
+ * 
+ * Within each bit width, the values are drawn uniformly.
+ * 
+ * @param p_CountValues The number of data elements to generate.
+ * @param p_BwWeights An array of 64 64-bit numbers representing the bit width
+ * histogram, or rather the weights of each bit width. The number of values of
+ * bit width i to generate is the weight of bit width i multiplied by the the
+ * number of data elements to generate.
+ * @param p_IsSorted Whether the generated data shall be sorted.
+ * @param p_IsExact 
+ * @param p_Seed The seed to use for the pseudo random number generator. If 0
+ * (the default), then the current time will be used.
+ * @return An uncompressed column containing the generated data elements.
+ */
+const column<uncompr_f> * generate_with_bitwidth_histogram(
+        size_t p_CountValues,
+        const uint64_t * p_BwWeights,
+        bool p_IsSorted,
+        bool p_IsExact,
+        size_t p_Seed = 0
+) {
+    const size_t allocationSize = p_CountValues * sizeof(uint64_t);
+    auto resCol = new column<uncompr_f>(allocationSize);
+    uint64_t * res = resCol->get_data();
+        
+    if(p_Seed == 0) {
+       p_Seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    }
+    std::default_random_engine gen(p_Seed);
+    std::uniform_int_distribution<uint64_t> distrVal(
+            0, std::numeric_limits<uint64_t>::max()
+    );
+
+    const size_t digits = std::numeric_limits<uint64_t>::digits;
+    size_t bwHist[digits];
+
+    // Convert the given bit width weights to bit width histograms (weights to
+    // absolute frequencies).
+    uint64_t sumBwWeights = 0;
+    for(unsigned bwMinus1 = 0; bwMinus1 < digits; bwMinus1++)
+        sumBwWeights += p_BwWeights[bwMinus1];
+    for(unsigned bwMinus1 = 0; bwMinus1 < digits; bwMinus1++)
+        bwHist[bwMinus1] = static_cast<size_t>(round(
+                static_cast<double>(p_CountValues) * p_BwWeights[bwMinus1] / sumBwWeights
+        ));
+
+    // Due to rounding errors, the sum over the bit width histogram could
+    // differ from the total number of data elements to generate (it could
+    // be lower or higher. We compensate for that by either increasing or
+    // decreasing buckets of the histogram in round-robin fashion until the
+    // sum over the bit width histogram is exactly what we want. We only
+    // change buckets that are non-zero (in order not to introduce new
+    // bit widths) and non-max (in order to prevent integer overflows,
+    // although this is extremely unlikely).
+    size_t sumBwHist = 0;
+    for(unsigned i = 0; i < digits; i++)
+        sumBwHist += bwHist[i];
+    int correction = (sumBwHist < p_CountValues) ? 1 : -1;
+    for(unsigned i = 0; sumBwHist != p_CountValues; i = (i + 1) % digits) {
+        if(bwHist[i] && ~bwHist[i]) {
+            bwHist[i] += correction;
+            sumBwHist += correction;
+        }
+    }
+
+    if(p_IsSorted) {
+        for(unsigned bwMinus1 = 0; bwMinus1 < digits; bwMinus1++) {
+            uint64_t * const bwStart = res;
+            for(size_t i = 0; i < bwHist[bwMinus1]; i++)
+                *res++ = generate_with_bitwidth_histogram_helpers::get_value(
+                        distrVal(gen), bwMinus1
+                );
+            std::sort(bwStart, res);
+        }
+    }
+    else {
+        // Generates (bw - 1).
+        std::discrete_distribution<unsigned> distrBw(bwHist, bwHist + digits);
+        
+        if(p_IsExact) {
+            unsigned bwMinus1;
+            for(size_t i = 0; i < p_CountValues; i++) {
+                do {
+                    bwMinus1 = distrBw(gen);
+                } while(!bwHist[bwMinus1]);
+                bwHist[bwMinus1]--;
+                *res++ = generate_with_bitwidth_histogram_helpers::get_value(
+                        distrVal(gen), bwMinus1
+                );
+            }
+        }
+        else {
+            for(size_t i = 0; i < p_CountValues; i++)
+                *res++ = generate_with_bitwidth_histogram_helpers::get_value(
+                        distrVal(gen), distrBw(gen)
+                );
+        }
+    }
+    
+    resCol->set_meta_data(p_CountValues, allocationSize);
     
     return resCol;
 }
