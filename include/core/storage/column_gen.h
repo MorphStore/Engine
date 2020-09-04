@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -198,6 +199,74 @@ class two_value_distribution {
         t_int_t operator()(t_generator_t & p_Generator) {
             return m_Chooser(p_Generator) ? m_Val1 : m_Val0;
         }
+};
+
+template<template<typename> class t_distr0_t, template<typename> class t_distr1_t>
+struct two_distr_distribution {
+    template<typename t_int_t>
+    class distr {
+        t_distr0_t<t_int_t> m_Distr0;
+        t_distr1_t<t_int_t> m_Distr1;
+        std::bernoulli_distribution m_Chooser;
+        
+    public:
+        distr(
+                t_distr0_t<t_int_t> p_Distr0,
+                t_distr1_t<t_int_t> p_Distr1,
+                double p_ProbVal1
+        ) :
+                m_Distr0(p_Distr0),
+                m_Distr1(p_Distr1),
+                m_Chooser(std::bernoulli_distribution(p_ProbVal1))
+        {
+            //
+        }
+        
+        template<class t_generator_t>
+        t_int_t operator()(t_generator_t & p_Generator) {
+            return m_Chooser(p_Generator) ? m_Distr1(p_Generator) : m_Distr0(p_Generator);
+        }
+    };
+};
+
+/**
+ * @brief A wrapper converting the values returned by non-integer distributions
+ * to integers.
+ * 
+ * The parameters of the wrapped distribution should be chosen with care.
+ * Generated values less than zero or greater than the maximum value of
+ * `t_int_t` will be clipped.
+ * 
+ * Meant to be used with, e.g. std::normal_distribution or other distributions
+ * returning floating point values.
+ */
+template<class t_distr_t>
+struct int_distribution {
+    // Since our data generation function generate_with_distr requires a
+    // distribution class with exactly one template parameter, we need this
+    // inner class.
+    template<typename t_int_t>
+    class distr {
+        t_distr_t m_Distr;
+        
+    public:
+        distr(t_distr_t p_Distr) : m_Distr(p_Distr) {
+            //
+        };
+
+        template<class t_generator_t>
+        MSV_CXX_ATTRIBUTE_INLINE
+        t_int_t operator()(t_generator_t & p_Generator) {
+            const typename t_distr_t::result_type res =
+                    std::round(m_Distr(p_Generator));
+            if(res < 0)
+                return 0;
+            const t_int_t max = std::numeric_limits<t_int_t>::max();
+            if(res > max)
+                return max;
+            return static_cast<t_int_t>(res);
+        }
+    };
 };
 
 /**

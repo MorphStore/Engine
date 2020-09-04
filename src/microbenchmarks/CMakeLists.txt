@@ -95,9 +95,17 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( otf_morphing_example_1 PRIVATE "-ldl" )
 
-    add_executable( compression_data_benchmark compression_data_benchmark.cpp )
-    target_compile_options( compression_data_benchmark PRIVATE
+    add_executable( compression_data_benchmark_hist compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_hist PRIVATE
+                            -DCOMPRESSION_DATA_BENCHMARK_USE_HIST
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( compression_data_benchmark PRIVATE "-ldl" )
+    target_link_libraries( compression_data_benchmark_hist PRIVATE "-ldl" )
+
+    add_executable( compression_data_benchmark_distr compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_distr PRIVATE
+                            -UCOMPRESSION_DATA_BENCHMARK_USE_HIST
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( compression_data_benchmark_distr PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )

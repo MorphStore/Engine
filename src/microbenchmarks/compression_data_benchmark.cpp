@@ -263,6 +263,56 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 
 
 // ****************************************************************************
+// Utilities for data generation.
+// ****************************************************************************
+
+#ifndef COMPRESSION_DATA_BENCHMARK_USE_HIST
+class data_generator {
+protected:
+    virtual const column<uncompr_f> * generate_internal(
+            size_t p_CountValues, bool p_IsSorted
+    ) = 0;
+
+    data_generator() {}
+
+public:
+    const column<uncompr_f> * generate(size_t p_CountValues, bool p_IsSorted) {
+        return generate_internal(p_CountValues, p_IsSorted);
+    }
+    
+    virtual ~data_generator() {
+        //
+    };
+};
+
+template<template<typename> class t_distr>
+class special_data_generator : public data_generator {
+protected:
+    const t_distr<uint64_t> m_Distr;
+
+    const column<uncompr_f> * generate_internal(
+            size_t p_CountValues, bool p_IsSorted
+    ) {
+        return generate_with_distr<t_distr>(
+                p_CountValues, m_Distr, p_IsSorted
+        );
+    }
+public:
+    special_data_generator(t_distr<uint64_t> p_Distr) : m_Distr(p_Distr) {}
+};
+
+template<typename t_int_t>
+using normal_int_distribution =
+        int_distribution<std::normal_distribution<double>>::distr<t_int_t>;
+
+template<typename t_int_t>
+using two_normal_int_distribution = two_distr_distribution<
+        normal_int_distribution, normal_int_distribution
+>::distr<t_int_t>;
+
+#endif
+
+// ****************************************************************************
 // Main program.
 // ****************************************************************************
 
@@ -270,6 +320,8 @@ int main(int argc, char ** argv) {
     // @todo This should not be necessary.
     fail_if_self_managed_memory();
     
+    // @todo Get rid of the duplication here.
+#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
     if(argc != 5) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -277,13 +329,24 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
+#else
+    if(argc != 4) {
+        std::cerr
+                << "Usage: " << argv[0]
+                << " <countValuesLarge INT> <countValuesSmall INT> <repetitions INT>" << std::endl
+                << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
+        exit(-1);
+    }
+#endif
     // @todo More validation of the arguments.
     const size_t countValuesLarge = atoi(argv[1]);
     const size_t countValuesSmall = atoi(argv[2]);
     const int countRepetitions = atoi(argv[3]);
     if(countRepetitions < 1)
         throw std::runtime_error("the number of repetitions must be >= 1");
+#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
     const std::string bwWeightsFile(argv[4]);
+#endif
     
     using varex_t = variant_executor_helper<2, 1, size_t, size_t, int, unsigned>::type
         ::for_variant_params<std::string, std::string>
@@ -296,24 +359,99 @@ int main(int argc, char ** argv) {
     
     const size_t digits = std::numeric_limits<uint64_t>::digits;
     
+#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
     // Read the weights of the bit width histograms from a file.
     const uint64_t * bwHists;
     size_t countBwHists;
     std::tie(bwHists, countBwHists) =
             generate_with_bitwidth_histogram_helpers::read_bw_weights(bwWeightsFile);
+#else
+    // Define the data distributions.
+    std::vector<data_generator *> generators;
+    // Uniform distribution.
+    for(unsigned bw = 1; bw <= digits; bw++)
+        generators.push_back(
+                new special_data_generator<std::uniform_int_distribution>(
+                        std::uniform_int_distribution<uint64_t>(
+                                0, bitwidth_max<uint64_t>(bw)
+                        )
+                )
+        );
+    // Normal distribution.
+    for(unsigned startBw : {6, 21, 36, 51}) {
+        const double stddev = bitwidth_max<uint64_t>(startBw) / 3;
+        for(unsigned bw = startBw; bw < digits; bw++)
+            generators.push_back(
+                    new special_data_generator<normal_int_distribution>(
+                            normal_int_distribution<uint64_t>(
+                                    std::normal_distribution<double>(
+                                            bitwidth_max<uint64_t>(bw), stddev
+                                    )
+                            )
+                    )
+            );
+    }
+    // Two normal distributions.
+    for(double outlierShare : {0.001, 0.01, 0.1, 0.25, 0.5, 0.9})
+        for(unsigned startBw : {6, 21, 36, 51})
+            for(unsigned bw = startBw; bw < digits; bw++) {
+                const double stddev = bitwidth_max<uint64_t>(startBw) / 3;
+                generators.push_back(
+                        new special_data_generator<two_normal_int_distribution>(
+                                two_normal_int_distribution<uint64_t>(
+                                        normal_int_distribution<uint64_t>(
+                                                std::normal_distribution<double>(
+                                                        bitwidth_max<uint64_t>(startBw),
+                                                        stddev
+                                                )
+                                        ),
+                                        normal_int_distribution<uint64_t>(
+                                                std::normal_distribution<double>(
+                                                        bitwidth_max<uint64_t>(bw),
+                                                        stddev
+                                                )
+                                        ),
+                                        outlierShare
+                                )
+                        )
+                );
+            }
+#endif
+    
     
     for(int repIdx = 1; repIdx <= countRepetitions; repIdx++) {
         size_t settingIdx = 0;
         
+#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
         for(unsigned bwHistIdx = 0; bwHistIdx < countBwHists; bwHistIdx++) {
             const uint64_t * const bwHist = bwHists + bwHistIdx * digits;
             
             unsigned maxBw = digits;
             while(!bwHist[maxBw - 1])
                 maxBw--;
+#else
+        for(data_generator * generator : generators) {
+#endif
             
             for(bool isSorted : {false, true}) {
                 settingIdx++;
+
+                varex.print_datagen_started();
+#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+                auto origCol = generate_with_bitwidth_histogram(
+                        countValuesSmall, bwHist, isSorted, true
+                );
+#else
+                // Generate the data.
+                auto origCol = generator->generate(countValuesSmall, isSorted);
+                // Find out the maximum bit width.
+                uint64_t pseudoMax = 0;
+                const uint64_t * origData = origCol->get_data();
+                for(size_t i = 0; i < countValuesSmall; i++)
+                    pseudoMax |= origData[i];
+                const unsigned maxBw = effective_bitwidth(pseudoMax);
+#endif
+                varex.print_datagen_done();
 
                 std::vector<varex_t::variant_t> variants;
                 switch(maxBw) {
@@ -386,12 +524,6 @@ int main(int argc, char ** argv) {
                     case 64: variants = make_variants<varex_t, 64>(); break;
                 }
 
-                varex.print_datagen_started();
-                auto origCol = generate_with_bitwidth_histogram(
-                        countValuesSmall, bwHist, isSorted, true
-                );
-                varex.print_datagen_done();
-
                 varex.execute_variants(
                         variants,
                         origCol,
@@ -405,6 +537,11 @@ int main(int argc, char ** argv) {
             }
         }
     }
+     
+#ifndef COMPRESSION_DATA_BENCHMARK_USE_HIST
+    for(data_generator * generator : generators)
+        delete generator;
+#endif
     
     varex.done();
     
