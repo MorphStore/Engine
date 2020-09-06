@@ -145,6 +145,7 @@ template<class t_vector_extension, class t_format>
 const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_morphs(
         const column<uncompr_f> * p_InCol, // small column
         size_t p_CountValuesLarge,
+        size_t p_SettingGroup,
         size_t p_SettingIdx,
         int p_RepIdx,
         unsigned p_Bw
@@ -158,11 +159,11 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
     
     MONITORING_ADD_INT_FOR(
             "countValuesSmall", countValuesSmall,
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     MONITORING_ADD_DATAPROPERTIES_FOR(
             "", data_properties(p_InCol),
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
     // ------------------------------------------------------------------------
@@ -171,7 +172,7 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr cache2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     // large column
     auto comprCol = cache2ram_morph_t<
@@ -179,42 +180,42 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
     >::apply(p_InCol, p_CountValuesLarge);
     MONITORING_END_INTERVAL_FOR(
             "runtime compr cache2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
     MONITORING_START_INTERVAL_FOR(
             "runtime decompr ram2reg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     // single-element column
     auto sumCol1 = agg_sum<t_vector_extension, t_format>(comprCol);
     MONITORING_END_INTERVAL_FOR(
             "runtime decompr ram2reg [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
     MONITORING_START_INTERVAL_FOR(
             "runtime decompr ram2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     // large column
     auto decomprCol1 = morph<t_vector_extension, uncompr_f>(comprCol);
     MONITORING_END_INTERVAL_FOR(
             "runtime decompr ram2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
     delete comprCol;
     
     MONITORING_START_INTERVAL_FOR(
             "runtime compr ram2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     // large column
     auto comprCol2 = morph<t_vector_extension, t_format>(decomprCol1);
     MONITORING_END_INTERVAL_FOR(
             "runtime compr ram2ram [µs]",
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingIdx, p_RepIdx, p_Bw
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
     delete decomprCol1;
@@ -348,11 +349,11 @@ int main(int argc, char ** argv) {
     const std::string bwWeightsFile(argv[4]);
 #endif
     
-    using varex_t = variant_executor_helper<2, 1, size_t, size_t, int, unsigned>::type
+    using varex_t = variant_executor_helper<2, 1, size_t, size_t, size_t, int, unsigned>::type
         ::for_variant_params<std::string, std::string>
         ::for_setting_params<>;
     varex_t varex(
-            {"countValuesLarge", "settingIdx", "repIdx", "bitwidth"},
+            {"countValuesLarge", "settingGroup", "settingIdx", "repIdx", "bitwidth"},
             {"vector_extension", "format"},
             {}
     );
@@ -367,28 +368,34 @@ int main(int argc, char ** argv) {
             generate_with_bitwidth_histogram_helpers::read_bw_weights(bwWeightsFile);
 #else
     // Define the data distributions.
-    std::vector<data_generator *> generators;
+    std::vector<std::tuple<size_t, data_generator *>> generators;
     // Uniform distribution.
     for(unsigned bw = 1; bw <= digits; bw++)
         generators.push_back(
-                new special_data_generator<std::uniform_int_distribution>(
-                        std::uniform_int_distribution<uint64_t>(
-                                0, bitwidth_max<uint64_t>(bw)
-                        )
-                )
+                {
+                    1,
+                    new special_data_generator<std::uniform_int_distribution>(
+                            std::uniform_int_distribution<uint64_t>(
+                                    0, bitwidth_max<uint64_t>(bw)
+                            )
+                    )
+                }
         );
     // Normal distribution.
     for(unsigned startBw : {6, 21, 36, 51}) {
         const double stddev = bitwidth_max<uint64_t>(startBw) / 3;
         for(unsigned bw = startBw; bw < digits; bw++)
             generators.push_back(
-                    new special_data_generator<normal_int_distribution>(
-                            normal_int_distribution<uint64_t>(
-                                    std::normal_distribution<double>(
-                                            bitwidth_max<uint64_t>(bw), stddev
-                                    )
-                            )
-                    )
+                    {
+                        2,
+                        new special_data_generator<normal_int_distribution>(
+                                normal_int_distribution<uint64_t>(
+                                        std::normal_distribution<double>(
+                                                bitwidth_max<uint64_t>(bw), stddev
+                                        )
+                                )
+                        )
+                    }
             );
     }
     // Two normal distributions.
@@ -397,23 +404,26 @@ int main(int argc, char ** argv) {
             for(unsigned bw = startBw; bw < digits; bw++) {
                 const double stddev = bitwidth_max<uint64_t>(startBw) / 3;
                 generators.push_back(
-                        new special_data_generator<two_normal_int_distribution>(
-                                two_normal_int_distribution<uint64_t>(
-                                        normal_int_distribution<uint64_t>(
-                                                std::normal_distribution<double>(
-                                                        bitwidth_max<uint64_t>(startBw),
-                                                        stddev
-                                                )
-                                        ),
-                                        normal_int_distribution<uint64_t>(
-                                                std::normal_distribution<double>(
-                                                        bitwidth_max<uint64_t>(bw),
-                                                        stddev
-                                                )
-                                        ),
-                                        outlierShare
-                                )
-                        )
+                        {
+                            3,
+                            new special_data_generator<two_normal_int_distribution>(
+                                    two_normal_int_distribution<uint64_t>(
+                                            normal_int_distribution<uint64_t>(
+                                                    std::normal_distribution<double>(
+                                                            bitwidth_max<uint64_t>(startBw),
+                                                            stddev
+                                                    )
+                                            ),
+                                            normal_int_distribution<uint64_t>(
+                                                    std::normal_distribution<double>(
+                                                            bitwidth_max<uint64_t>(bw),
+                                                            stddev
+                                                    )
+                                            ),
+                                            outlierShare
+                                    )
+                            )
+                        }
                 );
             }
 #endif
@@ -429,8 +439,13 @@ int main(int argc, char ** argv) {
             unsigned maxBw = digits;
             while(!bwHist[maxBw - 1])
                 maxBw--;
+            
+            size_t settingGroup = 0;
 #else
-        for(data_generator * generator : generators) {
+        for(auto genInfo : generators) {
+            size_t settingGroup;
+            data_generator * generator;
+            std::tie(settingGroup, generator) = genInfo;
 #endif
             
             for(bool isSorted : {false, true}) {
@@ -528,6 +543,7 @@ int main(int argc, char ** argv) {
                         variants,
                         origCol,
                         countValuesLarge,
+                        settingGroup,
                         settingIdx,
                         repIdx, 
                         maxBw
@@ -539,8 +555,8 @@ int main(int argc, char ** argv) {
     }
      
 #ifndef COMPRESSION_DATA_BENCHMARK_USE_HIST
-    for(data_generator * generator : generators)
-        delete generator;
+    for(auto genInfo : generators)
+        delete std::get<1>(genInfo);
 #endif
     
     varex.done();
