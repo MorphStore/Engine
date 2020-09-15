@@ -24,20 +24,26 @@ namespace vectorlib {
 	template<class VirtualVectorView, class VectorExtension>
 	struct vv {
 		/// check for equality of base type of the virtual vector and the used vector extension
-		static_assert(std::is_same<
-				              typename VirtualVectorView::base_t,
-				              typename VectorExtension::vector_helper_t::base_t
-		              >::value,
-		              "Base type of virtual vector and used vector extension mismatch!");
+		static_assert(
+			std::is_same<
+				typename VirtualVectorView::base_t,
+				typename VectorExtension::vector_helper_t::base_t
+			>::value,
+			"Base type of virtual vector and used vector extension mismatch!"
+		);
+		
+		/// store physically used processing style
 		using pps = VectorExtension;
-		using vector_t = typename VirtualVectorView::base_t;
-		static_assert(std::is_arithmetic<vector_t>::value, "Base type of vector register has to be arithmetic.");
+		using vector_t        = typename VirtualVectorView::base_t;
+		static_assert(
+			std::is_arithmetic<vector_t>::value,
+			"Base type of vector register has to be arithmetic."
+		);
+		
 		using vector_helper_t = VirtualVectorView;
-		using base_t = typename vector_helper_t::base_t;
-		
-		using size = std::integral_constant<size_t, sizeof(vector_t)>;
-		using mask_t = uint16_t;
-		
+		using base_t          = typename vector_helper_t::base_t;
+		using size            = std::integral_constant<size_t, sizeof(vector_t)>;
+		using mask_t          = uint16_t;
 	};
 	
 }
