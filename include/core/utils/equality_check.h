@@ -31,6 +31,8 @@
 #include <cstring>
 #include <iostream>
 
+#include <assert.h> 
+
 namespace morphstore {
 
     struct equality_check {
@@ -77,6 +79,9 @@ namespace morphstore {
     };
     
     std::ostream & operator<<( std::ostream & os, const equality_check & ec ) {
+        const char *data_ok_str =
+            (ec.m_CountValuesEqual && ec.m_SizeUsedByteEqual) ? equality_check::ok_str(ec.m_DataEqual) : "undefined";
+
         os
                 << "countValues: " << equality_check::ok_str( ec.m_CountValuesEqual )
                 << " (expected " << ec.m_CountValuesExp
@@ -86,10 +91,30 @@ namespace morphstore {
                 << " (expected " << ec.m_SizeUsedByteExp
                 << ", found " << ec.m_SizeUsedByteFnd << ')'
                 << std::endl
-                << "data: " << equality_check::ok_str( ec.m_DataEqual )
-                << " (this check is only valid, if countValues and sizeUsedByte are ok)"
+                << "data: " << data_ok_str
                 << std::endl;
         return os;
+    }
+
+    template <class F> void assert_columns_equal(const column<F> *expected_col, const column<F> *actual_col) {
+        equality_check ec(expected_col, actual_col);
+        std::cout << ec;
+        if (!ec.good()) {
+            uint64_t *expected = expected_col->get_data();
+            uint64_t *actual = actual_col->get_data();
+
+            assert(ec.m_CountValuesEqual);
+            assert(ec.m_SizeUsedByteEqual);
+
+            // printing only different entries
+            for (uint64_t i = 0; i < expected_col->get_count_values(); i++) {
+                if (!(expected[i] == actual[i])) {
+                    std::cout << "pos: " << i << " expected: " << expected[i] << " actual: " << actual[i] << std::endl;
+                }
+            }
+            // print_columns(print_buffer_base::decimal, actual_col, expected_col, "actual", "expected");
+            assert(false);
+        }
     }
 }
 #endif //MORPHSTORE_CORE_UTILS_EQUALITY_CHECK_H

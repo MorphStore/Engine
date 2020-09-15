@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.10 )
 project( MorphStore )
 
-set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_STANDARD 17 )
 
 macro(morph_flag)
 	add_definitions(${ARGN})
@@ -28,9 +28,11 @@ set( LOG_FILE "recentMorphStoreProjectConf.log" )
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	morph_flag(-g)
+	morph_flag(-DDEBUG)
 	message(STATUS "MorphStore is configured in DEBUG mode.")
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 	morph_flag(-O2)
+	morph_flag(-DNDEBUG)
 	message(STATUS "MorphStore is configured in RELEASE mode.")
 ELSEIF(CMAKE_BUILD_TYPE MATCHES HighPerf)
 	morph_flag(-O3)
@@ -92,6 +94,10 @@ ENDIF(CODROID)
 
 # remove build type to allow for custom flag handling
 set(CMAKE_BUILD_TYPE "")
+
+# add resource directory for ldbc graph
+# (see https://github.com/ldbc/ldbc_snb_datagen for further instructions)
+morph_flag(-DLDBC_DIR="$ENV{HOME}/ldbc_snb_datagen/social_network/")
 
 # general compiler settings, meant for all subdirectories and tests
 morph_flag(-Werror)
