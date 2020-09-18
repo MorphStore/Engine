@@ -16,28 +16,30 @@
  **********************************************************************************************/
 
 /**
- * @file select_uncompr.h
+ * @file select.h
  * @brief Template specialization of the select-operator for uncompressed
  * inputs and outputs using the scalar processing style. Note that these are
  * simple reference implementations not tailored for efficiency.
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_H
+#define MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_H
 
 #include <core/operators/interfaces/select.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/scalar/extension_scalar.h>
+#include <vector/scalar/compare_scalar.h>
 
 #include <cstdint>
 
 namespace morphstore {
     
-template<template<typename> class t_op>
+template<template< class, int > class t_op>
 struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, uncompr_f> {
+    using VectorExtension =  vectorlib::scalar<vectorlib::v64<uint64_t>>;
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataCol,
@@ -58,13 +60,14 @@ struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, un
                 : inDataCol->get_size_used_byte()
         );
         
-        t_op<uint64_t> op;
+      //  t_op<uint64_t> op;
         uint64_t * outPos = outPosCol->get_data();
         const uint64_t * const initOutPos = outPos;
 
 
         for(unsigned i = 0; i < inDataCount; i++)
-            if(op(inData[i], val)) {
+          if (t_op<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(inData[i], val) ){
+        //    if(op(inData[i], val)) {
                 *outPos = i;
                 outPos++;
             }
@@ -77,4 +80,4 @@ struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, un
 };
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_SELECT_H

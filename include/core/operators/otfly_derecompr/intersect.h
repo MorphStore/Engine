@@ -5,14 +5,15 @@
  */
 
 /* 
- * File:   intersect_compr.h
+ * File:   intersect.h
  * Author: Annett
  *
  * Created on 20. Februar 2020, 11:35
+ * WARNING: HANDLE WITH CARE; THERE ARE STILL BUGS HERE!!!
  */
 
-#ifndef INTERSECT_COMPR_H
-#define INTERSECT_COMPR_H
+#ifndef INTERSECT_H
+#define INTERSECT_H
 
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
@@ -351,5 +352,5 @@ template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_
 }
 
 
-#endif /* INTERSECT_COMPR_H */
+#endif /* INTERSECT_H */
 

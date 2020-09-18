@@ -16,13 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file select_compr.h
+ * @file select.h
  * @brief Select-operator based on the vector-lib, weaving the operator's core
  * into the decompression routine of the input data's format.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
 
 // @todo Include this as soon as the interfaces are harmonized.
 
@@ -270,4 +270,4 @@ struct select_t
 #undef COMPARE_OP_AS_TEMPLATE_CLASS
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
