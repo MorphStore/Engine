@@ -16,13 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file select_compr.h
+ * @file between.h
  * @brief Select-operator based on the vector-lib, weaving the operator's core
  * into the decompression routine of the input data's format.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_COMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_H
 
 // @todo Include this as soon as the interfaces are harmonized.
 #include <core/operators/interfaces/between.h>
@@ -278,4 +278,4 @@ namespace morphstore {
 #undef COMPARE_OP_AS_TEMPLATE_CLASS
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_COMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_H

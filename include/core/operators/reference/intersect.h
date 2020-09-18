@@ -16,15 +16,15 @@
  **********************************************************************************************/
 
 /**
- * @file intersect_uncompr.h
+ * @file intersect.h
  * @brief Template specialization of the intersect-operator for uncompressed
  * inputs and outputs using the scalar processing style. Note that these are
  * simple reference implementations not tailored for efficiency.
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_H
+#define MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_H
 
 #include <core/operators/interfaces/intersect.h>
 #include <core/morphing/format.h>
@@ -86,4 +86,4 @@ intersect_sorted<vectorlib::scalar<vectorlib::v64<uint64_t>>,uncompr_f,uncompr_f
 }
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_INTERSECT_H
