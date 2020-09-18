@@ -37,7 +37,7 @@
 namespace morphstore {
     
 template<template<typename> class t_op>
-struct select_t<t_op, vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f> {
+struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, uncompr_f> {
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataCol,
