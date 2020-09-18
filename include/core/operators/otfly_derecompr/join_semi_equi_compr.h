@@ -11,6 +11,8 @@
 #include <core/morphing/format.h>
 #include <core/morphing/write_iterator.h>
 
+#include <core/utils/basic_types.h>
+
 #include <core/operators/interfaces/join.h>
 
 #include <vector/vector_extension_structs.h>
@@ -18,7 +20,6 @@
 
 #include <vector/datastructures/hash_based/strategies/linear_probing.h>
 #include <vector/datastructures/hash_based/hash_utils.h>
-#include <vector/datastructures/hash_based/hash_map.h>
 #include <vector/datastructures/hash_based/hash_set.h>
 #include <vector/complex/hash.h>
 
