@@ -21,8 +21,8 @@
  * into the decompression routine of the input data's format.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_COMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_COMPR_H
+#define MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_COMPR_H
 
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
@@ -262,4 +262,4 @@ public:
 };
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_PROJECT_COMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_COMPR_H

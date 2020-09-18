@@ -16,58 +16,62 @@
  **********************************************************************************************/
 
 /**
- * @file project_uncompr.h
- * @brief Template specialization of the project-operator for uncompressed
- * inputs and outputs using the scalar processing style. Note that these are
+ * @file group_first.h
+ * @brief Template specialization of the group_first-operator for uncompressed
+ * inputs and outputs using the scalar processing style. Note that this is a
  * simple reference implementations not tailored for efficiency.
- * @todo TODOS?
+ * 
+ * Note that this reference implementation of the group_first-operator
+ * delegates to the reference implementation of the group_next-operator.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_REFERENCE_GROUP_FIRST_H
+#define MORPHSTORE_CORE_OPERATORS_REFERENCE_GROUP_FIRST_H
 
-#include <core/operators/interfaces/project.h>
+#include <core/operators/interfaces/group_first.h>
+#include <core/operators/reference/group_next.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/scalar/extension_scalar.h>
 
+#ifndef MSV_NO_SELFMANAGED_MEMORY
+#include <core/memory/management/allocators/global_scope_allocator.h>
+#endif
+
 #include <cstdint>
+#include <tuple>
 
 namespace morphstore {
-    
+
 template<>
-struct project_t<
+struct group_first_t<
         vectorlib::scalar<vectorlib::v64<uint64_t>>,
         uncompr_f,
         uncompr_f,
         uncompr_f
 > {
     static
-    const column<uncompr_f> *
+    const std::tuple<
+            const column<uncompr_f> *,
+            const column<uncompr_f> *
+    >
     apply(
             const column<uncompr_f> * const inDataCol,
-            const column<uncompr_f> * const inPosCol
+            const size_t outExtCountEstimate
     ) {
-        const size_t inPosCount = inPosCol->get_count_values();
-        const uint64_t * const inData = inDataCol->get_data();
-        const uint64_t * const inPos = inPosCol->get_data();
-
-        const size_t inPosSize = inPosCol->get_size_used_byte();
-        // Exact allocation size (for uncompressed data).
-        auto outDataCol = new column<uncompr_f>(inPosSize);
-        uint64_t * outData = outDataCol->get_data();
-
-        for(unsigned i = 0; i < inPosCount; i++) {
-            *outData = inData[inPos[i]];
-            outData++;
-        }
-
-        outDataCol->set_meta_data(inPosCount, inPosSize);
-
-        return outDataCol;
+        return group_next<
+                vectorlib::scalar<vectorlib::v64<uint64_t>>,
+                uncompr_f,
+                uncompr_f,
+                uncompr_f
+        >(
+                nullptr,
+                inDataCol,
+                outExtCountEstimate
+        );
     }
 };
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_REFERENCE_GROUP_FIRST_H
