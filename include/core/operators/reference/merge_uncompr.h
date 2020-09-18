@@ -35,71 +35,64 @@
 #include <cstdint>
 
 namespace morphstore {
-    
-template<>
-struct merge_sorted_t<
-    vectorlib::scalar<vectorlib::v64<uint64_t>>,
-        uncompr_f,
-        uncompr_f,
-        uncompr_f
->{
-    static
-    const column<uncompr_f> *
-    apply( 
-            const column<uncompr_f> * const inPosLCol,
-            const column<uncompr_f> * const inPosRCol
-    )
-    {
-    const uint64_t * inPosL = inPosLCol->get_data();
-    const uint64_t * inPosR = inPosRCol->get_data();
-    const uint64_t * const inPosLEnd = inPosL + inPosLCol->get_count_values();
-    const uint64_t * const inPosREnd = inPosR + inPosRCol->get_count_values();
-    
-    // If no estimate is provided: Pessimistic allocation size (for
-    // uncompressed data), reached only if the two input columns are disjoint.
-    auto outPosCol = new column<uncompr_f>(
-            
-                    inPosLCol->get_size_used_byte() +
-                    inPosRCol->get_size_used_byte()
-            
-    );
-    uint64_t * outPos = outPosCol->get_data();
-    const uint64_t * const initOutPos = outPos;
-    
-    while(inPosL < inPosLEnd && inPosR < inPosREnd) {
-        if(*inPosL < *inPosR) {
-            *outPos = *inPosL;
-            inPosL++;
-        }
-        else if(*inPosR < *inPosL) {
-            *outPos = *inPosR;
-            inPosR++;
-        }
-        else { // *inPosL == *inPosR
-            *outPos = *inPosL;
-            inPosL++;
-            inPosR++;
-        }
-        outPos++;
-    }
-    // At this point, at least one of the operands has been fully consumed and
-    // the other one might still contain data elements, which must be output.
-    while(inPosL < inPosLEnd) {
-        *outPos = *inPosL;
-        outPos++;
-        inPosL++;
-    }
-    while(inPosR < inPosREnd) {
-        *outPos = *inPosR;
-        outPos++;
-        inPosR++;
-    }
-    
-    const size_t outPosCount = outPos - initOutPos;
-    outPosCol->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
-    
-    return outPosCol;
-}
-};
+	
+	template<>
+	struct merge_sorted_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f> {
+		
+		static
+		const column<uncompr_f> *
+		apply(
+		  const column<uncompr_f> * const in_L_posColumn,
+		  const column<uncompr_f> * const in_R_posColumn
+		) {
+			const uint64_t * in_L_pos = in_L_posColumn->get_data();
+			const uint64_t * in_R_pos = in_R_posColumn->get_data();
+			const uint64_t * const in_L_posEnd = in_L_pos + in_L_posColumn->get_count_values();
+			const uint64_t * const in_R_posEnd = in_R_pos + in_R_posColumn->get_count_values();
+			
+			// If no estimate is provided: Pessimistic allocation size (for
+			// uncompressed data), reached only if the two input columns are disjoint.
+			auto out_posColumn = new column<uncompr_f>(
+			  
+			  in_L_posColumn->get_size_used_byte() +
+			  in_R_posColumn->get_size_used_byte()
+			
+			);
+			uint64_t * out_pos = out_posColumn->get_data();
+			const uint64_t * const initOutPos = out_pos;
+			
+			while (in_L_pos < in_L_posEnd && in_R_pos < in_R_posEnd) {
+				if (*in_L_pos < *in_R_pos) {
+					*out_pos = *in_L_pos;
+					in_L_pos ++;
+				} else if (*in_R_pos < *in_L_pos) {
+					*out_pos = *in_R_pos;
+					in_R_pos ++;
+				} else { // *inPosL == *inPosR
+					*out_pos = *in_L_pos;
+					in_L_pos ++;
+					in_R_pos ++;
+				}
+				out_pos ++;
+			}
+			// At this point, at least one of the operands has been fully consumed and
+			// the other one might still contain data elements, which must be output.
+			while (in_L_pos < in_L_posEnd) {
+				*out_pos = *in_L_pos;
+				out_pos ++;
+				in_L_pos ++;
+			}
+			while (in_R_pos < in_R_posEnd) {
+				*out_pos = *in_R_pos;
+				out_pos ++;
+				in_R_pos ++;
+			}
+			
+			const size_t outPosCount = out_pos - initOutPos;
+			out_posColumn->set_meta_data(outPosCount, outPosCount * sizeof(uint64_t));
+			
+			return out_posColumn;
+		}
+	};
 }
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_UNCOMPR_H

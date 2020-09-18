@@ -28,22 +28,15 @@
 #include <core/utils/basic_types.h>
 
 namespace morphstore {
-    
-    template<
-        class t_vector_extension,
-        class t_out_data_f,
-        class t_in_data1_f,
-        class t_in_data2_f
-    >
-    struct merge_sorted_t{
-            static
-            const column<t_out_data_f> *
-            apply(
-                    const column<t_in_data1_f> * const inData1Col,
-                    const column<t_in_data2_f> * const inData2Col
-            );
-        };
-    
+	
+	template<
+	  class t_vector_extension,
+	  class t_out_pos_f,
+	  class t_in_pos_l_f,
+	  class t_in_pos_r_f
+	>
+	struct merge_sorted_t;
+
 /**
  * Merge-operator for sorted inputs. Merges the two given columns, each of
  * which is assumed to be sorted in ascending order and to contain only unique
@@ -56,29 +49,28 @@ namespace morphstore {
  * - inPosRCol: [1,       6, 8,    12, 15]
  * - outPosCol: [1, 4, 5, 6, 8, 9, 12, 15]
  * 
- * @param inPosLCol A column of sorted and unique data elements.
- * @param inPosRCol A column of sorted and unique data elements.
+ * @param in_L_posColumn A column of sorted and unique data elements.
+ * @param in_R_posColumn A column of sorted and unique data elements.
  * @param outPosCountEstimate An optional estimate of the number of data
  * elements in the output position column. If specified, the output positions
  * column will allocate enough memory for exactly this number of data elements.
  * Otherwise, a pessimistic estimation will be done.
  * @return The union of the two input columns, which is also sorted and unique.
  */
-    template<
-            class t_vector_extension,
-            class t_out_pos_f,
-            class t_in_pos_l_f,
-            class t_in_pos_r_f
-    >
-    const column<t_out_pos_f> *
-    merge_sorted(
-            const column<t_in_pos_l_f> * const inPosLCol,
-            const column<t_in_pos_r_f> * const inPosRCol
-    ){
-        return merge_sorted_t<t_vector_extension,t_out_pos_f,t_in_pos_l_f,t_in_pos_r_f>::apply(
-                inPosLCol,
-                inPosRCol
-        );
-    }
+	template<
+	  class t_vector_extension,
+	  class t_out_pos_f,
+	  class t_in_pos_l_f,
+	  class t_in_pos_r_f
+	>
+	const column<t_out_pos_f> *
+	merge_sorted(
+	  const column<t_in_pos_l_f> * const in_L_posColumn,
+	  const column<t_in_pos_r_f> * const in_R_posColumn
+	) {
+		return
+		  merge_sorted_t<t_vector_extension, t_out_pos_f, t_in_pos_l_f, t_in_pos_r_f>
+		  ::apply(in_L_posColumn, in_R_posColumn);
+	}
 }
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_MERGE_H
