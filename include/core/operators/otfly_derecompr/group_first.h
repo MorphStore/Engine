@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 28.05.19.
 //
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_GROUP_FIRST_H
+#define MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_GROUP_FIRST_H
 
 #include <core/utils/preprocessor.h>
 #include <core/storage/column.h>
@@ -20,22 +20,20 @@
 
 #include <vector/complex/hash.h>
 
-#include <core/operators/interfaces/group.h>
+#include <core/operators/interfaces/group_first.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
 
 namespace morphstore {
-   using namespace vectorlib;
-
    template<
       class VectorExtension,
       class OutFormatGroupIds,
       class OutFormatGroupExtents,
       class DataStructure
    >
-   struct group_processing_unit_wit {
+   struct group_processing_unit_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       struct state_t {
          DataStructure    & m_Ds;
@@ -94,11 +92,18 @@ namespace morphstore {
       class VectorExtension,
       class OutFormatGroupIds,
       class OutFormatGroupExtents,
-      class InFormatData,
-      class DataStructure
+      class InFormatData
    >
-   struct group_wit_t {
+   struct group_first_t {
+      using DataStructure = vectorlib::hash_map<
+         VectorExtension,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
+         60
+      >;
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+      
       static
       std::tuple<
          column<OutFormatGroupIds> const *,
@@ -108,6 +113,7 @@ namespace morphstore {
          column<InFormatData> const * const p_InDataCol,
          size_t const outCountGroupExtentsEstimate = 0
       ) {
+         using namespace vectorlib;
          uint8_t const *         inData               = p_InDataCol->get_data();
          uint8_t const * const   initInData           = inData;
          size_t  const           inDataCountLog       = p_InDataCol->get_count_values();
@@ -142,7 +148,7 @@ namespace morphstore {
 
 
 
-         typename group_processing_unit_wit<
+         typename group_processing_unit_t<
             VectorExtension,
             OutFormatGroupIds,
             OutFormatGroupExtents,
@@ -158,7 +164,7 @@ namespace morphstore {
          decompress_and_process_batch<
             VectorExtension,
             InFormatData,
-            group_processing_unit_wit,
+            group_processing_unit_t,
             OutFormatGroupIds,
             OutFormatGroupExtents,
             DataStructure
@@ -193,7 +199,7 @@ namespace morphstore {
             decompress_and_process_batch<
                VectorExtension,
                uncompr_f,
-               group_processing_unit_wit,
+               group_processing_unit_t,
                OutFormatGroupIds,
                OutFormatGroupExtents,
                DataStructure
@@ -216,7 +222,7 @@ namespace morphstore {
 
             const size_t inSizeScalarRemainderByte = inSizeRestByte % vector_size_byte::value;
             if(inSizeScalarRemainderByte) {
-               typename group_processing_unit_wit<
+               typename group_processing_unit_t<
                   scalar<v64<uint64_t>>,
                   uncompr_f,
                   uncompr_f,
@@ -235,7 +241,7 @@ namespace morphstore {
                decompress_and_process_batch<
                   scalar<v64<uint64_t>>,
                   uncompr_f,
-                  group_processing_unit_wit,
+                  group_processing_unit_t,
                   uncompr_f,
                   uncompr_f,
                   DataStructure
@@ -270,34 +276,5 @@ namespace morphstore {
       }
    };
 
-
-
-
-
-
-
-
-
-   template<class VectorExtension, class t_out_gr_f, class t_out_ext_f, class t_in_data_f>
-   const std::tuple<
-      const column<t_out_gr_f> *,
-      const column<t_out_ext_f> *
-   > group_vec(
-      column<t_in_data_f> const * const  p_InDataCol,
-      size_t const outCountEstimate = 0
-   ) {
-      return group_wit_t<VectorExtension,
-         t_out_gr_f,
-         t_out_ext_f,
-         t_in_data_f,
-         hash_map<
-            VectorExtension,
-            multiply_mod_hash,
-            size_policy_hash::EXPONENTIAL,
-            scalar_key_vectorized_linear_search,
-            60>
-      >::apply(p_InDataCol,outCountEstimate);
-   }
-
 }
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_GROUP_COMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_GROUP_FIRST_H
