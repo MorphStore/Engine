@@ -40,7 +40,7 @@ namespace morphstore {
     
 template<>
 const column<uncompr_f> *
-intersect_sorted<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
+intersect_sorted<vectorlib::scalar<vectorlib::v64<uint64_t>>,uncompr_f,uncompr_f,uncompr_f>(
         const column<uncompr_f> * const inPosLCol,
         const column<uncompr_f> * const inPosRCol,
         const size_t outPosCountEstimate
