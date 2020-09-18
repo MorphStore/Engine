@@ -304,12 +304,12 @@ typedef shell_logger morphstore_logger;
 #  ifdef DEBUG
 #     define trace(...) morphstore::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
 #     define debug(...) morphstore::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
-#     define info(...) morphstore::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
 #  else
 #     define trace(...)
 #     define debug(...)
-#     define info(...)
+//#     define info(...)
 #  endif
+#     define info(...) morphstore::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
 #  define warn(...) morphstore::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
 #  define error(...) morphstore::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
 #  define wtf(...) morphstore::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
