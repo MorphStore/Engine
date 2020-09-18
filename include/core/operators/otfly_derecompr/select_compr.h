@@ -25,14 +25,18 @@
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_COMPR_H
 
 // @todo Include this as soon as the interfaces are harmonized.
-//#include <core/operators/interfaces/select.h>
-#include <core/memory/management/utils/alignment_helper.h>
+
+#include <core/utils/preprocessor.h>
+#include <core/storage/column.h>
 #include <core/morphing/format.h>
 #include <core/morphing/write_iterator.h>
-#include <core/storage/column.h>
+#include <core/operators/interfaces/select.h>
+#include <core/memory/management/utils/alignment_helper.h>
+
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+
 
 #include <tuple>
 
@@ -88,28 +92,32 @@ struct select_processing_unit_wit {
         p_State.m_Pos = vectorlib::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
     }
 };
-    
-template<
-        template<class, int> class t_compare,
-        class t_vector_extension,
-        class t_out_pos_f,
-        class t_in_data_f
->
-// @todo We cannot call it select or select_t at the moment, because it has
-// other requirements for t_op than the select-struct in the general interface.
-struct my_select_wit_t {
+
+template<class t_vector_extension, 
+          template<class, int> class t_compare, 
+          class t_out_pos_f, 
+          class t_in_data_f
+          >
+          
+struct select_t
+{
     using t_ve = t_vector_extension;
     IMPORT_VECTOR_BOILER_PLATE(t_ve)
-#ifndef COMPARE_OP_AS_TEMPLATE_CLASS
+    #ifndef COMPARE_OP_AS_TEMPLATE_CLASS
     using t_compare_special_ve = t_compare<t_ve, vector_base_t_granularity::value>;
     using t_compare_special_sc = t_compare<vectorlib::scalar<vectorlib::v64<uint64_t>>, vectorlib::scalar<vectorlib::v64<uint64_t>>::vector_helper_t::granularity::value>;
-#endif
-    
-    static const column<t_out_pos_f> * apply(
+    #endif
+
+    static
+    const column<t_out_pos_f> * apply(
+    //static const column<t_out_pos_f> * apply(
             const column<t_in_data_f> * const inDataCol,
             const uint64_t val,
             const size_t outPosCountEstimate = 0
     ) {
+    
+    
+
         using namespace vectorlib;
         
         const uint8_t * inData = inDataCol->get_data();
@@ -150,13 +158,13 @@ struct my_select_wit_t {
         // Processing of the input column's compressed part using the specified
         // vector extension, compressed output.
         decompress_and_process_batch<
-                t_ve,
+                t_vector_extension,
                 t_in_data_f,
                 select_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                 t_compare,
 #else
-                t_compare_special_ve,
+                 t_compare<t_vector_extension, vector_base_t_granularity::value>,
 #endif
                 t_out_pos_f
         >::apply(

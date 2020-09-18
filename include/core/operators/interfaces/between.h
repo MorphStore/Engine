@@ -36,24 +36,30 @@ namespace morphstore {
  * partial template specialization.
  */
    template<
-      template<typename> class t_op_lower,
-      template<typename> class t_op_upper,
+      template<class, int> class t_op_lower,
+      template<class, int> class t_op_upper,
       class t_vector_extension,
       class t_out_pos_f,
       class t_in_data_f
    >
-   struct between_t {
+   struct between_t;
       /**
        * Select-operator. Outputs the positions of all data elements in the given
        * column which fulfil the given predicate.
        *
        * Example:
        * - inDataCol: [95, 102, 100, 87, 120]
-       * - predicate: "less than 100"
-       * - outPosCol: [ 0,            3     ]
-       *
+       * - predicate: "greater than 95, less than 110"
+       * - outPosCol: [   1,  2,         ]
+       * @tparam t_vector_extension The column to do the selection on.
+       * @tparam t_op_lower The operator to compare with the lower bound, typically greater or greaterequal
+       * @tparam t_op_upper The operator to compare with the upper bound, typically less or lessequal
+       * @tparam t_out_pos_f The format of the returned column
+       * @tparam t_in_data_f The format of the input column inDataCol
        * @param inDataCol The column to do the selection on.
-       * @param val The constant each data element is compared to using the
+       * @param val_lower The lower bound each data element is compared to using the
+       * comparison operation t_op.
+       * @param val_upper The upper bound each data element is compared to using the
        * comparison operation t_op.
        * @param outPosCountEstimate An optional estimate of the number of data
        * elements in the output position column. If specified, the output
@@ -62,19 +68,11 @@ namespace morphstore {
        * @return A column containing the positions of all data elements d in
        * inDataCol for which t_op(d, val) is true.
        */
-      static
-      const column<t_out_pos_f> *
-      apply(
-         column<t_in_data_f> const * const inDataCol,
-         uint64_t const val_lower,
-         uint64_t const val_upper,
-         size_t const outPosCountEstimate = 0
-      );
-   };
+      
 
    template<
-      template<typename> class t_op_lower,
-      template<typename> class t_op_upper,
+      template<class, int> class t_op_lower,
+      template<class, int> class t_op_upper,
       class t_vector_extension,
       class t_out_pos_f,
       class t_in_data_f
@@ -94,7 +92,8 @@ namespace morphstore {
             t_in_data_f
          >::apply(
             inDataCol,
-            val,
+            val_lower,
+            val_upper,
             outPosCountEstimate
          );
    }

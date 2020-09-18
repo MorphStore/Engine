@@ -5,13 +5,15 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_UNCOMPR_H
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_UNCOMPR_H
 
+#include <core/operators/interfaces/select.h>
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
+
 namespace morphstore {
 
-    using namespace vectorlib;
+   using namespace vectorlib;
    template<class VectorExtension,  template< class, int > class Operator>
    struct select_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
@@ -61,7 +63,7 @@ namespace morphstore {
    };
 
    template<class VectorExtension, template< class, int > class Operator>
-   struct select_t {
+   struct select_t<VectorExtension, Operator, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -97,16 +99,6 @@ namespace morphstore {
          return outDataCol;
       }
    };
-
-    template<template< class, int > class Operator, class t_vector_extension, class t_out_pos_f, class t_in_data_f>
-    column<uncompr_f> const * select(
-        column< uncompr_f > const * const p_DataColumn,
-         typename t_vector_extension::vector_helper_t::base_t const p_Predicate,
-         const size_t outPosCountEstimate = 0
-      ){
-        return select_t<t_vector_extension, Operator>::apply(p_DataColumn,p_Predicate,outPosCountEstimate);
-    }
-
 
 }
 

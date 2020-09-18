@@ -25,7 +25,7 @@
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_BETWEEN_COMPR_H
 
 // @todo Include this as soon as the interfaces are harmonized.
-//#include <core/operators/interfaces/select.h>
+#include <core/operators/interfaces/between.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/write_iterator.h>
@@ -105,9 +105,8 @@ namespace morphstore {
       class t_out_pos_f,
       class t_in_data_f
    >
-// @todo We cannot call it select or select_t at the moment, because it has
-// other requirements for t_op than the select-struct in the general interface.
-   struct my_between_wit_t {
+
+   struct between_t {
       using t_ve = t_vector_extension;
       IMPORT_VECTOR_BOILER_PLATE(t_ve)
 #ifndef COMPARE_OP_AS_TEMPLATE_CLASS

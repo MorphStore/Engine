@@ -36,12 +36,12 @@ namespace morphstore {
  * partial template specialization.
  */
 template<
-        template<typename> class t_op,
         class t_vector_extension,
+        template< class, int > class t_operator,
         class t_out_pos_f,
         class t_in_data_f
 >
-struct select_t {
+struct select_t;
     /**
      * Select-operator. Outputs the positions of all data elements in the given
      * column which fulfil the given predicate.
@@ -50,29 +50,32 @@ struct select_t {
      * - inDataCol: [95, 102, 100, 87, 120]
      * - predicate: "less than 100"
      * - outPosCol: [ 0,            3     ]
-     * 
+     * @tparam t_vector_extension The column to do the selection on.
+     * @tparam t_operator The operator (e.g. less, greater, equal), which is used for the comparison.
+     * @tparam t_out_pos_f The format of the returned column
+     * @tparam t_in_data_f The format of the input column inDataCol
      * @param inDataCol The column to do the selection on.
      * @param val The constant each data element is compared to using the
-     * comparison operation t_op.
-     * @param outPosCountEstimate An optional estimate of the number of data
+     * comparison operator t_operator.
+     * @param outPosCountEstimate An optional estimate of the number of data 
      * elements in the output position column. If specified, the output
      * positions column will allocate enough memory for exactly this number of
      * data elements. Otherwise, a pessimistic estimation will be done.
      * @return A column containing the positions of all data elements d in
      * inDataCol for which t_op(d, val) is true.
-     */
-    static
+     */   
+    /*{ static
     const column<t_out_pos_f> *
     apply(
         const column<t_in_data_f> * const inDataCol,
         const uint64_t val,
         const size_t outPosCountEstimate = 0
     );
-};
+};  */
 
 template<
-        template<typename> class t_op,
         class t_vector_extension,
+        template< class, int > class t_operator,
         class t_out_pos_f,
         class t_in_data_f
 >
@@ -83,8 +86,8 @@ select(
         const uint64_t val,
         const size_t outPosCountEstimate = 0
 ) {
-    return select_t<t_op,
-        t_vector_extension,
+    return select_t<t_vector_extension,
+        t_operator,
         t_out_pos_f,
         t_in_data_f>::apply(
             inDataCol,
