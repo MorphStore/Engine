@@ -26,35 +26,43 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_COMPR_ITERATOR_H
 #define MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_COMPR_ITERATOR_H
 
-#include <core/operators/interfaces/agg_sum.h>
+#include <cstdint>
+
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
+#include <core/operators/interfaces/agg_sum.h>
 
-#include <cstdint>
 
 namespace morphstore {
-
-template<class t_vector_extension, class t_in_data_f>
-const column<uncompr_f> *
-agg_sum(
-        const column<t_in_data_f> * const inDataCol
-) {
-    const size_t inDataCount = inDataCol->get_count_values();
-    
-    // Exact allocation size (for uncompressed data).
-    auto outDataCol = new column<uncompr_f>(sizeof(uint64_t));
-    uint64_t * const outData = outDataCol->get_data();
-
-    *outData = 0;
-    read_iterator<t_in_data_f> it(inDataCol->get_data());
-    for(unsigned i = 0; i < inDataCount; i++)
-        *outData += it.next();
-    
-    outDataCol->set_meta_data(1, sizeof(uint64_t));
-    
-    return outDataCol;
+	/**
+	 * TODO: same template specialization as in otfly_derecompr/agg_sum_compr.h -> intended?
+	 * shouldn't t_vector_extension be scalar?
+	 **/
+	template< class t_vector_extension, class t_in_data_f >
+	struct agg_sum_all_t<t_vector_extension, uncompr_f, t_in_data_f> {
+		
+		static
+		const column <uncompr_f> *
+		apply(const column <t_in_data_f> * const in_dataColumn) {
+			const size_t in_dataCount = in_dataColumn->get_count_values();
+			
+			// Exact allocation size (for uncompressed data).
+			auto out_dataColumn = new column<uncompr_f>(sizeof(uint64_t));
+			uint64_t * const out_data = out_dataColumn->get_data();
+			
+			*out_data = 0;
+			read_iterator<t_in_data_f> it(in_dataColumn->get_data());
+			for (unsigned i = 0; i < in_dataCount; i ++)
+				*out_data += it.next();
+			
+			out_dataColumn->set_meta_data(1, sizeof(uint64_t));
+			
+			return out_dataColumn;
+		}
+		
+	};
+	
 }
 
-}
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_COMPR_ITERATOR_H

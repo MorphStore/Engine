@@ -39,60 +39,68 @@
 #include <unordered_map>
 
 namespace morphstore {
-
-template<>
-const column<uncompr_f> *
-agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
-        const column<uncompr_f> * const inDataCol
-) {
-    const size_t inDataCount = inDataCol->get_count_values();
-    const uint64_t * const inData = inDataCol->get_data();
-    
-    // Exact allocation size (for uncompressed data).
-    auto outDataCol = new column<uncompr_f>(sizeof(uint64_t));
-    uint64_t * const outData = outDataCol->get_data();
-
-    *outData = 0;
-    for(unsigned i = 0; i < inDataCount; i++)
-        *outData += inData[i];
-    
-    outDataCol->set_meta_data(1, sizeof(uint64_t));
-    
-    return outDataCol;
-}
-
-template<>
-const column<uncompr_f> *
-agg_sum<vectorlib::scalar<vectorlib::v64<uint64_t>>>(
-        const column<uncompr_f> * const inGrCol,
-        const column<uncompr_f> * const inDataCol,
-        size_t inExtCount
-) {
-    const size_t inDataCount = inDataCol->get_count_values();
-    
-    if(inDataCount != inGrCol->get_count_values())
-        throw std::runtime_error(
-                "agg_sum: inGrCol and inDataCol must contain the same number "
-                "of data elements"
-        );
-    
-    const uint64_t * const inGr = inGrCol->get_data();
-    const uint64_t * const inData = inDataCol->get_data();
-    
-    const size_t outDataSize = inExtCount * sizeof(uint64_t);
-    // Exact allocation size (for uncompressed data).
-    auto outDataCol = new column<uncompr_f>(outDataSize);
-    uint64_t * const outData = outDataCol->get_data();
-    
-    for(unsigned i = 0; i < inExtCount; i++)
-        outData[i] = 0;
-    for(unsigned i = 0; i < inDataCount; i++)
-        outData[inGr[i]] += inData[i];
-    
-    outDataCol->set_meta_data(inExtCount, outDataSize);
-    
-    return outDataCol;
-}
-    
+	
+	template<>
+	struct agg_sum_all_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f> {
+		
+		static
+		const column<uncompr_f> *
+		apply(const column<uncompr_f> * const in_dataColumm) {
+			const size_t in_dataCount = in_dataColumm->get_count_values();
+			const uint64_t * const in_data = in_dataColumm->get_data();
+			
+			// Exact allocation size (for uncompressed data).
+			auto out_dataColumn = new column<uncompr_f>(sizeof(uint64_t));
+			uint64_t * const out_data = out_dataColumn->get_data();
+			
+			*out_data = 0;
+			for (unsigned i = 0; i < in_dataCount; i ++)
+				*out_data += in_data[i];
+			
+			out_dataColumn->set_meta_data(1, sizeof(uint64_t));
+			
+			return out_dataColumn;
+		}
+		
+	};
+	
+	template<>
+	struct agg_sum_grouped_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f> {
+		
+		static
+		const column<uncompr_f> *
+		apply(
+		  const column<uncompr_f> * const in_groupIdsColumn,
+		  const column<uncompr_f> * const in_dataCoumn,
+		  size_t in_extendCount
+		) {
+			const size_t in_dataCount = in_dataCoumn->get_count_values();
+			
+			if (in_dataCount != in_groupIdsColumn->get_count_values())
+				throw std::runtime_error(
+				  "agg_sum: inGrCol and inDataCol must contain the same number "
+				  "of data elements"
+				);
+			
+			const uint64_t * const in_groupIds = in_groupIdsColumn->get_data();
+			const uint64_t * const in_data = in_dataCoumn->get_data();
+			
+			const size_t out_dataSize = in_extendCount * sizeof(uint64_t);
+			// Exact allocation size (for uncompressed data).
+			auto out_dataCol = new column<uncompr_f>(out_dataSize);
+			uint64_t * const out_data = out_dataCol->get_data();
+			
+			for (unsigned i = 0; i < in_extendCount; i ++)
+				out_data[i] = 0;
+			for (unsigned i = 0; i < in_dataCount; i ++)
+				out_data[in_groupIds[i]] += in_data[i];
+			
+			out_dataCol->set_meta_data(in_extendCount, out_dataSize);
+			
+			return out_dataCol;
+		}
+		
+	};
+	
 }
 #endif //MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_UNCOMPR_H

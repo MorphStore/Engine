@@ -99,20 +99,20 @@ namespace morphstore {
       }
    };
 
-   template<class VectorExtension>
-   struct agg_sum_t<VectorExtension, uncompr_f> {
-      IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
-      MSV_CXX_ATTRIBUTE_FORCE_INLINE static
+   template<class t_vector_extension>
+   struct agg_sum_all_t<t_vector_extension, uncompr_f, uncompr_f> {
+      IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
+      
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
       const column<uncompr_f> *
-      apply(
-         column< uncompr_f > const * const p_DataColumn
-      ) {
-         typename agg_sum_processing_unit<VectorExtension>::state_t vectorState;
+      apply(column< uncompr_f > const * const p_DataColumn) {
+         typename agg_sum_processing_unit<t_vector_extension>::state_t vectorState;
          size_t const vectorCount = p_DataColumn->get_count_values() / vector_element_count::value;
          size_t const remainderCount = p_DataColumn->get_count_values() % vector_element_count::value;
          base_t const * dataPtr = p_DataColumn->get_data( );
 
-         base_t t=agg_sum_batch<VectorExtension>::apply( dataPtr, vectorCount, vectorState );
+         base_t t=agg_sum_batch<t_vector_extension>::apply( dataPtr, vectorCount, vectorState );
          typename agg_sum_processing_unit<scalar<v64<uint64_t>>>::state_t scalarState(
          t
          );
