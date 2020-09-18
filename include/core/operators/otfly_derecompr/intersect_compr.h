@@ -21,6 +21,7 @@
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <core/operators/interfaces/intersect.h>
 
 #include <iostream>
 #include <tuple>
@@ -187,7 +188,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
 };
 
 template<class VectorExtension, class t_out_data_f, class t_in_pos_l_f, class t_in_pos_r_f>
-   class my_intersect_wit_t {
+   struct intersect_sorted_t {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
    public:
       MSV_CXX_ATTRIBUTE_FORCE_INLINE 

@@ -1,4 +1,4 @@
-/**********************************************************************************************
+                                                                                            /**********************************************************************************************
  * Copyright (C) 2019 by MorphStore-Team                                                      *
  *                                                                                            *
  * This file is part of MorphStore - a compression aware vectorized column store.             *
@@ -21,7 +21,7 @@
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_INTERSECT_H
+#ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_INTERSECT_KARY_H
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_INTERSECT_H
 
 #include <core/storage/column.h>
@@ -34,15 +34,12 @@ namespace morphstore {
         class t_in_pos_l_f,
         class t_in_pos_r_f
 >
-struct intersect_sorted_t;   
+struct intersect_sorted_kary_t;   
 /**
- * Intersect-operator for sorted inputs. Intersects the two given columns, each
- * of which is assumed to be sorted in ascending order and to contain only
- * unique data elements. This operator is commutative, i.e., interchanging its
- * first and second operand does not affect the result.
- * 
- * WARNING: The intersection currently only works reliable on uncompressed data! 
- * Include core/operators/uncompr/intersect_uncompr.h !!!
+ * Intersect-operator for sorted inputs. Unlike the default intersect of MorphStore,
+ * this one uses a k-ary search to find matching elements. 
+ * Handle with care as this has not been extensively tested.
+ * Currently this only works for uncompressed data.
  *  
  * Example:
  * - inPosLCol: [1, 4, 5,    8, 9, 12    ]
@@ -65,12 +62,12 @@ template<
         class t_in_pos_r_f
 >
 const column<t_out_pos_f> *
-intersect_sorted(
+intersect_sorted_kary(
         const column<t_in_pos_l_f> * const inPosLCol,
         const column<t_in_pos_r_f> * const inPosRCol,
         const size_t outPosCountEstimate = 0
 ){
-   return intersect_sorted_t<
+   return intersect_sorted_kary_t<
         t_vector_extension,
         t_out_pos_f,
         t_in_pos_l_f,
@@ -82,4 +79,4 @@ intersect_sorted(
     }
     
 }
-#endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_INTERSECT_H
+#endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_INTERSECT_KARY_H
