@@ -16,12 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file merge_uncompr.h
- * @brief TODO
+ * @file merge.h
+ * @brief Template specialization of the merge-operator for uncompressed inputs
+ * and outputs using the an arbitrary processing style.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_MERGE_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_MERGE_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_MERGE_H
+#define MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_MERGE_H
 
 
 #include <core/utils/preprocessor.h>
@@ -31,8 +32,8 @@
 #include <cassert>
 
 namespace morphstore {
-	
 	using namespace vectorlib;
+	
 	
 	template< class VectorExtension >
 	struct merge_sorted_processing_unit {
@@ -52,12 +53,10 @@ namespace morphstore {
 		};
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static
-		vector_mask_t
+		static vector_mask_t
 		apply(
 		  vector_t const p_Data1Vector,
 		  vector_t const p_Data2Vector,
-		  
 		  state_t & p_State
 		) {
 			vector_mask_t resultMaskEqual = 0;
@@ -68,16 +67,18 @@ namespace morphstore {
 			  p_Data2Vector
 			);// vec2<vec1?
 			
-			
 			return resultMaskEqual;
 		}
 	};
+	
 	
 	template< class VectorExtension >
 	struct merge_sorted_batch {
 		IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 		
-		MSV_CXX_ATTRIBUTE_FORCE_INLINE static size_t apply(
+		MSV_CXX_ATTRIBUTE_FORCE_INLINE
+		static size_t
+		apply(
 		  base_t * p_Data1Ptr,//left
 		  base_t * p_Data2Ptr,//right
 		  base_t * p_OutPtr,
@@ -85,15 +86,14 @@ namespace morphstore {
 		  size_t const p_CountData2,
 		  typename merge_sorted_processing_unit<VectorExtension>::state_t & p_State
 		) {
-			
-			//We hope that the larger column has the longest sequential runs, i.e. we get more sequential memory access
+			/// We hope that the larger column has the longest sequential runs, i.e. we get more sequential memory access
 			base_t * pl = p_Data1Ptr;
 			base_t * pr = p_Data2Ptr;
 			
 			base_t * endInPosR = p_Data2Ptr + p_CountData2;
 			base_t * endInPosL = p_Data1Ptr + p_CountData1;
 			
-			//We hope that the larger column has the longest sequential runs, i.e. we get more sequential memory access
+			/// We hope that the larger column has the longest sequential runs, i.e. we get more sequential memory access
 			if (p_CountData2 < p_CountData1) {
 				
 				p_Data1Ptr = pr;
@@ -216,17 +216,16 @@ namespace morphstore {
 		}
 	};
 	
+	
 	template< class t_vector_extension >
 	struct merge_sorted_t<t_vector_extension, uncompr_f, uncompr_f, uncompr_f> {
 		IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static
-		column <uncompr_f> const *
+		static column <uncompr_f> const *
 		apply(
 		  column <uncompr_f> const * const in_L_posColumn,
 		  column <uncompr_f> const * const in_R_posColumn
-		
 		) {
 			const size_t in_L_dataCount = in_L_posColumn->get_count_values();
 			const size_t in_R_dataCount = in_R_posColumn->get_count_values();
@@ -258,4 +257,4 @@ namespace morphstore {
 }
 
 
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_INTERSECT_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_MERGE_H
