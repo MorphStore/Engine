@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file agg_sum_compr.h
+ * @file agg_sum_all.h
  * @brief Whole-column aggregation-operator based on the vector-lib, weaving
  * the operator's core into the decompression routine of the input data's
  * format.
@@ -26,8 +26,8 @@
  * compression.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_AGG_SUM_ALL_H
+#define MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_AGG_SUM_ALL_H
 
 #include <core/morphing/format.h>
 #include <core/operators/interfaces/agg_sum.h>
@@ -136,5 +136,5 @@ namespace morphstore {
 	
 }
 
-#endif /* MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_AGG_SUM_COMPR_H */
+#endif /* MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_AGG_SUM_ALL_H */
 
