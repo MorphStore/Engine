@@ -16,15 +16,15 @@
  **********************************************************************************************/
 
 /**
- * @file merge_uncompr.h
+ * @file merge.h
  * @brief Template specialization of the merge-operator for uncompressed inputs
  * and outputs using the scalar processing style. Note that these are simple
  * reference implementations not tailored for efficiency.
  * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_H
+#define MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_H
 
 #include <core/operators/interfaces/merge.h>
 #include <core/morphing/format.h>
@@ -95,4 +95,4 @@ namespace morphstore {
 		}
 	};
 }
-#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_MERGE_H
