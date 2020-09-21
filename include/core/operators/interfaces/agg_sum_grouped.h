@@ -27,6 +27,7 @@
 	#include <core/storage/column.h>
 	#include <core/utils/basic_types.h>
 
+namespace morphstore {
 	template<
 	  class t_vector_extension,
 	  class t_out_data_f,
@@ -66,10 +67,10 @@
 	  class t_in_gr_f,
 	  class t_in_data_f
 	>
-	const column<t_out_data_f> *
+	const column <t_out_data_f> *
 	agg_sum_grouped(
-	  const column<t_in_gr_f> * const in_groupIdsColumn,
-	  const column<t_in_data_f> * const in_dataCoumn,
+	  const column <t_in_gr_f> * const in_groupIdsColumn,
+	  const column <t_in_data_f> * const in_dataCoumn,
 	  const size_t in_extendCount
 	) {
 		return agg_sum_grouped_t<t_vector_extension, t_out_data_f, t_in_gr_f, t_in_data_f>::apply(
@@ -78,5 +79,6 @@
 		  in_extendCount
 		);
 	}
+}
 
 #endif //MORPHSTORE_AGG_SUM_GROUPED_H
