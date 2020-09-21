@@ -23,7 +23,7 @@
 #ifndef MORPHSTORE_CORE_OPERATORS_UNCOMPR_AGG_SUM_ALL_H
 #define MORPHSTORE_CORE_OPERATORS_UNCOMPR_AGG_SUM_ALL_H
 
-#include <core/operators/interfaces/agg_sum.h>
+#include <core/operators/interfaces/agg_sum_all.h>
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>

@@ -16,52 +16,17 @@
  **********************************************************************************************/
 
 /**
- * @file agg_sum.h
- * @brief The template-based interfaces of the whole-column and group-based
- * aggregation(sum)-operators.
- * @todo Probably, we could generalize the aggregation function using templates
- * somehow.
+ * @file agg_sum_grouped.h
+ * @brief The template-based interfaces of the group-based aggregation(sum)-operators.
+ * @todo Probably, we could generalize the aggregation function using templates somehow.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_H
-#define MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_H
+#ifndef MORPHSTORE_AGG_SUM_GROUPED_H
+#define MORPHSTORE_AGG_SUM_GROUPED_H
 
-#include <core/storage/column.h>
-#include <core/utils/basic_types.h>
+	#include <core/storage/column.h>
+	#include <core/utils/basic_types.h>
 
-namespace morphstore {
-	
-	template<
-	  class t_vector_extension,
-	  class t_out_data_f,
-	  class t_in_data_f
-	>
-	struct agg_sum_all_t;
-	
-	/**
-	 * Whole-column aggregation(sum)-operator. Aggregates all data elements in the
-	 * given column.
-	 *
-	 * Example:
-	 * - inDataCol:  [100, 150, 50, 500, 200, 100]
-	 * - outDataCol: [1100]
-	 *
-	 * @param inDataCol A column containing the data elements to be aggregated.
-	 * @return An uncompressed column containing the aggregate value as a single
-	 * data element. We always use the uncompressed format here, since compressing
-	 * a single value would not make much sense.
-	***/
-	template<
-	  class t_vector_extension,
-	  class t_out_data_f,
-	  class t_in_data_f
-	>
-	column<t_out_data_f> const *
-	agg_sum_all(const column<t_in_data_f> * const in_dataColumn) {
-		return agg_sum_all_t<t_vector_extension, t_out_data_f, t_in_data_f>::apply(in_dataColumn);
-	}
-	
-	
 	template<
 	  class t_vector_extension,
 	  class t_out_data_f,
@@ -102,7 +67,7 @@ namespace morphstore {
 	  class t_in_data_f
 	>
 	const column<t_out_data_f> *
-	agg_sum(
+	agg_sum_grouped(
 	  const column<t_in_gr_f> * const in_groupIdsColumn,
 	  const column<t_in_data_f> * const in_dataCoumn,
 	  const size_t in_extendCount
@@ -113,12 +78,5 @@ namespace morphstore {
 		  in_extendCount
 		);
 	}
-	
-}
 
-#include "core/operators/reference/agg_sum_grouped.h"
-
-
-#endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_H
-
-
+#endif //MORPHSTORE_AGG_SUM_GROUPED_H

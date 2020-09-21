@@ -23,7 +23,7 @@
  * reference implementations not tailored for efficiency.
  */
 
-//#include <core/operators/interfaces/agg_sum.h>
+#include <core/operators/interfaces/agg_sum_all.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>

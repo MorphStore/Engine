@@ -30,7 +30,7 @@
 #define MORPHSTORE_CORE_OPERATORS_OTFLY_DERECOMPR_AGG_SUM_ALL_H
 
 #include <core/morphing/format.h>
-#include <core/operators/interfaces/agg_sum.h>
+#include <core/operators/interfaces/agg_sum_grouped.h>
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>

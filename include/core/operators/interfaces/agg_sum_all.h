@@ -16,52 +16,51 @@
  **********************************************************************************************/
 
 /**
- * @file agg_sum_all.h
- * @brief Template specializations of the whole-column
- * variants of the aggregation(sum)-operator for uncompressed inputs and
- * outputs using the scalar processing style. Note that these are simple
- * reference implementations not tailored for efficiency.
+ * @file agg_sum.h
+ * @brief The template-based interfaces of the whole-column aggregation(sum)-operators.
+ * @todo Probably, we could generalize the aggregation function using templates somehow.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
-#define MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
+#ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_ALL_H
+#define MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_ALL_H
 
-#include <core/operators/interfaces/agg_sum_all.h>
-#include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/scalar/extension_scalar.h>
-
-#include <cstdint>
-#include <stdexcept>
-#include <tuple>
-#include <unordered_map>
 
 namespace morphstore {
 	
-	template<>
-	struct agg_sum_all_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f> {
-		
-		static const column<uncompr_f> *
-		apply(const column<uncompr_f> * const in_dataColumm) {
-			const size_t in_dataCount = in_dataColumm->get_count_values();
-			const uint64_t * const in_data = in_dataColumm->get_data();
-			
-			// Exact allocation size (for uncompressed data).
-			auto out_dataColumn = new column<uncompr_f>(sizeof(uint64_t));
-			uint64_t * const out_data = out_dataColumn->get_data();
-			
-			*out_data = 0;
-			for (unsigned i = 0; i < in_dataCount; i ++)
-				*out_data += in_data[i];
-			
-			out_dataColumn->set_meta_data(1, sizeof(uint64_t));
-			
-			return out_dataColumn;
-		}
-		
-	};
+	template<
+	  class t_vector_extension,
+	  class t_out_data_f,
+	  class t_in_data_f
+	>
+	struct agg_sum_all_t;
 	
-	
+	/**
+	 * Whole-column aggregation(sum)-operator. Aggregates all data elements in the
+	 * given column.
+	 *
+	 * Example:
+	 * - inDataCol:  [100, 150, 50, 500, 200, 100]
+	 * - outDataCol: [1100]
+	 *
+	 * @param inDataCol A column containing the data elements to be aggregated.
+	 * @return An uncompressed column containing the aggregate value as a single
+	 * data element. We always use the uncompressed format here, since compressing
+	 * a single value would not make much sense.
+	***/
+	template<
+	  class t_vector_extension,
+	  class t_out_data_f,
+	  class t_in_data_f
+	>
+	column<t_out_data_f> const *
+	agg_sum_all(const column<t_in_data_f> * const in_dataColumn) {
+		return agg_sum_all_t<t_vector_extension, t_out_data_f, t_in_data_f>::apply(in_dataColumn);
+	}
 }
-#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
+
+
+#endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_ALL_H
+
+
