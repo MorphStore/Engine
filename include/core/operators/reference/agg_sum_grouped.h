@@ -16,17 +16,14 @@
  **********************************************************************************************/
 
 /**
- * @file agg_sum_all.h
- * @brief Template specializations of the whole-column
+ * @file agg_sum_grouped.h
+ * @brief Template specializations of the group-related
  * variants of the aggregation(sum)-operator for uncompressed inputs and
  * outputs using the scalar processing style. Note that these are simple
  * reference implementations not tailored for efficiency.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
-#define MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
-
-#include <core/operators/interfaces/agg_sum.h>
+//#include <core/operators/interfaces/agg_sum.h>
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
@@ -37,31 +34,45 @@
 #include <tuple>
 #include <unordered_map>
 
+#ifndef MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_GROUPED_H
+#define MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_GROUPED_H
+
 namespace morphstore {
-	
 	template<>
-	struct agg_sum_all_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f> {
+	struct agg_sum_grouped_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f> {
 		
-		static const column<uncompr_f> *
-		apply(const column<uncompr_f> * const in_dataColumm) {
-			const size_t in_dataCount = in_dataColumm->get_count_values();
-			const uint64_t * const in_data = in_dataColumm->get_data();
+		static const column <uncompr_f> *
+		apply(
+		  const column <uncompr_f> * const in_groupIdsColumn,
+		  const column <uncompr_f> * const in_dataCoumn,
+		  size_t in_extendCount
+		) {
+			const size_t in_dataCount = in_dataCoumn->get_count_values();
 			
+			if (in_dataCount != in_groupIdsColumn->get_count_values())
+				throw std::runtime_error(
+				  "agg_sum: inGrCol and inDataCol must contain the same number "
+				  "of data elements"
+				);
+			
+			const uint64_t * const in_groupIds = in_groupIdsColumn->get_data();
+			const uint64_t * const in_data = in_dataCoumn->get_data();
+			
+			const size_t out_dataSize = in_extendCount * sizeof(uint64_t);
 			// Exact allocation size (for uncompressed data).
-			auto out_dataColumn = new column<uncompr_f>(sizeof(uint64_t));
-			uint64_t * const out_data = out_dataColumn->get_data();
+			auto out_dataCol = new column<uncompr_f>(out_dataSize);
+			uint64_t * const out_data = out_dataCol->get_data();
 			
-			*out_data = 0;
+			for (unsigned i = 0; i < in_extendCount; i ++)
+				out_data[i] = 0;
 			for (unsigned i = 0; i < in_dataCount; i ++)
-				*out_data += in_data[i];
+				out_data[in_groupIds[i]] += in_data[i];
 			
-			out_dataColumn->set_meta_data(1, sizeof(uint64_t));
+			out_dataCol->set_meta_data(in_extendCount, out_dataSize);
 			
-			return out_dataColumn;
+			return out_dataCol;
 		}
 		
 	};
-	
-	
 }
-#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_All_H
+#endif //MORPHSTORE_CORE_OPERATORS_SCALAR_AGG_SUM_GROUPED_H

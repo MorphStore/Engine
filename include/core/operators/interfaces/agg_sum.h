@@ -115,4 +115,10 @@ namespace morphstore {
 	}
 	
 }
+
+#include "core/operators/reference/agg_sum_grouped.h"
+
+
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_H
+
+
