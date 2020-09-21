@@ -22,19 +22,32 @@
  * @todo TODOS?
  */
 
-#include "../../include/core/memory/mm_glob.h"
-#include "../../include/core/morphing/format.h"
-#include "../../include/core/operators/scalar/agg_sum_uncompr.h"
-#include "../../include/core/operators/scalar/group_uncompr.h"
-#include "../../include/core/operators/scalar/join_uncompr.h"
-#include "../../include/core/operators/scalar/project_uncompr.h"
-#include "../../include/core/operators/scalar/select_uncompr.h"
-#include "../../include/core/storage/column.h"
-#include "../../include/core/storage/column_gen.h"
-#include "../../include/core/utils/basic_types.h"
-#include "../../include/core/utils/printing.h"
-#include "../../include/vector/scalar/extension_scalar.h"
+#include "core/memory/mm_glob.h"
+#include "core/morphing/format.h"
 
+/// operators
+#include "core/operators/reference/agg_sum_all.h"
+#include "core/operators/reference/agg_sum_grouped.h"
+#include "core/operators/reference/agg_sum_compr_iterator.h"
+#include "core/operators/uncompr/agg_sum_all.h"
+#include "core/operators/reference/group_first.h"
+#include "core/operators/reference/group_next.h"
+#include "core/operators/reference/join_uncompr.h"
+#include "core/operators/reference/project_uncompr.h"
+#include "core/operators/reference/select.h"
+#include "core/operators/reference/merge.h"
+#include "core/operators/otfly_derecompr/merge.h"
+
+/// storage
+#include "core/storage/column.h"
+#include "core/storage/column_gen.h"
+
+/// misc
+#include "core/utils/basic_types.h"
+#include "core/utils/printing.h"
+#include "vector/scalar/extension_scalar.h"
+
+/// libs
 #include <functional>
 #include <iostream>
 #include <random>
@@ -43,19 +56,19 @@
 using namespace morphstore;
 using namespace vectorlib;
 
-// ****************************************************************************
-// * Example query
-// ****************************************************************************
-
-// SELECT order.suppKey, order.custKey, SUM(order.qty)
-// FROM order INNER JOIN part ON order.partKey = part.partKey
-// WHERE part.weight < 2000
-// GROUP BY order.suppKey, order.custKey
-// HAVING SUM(order.qty) > 200000
-
-// ****************************************************************************
-// * Basic schema information
-// ****************************************************************************
+/// ****************************************************************************
+/// * Example query
+/// ****************************************************************************
+///
+/// SELECT order.suppKey, order.custKey, SUM(order.qty)
+/// FROM order INNER JOIN part ON order.partKey = part.partKey
+/// WHERE part.weight < 2000
+/// GROUP BY order.suppKey, order.custKey
+/// HAVING SUM(order.qty) > 200000
+///
+/// ****************************************************************************
+/// * Basic schema information
+/// ****************************************************************************
 
 struct order_t {
     const column<uncompr_f> * suppKey;
@@ -137,8 +150,8 @@ int main( void ) {
     
     // Positions in "part" fulfilling "part.weight < 2000"
     auto iPPos = morphstore::select<
-            std::less,
             ve,
+            vectorlib::less,
             uncompr_f,
             uncompr_f
     >(part.weight, 2000);
@@ -169,7 +182,7 @@ int main( void ) {
     // Positions of group-representatives of *unary* grouping on filtered
     // "order.suppKey"
     const column<uncompr_f> * iOSuppKeyExt;
-    std::tie(iOSuppKeyGr, iOSuppKeyExt) = group<ve, uncompr_f, uncompr_f>(
+    std::tie(iOSuppKeyGr, iOSuppKeyExt) = group_first<ve, uncompr_f, uncompr_f, uncompr_f>(
             iOSuppKeyProj
     );
     
@@ -179,12 +192,12 @@ int main( void ) {
     // Positions of group-representatives of *binary* grouping on filtered
     // "order.custKey"
     const column<uncompr_f> * iOCustKeyExt;
-    std::tie(iOCustKeyGr, iOCustKeyExt) = group<ve, uncompr_f, uncompr_f>(
+    std::tie(iOCustKeyGr, iOCustKeyExt) = group_next<ve, uncompr_f, uncompr_f, uncompr_f, uncompr_f>(
             iOSuppKeyGr, iOCustKeyProj
     );
     
     // Per-group aggregates of filtered "order.qty"
-    auto iOQtyGrSum = agg_sum<ve, uncompr_f>(
+    auto iOQtyGrSum = agg_sum_grouped<ve, uncompr_f>(
             iOCustKeyGr,
             iOQtyProj,
             iOCustKeyExt->get_count_values()
@@ -192,8 +205,8 @@ int main( void ) {
     
     // Group-ids of *binary* grouping fulfilling "SUM(order.qty) > 200000"
     auto iOPosHaving = morphstore::select<
-            std::greater,
             ve,
+            vectorlib::greater,
             uncompr_f,
             uncompr_f
     >(iOQtyGrSum, 200000);
