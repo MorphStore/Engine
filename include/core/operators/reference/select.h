@@ -31,7 +31,7 @@
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/scalar/extension_scalar.h>
-#include <vector/scalar/compare_scalar.h>
+#include <vector/scalar/primitives/compare_scalar.h>
 
 #include <cstdint>
 
