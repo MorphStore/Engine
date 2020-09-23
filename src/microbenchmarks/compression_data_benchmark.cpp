@@ -57,6 +57,7 @@ using namespace vectorlib;
 // These values are used in CMakeLists.txt, keep them consistent.
 #define DATA_SOURCE_HIST 1
 #define DATA_SOURCE_DISTR 2
+#define DATA_SOURCE_DATAFILE 3
 
 // ****************************************************************************
 // Variant of the morph-operator simulating in-cascade use
@@ -341,6 +342,14 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+    if(argc != 5) {
+        std::cerr
+                << "Usage: " << argv[0]
+                << " <countValuesLarge INT> <countValuesSmall INT> <repetitions INT> <dataFile STRING>" << std::endl
+                << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
+        exit(-1);
+    }
 #endif
     // @todo More validation of the arguments.
     const size_t countValuesLarge = atoi(argv[1]);
@@ -350,6 +359,8 @@ int main(int argc, char ** argv) {
         throw std::runtime_error("the number of repetitions must be >= 1");
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
     const std::string bwWeightsFile(argv[4]);
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+    const std::string dataFile(argv[4]);
 #endif
     
     using varex_t = variant_executor_helper<2, 1, size_t, size_t, size_t, int, unsigned>::type
@@ -361,6 +372,7 @@ int main(int argc, char ** argv) {
             {}
     );
     
+    MSV_CXX_ATTRIBUTE_PPUNUSED
     const size_t digits = std::numeric_limits<uint64_t>::digits;
     
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
@@ -429,6 +441,24 @@ int main(int argc, char ** argv) {
                         }
                 );
             }
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+    // Determine the number of blocks of size countValuesSmall in the data file.
+    size_t blockSizeByte = convert_size<uint64_t, uint8_t>(countValuesSmall);
+    size_t countBlocksDataFile;
+    std::ifstream ifsDataFile(dataFile, std::ios::in | std::ios::binary);
+    if(ifsDataFile.good()) {
+        ifsDataFile.seekg(0, std::ios_base::end);
+        const size_t sizeByteDataFile = ifsDataFile.tellg();
+        ifsDataFile.seekg(0, std::ios_base::beg);
+        if(sizeByteDataFile % sizeof(uint64_t))
+            throw std::runtime_error(
+                    "the size of the data file is not a multiple of 8 byte, "
+                    "but we want to read 64 bit integers"
+            );
+        countBlocksDataFile = sizeByteDataFile / blockSizeByte;
+    }
+    else
+        throw std::runtime_error("could not open the data file for reading");
 #endif
     
     
@@ -444,14 +474,22 @@ int main(int argc, char ** argv) {
                 maxBw--;
             
             size_t settingGroup = 0;
+            
+            for(bool isSorted : {false, true}) {
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
         for(auto genInfo : generators) {
             size_t settingGroup;
             data_generator * generator;
             std::tie(settingGroup, generator) = genInfo;
-#endif
             
             for(bool isSorted : {false, true}) {
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+        for(size_t blockIdx = 0; blockIdx < countBlocksDataFile; blockIdx++) {
+            size_t settingGroup = 0;
+            
+            { // no explicit sorting if the data is loaded from a file
+#endif
+            
                 settingIdx++;
 
                 varex.print_datagen_started();
@@ -459,9 +497,20 @@ int main(int argc, char ** argv) {
                 auto origCol = generate_with_bitwidth_histogram(
                         countValuesSmall, bwHist, isSorted, true
                 );
-#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
+#else
+    #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
                 // Generate the data.
                 auto origCol = generator->generate(countValuesSmall, isSorted);
+    #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+                // Load the next block from the data file.
+                auto origCol = new column<uncompr_f>(blockSizeByte);
+                ifsDataFile.read(origCol->get_data(), blockSizeByte);
+                if(!ifsDataFile.good())
+                    throw std::runtime_error(
+                            "could not read the next block from the data file"
+                    );
+                origCol->set_meta_data(countValuesSmall, blockSizeByte);
+    #endif
                 // Find out the maximum bit width.
                 uint64_t pseudoMax = 0;
                 const uint64_t * origData = origCol->get_data();
