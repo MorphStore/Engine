@@ -54,6 +54,9 @@
 using namespace morphstore;
 using namespace vectorlib;
 
+// These values are used in CMakeLists.txt, keep them consistent.
+#define DATA_SOURCE_HIST 1
+#define DATA_SOURCE_DISTR 2
 
 // ****************************************************************************
 // Variant of the morph-operator simulating in-cascade use
@@ -267,7 +270,7 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 // Utilities for data generation.
 // ****************************************************************************
 
-#ifndef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
 class data_generator {
 protected:
     virtual const column<uncompr_f> * generate_internal(
@@ -322,7 +325,7 @@ int main(int argc, char ** argv) {
     fail_if_self_managed_memory();
     
     // @todo Get rid of the duplication here.
-#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
     if(argc != 5) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -330,7 +333,7 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
-#else
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
     if(argc != 4) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -345,7 +348,7 @@ int main(int argc, char ** argv) {
     const int countRepetitions = atoi(argv[3]);
     if(countRepetitions < 1)
         throw std::runtime_error("the number of repetitions must be >= 1");
-#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
     const std::string bwWeightsFile(argv[4]);
 #endif
     
@@ -360,13 +363,13 @@ int main(int argc, char ** argv) {
     
     const size_t digits = std::numeric_limits<uint64_t>::digits;
     
-#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
     // Read the weights of the bit width histograms from a file.
     const uint64_t * bwHists;
     size_t countBwHists;
     std::tie(bwHists, countBwHists) =
             generate_with_bitwidth_histogram_helpers::read_bw_weights(bwWeightsFile);
-#else
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
     // Define the data distributions.
     std::vector<std::tuple<size_t, data_generator *>> generators;
     // Uniform distribution.
@@ -432,7 +435,7 @@ int main(int argc, char ** argv) {
     for(int repIdx = 1; repIdx <= countRepetitions; repIdx++) {
         size_t settingIdx = 0;
         
-#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
         for(unsigned bwHistIdx = 0; bwHistIdx < countBwHists; bwHistIdx++) {
             const uint64_t * const bwHist = bwHists + bwHistIdx * digits;
             
@@ -441,7 +444,7 @@ int main(int argc, char ** argv) {
                 maxBw--;
             
             size_t settingGroup = 0;
-#else
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
         for(auto genInfo : generators) {
             size_t settingGroup;
             data_generator * generator;
@@ -452,11 +455,11 @@ int main(int argc, char ** argv) {
                 settingIdx++;
 
                 varex.print_datagen_started();
-#ifdef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
                 auto origCol = generate_with_bitwidth_histogram(
                         countValuesSmall, bwHist, isSorted, true
                 );
-#else
+#elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
                 // Generate the data.
                 auto origCol = generator->generate(countValuesSmall, isSorted);
                 // Find out the maximum bit width.
@@ -554,7 +557,7 @@ int main(int argc, char ** argv) {
         }
     }
      
-#ifndef COMPRESSION_DATA_BENCHMARK_USE_HIST
+#if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
     for(auto genInfo : generators)
         delete std::get<1>(genInfo);
 #endif
