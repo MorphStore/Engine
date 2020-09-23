@@ -257,6 +257,10 @@ struct int_distribution {
         template<class t_generator_t>
         MSV_CXX_ATTRIBUTE_INLINE
         t_int_t operator()(t_generator_t & p_Generator) {
+#if 0
+            // Variant 1) Clip values outside the range of the integer type to
+            // zero and the maximum integer value, respectively. Sometimes
+            // results in unexpected values less than zero.
             const typename t_distr_t::result_type res =
                     std::round(m_Distr(p_Generator));
             if(res < 0)
@@ -264,6 +268,16 @@ struct int_distribution {
             const t_int_t max = std::numeric_limits<t_int_t>::max();
             if(res > max)
                 return max;
+#else
+            // Variant 2) Discard values outside the range of the integer type.
+            // Might result in an infinite loop or a very slow data generation
+            // if the normal distribution has unsuitable parameters.
+            const t_int_t max = std::numeric_limits<t_int_t>::max();
+            typename t_distr_t::result_type res;
+            do {
+                res = std::round(m_Distr(p_Generator));
+            } while(res < 0 || res > max);
+#endif
             return static_cast<t_int_t>(res);
         }
     };
