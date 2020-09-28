@@ -27,6 +27,7 @@
 #endif
 
 #include <vector/scalar/extension_scalar.h>
+#include <vector/vv/extension_virtual_vector.h>
 
 namespace vectorlib{
 
