@@ -24,61 +24,65 @@
 #ifndef MORPHSTORE_AGG_SUM_GROUPED_H
 #define MORPHSTORE_AGG_SUM_GROUPED_H
 
-	#include <core/storage/column.h>
-	#include <core/utils/basic_types.h>
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
 
 namespace morphstore {
-	template<
-	  class t_vector_extension,
-	  class t_out_data_f,
-	  class t_in_gr_f,
-	  class t_in_data_f
-	>
-	struct agg_sum_grouped_t;
-	
-	
-	/**
-	 * Group-based aggregation(sum)-operator. Aggregates all data elements in the
-	 * given colum within each of the given groups.
-	 *
-	 * Example:
-	 * - inGrCol:    [  0,   0,  1,   0,   2,   1]
-	 * - inDataCol:  [100, 150, 50, 500, 200, 100]
-	 * - inExtCount: 3
-	 * - outDataCol: [750, 150, 200]
-	 *
-	 * @param inGrCol A column whose i-th data element is the group-id of the i-th
-	 * data element in inDataCol. Must contain as many data elements as inDataCol.
-	 * @param inDataCol A column containing the data elements to be aggregated
-	 * based on the group-ids in inGrCol. Must contain the same number of data
-	 * elements as inGrCol.
-	 * @param inExtCount The number of groups in the input. Note that this is, in
-	 * general, not the number of data elements in inGrCol, but the number of data
-	 * elements in the output extents column from the grouping which produced
-	 * inGrCol.
-	 * @return A column of the per-group aggregates. This column contains
-	 * inExtCount data elements and its i-th data element is the aggregated value
-	 * of all data elements in inDataCol, whose corresponding group-id in inGrCol
-	 * equals i.
-	 */
-	template<
-	  class t_vector_extension,
-	  class t_out_data_f,
-	  class t_in_gr_f,
-	  class t_in_data_f
-	>
-	const column <t_out_data_f> *
-	agg_sum_grouped(
-	  const column <t_in_gr_f> * const in_groupIdsColumn,
-	  const column <t_in_data_f> * const in_dataCoumn,
-	  const size_t in_extendCount
-	) {
-		return agg_sum_grouped_t<t_vector_extension, t_out_data_f, t_in_gr_f, t_in_data_f>::apply(
-		  in_groupIdsColumn,
-		  in_dataCoumn,
-		  in_extendCount
-		);
-	}
-}
+    
+    /**
+     * @brief A struct wrapping the actual select-operator. This is necessary to enable
+     * partial template specialization.
+     */
+    template<
+      class t_vector_extension,
+      class t_out_data_f,
+      class t_in_gr_f,
+      class t_in_data_f
+    >
+    struct agg_sum_grouped_t;
+    
+    
+    /**
+     * Group-based aggregation(sum)-operator. Aggregates all data elements in the
+     * given colum within each of the given groups.
+     *
+     * Example:
+     * - inGrCol:    [  0,   0,  1,   0,   2,   1]
+     * - inDataCol:  [100, 150, 50, 500, 200, 100]
+     * - inExtCount: 3
+     * - outDataCol: [750, 150, 200]
+     *
+     * @param inGrCol A column whose i-th data element is the group-id of the i-th
+     * data element in inDataCol. Must contain as many data elements as inDataCol.
+     * @param inDataCol A column containing the data elements to be aggregated
+     * based on the group-ids in inGrCol. Must contain the same number of data
+     * elements as inGrCol.
+     * @param inExtCount The number of groups in the input. Note that this is, in
+     * general, not the number of data elements in inGrCol, but the number of data
+     * elements in the output extents column from the grouping which produced
+     * inGrCol.
+     * @return A column of the per-group aggregates. This column contains
+     * inExtCount data elements and its i-th data element is the aggregated value
+     * of all data elements in inDataCol, whose corresponding group-id in inGrCol
+     * equals i.
+     */
+    template<
+      class t_vector_extension,
+      class t_out_data_f,
+      class t_in_gr_f,
+      class t_in_data_f
+    >
+    const column <t_out_data_f> *
+    agg_sum_grouped(
+      const column <t_in_gr_f> * const in_groupIdsColumn,
+      const column <t_in_data_f> * const in_dataCoumn,
+      const size_t in_extendCount
+    ) {
+        return
+          agg_sum_grouped_t<t_vector_extension, t_out_data_f, t_in_gr_f, t_in_data_f>
+          ::apply(in_groupIdsColumn, in_dataCoumn, in_extendCount);
+    }
+
+} /// namespace morphstore
 
 #endif //MORPHSTORE_AGG_SUM_GROUPED_H
