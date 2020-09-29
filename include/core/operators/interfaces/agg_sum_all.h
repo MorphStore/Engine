@@ -29,6 +29,10 @@
 
 namespace morphstore {
 	
+    /**
+     * A struct wrapping the actual agg_sum_all-operator. This is necessary to enable
+     * partial template specialization.
+    **/
 	template<
 	  class t_vector_extension,
 	  class t_out_data_f,
@@ -48,7 +52,7 @@ namespace morphstore {
 	 * @return An uncompressed column containing the aggregate value as a single
 	 * data element. We always use the uncompressed format here, since compressing
 	 * a single value would not make much sense.
-	***/
+	**/
 	template<
 	  class t_vector_extension,
 	  class t_out_data_f,
@@ -58,8 +62,8 @@ namespace morphstore {
 	agg_sum_all(const column<t_in_data_f> * const in_dataColumn) {
 		return agg_sum_all_t<t_vector_extension, t_out_data_f, t_in_data_f>::apply(in_dataColumn);
 	}
-}
-
+	
+} /// namespace morphstore
 
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_ALL_H
 
