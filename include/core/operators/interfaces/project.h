@@ -27,72 +27,51 @@
 
 namespace morphstore {
     
-/**
- * @brief A struct wrapping the actual project-operator.
- * 
- * This is necessary to enable partial template specialization, which is
- * required, since some compressed formats have their own template parameters.
- */
-template<
-        class t_vector_extension,
-        class t_out_data_f,
-        class t_in_data_f,
-        class t_in_pos_f
->
-struct project_t {
+    /**
+     * @brief A struct wrapping the actual select-operator. This is necessary to enable
+     * partial template specialization.
+    **/
+    template<
+      class t_vector_extension,
+      class t_out_data_f,
+      class t_in_data_f,
+      class t_in_pos_f
+    >
+    struct project_t;
+    
     /**
      * @brief Project-operator. Extracts the data elements at the given
      * positions from the given data column.
-     * 
+     *
      * Example:
      * - `inDataCol`:  `[11, 44, 22, 33, 11]`
      * - `inPosCol`:   `[     1,      3,  4]`
      * - `outDataCol`: `[    44,     33, 11]`
-     * 
+     *
      * This function is deleted by default, to guarantee that using this struct
      * with a format combination it is not specialized for causes a compiler
      * error, not a linker error.
-     * 
+     *
      * @param inDataCol The column to extract from.
      * @param inPosCol The column containing the positions to extract.
      * @return A column containing the extracted data elements, i.e., as many
      * as in `inPosCol`.
-     */
-    static
-    const column<t_out_data_f> *
-    apply(
-            const column<t_in_data_f> * const inDataCol,
-            const column<t_in_pos_f> * const inPosCol
-    ) = delete;
-};
-
-/**
- * @brief A convenience function wrapping the project-operator.
- * 
- * Extracts the data elements at the given positions from the given data
- * column. See documentation of `project_t::apply` for details.
- * 
- * @param inDataCol The column to extract from.
- * @param inPosCol The column containing the positions to extract.
- * @return A column containing the extracted data elements, i.e., as many as in
- * `inPosCol`.
- */
-template<
-        class t_vector_extension,
-        class t_out_data_f,
-        class t_in_data_f,
-        class t_in_pos_f
->
-const column<t_out_data_f> *
-project(
-        const column<t_in_data_f> * const inDataCol,
-        const column<t_in_pos_f> * const inPosCol
-) {
-    return project_t<t_vector_extension, t_out_data_f, t_in_data_f, t_in_pos_f>::apply(
-            inDataCol,
-            inPosCol
-    );
-}
-
+    **/
+    template<
+      class t_vector_extension,
+      class t_out_data_f,
+      class t_in_data_f,
+      class t_in_pos_f
+    >
+    const column <t_out_data_f> *
+    project(
+      const column <t_in_data_f> * const inDataCol,
+      const column <t_in_pos_f> * const inPosCol
+    ) {
+        return
+          project_t<t_vector_extension, t_out_data_f, t_in_data_f, t_in_pos_f>
+          ::apply(inDataCol, inPosCol);
+    }
+    
 }
 #endif //MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_H
