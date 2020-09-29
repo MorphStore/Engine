@@ -21,8 +21,8 @@
  * @todo Probably, we could generalize the aggregation function using templates somehow.
  */
 
-#ifndef MORPHSTORE_AGG_SUM_GROUPED_H
-#define MORPHSTORE_AGG_SUM_GROUPED_H
+#ifndef MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_GROUPED_H
+#define MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_GROUPED_H
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
@@ -85,4 +85,4 @@ namespace morphstore {
 
 } /// namespace morphstore
 
-#endif //MORPHSTORE_AGG_SUM_GROUPED_H
+#endif // MORPHSTORE_CORE_OPERATORS_INTERFACES_AGG_SUM_GROUPED_H
