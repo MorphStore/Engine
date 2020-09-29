@@ -32,9 +32,9 @@
 namespace morphstore {
 
     /**
-     * A struct wrapping the actual select-operator. This is necessary to enable
+     * @brief A struct wrapping the actual select-operator. This is necessary to enable
      * partial template specialization.
-     */
+    **/
     template<
       class t_vector_extension,
       template< class, int > class t_operator,
