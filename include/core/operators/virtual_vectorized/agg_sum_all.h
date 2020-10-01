@@ -20,7 +20,7 @@
 #define MORPHSTORE_AGG_SUM_UNCOMPR_H
 
 
-#include <core/operators/interfaces/agg_sum.h>
+#include <core/operators/interfaces/agg_sum_all.h>
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
@@ -28,7 +28,6 @@
 #include <thread>
 #include <iostream>
 
-#include <core/operators/general_vectorized/agg_sum_uncompr.h>
 
 namespace morphstore {
 
@@ -91,14 +90,16 @@ namespace morphstore {
 		};
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static void apply(typename TVectorExtension::vector_t const & p_DataVector, state_t & p_State) {
+		static void
+		apply(typename TVectorExtension::vector_t const & p_DataVector, state_t & p_State) {
 			p_State.resultVec = vectorlib::add<TVectorExtension, TVectorExtension::vector_helper_t::granularity::value>::apply(
 				p_State.resultVec, p_DataVector
 			);
 		}
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static base_t finalize(typename agg_sum_processing_unit<TVE>::state_t & p_State) {
+		static base_t
+		finalize(typename agg_sum_processing_unit<TVE>::state_t & p_State) {
 			return vectorlib::hadd<TVectorExtension, TVectorExtension::vector_helper_t::granularity::value>::apply(p_State.resultVec );
 		}
    };
@@ -109,7 +110,8 @@ namespace morphstore {
 		IMPORT_VECTOR_BOILER_PLATE(TVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static base_t apply(base_t const *& in_dataPtr,
+		static base_t
+		apply(base_t const *& in_dataPtr,
 							size_t const virtualVectorCnt,
 							MSV_CXX_ATTRIBUTE_PPUNUSED
 							typename agg_sum_processing_unit<TVE>::state_t &p_State) {
@@ -172,12 +174,13 @@ namespace morphstore {
 	};
 
 	template<class TVirtualVectorView, class TVectorExtension>
-	struct agg_sum_t<vv<TVirtualVectorView, TVectorExtension>, uncompr_f> {
+	struct agg_sum_all_t<vv<TVirtualVectorView, TVectorExtension>, uncompr_f, uncompr_f> {
    	    using TVE = vv<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE( TVE )
   
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static const column<uncompr_f> * apply( column< uncompr_f > const * const p_DataColumn ) {
+		static const column<uncompr_f> *
+		apply( column< uncompr_f > const * const p_DataColumn ) {
 		    typename agg_sum_processing_unit<TVE>::state_t vectorState;
 		 
 		    size_t const vectorCount = p_DataColumn->get_count_values() / TVectorExtension::vector_helper_t::element_count::value;

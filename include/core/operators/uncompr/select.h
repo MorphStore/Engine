@@ -2,8 +2,8 @@
 // Created by jpietrzyk on 26.04.19.
 //
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
+#ifndef MORPHSTORE_CORE_OPERATORS_UNCOMPR_SELECT_H
+#define MORPHSTORE_CORE_OPERATORS_UNCOMPR_SELECT_H
 
 #include <core/operators/interfaces/select.h>
 #include <core/utils/preprocessor.h>
@@ -104,6 +104,6 @@ namespace morphstore {
 
 
 
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_H
+#endif //MORPHSTORE_CORE_OPERATORS_UNCOMPR_SELECT_H
 
 
