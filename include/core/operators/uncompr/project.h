@@ -28,7 +28,7 @@ namespace morphstore {
     using namespace vectorlib;
     
     template< class t_vector_extension >
-    struct project_t_processing_unit {
+    struct project_processing_unit {
         IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
         
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -45,7 +45,7 @@ namespace morphstore {
     
     
     template< class t_vector_extension >
-    struct project_t_batch {
+    struct project_batch {
         IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
         
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -60,7 +60,7 @@ namespace morphstore {
                 vector_t posVector
                   = vectorlib::load<t_vector_extension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_PosPtr);
                 vector_t lookupVector
-                  = project_t_processing_unit<t_vector_extension>::apply(p_DataPtr, posVector);
+                  = project_processing_unit<t_vector_extension>::apply(p_DataPtr, posVector);
                 vectorlib
                   ::store<t_vector_extension, vectorlib::iov::ALIGNED, vector_size_bit::value>
                     (p_OutPtr, lookupVector);
@@ -90,8 +90,8 @@ namespace morphstore {
             auto outDataCol = new column<uncompr_f>(inUsedBytes);
             base_t * outDataPtr = outDataCol->get_data();
             
-            project_t_batch<t_vector_extension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
-            project_t_batch<scalar<v64<uint64_t>>>::apply(inDataPtr, inPosPtr, outDataPtr, remainderCount);
+            project_batch<t_vector_extension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
+            project_batch<scalar<v64<uint64_t>>>::apply(inDataPtr, inPosPtr, outDataPtr, remainderCount);
             
             outDataCol->set_meta_data(inPosCount, inUsedBytes);
             
