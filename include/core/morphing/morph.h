@@ -177,9 +177,10 @@ struct morph_t<t_vector_extension, t_dst_f, uncompr_f> {
         uint8_t * out8 = outCol->get_data();
         const uint8_t * const initOut8 = out8;
 
-        morph_batch<t_vector_extension, t_dst_f, src_f>(
-                in8, out8, outCountLogCompr
-        );
+        if(outCountLogCompr)
+            morph_batch<t_vector_extension, t_dst_f, src_f>(
+                    in8, out8, outCountLogCompr
+            );
         const size_t sizeComprByte = out8 - initOut8;
 
         if(outSizeRestByte) {
@@ -223,13 +224,15 @@ struct morph_t<t_vector_extension, uncompr_f, t_src_f> {
         auto outCol = new column<dst_f>(outSizeByte);
         uint8_t * out8 = outCol->get_data();
 
-        morph_batch<t_vector_extension, dst_f, t_src_f>(
-                in8, out8, inCountLogCompr
-        );
+        if(inCountLogCompr)
+            morph_batch<t_vector_extension, dst_f, t_src_f>(
+                    in8, out8, inCountLogCompr
+            );
 
-        memcpy(
-                out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
-        );
+        if(inCountLogRest)
+            memcpy(
+                    out8, inRest8, uncompr_f::get_size_max_byte(inCountLogRest)
+            );
 
         outCol->set_meta_data(countLog, outSizeByte);
 
