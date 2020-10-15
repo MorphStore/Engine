@@ -45,6 +45,15 @@ MSV_CXX_ATTRIBUTE_FORCE_INLINE T* create_aligned_ptr(T* p_Ptr) {
 #endif
 }
 
+template<typename T>
+MSV_CXX_ATTRIBUTE_FORCE_INLINE T* create_aligned_ptr(T* p_Ptr, size_t p_AlignmentByte) {
+   size_t ptrToSizeT = reinterpret_cast<size_t>(p_Ptr);
+   size_t offset = ptrToSizeT % p_AlignmentByte;
+   return reinterpret_cast<T*>(
+         ptrToSizeT + p_AlignmentByte + (-offset | -p_AlignmentByte)
+   );
+}
+
 MSV_CXX_ATTRIBUTE_FORCE_INLINE void* create_extended_aligned_ptr(void* p_StartPtr, size_t p_SizeOfMemChunk) {
    trace( "[] -  IN. ( ptr = ", p_StartPtr, ". Size = ", p_SizeOfMemChunk, " Bytes )." );
    void * aligned_ptr = create_aligned_ptr(p_StartPtr);
