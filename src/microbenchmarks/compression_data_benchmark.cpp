@@ -27,6 +27,7 @@
 #include <core/memory/noselfmanaging_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/dynamic_vbp.h>
+#include <core/morphing/group_simple.h>
 #include <core/morphing/static_vbp.h>
 #include <core/morphing/k_wise_ns.h>
 #include <core/morphing/uncompr.h>
@@ -252,16 +253,20 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 #ifdef AVX512
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>)),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(group_simple_f<8, uint64_t, 64>)),
 #elif defined(AVXTWO)
         MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
         MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(group_simple_f<4, uint64_t, 32>)),
 #elif defined(SSE)
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>), t_Bw),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(group_simple_f<2, uint64_t, 16>)),
 #else
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(group_simple_f<1, uint64_t, 8>)),
 #endif
     };
 }
