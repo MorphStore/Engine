@@ -150,10 +150,10 @@ template<class t_vector_extension, class t_format>
 const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_morphs(
         const column<uncompr_f> * p_InCol, // small column
         size_t p_CountValuesLarge,
-        size_t p_SettingGroup,
-        size_t p_SettingIdx,
-        int p_RepIdx,
-        unsigned p_Bw
+        MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_SettingGroup,
+        MSV_CXX_ATTRIBUTE_PPUNUSED size_t p_SettingIdx,
+        MSV_CXX_ATTRIBUTE_PPUNUSED int p_RepIdx,
+        MSV_CXX_ATTRIBUTE_PPUNUSED unsigned p_Bw
 ) {
     MSV_CXX_ATTRIBUTE_PPUNUSED
     const size_t countValuesSmall = p_InCol->get_count_values();
@@ -250,6 +250,8 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
 template<class t_varex_t, unsigned t_Bw>
 std::vector<typename t_varex_t::variant_t> make_variants() {
     return {
+#if 1
+        // Use only the allowed processing style with the largest vectors.
 #ifdef AVX512
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
         MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>)),
@@ -261,9 +263,31 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
 #elif defined(SSE)
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)),
-        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>), t_Bw),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>)),
         MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(group_simple_f<2, uint64_t, 16>)),
 #else
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>)),
+        MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(group_simple_f<1, uint64_t, 8>)),
+#endif
+#else
+        // Use all allowed processing styles.
+#ifdef AVX512
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 8>>)),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<512, 64, 8>)),
+        MAKE_VARIANT(avx512<v512<uint64_t>>, SINGLE_ARG(group_simple_f<8, uint64_t, 64>)),
+#endif
+#ifdef AVXTWO
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 4>>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<256, 32, 4>)),
+        MAKE_VARIANT(avx2<v256<uint64_t>>, SINGLE_ARG(group_simple_f<4, uint64_t, 32>)),
+#endif
+#ifdef SSE
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 2>>)),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<128, 16, 2>)),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(k_wise_ns_f<2>)),
+        MAKE_VARIANT(sse<v128<uint64_t>>, SINGLE_ARG(group_simple_f<2, uint64_t, 16>)),
+#endif
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(static_vbp_f<vbp_l<t_Bw, 1>>)),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(dynamic_vbp_f<64, 8, 1>)),
         MAKE_VARIANT(scalar<v64<uint64_t>>, SINGLE_ARG(group_simple_f<1, uint64_t, 8>)),
@@ -389,11 +413,24 @@ int main(int argc, char ** argv) {
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
     // Define the data distributions.
     std::vector<std::tuple<size_t, data_generator *>> generators;
-    // Uniform distribution.
+    // Exact bit width.
     for(unsigned bw = 1; bw <= digits; bw++)
         generators.push_back(
                 {
                     1,
+                    new special_data_generator<std::uniform_int_distribution>(
+                            std::uniform_int_distribution<uint64_t>(
+                                    bitwidth_min<uint64_t>(bw),
+                                    bitwidth_max<uint64_t>(bw)
+                            )
+                    )
+                }
+        );
+    // Uniform distribution.
+    for(unsigned bw = 1; bw <= digits; bw++)
+        generators.push_back(
+                {
+                    3,
                     new special_data_generator<std::uniform_int_distribution>(
                             std::uniform_int_distribution<uint64_t>(
                                     0, bitwidth_max<uint64_t>(bw)
@@ -407,7 +444,7 @@ int main(int argc, char ** argv) {
         for(unsigned bw = startBw; bw < digits; bw++)
             generators.push_back(
                     {
-                        2,
+                        3,
                         new special_data_generator<normal_int_distribution>(
                                 normal_int_distribution<uint64_t>(
                                         std::normal_distribution<double>(
@@ -425,7 +462,7 @@ int main(int argc, char ** argv) {
                 const double stddev = bitwidth_max<uint64_t>(startBw) / 3;
                 generators.push_back(
                         {
-                            3,
+                            4,
                             new special_data_generator<two_normal_int_distribution>(
                                     two_normal_int_distribution<uint64_t>(
                                             normal_int_distribution<uint64_t>(
@@ -446,6 +483,21 @@ int main(int argc, char ** argv) {
                         }
                 );
             }
+    // Amount of outliers.
+    for(double outlierShare : {0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0}) {
+        generators.push_back(
+                {
+                    5,
+                    new special_data_generator<two_value_distribution>(
+                            two_value_distribution<uint64_t>(
+                                    bitwidth_max<uint64_t>(4),
+                                    bitwidth_max<uint64_t>(60),
+                                    outlierShare
+                            )
+                    )
+                }
+        );
+    }
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
     // Determine the number of blocks of size countValuesSmall in the data file.
     size_t blockSizeByte = convert_size<uint64_t, uint8_t>(countValuesSmall);
@@ -496,6 +548,7 @@ int main(int argc, char ** argv) {
 #endif
             
                 settingIdx++;
+                std::cerr << "settingIdx: " << settingIdx << std::endl;
 
                 varex.print_datagen_started();
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
