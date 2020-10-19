@@ -16,15 +16,14 @@
  **********************************************************************************************/
 
 /**
- * @file project_uncompr.h
+ * @file project.h
  * @brief Template specialization of the project-operator for uncompressed
  * inputs and outputs using the scalar processing style. Note that these are
  * simple reference implementations not tailored for efficiency.
- * @todo TODOS?
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_H
+#define MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_H
 
 #include <core/operators/interfaces/project.h>
 #include <core/morphing/format.h>
@@ -70,4 +69,4 @@ struct project_t<
 };
 
 }
-#endif //MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_UNCOMPR_H
+#endif /// MORPHSTORE_CORE_OPERATORS_REFERENCE_PROJECT_H
