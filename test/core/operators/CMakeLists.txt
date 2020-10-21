@@ -37,6 +37,7 @@ ENDIF(CAVXTWO  OR CAVX512)
 	add_executable( select_test_app select_test.cpp )
 	add_executable( operation_summation_test_app summation_test.cpp )
 	add_executable( random_access_test_app random_access_test.cpp )
+	add_executable( operator_test operator_test.cpp )
 
 IF(CAVXTWO  OR CAVX512)
 	add_executable( project_benchmark_test_app project_benchmark_test.cpp )
@@ -168,4 +169,3 @@ IF(CAVXTWO  OR CAVX512)
 ENDIF(CAVXTWO  OR CAVX512)
 
 endif( CTEST_ALL OR CTEST_OPERATORS)
-	
