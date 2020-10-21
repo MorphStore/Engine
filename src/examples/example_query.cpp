@@ -33,7 +33,7 @@
 #include "core/operators/reference/group_first.h"
 #include "core/operators/reference/group_next.h"
 #include "core/operators/reference/join_uncompr.h"
-#include "core/operators/reference/project_uncompr.h"
+#include "core/operators/reference/project.h"
 #include "core/operators/reference/select.h"
 #include "core/operators/reference/merge.h"
 #include "core/operators/otfly_derecompr/merge.h"
