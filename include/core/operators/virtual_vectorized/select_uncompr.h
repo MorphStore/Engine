@@ -24,10 +24,9 @@
 #include <vector/vector_primitives.h>
 #include <thread>
 
-/// don't include this!! this code does not implement the correct interface
-//#include <core/operators/interfaces/select.h>
+#include <core/operators/interfaces/select.h>
+#include <core/operators/uncompr/select.h>
 
-#include <core/operators/general_vectorized/select_uncompr.h>
 #include <core/morphing/format.h>
 #include <vector>
 
@@ -39,14 +38,12 @@ namespace morphstore {
 	template< class VectorExtension, template< class, int > class Operator >
 	struct select_batch;
 	
-//	template< class VectorExtension, template< class, int > class Operator >
-//	struct select_t;
-	
-	template< class TVirtualVectorExtension, template< class, int > class Operator >
-	static void select_lambda(
+	template< class TVirtualVectorExtension, template< class, int > class Comparator >
+	static void
+	select_lambda(
 	  const size_t begin, /// first vector
 	  const size_t end, /// behind last vector
-	  typename TVirtualVectorExtension::vector_helper_t::base_t p_Predicate,
+	  typename TVirtualVectorExtension::vector_helper_t::base_t in_predicate,
 	  typename TVirtualVectorExtension::vector_helper_t::base_t const * in_dataPtr,
 	  typename TVirtualVectorExtension::vector_helper_t::base_t *& out_dataPtr
 	) {
@@ -57,24 +54,27 @@ namespace morphstore {
 		
 		/// predicate expanded to a whole vector register
 		vector_t const predicateVector
-		  = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(p_Predicate);
-		/// incrementer
+		  = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(in_predicate);
+		/// set constant incrementer
 		vector_t const addVector
 		  = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(vector_element_count::value);
 		/// current positions for each element in the register
 		vector_t positionVector
 		  = vectorlib::set_sequence<VectorExtension, vector_base_t_granularity::value>(firstPos, 1);
 		
+		/// calc pointer of input according to offset
 		base_t * in_ptr = ((base_t *) in_dataPtr) + (begin * vector_element_count::value);
+		
+		/// process each vector
 		for (size_t i = begin; i < end; ++ i) {
-			/// load vector register
+			/// load data into vector register
 			vector_t dataVector
 			  = vectorlib::load
 			    <VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>
 			    (in_ptr);
-			/// execute select
+			/// execute the filter for this vector
 			vector_mask_t resultMask
-			  = select_processing_unit<VectorExtension, Operator>::apply(dataVector, predicateVector);
+			  = select_processing_unit<VectorExtension, Comparator>::apply(dataVector, predicateVector);
 			/// store positions of selected values
 			vectorlib::compressstore
 			  <VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>
@@ -91,13 +91,14 @@ namespace morphstore {
 	}
 	
 	
-	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class Operator >
-	struct select_batch<vv<TVirtualVectorView, TVectorExtension>, Operator> {
+	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class Comparator >
+	struct select_batch<vv<TVirtualVectorView, TVectorExtension>, Comparator> {
 		using TVE = vv<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static void apply(
+		static void
+		apply(
 		  base_t const *& in_dataPtr,
 		  base_t const    p_Predicate,
 		  base_t       *& out_dataPtr,
@@ -108,12 +109,14 @@ namespace morphstore {
 			/// calculate degree of parallelization: size of virtual vector / size of physical vector
 			const uint16_t threadCnt
 			  = std::max(vector_size_bit::value / TVectorExtension::vector_helper_t::size_bit::value, 1);
+			uint64_t vectorCount
+			  = virtualVectorCnt * vector_element_count::value / TVectorExtension::vector_helper_t::element_count::value;
 			
 			/// thread container
 			std::thread * threads[threadCnt];
 			
 			/// step size / vector elements per pipeline
-			size_t vectorsPerThread = virtualVectorCnt / threadCnt + ((virtualVectorCnt % threadCnt > 0) ? 1 : 0);
+			size_t vectorsPerThread = vectorCount / threadCnt + ((vectorCount % threadCnt > 0) ? 1 : 0);
 			
 			size_t intermediate_elementCnt = vectorsPerThread * vector_element_count::value;
 			
@@ -127,8 +130,8 @@ namespace morphstore {
 			for(uint16_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
 				size_t begin = threadIdx * vectorsPerThread;
 				size_t end   = begin + vectorsPerThread;
-				if(end > virtualVectorCnt)
-					end = virtualVectorCnt;
+				if(end > vectorCount)
+					end = vectorCount;
 				
 				/// prepare intermediate column
 				intermediateColumns[threadIdx]
@@ -137,7 +140,7 @@ namespace morphstore {
 				
 				threads[threadIdx] = new std::thread(
 					/// lambda function
-					select_lambda< TVE, Operator >,
+					select_lambda< TVE, Comparator >,
 					/// parameters
 					begin, end, p_Predicate, std::ref(in_dataPtr), std::ref(intermediatePtr[threadIdx])/**/
 				);
@@ -151,63 +154,66 @@ namespace morphstore {
 			
 			/// combine results
 			for(uint16_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
-				info("Combine Results");
+//				info("Combine Results");
 				base_t * tmpPtr = intermediateColumns[threadIdx]->get_data();
 				uint64_t dist = intermediatePtr[threadIdx] - tmpPtr;
-				info("Dist: " + std::to_string(dist));
+//				info("Dist: " + std::to_string(dist));
 				for(; tmpPtr < intermediatePtr[threadIdx]; ++tmpPtr){
 					*out_dataPtr = *tmpPtr;
 					++out_dataPtr;
 				}
+				delete intermediateColumns[threadIdx];
 			}
+			in_dataPtr += virtualVectorCnt * vector_element_count::value;
 		}
 	};
 	
 	
-	/// @todo : adapt to interface (adopted (wrong) format from uncompressed select operator to stay consistent ... for now)
-	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class Operator >
-	struct select_t<vv<TVirtualVectorView, TVectorExtension>, Operator> {
+	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class TComparator >
+	struct select_t<vv<TVirtualVectorView, TVectorExtension>, TComparator, uncompr_f, uncompr_f> {
 		using TVE = vv<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
-		static column <uncompr_f> const * apply(
-		  column <uncompr_f> const * const p_DataColumn,
-		  base_t const p_Predicate,
-		  const size_t outPosCountEstimate = 0
+		static column <uncompr_f> const *
+		apply(
+		  column <uncompr_f> const * const in_dataColumn,
+		  base_t const in_predicate,
+		  const size_t out_posCountEstimate = 0
 		) {
-			/// fetch metadata
-			size_t const inDataCount = p_DataColumn->get_count_values();
-			base_t const * inDataPtr = p_DataColumn->get_data();
+			/// fetch metadata & data pointer
+			size_t const in_dataCount = in_dataColumn->get_count_values();
+			base_t const * in_dataPtr = in_dataColumn->get_data();
+			
+			/// calc variables
 			size_t const sizeByte =
-			  bool(outPosCountEstimate) ? (outPosCountEstimate * sizeof(base_t)) : p_DataColumn->get_size_used_byte();
+              bool(out_posCountEstimate) ? (out_posCountEstimate * sizeof(base_t)) : in_dataColumn->get_size_used_byte();
+			size_t const vectorCount    = in_dataCount / vector_element_count::value;
+			size_t const remainderCount = in_dataCount % vector_element_count::value;
 			
 			/// create output column
-			auto outDataCol = new column<uncompr_f>(sizeByte);
-			base_t * outDataPtr = outDataCol->get_data();
-			base_t * const outDataPtrOrigin = const_cast< base_t * const >(outDataPtr);
+			auto out_dataCol = new column<uncompr_f>(sizeByte);
+			base_t * out_dataPtr = out_dataCol->get_data();
+			base_t * const out_dataPtrOrigin = const_cast< base_t * const >(out_dataPtr);
 			
-			size_t const vectorCount    = inDataCount / vector_element_count::value;
-			size_t const remainderCount = inDataCount % vector_element_count::value;
 			
 			/// process data vectorized
-			select_batch<TVE, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
-			//... increase data ptr
+			select_batch<TVE, TComparator>::apply(in_dataPtr, in_predicate, out_dataPtr, vectorCount);
 			
-			info("RemainderCount: " + std::to_string(remainderCount));
+//			info("RemainderCount: " + std::to_string(remainderCount));
 			/// process remaining data scalar
-			select_batch<scalar<v64<uint64_t>>, Operator>::apply(
-			  inDataPtr, p_Predicate, outDataPtr, remainderCount, vectorCount * vector_element_count::value
+			select_batch<scalar<v64<uint64_t>>, TComparator>::apply(
+              in_dataPtr, in_predicate, out_dataPtr, remainderCount, vectorCount * vector_element_count::value
 			);
 			/// set metadata for output column
-			size_t const outDataCount = outDataPtr - outDataPtrOrigin;
-			outDataCol->set_meta_data(outDataCount, outDataCount * sizeof(base_t));
+			size_t const outDataCount = out_dataPtr - out_dataPtrOrigin;
+			out_dataCol->set_meta_data(outDataCount, outDataCount * sizeof(base_t));
 			
-			return outDataCol;
+			return out_dataCol;
 		}
 	};
 	
-} // namespace morphstore
+} /// namespace morphstore
 
 
 #endif //MORPHSTORE_SELECT_UNCOMPR_H

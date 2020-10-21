@@ -32,6 +32,16 @@ namespace vectorlib {
 			"Base type of virtual vector and used vector extension mismatch!"
 		);
 		
+		static_assert(
+		  VirtualVectorView::size_bit::value >= VectorExtension::vector_helper_t::size_bit::value,
+		  "Virtual vector size must be greater or equal to physical vector size!"
+        );
+		
+		static_assert(
+		  VirtualVectorView::size_bit::value % VectorExtension::vector_helper_t::size_bit::value == 0,
+		  "Virtual vector size must be multiple of physical vector size!"
+		);
+		
 		/// store physically used processing style
 		using pps = VectorExtension;
 		using vector_t        = typename VirtualVectorView::base_t;
