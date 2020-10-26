@@ -1,0 +1,6 @@
+# .gitignore in /doxygen/
+documentation*
+documentation/*
+doxygen.eris.conf
+errors.txt
+tmp/*

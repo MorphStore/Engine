@@ -1,0 +1,3 @@
+# .gitignore in /doxygen/style/
+*.map
+*.css

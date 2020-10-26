@@ -1,0 +1,229 @@
+/* 
+    Created on : 02.03.2018, 14:49:15
+    Author     : Eric Mier
+*/
+
+/* === Font-import ========================================================== */
+/*@import url('https://fonts.googleapis.com/css?family=Fira+Sans:400');*/
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans:400,500,600');
+
+/* === Variables ============================================================ */
+$font-normal: 'Roboto', 'Fira Sans', 'Arial', sans-serif;
+$font-mono: 'Roboto Mono', sans-serif;
+
+$code-color: #393;
+
+$link-color:  #00225b;
+$link-color2:  #003FA5;
+$link-color3:  #1D5EC6;
+$link-color-visited: #4f1787;
+$link-color-visited2: #1042ab;
+$link-color-bright: #ffffff;
+$link-color-bright-visited: #ffffff;
+
+$gradient-dark: linear-gradient(#02060F, #102A5F);
+
+$background-bars: #0b45a3;
+
+$background-image-title-nav: url("tab_s.png");
+$background-image-footer-path: url("bc_s.png");
+
+$border-dark: #02060F;
+
+%font {
+    font-family: $font-normal;
+    font-style: normal;
+    font-size: 14px;
+    line-height: 20px;
+}
+%font-mono {
+    font-family: $font-mono;
+    font-style: normal;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+%bar {
+    /*background-image: none;*/
+    /*background-color: $background-bars;*/
+    background: $background-bars;
+}
+
+
+
+/* === Overrides ============================================================ */
+/* = Font */
+* {
+    /*@extend %font;*/
+    font-family: $font-normal;
+    cursor: default;
+}
+
+body, table, div, p, dl {
+    @extend %font;
+}
+
+body {
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+}
+
+p {
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 18px;
+    margin-top: 8px;
+}
+
+map {
+    area {
+        cursor: pointer;
+        
+        &:hover {
+            background: #0077cc;
+        }
+    }
+}
+
+hr {
+    /*border-top: 1px solid #0b45a3;*/
+    border-top: 2px solid #888888;
+    width: calc(100% + 22px);
+    position: relative;
+    left: -11px;
+    z-index: 20;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+        
+.copy {
+    &, & * {
+        cursor: pointer;
+        &:hover{
+            color: $link-color3 !important;
+        }
+    }
+}
+
+
+
+
+/* === Links ================================================================ */
+a{
+    color: $link-color2;
+    cursor: pointer;
+}
+a.el {
+    color: $link-color;
+}
+a:visited {
+    color: $link-color-visited;
+}
+
+
+
+
+p.reference, p.definition{
+	border: #A8C0EF solid 1px;
+	padding: 4px;
+	background-color: #F9FBFE;
+	margin: 4px 8px 4px 2px;
+}
+
+p.reference:hover, p.definition:hover, div.fragment:hover{
+	background-color: #eff4fc;
+	border-color: #88a0fF;
+}
+
+
+
+
+
+/* === Colorizer ============================================================ */
+span{
+    &.red, &.red *, &.red *:visited{
+        color: #dd0000 !important;
+    }
+    &.lred, &.lred *, &.lred *:visited {
+        color: #ff0000 !important;
+    }
+    &.dred, &.dred *, &.dred *:visited {
+        color: #bb0000 !important;
+    }
+    &.green, &.green *, &.green *:visited {
+        color: #00dd00 !important;
+    }
+    &.lgreen, &.lgreen *, &.lgreen *:visited {
+        color: #00ff00 !important;
+    }
+    &.dgreen, &.dgreen *, &.dgreen *:visited {
+        color: #00bb00 !important;
+    }
+}
+
+
+
+
+
+
+
+
+/* === New ================================================================== */
+
+
+
+
+
+
+
+.paramname{
+    color: #410182;
+}
+
+
+
+
+
+.memberdecls td.glow, .fieldtable tr.glow {
+	background-color: #ff0000;
+	box-shadow: 0 0 15px #ff0000;
+}
+
+
+
+
+
+img#bottom_corner {
+    position: absolute;
+    bottom: 30px;
+    right: 0px;
+    /*right: 15px;*/
+
+    /*bottom: 46px;*/
+    /*right: 32px;*/
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 200;
+}
+
+
+/* ======= New Design ============================== */
+/*remove background images*/
+.sm-dox, .ui-resizable-e{
+    /*background-image: none;*/
+    /*background-color: #0e4eb5;*/
+    /*background-color: #0b45a3;*/
+}
+
+// ### Imports ###
+@import 'content';
+@import 'effects';
+@import 'footer';
+@import 'header';
+@import 'navigation';
