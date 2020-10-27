@@ -506,7 +506,6 @@ int main(int argc, char ** argv) {
     if(ifsDataFile.good()) {
         ifsDataFile.seekg(0, std::ios_base::end);
         const size_t sizeByteDataFile = ifsDataFile.tellg();
-        ifsDataFile.seekg(0, std::ios_base::beg);
         if(sizeByteDataFile % sizeof(uint64_t))
             throw std::runtime_error(
                     "the size of the data file is not a multiple of 8 byte, "
@@ -541,6 +540,7 @@ int main(int argc, char ** argv) {
             
             for(bool isSorted : {false, true}) {
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+        ifsDataFile.seekg(0, std::ios_base::beg);
         for(size_t blockIdx = 0; blockIdx < countBlocksDataFile; blockIdx++) {
             size_t settingGroup = 0;
             
