@@ -21,55 +21,53 @@ This section is designed to hand a plan to staff members and students, who never
 <b>Dear SIGMOD 2019 visitors, we are working on the documentation. Please have a little patience.</b>
 
 <div class="box-grid">
-
-<div class="BoxPink" style="grid-column: 1">
-<div class=symbol><br />❶</div>
-<b>Getting started</b>
-<ul>
-<li>\ref quickStart</li>
-<li><span id="stublink">\ref testCases</span></li>
-<li><span id="stublink">\ref overview</span></li>
-</ul>
-</div>
-<div class="BoxBlue" style="grid-column: 2">
-<div class=symbol><br />✎</div>
-<b>Writing Queries</b>
-<ul>
-<li>\ref helloWorld</li>
-<li>\ref operators</li>
-<li><span id="stublink">\ref persistency</span></li>
-</ul>
-</div>
-<div class="BoxBlue" style="grid-column: 1">
-<div class=symbol><br />B</div>
-<b>Benchmarking</b>
-<ul>
-<li>\ref variantExecutor</li>
-<li>\ref Monitoring</li>
-</ul>
-</div>
-<div class="BoxPink" style="grid-column: 2">
-<div class=symbol><br /><br />➚</div>
-<b>Vector Lib</b>
-<ul>
-<li>Using the \ref veclib - A short walk through</li>
-<li>\ref VectorPrimitives</li>
-<li>\ref primitiveTable - A table</li>
-<li>VectorLib w/o MorphStore</li>
-</ul>
-</div>
-<div class="BoxPink" style="grid-column: 1">
-<div class=symbol><br />⚒</div> 
-<b>Deep Dive</b>
-<ul>
-<li>\ref memory</li>
-</ul>
-</div>
-<div class="BoxBlue" style="grid-column: 2">
-<div class=symbol><br /></div>
-<b></b>
-</div>
-
+    <div class="BoxPink" style="grid-column: 1">
+        <div class=symbol><br />❶</div>
+        <b>Getting started</b>
+        <ul>
+            <li>\ref quickStart</li>
+            <li><span id="stublink">\ref testCases</span></li>
+            <li><span id="stublink">\ref overview</span></li>
+        </ul>
+    </div>
+    <div class="BoxBlue" style="grid-column: 2">
+        <div class=symbol><br />✎</div>
+        <b>Writing Queries</b>
+        <ul>
+            <li>\ref helloWorld</li>
+            <li>\ref operators</li>
+            <li><span id="stublink">\ref persistency</span></li>
+        </ul>
+    </div>
+    <div class="BoxBlue" style="grid-column: 1">
+        <div class=symbol><br />B</div>
+        <b>Benchmarking</b>
+        <ul>
+            <li>\ref variantExecutor</li>
+            <li>\ref Monitoring</li>
+        </ul>
+    </div>
+    <div class="BoxPink" style="grid-column: 2">
+        <div class=symbol><br /><br />➚</div>
+        <b>Vector Lib</b>
+        <ul>
+            <li>Using the \ref veclib - A short walk through</li>
+            <li>\ref VectorPrimitives</li>
+            <li>\ref primitiveTable - A table</li>
+            <li>VectorLib w/o MorphStore</li>
+        </ul>
+    </div>
+    <div class="BoxPink" style="grid-column: 1">
+        <div class=symbol><br />⚒</div> 
+        <b>Deep Dive</b>
+        <ul>
+            <li>\ref memory</li>
+        </ul>
+    </div>
+    <div class="BoxBlue" style="grid-column: 2">
+        <div class=symbol><br /></div>
+        <b></b>
+    </div>
 </div>
 
 <div class=howtoread>
@@ -95,4 +93,13 @@ According to these 3 aspects, code examples are colored differently:
 //This already belongs to the code base of the MorphStore.
 ~~~
 </div>
+
+@devcode{Devcode Test.}
+
+@devcode{
+ void test(){
+    return;
+ }
+}
+
 <div>

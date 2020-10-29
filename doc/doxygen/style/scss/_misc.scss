@@ -1,0 +1,183 @@
+/* color palette from flatuicolors.com, canada palette:
+
+    jigglypuff: #ff9ff3
+    casandora yellow: #feca57
+    pastel red: #ff6b6b
+    megaman:    #48dbfb
+    wildcarribean green: #1dd1a1
+    lian hong lotus pink: #f368e0
+    double dragon skin: #ff9f43
+    amour: #ee5253
+    cyanite: #0abde3
+    dark mountain meadow: #10ac84
+    jade dust: #00d2d3
+    joust blue: #54a0ff
+    nasu purple: #5f27cd
+    light blue ballerina: #c8d6e5
+    fuel town: #576574
+    aqua velvet: #01a3a4
+    bleu de france: #2e86de
+    bluebell: #341f97
+    storm petrel: #8395a7
+    omperial primer: #222f3e
+*/
+
+.morphStoreBaseCode{
+  background-color: #c8d6e5;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.morphStoreDeveloperCode{
+  background-color: #feca57;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.userCode{
+  background-color: #1dd1a1;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.ToDo{
+  border: 1px solid #ee5253;
+  color:  #ee5253;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: auto;
+  padding: 5px;
+  display: block;
+}
+.ToDo::before{
+  font-weight: bold;
+  content: "TODO ";
+}
+
+.new{
+  border-style: none none none solid;
+  border-color: #ee5253;
+  border-width: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: auto;
+  padding: 5px;
+  display: block;
+}
+.new::before{
+  font-weight: bold;
+  color:  #ee5253;
+  content: "NEW ";
+}
+
+.box-grid{
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.BoxPink{
+  border-style: solid solid hidden solid;
+  border-width: 10px 2px 5px 2px;
+  border-color: #f368e0;
+  background-color: #ff9ff3;
+  margin: 5px;
+  padding: 5px;
+
+}
+
+.BoxBlue{
+  border-style: solid solid hidden solid;
+  border-width: 10px 2px 5px 2px;
+  border-color: #0abde3;
+  background-color: #48dbfb;
+  margin: 5px;
+  padding: 5px;
+}
+
+
+.NO{
+  background-color:  #ee5253;
+  margin: 0px;
+  padding: 0px;
+  display: block;
+  text-align: center;
+  color: #222f3e;
+  border-radius: 5px;
+}
+
+.YES{
+  background-color:  #10ac84;
+  margin: 0px;
+  padding: 2px;
+  display: block;
+  text-align: center;
+  color: #222f3e;
+  border-radius: 5px;
+}
+
+.YES::before{
+  font-weight: bold;
+  content: "✔ ";
+}
+
+.NO::before{
+  font-weight: bold;
+  content: "✘ ";
+}
+
+.HACKY{
+  background-color:  #ff9f43;
+  margin: 0px;
+  padding: 2px;
+  display: block;
+  text-align: center;
+  color: #222f3e;
+  border-radius: 5px;
+}
+
+.HACKY::before{
+  font-weight: bold;
+  content: "⭘ ";
+}
+
+.symbol{
+  font-size: 6em;
+  float: left;
+  padding: 20px;
+  margin: 10px;
+  height: 100%;
+  text-align: center;
+  width: 150px;
+}
+
+.howtoread{
+  border-style: dashed;
+  border-color: #0abde3;
+  border-width: 2px 2px 2px 2px;
+  padding: 5px;
+  margin: 5px;
+}
+
+/*
+I know this is really really ugly because it requires using an id multiple times.
+Unfortunately I didn't find any other way to change the color of links in markdown.
+*/
+#stublink a{
+  color: #ff6b6b;
+}
+
+#stublink a::link {
+ color: #ff6b6b;
+}

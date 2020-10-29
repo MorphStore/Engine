@@ -40,6 +40,8 @@ function parse_arguments() {
       --uninstall)
         uninstall_dependencies
         exit;;
+      --css)
+        ONLY_CSS=1;;
       *)
         DXY_PARAM["$DXY_PARAM_CNT"]="$param"
         ((DXY_PARAM_CNT++)) ;;

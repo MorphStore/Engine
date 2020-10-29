@@ -216,8 +216,8 @@ img#bottom_corner {
 /* ======= New Design ============================== */
 /*remove background images*/
 .sm-dox, .ui-resizable-e{
-    /*background-image: none;*/
-    /*background-color: #0e4eb5;*/
+    background-image: none;
+    background-color: #0e4eb5;
     /*background-color: #0b45a3;*/
 }
 
@@ -227,3 +227,4 @@ img#bottom_corner {
 @import 'footer';
 @import 'header';
 @import 'navigation';
+@import 'misc';

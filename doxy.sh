@@ -162,64 +162,65 @@ CONFIG=$(<$CONFIG_FILE)$(<$ALIAS_FILE)
 #CONFIG="${CONFIG}"$'\n'"OUTPUT_DIRECTORY = ${OUT}"
 #echo -E "$CONFIG"
 #exit
+if [ "$ONLY_CSS" != "1" ]; then
+  ## == lite mode == ##
+  if [ "$LITE" == "1" ]; then
+    info "Generation is running in ${CYAN}~~ lite mode ~~${NOC}"
 
-## == lite mode == ##	
-if [ "$LITE" == "1" ]; then
-  info "Generation is running in ${CYAN}~~ lite mode ~~${NOC}"
-
-  (
-    echo "$CONFIG"
-    echo ""
-#        echo "SOURCE_BROWSER         = NO"
-    echo "INLINE_SOURCES         = NO"
-    echo "CALL_GRAPH             = NO"
-    echo "INLINE_INHERITED_MEMB  = NO"
-    echo "CLASS_DIAGRAMS         = NO"
-    echo "HAVE_DOT               = NO"
-    echo "REFERENCED_BY_RELATION = NO"
-    echo "REFERENCES_RELATION    = NO"
-#        echo "SEPARATE_MEMBER_PAGES  = NO"
-    echo "VERBATIM_HEADERS       = NO"
-    echo "OUTPUT_DIRECTORY       = ${OUTPUT_PATH}"
-    for param in ${DXY_PARAM[*]}; do
-        echo "$param"
-    done
-  ) | doxygen -
-fi
-
-
-## == extreme lite mode == ##	
-if [ "$EXTREME_LITE" == "1" ]; then
-  info "Generation is running in $RED~~~ extreme lite mode ~~~$NOC"
-  (
-    echo "$CONFIG"
-    echo "INPUT = doc/doxygen/pages/"
-    echo "OUTPUT_DIRECTORY = ${OUTPUT_PATH}"
-    for param in ${DXY_PARAM[*]}; do
-        echo "$param"
-    done
-  ) | doxygen -
-fi
+    (
+      echo "$CONFIG"
+      echo ""
+  #        echo "SOURCE_BROWSER         = NO"
+      echo "INLINE_SOURCES         = NO"
+      echo "CALL_GRAPH             = NO"
+      echo "INLINE_INHERITED_MEMB  = NO"
+      echo "CLASS_DIAGRAMS         = NO"
+      echo "HAVE_DOT               = NO"
+      echo "REFERENCED_BY_RELATION = NO"
+      echo "REFERENCES_RELATION    = NO"
+  #        echo "SEPARATE_MEMBER_PAGES  = NO"
+      echo "VERBATIM_HEADERS       = NO"
+      echo "OUTPUT_DIRECTORY       = ${OUTPUT_PATH}"
+      for param in ${DXY_PARAM[*]}; do
+          echo "$param"
+      done
+    ) | doxygen -
+  fi
 
 
-## == normal mode == ##	
-if [ "$LITE" == "0" ] && [ "$EXTREME_LITE" == "0" ]; then
-    info "Generation is running in $GREEN~ normal mode ~$NOC (this could take several minutes)"
-
-#    (
-##        cat $CONFIG_FILE
-#        for line in $CONFIG; do
-#            echo "$line"
-#        done
-#        echo "OUTPUT_DIRECTORY = ${OUT}"
-#        for param in ${DXY_PARAM[*]}; do
-#            echo "$param"
-#        done
-#    ) | doxygen -
+  ## == extreme lite mode == ##
+  if [ "$EXTREME_LITE" == "1" ]; then
+    info "Generation is running in $RED~~~ extreme lite mode ~~~$NOC"
+    (
+      echo "$CONFIG"
+      echo "INPUT = doc/doxygen/pages/"
+      echo "OUTPUT_DIRECTORY = ${OUTPUT_PATH}"
+      for param in ${DXY_PARAM[*]}; do
+          echo "$param"
+      done
+    ) | doxygen -
+  fi
 
 
-  CONFIG="${CONFIG}"$'\n'"OUTPUT_DIRECTORY = ${OUTPUT_PATH}"
-  echo "$CONFIG" | doxygen -
+  ## == normal mode == ##
+  if [ "$LITE" == "0" ] && [ "$EXTREME_LITE" == "0" ]; then
+      info "Generation is running in $GREEN~ normal mode ~$NOC (this could take several minutes)"
+
+  #    (
+  ##        cat $CONFIG_FILE
+  #        for line in $CONFIG; do
+  #            echo "$line"
+  #        done
+  #        echo "OUTPUT_DIRECTORY = ${OUT}"
+  #        for param in ${DXY_PARAM[*]}; do
+  #            echo "$param"
+  #        done
+  #    ) | doxygen -
+
+
+    CONFIG="${CONFIG}"$'\n'"OUTPUT_DIRECTORY = ${OUTPUT_PATH}"
+    echo "$CONFIG" | doxygen -
+  fi
 fi
 
 ### Compile stylsheets### ==============================================================================================
@@ -239,9 +240,10 @@ fi
 sass $DOXY_ROOT/style/scss/main.scss $DOXY_ROOT/style/main.css
 
 ### Copy stylsheets & scripts ### ======================================================================================
-mkdir ${OUTPUT_PATH}/html/images/
-mkdir ${OUTPUT_PATH}/html/style/
-mkdir ${OUTPUT_PATH}/html/style/search/
+mkdir -p ${OUTPUT_PATH}/html/images/
+mkdir -p ${OUTPUT_PATH}/html/style/
+mkdir -p ${OUTPUT_PATH}/html/style/search/
+mkdir -p ${OUTPUT_PATH}/html/script/
 cp $DOXY_ROOT/images/* ${OUTPUT_PATH}/html/images/
 cp $DOXY_ROOT/style/*.css ${OUTPUT_PATH}/html/style/ > /dev/null
 cp $DOXY_ROOT/style/search/* ${OUTPUT_PATH}/html/style/search/
@@ -251,7 +253,7 @@ cp -r $DOXY_ROOT/script/* ${OUTPUT_PATH}/html/script/
 ### Print results ### ==================================================================================================
 info "Generation complete.\n"
 
-echo "${RED}#=== ${GREEN}Warnings and Errors${RED} =================================================================================#${NOC}";
+info "${RED}#=== ${GREEN}Warnings and Errors${RED} =================================================================================#${NOC}";
 if (! (cat $DOXY_ROOT/errors.txt | grep -v "resolve reference\|multiple use of section label")); then
   echo "[SUCCESS] No warnings or errors"
 fi

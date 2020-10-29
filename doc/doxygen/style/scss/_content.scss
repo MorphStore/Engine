@@ -11,7 +11,8 @@
         /*@extend %code;*/
     }
     
-    @extend %code_dark;
+    //@extend %code_dark;
+    @extend %code_bright;
 }
 
 %code_bright {
