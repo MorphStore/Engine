@@ -159,7 +159,7 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
     const size_t countValuesSmall = p_InCol->get_count_values();
     
     // ------------------------------------------------------------------------
-    // Record some data characteristics etc.
+    // Record the data characteristics of the small column
     // ------------------------------------------------------------------------
     
     MONITORING_ADD_INT_FOR(
@@ -170,6 +170,17 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
             "", data_properties(p_InCol),
             veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
+    
+    // ------------------------------------------------------------------------
+    // Record compressed size of the small column
+    // ------------------------------------------------------------------------
+    
+    auto comprColSmall = morph<t_vector_extension, t_format>(p_InCol);
+    MONITORING_ADD_INT_FOR(
+            "compressed size [byte]", comprColSmall->get_size_used_byte(),
+            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
+    );
+    delete comprColSmall;
     
     // ------------------------------------------------------------------------
     // Measure runtimes.
