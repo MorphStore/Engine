@@ -430,7 +430,7 @@ int main(int argc, char ** argv) {
     for(unsigned bw = 1; bw <= digits; bw++)
         generators.push_back(
                 {
-                    3,
+                    2,
                     new special_data_generator<std::uniform_int_distribution>(
                             std::uniform_int_distribution<uint64_t>(
                                     0, bitwidth_max<uint64_t>(bw)
