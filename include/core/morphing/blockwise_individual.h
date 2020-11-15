@@ -44,6 +44,39 @@ namespace morphstore {
     // Format
     // ************************************************************************
     
+    namespace blockwise_individual_helper {
+        /**
+         * @brief Determines the maximum size a block of `p_BlockSizeLog`
+         * logical data elements could have in any of the supported inner
+         * formats of `blockwise_individual_f`.
+         * 
+         * @param p_BlockSizeLog The number of data elements per block
+         * @return The maximum size of a block of p_BlockSizeLog logical data
+         * elements in any of the formats supported by `blockwise_individual_f`
+         */
+        template<class t_vector_extension>
+        size_t get_size_max_byte_single_block(size_t p_BlockSizeLog) {
+            using t_ve = t_vector_extension;
+            const size_t sizesMaxByteSingleBlock[] = {
+                uncompr_f::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_STATIC_VBP_F        (t_ve, 64)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_DYNAMIC_VBP_F       (t_ve)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_GROUP_SIMPLE_F      (t_ve)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_DELTA_DYNAMIC_VBP_F (t_ve)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_DELTA_GROUP_SIMPLE_F(t_ve)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_FOR_DYNAMIC_VBP_F   (t_ve)::get_size_max_byte(p_BlockSizeLog),
+                DEFAULT_FOR_GROUP_SIMPLE_F  (t_ve)::get_size_max_byte(p_BlockSizeLog),
+            };
+            const size_t countSupportedFormats =
+                    sizeof(sizesMaxByteSingleBlock) / sizeof(size_t);
+            const size_t sizeMaxByteSingleBlock = *std::max_element(
+                    sizesMaxByteSingleBlock,
+                    sizesMaxByteSingleBlock + countSupportedFormats
+            );
+            return sizeMaxByteSingleBlock;
+        }
+    }
+    
     /**
      * @brief A meta-format for using an individual format for each block of a
      * column.
@@ -104,32 +137,14 @@ namespace morphstore {
         BWI_STATIC_ASSERT_BLOCKSIZE(DEFAULT_FOR_DYNAMIC_VBP_F(t_ve))
         BWI_STATIC_ASSERT_BLOCKSIZE(DEFAULT_FOR_GROUP_SIMPLE_F(t_ve))
         #undef BWI_STATIC_ASSERT_BLOCKSIZE
-        
+
         static size_t get_size_max_byte(size_t p_CountValues) {
-            // Determine the maximum size a block of t_BlockSizeLog logical
-            // data elements could have in any of the supported inner formats.
-            const size_t sizesMaxByteSingleBlock[] = {
-                uncompr_f::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_STATIC_VBP_F        (t_ve, 64)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_DYNAMIC_VBP_F       (t_ve)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_GROUP_SIMPLE_F      (t_ve)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_DELTA_DYNAMIC_VBP_F (t_ve)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_DELTA_GROUP_SIMPLE_F(t_ve)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_FOR_DYNAMIC_VBP_F   (t_ve)::get_size_max_byte(t_BlockSizeLog),
-                DEFAULT_FOR_GROUP_SIMPLE_F  (t_ve)::get_size_max_byte(t_BlockSizeLog),
-            };
-            const size_t countSupportedFormats =
-                    sizeof(sizesMaxByteSingleBlock) / sizeof(size_t);
-            const size_t sizeMaxByteSingleBlock = *std::max_element(
-                    sizesMaxByteSingleBlock,
-                    sizesMaxByteSingleBlock + countSupportedFormats
-            );
-            
             return 
                     // number of blocks
                     p_CountValues / t_BlockSizeLog * (
-                            // maximum size of the payload of block
-                            sizeMaxByteSingleBlock +
+                            // maximum size a single block could have in any of
+                            // the supported inner formats
+                            blockwise_individual_helper::get_size_max_byte_single_block<t_ve>(t_BlockSizeLog) +
                             // size of the metadata and padding of
                             // blockwise_individual_f
                             t_ve::vector_helper_t::size_byte::value

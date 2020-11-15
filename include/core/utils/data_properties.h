@@ -17,10 +17,8 @@
 
 /**
  * @file data_properties.h
- * @brief A utility for determining some important data characteristics of a
- * column.
- * 
- * Note that this code is not tailored for efficiency.
+ * @brief Utilities for determining the characteristics of data in columns or
+ * buffers.
  */
 
 #ifndef MORPHSTORE_CORE_UTILS_DATA_PROPERTIES_H
@@ -29,6 +27,8 @@
 #include <core/morphing/format.h> // for uncompr_f
 #include <core/storage/column.h>
 #include <core/utils/math.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
 
 #include <limits>
 #include <stdexcept>
@@ -39,7 +39,14 @@
 namespace morphstore {
     
     /**
-     * @brief A container for important data characteristics of a column.
+     * @brief A container for important data characteristics of a column and
+     * a utility for determining these characteristics.
+     * 
+     * Note that this is not tailored for efficiency, but rather for
+     * determining a wide range of possibly interesting data characteristics
+     * straightforwardly. It is primarily meant for analyzing a whole column to
+     * output its characteristics for later use in external tools. Consider
+     * using one of the other utilities in this header, if you need efficiency.
      */
     class data_properties {
         uint64_t m_Min;
@@ -155,5 +162,46 @@ namespace morphstore {
             return m_IsUnique;
         }
     };
+    
+    /**
+     * @brief Determines the maximum bit width of a data element in the given
+     * uncompressed buffer.
+     * 
+     * @todo So far, this works only for a base type of `uint64_t`.
+     * @todo (Almost) the same functionality already exists in `dynamic_vbp_f`;
+     * we should merge them.
+     * 
+     * @param p_In The *uncompressed* input buffer
+     * @param p_CountLog The number of logical data elements in the input; must
+     * be a multiple of the number of data elements per vector.
+     * @return The maximum bit width of an input data element.
+     */
+    template<class t_vector_extension>
+    unsigned determine_max_bitwidth(
+            const typename t_vector_extension::base_t * p_In, size_t p_CountLog
+    ) {
+        using t_ve = t_vector_extension;
+        IMPORT_VECTOR_BOILER_PLATE(t_ve)
+        using namespace vectorlib;
+        
+        const base_t * const endIn = p_In + p_CountLog;
+        
+        // Calculate the pseudo-maximum via bitwise OR.
+        vector_t v = load<t_ve, iov::ALIGNED, vector_size_bit::value>(p_In);
+        p_In += vector_element_count::value;
+        while(p_In < endIn) {
+            v = bitwise_or<t_ve, vector_size_bit::value>(
+                    v, load<t_ve, iov::ALIGNED, vector_size_bit::value>(p_In)
+            );
+            p_In += vector_element_count::value;
+        }
+        base_t s = hor<t_ve, vector_base_t_granularity::value>::apply(v);
+        
+        // Calculate and return the bit width of the pseudo-maximum, which is
+        // always the same as that of the actual maximum.
+        // @todo This is only for 64-bit.
+        return effective_bitwidth(s);
+    }
+    
 }
 #endif //MORPHSTORE_CORE_UTILS_DATA_PROPERTIES_H
