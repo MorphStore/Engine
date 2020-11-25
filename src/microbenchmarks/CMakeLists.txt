@@ -95,24 +95,64 @@ if( BUILD_ALL OR BUILD_MICROBMS )
     )
     target_link_libraries( otf_morphing_example_1 PRIVATE "-ldl" )
 
-    add_executable( compression_data_benchmark_hist compression_data_benchmark.cpp )
-    target_compile_options( compression_data_benchmark_hist PRIVATE
+    # *************************************************************************
+    # compression_data_benchmark
+    # *************************************************************************
+    # The following 6 targets represent variants of the
+    # compression_data_benchmark. The variants result from the combinations of
+    # two macro constants:
+    # - COMPRESSION_DATA_BENCHMARK_DATA_SOURCE: 3 data sources (hist, distr,
+    #   datafile)
+    # - COMPRESSION_DATA_BENCHMARK_RUN: either executing the compression
+    #   algorithms (D, defined), or only analyzing the data characteristics (U,
+    #   undefined)
+    # See compression_data_benchmark.cpp for how these macro constants are used.
+
+    add_executable( compression_data_benchmark_hist_run compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_hist_run PRIVATE
                             -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=1
+                            -DCOMPRESSION_DATA_BENCHMARK_RUN
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( compression_data_benchmark_hist PRIVATE "-ldl" )
+    target_link_libraries( compression_data_benchmark_hist_run PRIVATE "-ldl" )
 
-    add_executable( compression_data_benchmark_distr compression_data_benchmark.cpp )
-    target_compile_options( compression_data_benchmark_distr PRIVATE
+    add_executable( compression_data_benchmark_hist_datach compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_hist_datach PRIVATE
+                            -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=1
+                            -UCOMPRESSION_DATA_BENCHMARK_RUN
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( compression_data_benchmark_hist_datach PRIVATE "-ldl" )
+
+    add_executable( compression_data_benchmark_distr_run compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_distr_run PRIVATE
                             -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=2
+                            -DCOMPRESSION_DATA_BENCHMARK_RUN
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( compression_data_benchmark_distr PRIVATE "-ldl" )
+    target_link_libraries( compression_data_benchmark_distr_run PRIVATE "-ldl" )
 
-    add_executable( compression_data_benchmark_datafile compression_data_benchmark.cpp )
-    target_compile_options( compression_data_benchmark_datafile PRIVATE
-                            -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=3
+    add_executable( compression_data_benchmark_distr_datach compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_distr_datach PRIVATE
+                            -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=2
+                            -UCOMPRESSION_DATA_BENCHMARK_RUN
                             #$<$<CONFIG:DEBUG>:-DDEBUG>
     )
-    target_link_libraries( compression_data_benchmark_datafile PRIVATE "-ldl" )
+    target_link_libraries( compression_data_benchmark_distr_datach PRIVATE "-ldl" )
+
+    add_executable( compression_data_benchmark_datafile_run compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_datafile_run PRIVATE
+                            -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=3
+                            -DCOMPRESSION_DATA_BENCHMARK_RUN
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( compression_data_benchmark_datafile_run PRIVATE "-ldl" )
+
+    add_executable( compression_data_benchmark_datafile_datach compression_data_benchmark.cpp )
+    target_compile_options( compression_data_benchmark_datafile_datach PRIVATE
+                            -DCOMPRESSION_DATA_BENCHMARK_DATA_SOURCE=3
+                            -UCOMPRESSION_DATA_BENCHMARK_RUN
+                            #$<$<CONFIG:DEBUG>:-DDEBUG>
+    )
+    target_link_libraries( compression_data_benchmark_datafile_datach PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_MICROBMS )

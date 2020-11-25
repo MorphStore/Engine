@@ -18,13 +18,35 @@
 /**
  * @file compression_data_benchmark.cpp
  * @brief Measures (de)compression runtimes on data sets with various data
- * characteristics.
+ * characteristics or simply analyzes the characteristics of the input data.
  * 
  * The output is produced as a CSV table on stdout.
+ * 
+ * What this microbenchmark actually does is controlled by two macro constants
+ * which are set in CMakeLists.txt depending on the target name.
+ * - COMPRESSION_DATA_BENCHMARK_DATA_SOURCE: Determines how the input data is
+ *   obtained. It can be
+ *   - generated to follow a given bit width histogram (DATA_SOURCE_HIST)
+ *   - generated using some random distributions (DATA_SOURCE_DISTR)
+ *   - loaded from a file (DATA_SOURCE_DATAFILE)
+ * - COMPRESSION_DATA_BENCHMARK_RUN:
+ *   - If defined: A couple of compression algorithms are run on the obtained
+ *     input data and their runtimes and achieved compressed sizes are
+ *     recorded.
+ *   - If not defined: Only the data characteristics of the obtained input data
+ *     are recorded.
+ *   - Usually, both variants should be executed. Their CSV outputs can be
+ *     joined on the columns ["settingGroup", "settingIdx", "countValuesSmall"].
  */
 
 #include <core/memory/mm_glob.h>
 #include <core/memory/noselfmanaging_helper.h>
+#include <core/storage/column.h>
+#include <core/storage/column_gen.h>
+#include <core/utils/basic_types.h>
+#include <core/utils/math.h>
+#include <core/utils/monitoring.h>
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
 #include <core/morphing/format.h>
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/group_simple.h>
@@ -33,15 +55,13 @@
 #include <core/morphing/uncompr.h>
 #include <core/morphing/format_names.h> // Must be included after all formats.
 #include <core/operators/general_vectorized/agg_sum_compr.h>
-#include <core/storage/column.h>
-#include <core/storage/column_gen.h>
-#include <core/utils/basic_types.h>
-#include <core/utils/data_properties.h>
-#include <core/utils/math.h>
 #include <core/utils/variant_executor.h>
 #include <vector/vector_extension_names.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#else
+#include <core/utils/data_properties.h>
+#endif
 
 #include <limits>
 #include <random>
@@ -59,6 +79,8 @@ using namespace vectorlib;
 #define DATA_SOURCE_HIST 1
 #define DATA_SOURCE_DISTR 2
 #define DATA_SOURCE_DATAFILE 3
+
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
 
 // ****************************************************************************
 // Variant of the morph-operator simulating in-cascade use
@@ -164,10 +186,6 @@ const std::tuple<const column<uncompr_f> *, const column<uncompr_f> *> measure_m
     
     MONITORING_ADD_INT_FOR(
             "countValuesSmall", countValuesSmall,
-            veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
-    );
-    MONITORING_ADD_DATAPROPERTIES_FOR(
-            "", data_properties(p_InCol),
             veName<t_vector_extension>, formatName<t_format>, p_CountValuesLarge, p_SettingGroup, p_SettingIdx, p_RepIdx, p_Bw
     );
     
@@ -306,6 +324,7 @@ std::vector<typename t_varex_t::variant_t> make_variants() {
     };
 }
 
+#endif
 
 // ****************************************************************************
 // Utilities for data generation.
@@ -367,6 +386,7 @@ int main(int argc, char ** argv) {
     
     // @todo Get rid of the duplication here.
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
     if(argc != 5) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -374,7 +394,17 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
+#else
+    if(argc != 3) {
+        std::cerr
+                << "Usage: " << argv[0]
+                << " <countValuesSmall INT> <bwWeightsFile STRING>" << std::endl
+                << "countValuesSmall must be a multiple of the number of data elements per vector." << std::endl;
+        exit(-1);
+    }
+#endif
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DISTR
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
     if(argc != 4) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -382,7 +412,17 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
+#else
+    if(argc != 2) {
+        std::cerr
+                << "Usage: " << argv[0]
+                << " <countValuesSmall INT>" << std::endl
+                << "countValuesSmall must be a multiple of the number of data elements per vector." << std::endl;
+        exit(-1);
+    }
+#endif
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
     if(argc != 5) {
         std::cerr
                 << "Usage: " << argv[0]
@@ -390,19 +430,36 @@ int main(int argc, char ** argv) {
                 << "countValuesLarge and countValuesSmall must be multiples of the number of data elements per vector." << std::endl;
         exit(-1);
     }
+#else
+    if(argc != 3) {
+        std::cerr
+                << "Usage: " << argv[0]
+                << " <countValuesSmall INT> <dataFile STRING>" << std::endl
+                << "countValuesSmall must be a multiple of the number of data elements per vector." << std::endl;
+        exit(-1);
+    }
+#endif
 #endif
     // @todo More validation of the arguments.
-    const size_t countValuesLarge = atoi(argv[1]);
-    const size_t countValuesSmall = atoi(argv[2]);
-    const int countRepetitions = atoi(argv[3]);
+    unsigned argIdx = 1;
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
+    const size_t countValuesLarge = atoi(argv[argIdx++]);
+#endif
+    const size_t countValuesSmall = atoi(argv[argIdx++]);
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
+    const int countRepetitions = atoi(argv[argIdx++]);
     if(countRepetitions < 1)
         throw std::runtime_error("the number of repetitions must be >= 1");
+#else
+    const int countRepetitions = 1;
+#endif
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
-    const std::string bwWeightsFile(argv[4]);
+    const std::string bwWeightsFile(argv[argIdx++]);
 #elif COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_DATAFILE
-    const std::string dataFile(argv[4]);
+    const std::string dataFile(argv[argIdx++]);
 #endif
     
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
     using varex_t = variant_executor_helper<2, 1, size_t, size_t, size_t, int, unsigned>::type
         ::for_variant_params<std::string, std::string>
         ::for_setting_params<>;
@@ -411,6 +468,7 @@ int main(int argc, char ** argv) {
             {"vector_extension", "format"},
             {}
     );
+#endif
     
     MSV_CXX_ATTRIBUTE_PPUNUSED
     const size_t digits = std::numeric_limits<uint64_t>::digits;
@@ -561,7 +619,11 @@ int main(int argc, char ** argv) {
                 settingIdx++;
                 std::cerr << "settingIdx: " << settingIdx << std::endl;
 
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
                 varex.print_datagen_started();
+#else
+                std::cerr << "generating input data column... ";
+#endif
 #if COMPRESSION_DATA_BENCHMARK_DATA_SOURCE == DATA_SOURCE_HIST
                 auto origCol = generate_with_bitwidth_histogram(
                         countValuesSmall, bwHist, isSorted, true
@@ -587,6 +649,7 @@ int main(int argc, char ** argv) {
                     pseudoMax |= origData[i];
                 const unsigned maxBw = effective_bitwidth(pseudoMax);
 #endif
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
                 varex.print_datagen_done();
 
                 std::vector<varex_t::variant_t> variants;
@@ -669,6 +732,27 @@ int main(int argc, char ** argv) {
                         repIdx, 
                         maxBw
                 );
+#else
+                std::cerr << "done.";
+            
+                MONITORING_CREATE_MONITOR(
+                        MONITORING_MAKE_MONITOR(settingGroup, settingIdx),
+                        MONITORING_KEY_IDENTS("settingGroup", "settingIdx")
+                );
+
+                // Parameters of the data generation.
+                MONITORING_ADD_INT_FOR("countValuesSmall", countValuesSmall, settingGroup, settingIdx);
+
+                // The maximum bit widths as used for static_vbp_f.
+                MONITORING_ADD_INT_FOR("bitwidth", maxBw, settingGroup, settingIdx);
+
+                // Data characteristics of the (small) input column.
+                std::cerr << std::endl << "analyzing input column... ";
+                MONITORING_ADD_DATAPROPERTIES_FOR(
+                        "", data_properties(origCol), settingGroup, settingIdx
+                );
+                std::cerr << "done." << std::endl;
+#endif
 
                 delete origCol;
             }
@@ -680,7 +764,11 @@ int main(int argc, char ** argv) {
         delete std::get<1>(genInfo);
 #endif
     
+#ifdef COMPRESSION_DATA_BENCHMARK_RUN
     varex.done();
-    
     return !varex.good();
+#else
+    MONITORING_PRINT_MONITORS(monitorCsvLog);
+    return 0;
+#endif
 }
