@@ -56,8 +56,8 @@ using namespace vectorlib;
       ) {
          vector_mask_t resultMaskEqual    = 0;
          
-            resultMaskEqual         = vectorlib::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
-            p_State.m_MaskGreater   = vectorlib::greater<VectorExtension>::apply(p_Data1Vector, p_Data2Vector);// vec2<vec1?
+            resultMaskEqual         = vectorlib::equal_t<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
+            p_State.m_MaskGreater   = vectorlib::greater_t<VectorExtension>::apply(p_Data1Vector, p_Data2Vector);// vec2<vec1?
             
       
          return resultMaskEqual;
@@ -124,8 +124,8 @@ using namespace vectorlib;
                 vectorlib::compressstore<VectorExtension,vectorlib::iov::UNALIGNED,vector_base_t_granularity::value>(p_OutPtr,data2Vector,p_State.m_MaskGreater);
                 //p_Data2Ptr += __builtin_popcountl(p_State.m_MaskGreater); 
                 //p_OutPtr += __builtin_popcountl(p_State.m_MaskGreater);
-                p_Data2Ptr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskGreater); 
-                p_OutPtr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskGreater);
+                p_Data2Ptr += vectorlib::count_matches_t<VectorExtension>::apply(p_State.m_MaskGreater); 
+                p_OutPtr += vectorlib::count_matches_t<VectorExtension>::apply(p_State.m_MaskGreater);
                 data2Vector = vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_Data2Ptr);
                               
             }

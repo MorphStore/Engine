@@ -94,7 +94,7 @@ namespace morphstore {
 #endif
          if(mask)
             p_State.m_Wit.write(p_State.m_Pos, mask);
-         p_State.m_Pos = vectorlib::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+         p_State.m_Pos = vectorlib::add_t<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
       }
    };
 

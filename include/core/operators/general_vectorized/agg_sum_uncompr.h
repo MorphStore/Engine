@@ -65,7 +65,7 @@ namespace morphstore {
          vector_t const & p_DataVector,
          state_t & p_State
       ) {
-         p_State.resultVec = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(
+         p_State.resultVec = vectorlib::add_t<VectorExtension, vector_base_t_granularity::value>::apply(
             p_State.resultVec, p_DataVector
          );
       }
@@ -73,7 +73,7 @@ namespace morphstore {
          typename agg_sum_processing_unit<VectorExtension>::state_t & p_State
       ) {
           
-         return vectorlib::hadd<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
+         return vectorlib::hadd_t<VectorExtension,vector_base_t_granularity::value>::apply( p_State.resultVec );
       }
    };
 

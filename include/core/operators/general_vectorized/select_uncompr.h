@@ -6,8 +6,9 @@
 #define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_UNCOMPR_H
 
 #include <core/utils/preprocessor.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
+#include <header/extension_scalar.h>
 
 namespace morphstore {
 
@@ -51,10 +52,10 @@ namespace morphstore {
                   predicateVector
                );
             vectorlib::compressstore<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
-            positionVector = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
+            positionVector = vectorlib::add_t<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
 
             //p_OutPtr += __builtin_popcount( resultMask );
-            p_OutPtr += vectorlib::count_matches<VectorExtension>::apply( resultMask );
+            p_OutPtr += vectorlib::count_matches_t<VectorExtension>::apply( resultMask );
             p_DataPtr += vector_element_count::value;
          }
       }

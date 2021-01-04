@@ -90,8 +90,8 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
                     sequence = vectorlib::set_sequence<VectorExtension,vector_base_t_granularity::value>(offset+step,step);
                     //data2Vector = vectorlib::gather<VectorExtension, vector_base_t_granularity::value,vector_base_t_granularity::value/8>(p_Data2Ptr,sequence);
                     data2Vector = p_State.m_Rra.get(sequence);
-                    m_MaskEqual      = vectorlib::equal<VectorExtension>::apply(data2Vector, Data1Vector);
-                    m_MaskLess   = vectorlib::less<VectorExtension>::apply(data2Vector, Data1Vector);
+                    m_MaskEqual      = vectorlib::equal_t<VectorExtension>::apply(data2Vector, Data1Vector);
+                    m_MaskLess   = vectorlib::less_t<VectorExtension>::apply(data2Vector, Data1Vector);
 
                  if (m_MaskEqual==0) {//No matches
 
@@ -104,7 +104,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
 
                     else {
 
-                        match_helper=vectorlib::count_matches<VectorExtension>::apply(m_MaskLess);
+                        match_helper=vectorlib::count_matches_t<VectorExtension>::apply(m_MaskLess);
 
                         ad=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence, match_helper-1);
                         
@@ -132,7 +132,7 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
                     //p_State.m_Wit.write(p_Data1Vector, m_MaskEqual);
                     p_State.m_Wit.write(Data1Vector, 1);
 
-                    match_helper=vectorlib::count_matches<VectorExtension>::apply(m_MaskLess);
+                    match_helper=vectorlib::count_matches_t<VectorExtension>::apply(m_MaskLess);
                     if (match_helper > 0){
                         ad=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence,match_helper-1);
                         offset=(ad+1);
@@ -154,8 +154,8 @@ template<class VectorExtension, class t_out_data_f, class t_in_data_f>
                  // std::cout << "\t search in scalar rest\n";
                  sequence = vectorlib::set_sequence<VectorExtension,vector_base_t_granularity::value>(offset,1);
                  data2Vector = p_State.m_Rra.get(sequence); 
-                 m_MaskEqual      = vectorlib::equal<VectorExtension>::apply(data2Vector, Data1Vector);
-                 m_MaskLess   = vectorlib::less<VectorExtension>::apply(data2Vector, Data1Vector);
+                 m_MaskEqual      = vectorlib::equal_t<VectorExtension>::apply(data2Vector, Data1Vector);
+                 m_MaskLess   = vectorlib::less_t<VectorExtension>::apply(data2Vector, Data1Vector);
                  
                  if (m_MaskEqual!=0) {
                      //p_State.m_Wit.write(p_Data1Vector, m_MaskEqual);

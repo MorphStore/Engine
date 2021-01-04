@@ -29,8 +29,8 @@
 #include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
 
 #include <iostream>
 #include <tuple>
@@ -237,7 +237,7 @@ public:
                         t_ve, uncompr_f, t_in_data_f
                 >::apply(
                         load<
-                                t_ve, iov::ALIGNED, vector_size_bit::value
+                                t_ve, iov::ALIGNED, vector_base_t_granularity::value
                         >(tmpIn),
                         witUncomprState
                 );

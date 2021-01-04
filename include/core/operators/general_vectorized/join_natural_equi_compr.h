@@ -57,7 +57,7 @@ namespace morphstore {
             p_State.m_BuildPos,
             p_State.m_StrategyState
          );
-         p_State.m_BuildPos = add< VectorExtension >::apply( p_State.m_BuildPos, p_State.m_Inc );
+         p_State.m_BuildPos = add_t< VectorExtension >::apply( p_State.m_BuildPos, p_State.m_Inc );
       }
    };
 
@@ -108,7 +108,7 @@ namespace morphstore {
             );
          p_State.m_WitOutLData.write(lookupResultValuesVector, lookupResultMask, hitResultCount);
          p_State.m_WitOutRData.write(p_State.m_ProbePos, lookupResultMask, hitResultCount);
-         p_State.m_ProbePos = add< VectorExtension >::apply( p_State.m_ProbePos, p_State.m_Inc );
+         p_State.m_ProbePos = add_t< VectorExtension >::apply( p_State.m_ProbePos, p_State.m_Inc );
       }
    };
 

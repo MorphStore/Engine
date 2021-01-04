@@ -26,8 +26,8 @@
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/utils/math.h>
 #include <core/utils/basic_types.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
 
 #include <tuple>
 
@@ -191,7 +191,7 @@ struct decompress_and_process_batch {
             typename t_op_vector<
                     t_vector_extension, t_extra_args ...
             >::state_t & p_State
-    ) = delete;
+    );
 };
 
 template<class t_vector_extension, class t_format>

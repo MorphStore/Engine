@@ -44,8 +44,8 @@
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
 #include <core/utils/basic_types.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
 
 #include <tuple>
 
@@ -70,7 +70,6 @@ namespace morphstore {
         
         uint8_t * m_Out;
         const uint8_t * const m_InitOut;
-    public:
         // The largest multiple of the format's block size which is not smaller
         // than 2048 logical data elements respectively 16ki bytes of
         // uncompressed data.
@@ -78,7 +77,6 @@ namespace morphstore {
         static const size_t m_CountBuffer = round_up_to_multiple(
                 t_format::m_BlockSize, 2048
         );
-    private:
         // @todo We could also align it to a cache line.
         MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_StartBuffer[
                 m_CountBuffer + vector_element_count::value - 1
@@ -252,7 +250,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vectorlib::count_matches<t_ve>::apply(p_Mask)
+                    vectorlib::count_matches_t<t_ve>::apply(p_Mask)
             );
         }
     };

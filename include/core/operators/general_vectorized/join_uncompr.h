@@ -83,7 +83,7 @@ namespace morphstore {
                p_OutPosCol, positionVector, lookupResultMask);
             p_OutPosCol += hitResultCount;
             resultCount += hitResultCount;
-            positionVector = add< VectorExtension >::apply( positionVector, incrementVector );
+            positionVector = add_t< VectorExtension >::apply( positionVector, incrementVector );
             p_InProbeDataPtr += vector_element_count::value;
             hitResultCount = 0;
             lookupResultMask = 0;
@@ -164,7 +164,7 @@ namespace morphstore {
                positionVector,
                state );
             p_InBuildDataPtr += vector_element_count::value;
-            positionVector = add< VectorExtension >::apply( positionVector, incrementVector );
+            positionVector = add_t< VectorExtension >::apply( positionVector, incrementVector );
          }
       }
    };
@@ -207,7 +207,7 @@ namespace morphstore {
             p_OutPosRCol += hitResultCount;
             p_OutPosLCol += hitResultCount;
             resultCount += hitResultCount;
-            positionVector = add< VectorExtension >::apply( positionVector, incrementVector );
+            positionVector = add_t< VectorExtension >::apply( positionVector, incrementVector );
             p_InProbeDataPtr += vector_element_count::value;
             hitResultCount = 0;
             lookupResultMask = 0;

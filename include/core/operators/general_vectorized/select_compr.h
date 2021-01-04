@@ -31,8 +31,8 @@
 #include <core/morphing/write_iterator.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
 
 #include <tuple>
 
@@ -83,9 +83,11 @@ struct select_processing_unit_wit {
 #else
         vector_mask_t mask = t_compare::apply(p_Data, p_State.m_Predicate);
 #endif
-        if(mask)
-            p_State.m_Wit.write(p_State.m_Pos, mask);
-        p_State.m_Pos = vectorlib::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+
+
+  if (vectorlib::is_zero<t_ve>(mask,vector_element_count::value))
+        p_State.m_Wit.write(p_State.m_Pos, mask);
+        p_State.m_Pos = vectorlib::add_t<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
     }
 };
     

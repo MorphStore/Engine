@@ -41,8 +41,8 @@ using namespace vectorlib;
       ) {
          vector_mask_t resultMaskEqual    = 0;
          
-            resultMaskEqual      = vectorlib::equal<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
-            p_State.m_MaskLess   = vectorlib::less<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
+            resultMaskEqual      = vectorlib::equal_t<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);
+            p_State.m_MaskLess   = vectorlib::less_t<VectorExtension>::apply(p_Data2Vector, p_Data1Vector);// vec2<vec1?
             
       
          return resultMaskEqual;
@@ -110,7 +110,7 @@ using namespace vectorlib;
                     }
 
                     else {
-                        match_helper=vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
+                        match_helper=vectorlib::count_matches_t<VectorExtension>::apply(p_State.m_MaskLess);
 
                         ad=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence, match_helper-1);
    
@@ -130,7 +130,7 @@ using namespace vectorlib;
                     *p_OutPtr=*p_Data1Ptr;
                     p_OutPtr++;
 
-                    match_helper=vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
+                    match_helper=vectorlib::count_matches_t<VectorExtension>::apply(p_State.m_MaskLess);
                       if (match_helper > 0){
                         ad=vectorlib::extract_value<VectorExtension,vector_base_t_granularity::value>(sequence,match_helper-1);
                         p_Data2Ptr+=(ad+1);
@@ -188,7 +188,7 @@ using namespace vectorlib;
          
          vector_t data2Vector =vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_Data2Ptr);
          
-         vector_mask_t full_hit = vectorlib::equal<VectorExtension>::apply(data1Vector, data1Vector);
+         vector_mask_t full_hit = vectorlib::equal_t<VectorExtension>::apply(data1Vector, data1Vector);
          
          while(p_Data2Ptr < endInPosR && p_Data1Ptr < endInPosL){
             
@@ -219,7 +219,7 @@ using namespace vectorlib;
                 }else{
                     p_Data1Ptr++;
                     data1Vector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(*p_Data1Ptr);
-                    p_Data2Ptr += vectorlib::count_matches<VectorExtension>::apply(p_State.m_MaskLess);
+                    p_Data2Ptr += vectorlib::count_matches_t<VectorExtension>::apply(p_State.m_MaskLess);
                     data2Vector = vectorlib::load<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(
                        p_Data2Ptr
                     );

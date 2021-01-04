@@ -92,7 +92,7 @@ namespace morphstore {
                p_State.m_StrategyState
             );
          p_State.m_WitOutData.write(p_State.m_Pos, lookupResultMask, hitResultCount);
-         p_State.m_Pos = add< VectorExtension >::apply( p_State.m_Pos, p_State.m_Inc );
+         p_State.m_Pos = add_t< VectorExtension >::apply( p_State.m_Pos, p_State.m_Inc );
       }
    };
 

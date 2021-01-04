@@ -29,12 +29,15 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/math.h>
 #include <core/utils/preprocessor.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
+
 
 #include <tuple>
 
 #include <cstdint>
+
+// #include <iostream>
 
 namespace morphstore {
     
@@ -64,14 +67,51 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
         
+                
+        template<typename T = t_ve, typename std::enable_if<!(T::is_scalable::value), T>::type* = nullptr >
         static void apply(
                 const uint8_t * & p_In8,
                 size_t p_CountInLog,
                 typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
         ) {
-            const base_t * inBase = reinterpret_cast<const base_t *>(p_In8);
+            base_t * inBase = const_cast<base_t *>(reinterpret_cast<const base_t *>(p_In8));
 
             for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        vectorlib::load<
+                                t_ve,
+                                vectorlib::iov::ALIGNED,
+                                vector_base_t_granularity::value
+                        >(inBase + i,vector_base_t_granularity::value),
+                        p_State
+                );
+            
+            p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
+        }
+
+/* Specialization for scalable vector lengths
+*/
+        template<typename T = t_ve, typename std::enable_if<(T::is_scalable::value), T>::type* = nullptr >
+        static void apply(
+                const uint8_t * & p_In8,
+                size_t p_CountInLog,
+                typename t_op_vector<t_ve, t_extra_args ...>::state_t & p_State
+        ) {
+            base_t * inBase = const_cast<base_t*>(reinterpret_cast<const base_t *>(p_In8));
+
+
+            if(p_CountInLog > 0 && p_CountInLog < vector_element_count::value){
+                t_op_vector<t_ve, t_extra_args ...>::apply(
+                        vectorlib::load<
+                                t_ve,
+                                vectorlib::iov::ALIGNED,
+                                vector_base_t_granularity::value
+                        >(inBase, p_CountInLog),
+                        p_State/*, p_CountInLog*/
+                );
+            }
+            else{
+                for(size_t i = 0; i < p_CountInLog; i += vector_element_count::value)
                 t_op_vector<t_ve, t_extra_args ...>::apply(
                         vectorlib::load<
                                 t_ve,
@@ -81,13 +121,19 @@ namespace morphstore {
                         p_State
                 );
             
+            }
             p_In8 = reinterpret_cast<const uint8_t *>(inBase + p_CountInLog);
+
         }
     };
+
+
+
 
     // ------------------------------------------------------------------------
     // Random read
     // ------------------------------------------------------------------------
+
 
     template<class t_vector_extension>
     class random_read_access<t_vector_extension, uncompr_f> {
@@ -108,9 +154,20 @@ namespace morphstore {
         vector_t get(const vector_t & p_Positions) {
             return vectorlib::gather<
                     t_ve,
+                    vectorlib::iov::UNALIGNED,
+                    sizeof(base_t)*8
+            >(const_cast<base_t *>(m_Data), p_Positions);
+        }
+
+
+// Override for scalable vector lengths
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        vector_t get(const vector_t & p_Positions, int element_count) {
+            return vectorlib::gather<
+                    t_ve,
                     vector_base_t_granularity::value,
                     sizeof(base_t)
-            >(m_Data, p_Positions);
+            >(m_Data, p_Positions, element_count);
         }
     };
     
@@ -188,7 +245,7 @@ namespace morphstore {
             write(
                     p_Data,
                     p_Mask,
-                    vectorlib::count_matches<t_vector_extension>::apply(p_Mask)
+                    vectorlib::count_matches<t_vector_extension,vector_base_t_granularity::value>(p_Mask)
             );
         }
     };
@@ -217,6 +274,16 @@ namespace morphstore {
                     vector_base_t_granularity::value
             >(this->m_OutBase, p_Data);
             this->m_OutBase += vector_element_count::value;
+        }
+
+        // Support for scalable vector lengths
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(vector_t p_Data, int element_count) {
+            vectorlib::store<
+                    t_vector_extension,
+                    vectorlib::iov::ALIGNED,
+                    vector_base_t_granularity::value
+            >(this->m_OutBase, p_Data, element_count);
+            this->m_OutBase += element_count;
         }
     };
     

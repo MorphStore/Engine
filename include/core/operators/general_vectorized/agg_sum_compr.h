@@ -34,8 +34,9 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
+#include <header/extension_scalar.h>
 #include <cstdint>
 
 namespace morphstore {
@@ -59,7 +60,7 @@ namespace morphstore {
          vector_t const & p_DataVector,
          state_t        & p_State
       ) {
-         p_State.m_Aggregate = add< VectorExtension, vector_base_t_granularity::value >::apply(
+         p_State.m_Aggregate = add_t< VectorExtension, vector_base_t_granularity::value >::apply(
             p_State.m_Aggregate, p_DataVector
          );
       }
@@ -67,7 +68,7 @@ namespace morphstore {
       static base_t finalize(
          state_t        & p_State
       ) {
-         return hadd< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate );
+         return hadd_t< VectorExtension, vector_base_t_granularity::value >::apply( p_State.m_Aggregate );
       }
    };
 

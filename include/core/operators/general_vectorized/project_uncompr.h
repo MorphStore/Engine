@@ -7,8 +7,8 @@
 
 #include <core/utils/preprocessor.h>
 
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <header/vector_extension_structs.h>
+#include <header/vector_primitives.h>
 
 namespace morphstore {
 
