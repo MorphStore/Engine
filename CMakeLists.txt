@@ -1,7 +1,7 @@
 cmake_minimum_required( VERSION 3.10 )
 project( MorphStore )
 
-set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_STANDARD 20 )
 
 macro(morph_flag)
 	add_definitions(${ARGN})
@@ -102,6 +102,7 @@ morph_flag(-Wno-ignored-attributes)
 morph_flag(-Wno-comment)
 morph_flag(-fstack-protector-all)
 morph_flag(-fno-tree-vectorize)
+morph_flag(-fconcepts)
 
 ########### <Checking Defines
 set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
@@ -253,6 +254,7 @@ if(retValVBPRoutineGen EQUAL "1")
 endif()
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
+include_directories(${PROJECT_SOURCE_DIR}/include/abridge)
 
 
 if( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
@@ -262,7 +264,7 @@ endif( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTest has been enabled" )
 	enable_testing()
-  if ( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )
+  if ( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY OR CTEST_VIRTUAL )
       add_subdirectory( test )
-  endif( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY )
+  endif( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY OR CTEST_VIRTUAL )
 endif( RUN_CTESTS )

@@ -1,0 +1,7 @@
+add_subdirectory(memory)
+add_subdirectory(morphing)
+add_subdirectory(operators)
+add_subdirectory(persistence)
+add_subdirectory(storage)
+add_subdirectory(utils)
+add_subdirectory(virtual)
