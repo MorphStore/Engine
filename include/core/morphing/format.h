@@ -23,6 +23,8 @@
 #ifndef MORPHSTORE_CORE_MORPHING_FORMAT_H
 #define MORPHSTORE_CORE_MORPHING_FORMAT_H
 
+#include "interface/core/morphing/IFormat.h"
+
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/utils/math.h>
 #include <core/utils/basic_types.h>
@@ -68,12 +70,15 @@ struct representation {
     static const size_t m_BlockSize;
 };
 
-/**
- * @brief The base class of all format implementations.
- */
-struct format : public representation {
-    //
-};
+
+
+
+    /**
+     * @brief The base class of all format implementations.
+     */
+    struct format : public representation {
+        //
+    };
 
 /**
  * @brief The base class of all layout implementations.
