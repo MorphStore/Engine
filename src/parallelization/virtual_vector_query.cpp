@@ -217,7 +217,7 @@ int main( void ) {
     /// Test with 64bit vector
     #if VECTOR_BITSIZE <= 64
     if constexpr(ve::vector_helper_t::size_bit::value <= 64) {
-    	using virt = vv<v64<uint64_t>, ve>;
+    	using virt = vv_old<v64<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -260,7 +260,7 @@ int main( void ) {
     
     #if VECTOR_BITSIZE <= 128
     if(ve::vector_helper_t::size_bit::value <= 128) {
-    	using virt = vv<v128<uint64_t>, ve>;
+    	using virt = vv_old<v128<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -296,7 +296,7 @@ int main( void ) {
 
     #if VECTOR_BITSIZE <= 256
     if(ve::vector_helper_t::size_bit::value <= 256) {
-    	using virt = vv<v256<uint64_t>, ve>;
+    	using virt = vv_old<v256<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -330,7 +330,7 @@ int main( void ) {
     #endif
 
     if(ve::vector_helper_t::size_bit::value <= 512) {
-    	using virt = vv<v512<uint64_t>, ve>;
+    	using virt = vv_old<v512<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -364,7 +364,7 @@ int main( void ) {
 
 
     if(ve::vector_helper_t::size_bit::value <= 1024) {
-    	using virt = vv<v1024<uint64_t>, ve>;
+    	using virt = vv_old<v1024<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -398,7 +398,7 @@ int main( void ) {
 
 
     if(ve::vector_helper_t::size_bit::value <= 2048) {
-    	using virt = vv<v2048<uint64_t>, ve>;
+    	using virt = vv_old<v2048<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -432,7 +432,7 @@ int main( void ) {
 
 
     if(ve::vector_helper_t::size_bit::value <= 4096) {
-    	using virt = vv<v4096<uint64_t>, ve>;
+    	using virt = vv_old<v4096<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -466,7 +466,7 @@ int main( void ) {
 
 
     if(ve::vector_helper_t::size_bit::value <= 8192) {
-    	using virt = vv<v8192<uint64_t>, ve>;
+    	using virt = vv_old<v8192<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);
@@ -500,7 +500,7 @@ int main( void ) {
 
 
     if(ve::vector_helper_t::size_bit::value <= 16384) {
-    	using virt = vv<v16384<uint64_t>, ve>;
+    	using virt = vv_old<v16384<uint64_t>, ve>;
     	Monitor mon;
 		for (int i = 0; i < RUNS; ++i) {
 			mon.start(MTask::Runtime);

@@ -62,7 +62,7 @@ namespace morphstore {
     
     
     template< class TVirtualVectorView, class TVectorExtension >
-    struct project_core<vv<TVirtualVectorView, TVectorExtension>> {
+    struct project_core<vv_old<TVirtualVectorView, TVectorExtension>> {
         using t_vector_extension = TVectorExtension;
         IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
         
@@ -98,8 +98,8 @@ namespace morphstore {
     
     
     template< class TVirtualVectorView, class TVectorExtension >
-    struct project_batch<vv<TVirtualVectorView, TVectorExtension>> {
-        using t_vector_extension = vv<TVirtualVectorView, TVectorExtension>;
+    struct project_batch<vv_old<TVirtualVectorView, TVectorExtension>> {
+        using t_vector_extension = vv_old<TVirtualVectorView, TVectorExtension>;
         IMPORT_VECTOR_BOILER_PLATE(t_vector_extension)
         
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -158,8 +158,8 @@ namespace morphstore {
     
     
     template< class TVirtualVectorView, class TVectorExtension >
-    struct project_t<vv<TVirtualVectorView, TVectorExtension>, uncompr_f, uncompr_f, uncompr_f> {
-        using TVE = vv<TVirtualVectorView, TVectorExtension>;
+    struct project_t<vv_old<TVirtualVectorView, TVectorExtension>, uncompr_f, uncompr_f, uncompr_f> {
+        using TVE = vv_old<TVirtualVectorView, TVectorExtension>;
         IMPORT_VECTOR_BOILER_PLATE(TVE)
         
         MSV_CXX_ATTRIBUTE_FORCE_INLINE

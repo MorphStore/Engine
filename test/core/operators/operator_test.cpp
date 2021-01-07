@@ -317,25 +317,25 @@ int main( void ) {
     /// list of all test cases
     std::vector<std::pair<std::string, project_operator_t>> project_operators {
       {"Scalar<64>", project<scalar<v64<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>},
-      {"vv<1024, Scalar<64>>", project<vv< v1024<uint64_t>, scalar<v64<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
+      {"vv<1024, Scalar<64>>", project<vv_old<v1024<uint64_t>, scalar<v64<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
       
       #ifdef SSE
       {"SSE<128>", project<sse<v128<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>},
-      {"vv<1024, SSE<128>>", project<vv< v1024<uint64_t>, sse<v128<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
+      {"vv<1024, SSE<128>>", project<vv_old<v1024<uint64_t>, sse<v128<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
       #else
       {"SSE<128>", nullptr}
       #endif
       
       #ifdef AVXTWO
       {"AVX2<256>", project<avx2<v256<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>},
-      {"vv<1024, AVX2<256>>", project<vv< v1024<uint64_t>, avx2<v256<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
+      {"vv<1024, AVX2<256>>", project<vv_old<v1024<uint64_t>, avx2<v256<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>},
       #else
       {"AVX2<256>", nullptr},
       #endif
      
       #ifdef AVX512
       {"AVX512<512>", project<avx512<v512<uint64_t>>, uncompr_f, uncompr_f, uncompr_f>},
-      {"vv<1024, AVX512<512>>", project<vv< v1024<uint64_t>, avx512<v512<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>}
+      {"vv<1024, AVX512<512>>", project<vv_old<v1024<uint64_t>, avx512<v512<uint64_t>> >, uncompr_f, uncompr_f, uncompr_f>}
       #else
       {"AVX512<512>", nullptr}
       #endif

@@ -25,6 +25,9 @@
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+
+#include <core/virtual/partitioning.h>
+
 #include <type_traits>
 #include <thread>
 #include <iostream>
@@ -36,8 +39,8 @@ namespace morphstore {
    
 	
     template<class TVirtualVectorView, class TVectorExtension>
-	struct agg_sum_processing_unit<vv<TVirtualVectorView, TVectorExtension>> {
-   	    using TVVE = vv<TVirtualVectorView, TVectorExtension>;
+	struct agg_sum_processing_unit<vv_old<TVirtualVectorView, TVectorExtension>> {
+   	    using TVVE = vv_old<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVVE)
 		
 		struct state_t {
@@ -63,8 +66,8 @@ namespace morphstore {
    };
 
     template<class TVirtualVectorView, class TVectorExtension>
-	struct agg_sum_batch<vv<TVirtualVectorView, TVectorExtension>> {
-   	    using TVVE = vv<TVirtualVectorView, TVectorExtension>;
+	struct agg_sum_batch<vv_old<TVirtualVectorView, TVectorExtension>> {
+   	    using TVVE = vv_old<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -177,7 +180,99 @@ namespace morphstore {
 //		    return outDataCol;
 //		}
 //    };
-   
+
+
+    template<class TVectorBuilder>
+	struct agg_sum_batch<vv<TVectorBuilder>> {
+   	    using TVVE = vv<TVectorBuilder>;
+		using base_t = typename TVVE::base_t;
+  
+		MSV_CXX_ATTRIBUTE_FORCE_INLINE
+		static base_t
+		apply(
+		  base_t const *& in_dataPtr,
+		  size_t const virtualVectorCnt,
+		  MSV_CXX_ATTRIBUTE_PPUNUSED
+		  typename agg_sum_processing_unit<TVVE>::state_t &p_State
+		) {
+		    /// @todo partitioning input
+		    std::vector<base_t> * input_partitioned
+		      = virtuallib::logical_partitioning<column<uncompr_f>,base_t>
+		        ::apply(in_dataPtr, TVVE::vectorBuilder::cvalue::value);
+		    /// @todo execute operator core concurrently
+		    
+		    /// @todo combine results
+		    
+		/*
+			/// shortcut state type of physical processing style
+			using state_t = typename agg_sum_processing_unit<TVectorExtension>::state_t;
+			
+			/// calculate degree of parallelization: size of virtual vector / size of physical vector
+			/// minimum = 1
+			const uint16_t threadCnt
+			  = std::max(vector_size_bit::value / TVectorExtension::vector_helper_t::size_bit::value, 1);
+			uint64_t vectorCount
+			  = virtualVectorCnt * vector_element_count::value / TVectorExtension::vector_helper_t::element_count::value;
+			
+//			std::cout << "Thread count: " << threadCnt << std::endl;
+//			std::cout << "virtual vector count: " << virtualVectorCnt << std::endl;
+			
+			/// thread container
+			std::thread * threads[threadCnt];
+			
+			/// states // one for each pipeline
+			state_t p_States[threadCnt];
+			
+			/// step size // vector elements per pipeline
+			size_t vectorsPerThread = vectorCount / threadCnt + ((vectorCount % threadCnt > 0) ? 1 : 0);
+			
+			/// This function is used to parallelize the load and processing step of this operator.
+			/// To ensure disjoint input data for each thread a range (offset + end) is hand over.
+			auto lambda =
+				[] (const size_t begin, const size_t end, state_t * p_States, const base_t * p_DataPtr, const uint16_t pipe) {
+					for(size_t i = begin; i < end; ++i) {
+						typename TVectorExtension::vector_t dataVector =
+							vectorlib::load<TVectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>
+								( p_DataPtr + (i * TVectorExtension::vector_helper_t::element_count::value) );
+						agg_sum_processing_unit<TVectorExtension>::apply(dataVector, p_States[pipe]);
+					}
+				};
+			
+			/// init threads
+			for(uint16_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
+				size_t begin = threadIdx * vectorsPerThread;
+				size_t end = (threadIdx + 1) * vectorsPerThread;
+				if(end > vectorCount)
+					end = vectorCount;
+
+				threads[threadIdx] = new std::thread(
+					/// lambda function
+					lambda,
+					/// parameters
+					begin, end, p_States, in_dataPtr, threadIdx
+				);
+			}
+
+			/// wait for threads to finish
+			for(uint16_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
+				threads[threadIdx]->join();
+				delete threads[threadIdx];
+			}
+
+			/// aggregate results of all pipelines
+			base_t result = agg_sum_processing_unit<TVectorExtension>::finalize(p_States[0]);
+			for(uint16_t threadIdx = 1; threadIdx < threadCnt; ++threadIdx){
+				result += agg_sum_processing_unit<TVectorExtension>::finalize(p_States[threadIdx]);
+			}
+			
+			in_dataPtr += virtualVectorCnt * vector_element_count::value;
+			
+			return result;
+		*/
+		}
+	};
+
+
  
 } /// namespace morphstore
 

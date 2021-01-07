@@ -30,6 +30,8 @@
 #include <core/morphing/format.h>
 #include <vector>
 
+#include <core/virtual/partitioning.h>
+
 
 namespace morphstore {
 	using namespace vectorlib;
@@ -92,8 +94,8 @@ namespace morphstore {
 	
 	
 	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class Comparator >
-	struct select_batch<vv<TVirtualVectorView, TVectorExtension>, Comparator> {
-		using TVE = vv<TVirtualVectorView, TVectorExtension>;
+	struct select_batch<vv_old<TVirtualVectorView, TVectorExtension>, Comparator> {
+		using TVE = vv_old<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -170,8 +172,8 @@ namespace morphstore {
 	
 	
 	template< class TVirtualVectorView, class TVectorExtension, template< class, int > class TComparator >
-	struct select_t<vv<TVirtualVectorView, TVectorExtension>, TComparator, uncompr_f, uncompr_f> {
-		using TVE = vv<TVirtualVectorView, TVectorExtension>;
+	struct select_t<vv_old<TVirtualVectorView, TVectorExtension>, TComparator, uncompr_f, uncompr_f> {
+		using TVE = vv_old<TVirtualVectorView, TVectorExtension>;
 		IMPORT_VECTOR_BOILER_PLATE(TVE)
 		
 		MSV_CXX_ATTRIBUTE_FORCE_INLINE
