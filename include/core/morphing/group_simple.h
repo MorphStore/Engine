@@ -103,11 +103,16 @@ namespace morphstore {
             // need one selector byte per two groups of data elements
             // (remember that the selectors are packed to 4-bit).
 
-            // @todo Don't hardcode 2048. This should be the minimal block size
-            // at which the recompression in on-the-fly de/re-compression
-            // operators works. We need this because the meta data and padding
-            // are there for each recompressed block.
-            const size_t maxComprBlockCount = round_up_div(p_CountValues, 2048);
+            // @todo Don't hardcode 1024. This should be the minimal block size
+            // (in terms of uncompressed data elements) which is ever used for
+            // a blockwise compression using this format. For the recompression
+            // in on-the-fly de/re-compression, that size is 2048 (by default),
+            // but for the calibration benchmarks for cache-to-ram compression
+            // it is just 1024. So we use 1024 here. However, we should find a
+            // more general solution. In general, we need to know the
+            // blocksize, because the meta data and padding exist for each
+            // compressed block.
+            const size_t maxComprBlockCount = round_up_div(p_CountValues, 1024);
             
             return
                     // meta data
