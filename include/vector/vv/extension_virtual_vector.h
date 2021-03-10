@@ -20,34 +20,36 @@
 #define MORPHSTORE_EXTENSION_VIRTUAL_VECTOR_H
 
 //#include <cstdint>
+#include <stdlibs>
+#include <interfaces>
+#include <vectorExtensions>
 
-namespace vectorlib {
-	
-    struct ProcessingStyle {};
+namespace virtuallib {
+	using namespace vectorlib;
     
-	template<class VirtualVectorView, class VectorExtension>
-	struct vv_old : ProcessingStyle{
+	template<class VirtualVectorView, class TVectorExtension>
+	struct vv_old : VectorExtension {
 		/// check for equality of base type of the virtual vector and the used vector extension
 		static_assert(
 			std::is_same<
 				typename VirtualVectorView::base_t,
-				typename VectorExtension::vector_helper_t::base_t
+				typename TVectorExtension::vector_helper_t::base_t
 			>::value,
 			"Base type of virtual vector and used vector extension mismatch!"
 		);
 		
 		static_assert(
-		  VirtualVectorView::size_bit::value >= VectorExtension::vector_helper_t::size_bit::value,
+          VirtualVectorView::size_bit::value >= TVectorExtension::vector_helper_t::size_bit::value,
 		  "Virtual vector size must be greater or equal to physical vector size!"
         );
 		
 		static_assert(
-		  VirtualVectorView::size_bit::value % VectorExtension::vector_helper_t::size_bit::value == 0,
+          VirtualVectorView::size_bit::value % TVectorExtension::vector_helper_t::size_bit::value == 0,
 		  "Virtual vector size must be multiple of physical vector size!"
 		);
 		
 		/// store physically used processing style
-		using pps = VectorExtension;
+		using pps = TVectorExtension;
 		using vector_t        = typename VirtualVectorView::base_t;
 		static_assert(
 			std::is_arithmetic<vector_t>::value,
@@ -70,12 +72,23 @@ namespace vectorlib {
 	
 	struct VectorBuilderBase {};
 	
-	template<class TConcurrentType, uint16_t TConcurrentValue, class TSequentialType,
+    enum class ConcurrentType {
+        STD_THREADS = 0,
+        OPEN_MP = 1
+    };
+    
+    enum SequentialType {
+        FOR_LOOP = 0
+    };
+    
+	template<ConcurrentType TConcurrentType, uint16_t TConcurrentValue, class TSequentialType,
 	  uint16_t TSequentialValue, class TLowerLevelVectorExtension>
 	struct VectorBuilder : public VectorBuilderBase {
 	    /// definitions for multithreading
-	    using ctype  = TConcurrentType;
-	    using cvalue = std::integral_constant<uint16_t, TConcurrentValue>;
+//	    using ctype  = TConcurrentType;
+	    static constexpr ConcurrentType ctype  = TConcurrentType;
+	    static constexpr uint16_t cvalue = std::integral_constant<uint16_t, TConcurrentValue>::value;
+//	    using cvalue = std::integral_constant<uint16_t, TConcurrentValue>;
 	    /// definitions for sequential execution
 	    using stype  = TSequentialType;
 	    using svalue = std::integral_constant<uint16_t, TSequentialValue>;
@@ -89,13 +102,13 @@ namespace vectorlib {
 	    
 	};
 	
-	template<class TVectorBuilder>
-	struct vv : ProcessingStyle{
+	template<IVectorBuilder TVectorBuilder>
+	struct vv : public VectorExtension {
 	    /// safety check: TVectorBuilder is of type VectorBuilder
-	    static_assert(
-	      std::is_base_of<VectorBuilderBase, TVectorBuilder>::value,
-	      "Template parameter TVectorBuilders type must be VectorBuilder!"
-	    );
+//	    static_assert(
+//	      std::is_base_of<VectorBuilderBase, TVectorBuilder>::value,
+//	      "Template parameter TVectorBuilders type must be VectorBuilder!"
+//	    );
 	    
 	    using vectorBuilder = TVectorBuilder;
 	    

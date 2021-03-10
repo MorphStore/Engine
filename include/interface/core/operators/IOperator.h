@@ -16,13 +16,25 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_INTERFACE_CORE_OPERATORS_IOPERATOR_H
+#define MORPHSTORE_INCLUDE_INTERFACE_CORE_OPERATORS_IOPERATOR_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+#include <stdlibs>
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+namespace morphstore {
+    
+    /// Forward declaration of class Partitioner in <core/storage/Partitioner.h>
+    class Operator;
+    
+    #ifdef USE_CONCEPTS
+        /// Interface for Partitioner
+        template< typename TOperator >
+        concept IOperator = std::is_base_of<Operator, TOperator>::value;
+    #else
+        #define IOperator typename
+    #endif
+    
+    
+    
+} // namespace
+#endif //MORPHSTORE_INCLUDE_INTERFACE_CORE_OPERATORS_IOPERATOR_H

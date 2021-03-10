@@ -16,13 +16,11 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_VECTOR_VECTOREXTENSION_H
+#define MORPHSTORE_INCLUDE_VECTOR_VECTOREXTENSION_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+namespace vectorlib {
+    struct VectorExtension {};
+}
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+#endif //MORPHSTORE_INCLUDE_VECTOR_VECTOREXTENSION_H

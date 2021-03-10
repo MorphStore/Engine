@@ -16,13 +16,9 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_TEST_CORE_VIRTUAL_COMPILETEST_H
+#define MORPHSTORE_TEST_CORE_VIRTUAL_COMPILETEST_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+void someUselessFunction();
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+#endif //MORPHSTORE_TEST_CORE_VIRTUAL_COMPILETEST_H

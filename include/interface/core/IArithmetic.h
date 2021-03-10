@@ -23,8 +23,12 @@
 
 namespace morphstore {
 
-    template<class TDataType>
-    concept IArithmetic = std::is_arithmetic<TDataType>::value;
+    #ifdef USE_CONCEPTS
+        template<class TDataType>
+        concept IArithmetic = std::is_arithmetic<TDataType>::value;
+    #else
+        #define IArithmetic typename
+    #endif
     
 } // namespace
 

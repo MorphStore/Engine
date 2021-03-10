@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 3.10 )
-project( MorphStore )
+project( MorphStore CXX )
 
 set( CMAKE_CXX_STANDARD 20 )
 
@@ -94,8 +94,8 @@ ENDIF(CODROID)
 set(CMAKE_BUILD_TYPE "")
 
 # general compiler settings, meant for all subdirectories and tests
-morph_flag(-Werror)
-morph_flag(-pedantic)
+#morph_flag(-Werror)
+#morph_flag(-pedantic)
 #morph_flag(-Wall)
 morph_flag(-Wextra)
 morph_flag(-Wno-ignored-attributes)

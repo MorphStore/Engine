@@ -16,13 +16,25 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_INTERFACE_VECTOR_IVECTOREXTENSION_H
+#define MORPHSTORE_INCLUDE_INTERFACE_VECTOR_IVECTOREXTENSION_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
-
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+namespace vectorlib {
+    
+    /// Forward declaration of class VectorExtension in <vector/vv/extension_virtual_vector.h>
+    class VectorExtension;
+    
+    #ifdef USE_CONCEPTS
+    
+        /// Interface for possible vector extensions
+        template< typename TVectorExtension >
+        concept IVectorExtension = std::is_base_of<VectorExtension, TVectorExtension>::value;
+        
+    #else
+      
+        #define IVectorExtension typename
+      
+    #endif
+    
+}
+#endif //MORPHSTORE_INCLUDE_INTERFACE_VECTOR_IVECTOREXTENSION_H

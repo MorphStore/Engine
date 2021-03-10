@@ -16,13 +16,19 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_INTERFACE_CORE_IOPERATOROUTPUT_H
+#define MORPHSTORE_INCLUDE_INTERFACE_CORE_IOPERATOROUTPUT_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
-
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+namespace morphstore {
+    #ifdef USE_CONCEPTS
+        /// Interface for possible input types [executables and arithmetic types]
+        template< typename TDataType >
+        concept IOperatorOutput
+            = std::is_base_of<Storage, TDataType>::value
+            or std::is_arithmetic<TDataType>::value
+            or morphstore::is_storage_ptr<TDataType>::value;
+    #else
+      #define IOperatorOutput typename
+    #endif
+}
+#endif //MORPHSTORE_INCLUDE_INTERFACE_CORE_IOPERATOROUTPUT_H

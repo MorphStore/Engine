@@ -14,4 +14,9 @@ if( BUILD_ALL OR BUILD_EXAMPLES )
     target_compile_options( variant_executor_usage PRIVATE
                             $<$<CONFIG:DEBUG>:-DDEBUG> )
     target_link_libraries( variant_executor_usage PRIVATE "-ldl" )
+
+    add_executable( group_by_test group_by_test.cpp )
+    target_compile_options( group_by_test PRIVATE
+                            $<$<CONFIG:DEBUG>:-DDEBUG> )
+    target_link_libraries( group_by_test PRIVATE "-ldl" )
 endif( BUILD_ALL OR BUILD_EXAMPLES )

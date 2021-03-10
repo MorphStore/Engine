@@ -21,6 +21,8 @@
 
 #include "core/virtual/partitioning.h"
 #include "core/virtual/threading.h"
+#include <core/virtual/Executable.h>
+#include <core/virtual/Executor.h>
 
 
 #endif //MORPHSTORE_VIRTUAL_

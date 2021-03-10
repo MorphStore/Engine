@@ -26,8 +26,18 @@ namespace morphstore {
 //    template<IFormat TFormat>
 //    class column;
 //
-    template<IFormat, IArithmetic, IPartitioner>
+
+    //// @todo === New Implementation ===
+//    template<IFormat, IArithmetic, IPartitioner>
+//    class PartitionedColumn;
+    template<IPartitioner, IFormat, IArithmetic>
     class PartitionedColumn;
+    
+//    template<IStorage, IArithmetic, uint64_t>
+//    class LogicalPartitioner;
+    
+    template<IFormat, IArithmetic>
+    class VirtualColumn;
 }
 
 #endif //MORPHSTORE_FORWARD_H

@@ -16,13 +16,24 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_INTERFACE_CORE_VIRTUAL_IVECTORBUILDER_H
+#define MORPHSTORE_INCLUDE_INTERFACE_CORE_VIRTUAL_IVECTORBUILDER_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+namespace virtuallib {
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+    /// Forward declaration of class VectorBuilderBase in <vector/vv/extension_virtual_vector.h>
+    class VectorBuilderBase;
+    #ifdef USE_CONCEPTS
+    
+        /// Interface for possible vector extensions
+        template< typename TVectorBuilder >
+        concept IVectorBuilder = std::is_base_of<VectorBuilderBase, TVectorBuilder>::value;
+        
+    #else
+      
+        #define IVectorBuilder typename
+      
+    #endif
+}
+
+#endif //MORPHSTORE_INCLUDE_INTERFACE_CORE_VIRTUAL_IVECTORBUILDER_H

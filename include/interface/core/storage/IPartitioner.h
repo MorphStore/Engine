@@ -25,9 +25,6 @@ namespace morphstore {
     
     /// Forward declaration of class Partitioner in <core/storage/Partitioner.h>
     class Partitioner;
-    
-    
-    #define USE_CONCEPTS
 
     #ifdef USE_CONCEPTS
         /// Interface for Partitioner

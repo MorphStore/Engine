@@ -16,13 +16,51 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_CORE_UTILS_VIRTUALARRAY_H
+#define MORPHSTORE_INCLUDE_CORE_UTILS_VIRTUALARRAY_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+#include <stdlibs>
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+#include <interfaces>
+
+namespace morphstore {
+    
+    template<typename Type>
+    class VirtualArray {
+      Type value;
+      public:
+        
+        VirtualArray(Type value) : value(value) {};
+        
+        Type operator[](size_t){
+            return value;
+        }
+        
+        Type operator+(Type other){
+            return value + other;
+        }
+        
+        VirtualArray<Type>& operator=(Type value_){
+            value = value_;
+            return *this;
+        }
+        
+        operator Type(){
+            return value;
+        }
+        
+        template<IArithmetic TNewType>
+        operator TNewType(){
+            return value;
+        }
+    };
+}
+
+namespace std {
+    template<typename T>
+    struct is_arithmetic<morphstore::VirtualArray<T>> : is_arithmetic<T> {};
+    template<typename T>
+    struct is_arithmetic<morphstore::VirtualArray<T>*> : is_arithmetic<T> {};
+}
+
+#endif //MORPHSTORE_INCLUDE_CORE_UTILS_VIRTUALARRAY_H

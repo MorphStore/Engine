@@ -35,8 +35,11 @@
 
 #include <cstring>
 
+#include <stdlibs>
 #include <forward>
 #include "Storage.h"
+
+#include <utils>
 
 namespace morphstore {
     
@@ -54,17 +57,14 @@ namespace morphstore {
      */
     template< IFormat TFormat >
     class column : public Storage {
-        /// make Partitioned Column friend to this class
-//        template<IFormat TFormat>
-//        template<>
-        template<IFormat, IPartitioner>
-        friend class PartitionedColumn;
-//        static_assert(
-//          std::is_base_of<format, TFormat>::value,
-//          "column: template parameter F must be a subclass of format"
-//        );
-      
+      public:
+        using format = TFormat;
       private:
+        
+        /// befriend Partitioned Column
+        template<IPartitioner, IFormat, IArithmetic>
+        friend class PartitionedColumn;
+      protected:
         /// Stores meta data of column (value count, bytes used, compressed bytes used).
         column_meta_data m_MetaData;
         
@@ -83,6 +83,8 @@ namespace morphstore {
         /// This flag indicates if the (compressed) column is already prepared for random access.
         mutable bool m_IsPreparedForRndAccess;
         
+        bool is_virtual = false;
+        
         /// Constructor of column. When using morphstores own memory manager the column is either persistent or ephemeral.
         column(storage_persistence_type p_PersistenceType, size_t p_SizeAllocatedByte) :
             m_MetaData{0, 0, 0, p_SizeAllocatedByte},
@@ -98,8 +100,26 @@ namespace morphstore {
                : malloc( p_SizeAllocatedByte )
             }
             #endif
-            { /* ... */ }
+            { /* ... */ };
+        
+      protected:
+        /**
+         * Constructor used by derived VirtualColumn.
+         * @tparam base_t
+         * @param alignedData
+         * @param metaData
+         */
+        column(voidptr_t alignedData, column_meta_data&& metaData) :
+            m_MetaData{std::move(metaData)},
+            m_IsPreparedForRndAccess(false),
+            m_DataUnaligned{alignedData},
+            m_Data{alignedData},
+            is_virtual{true}
+        {
+            //
+        }
       
+            
       public:
         /// Creates an ephemeral column. Intended for intermediate results.
         column(size_t p_SizeAllocatedByte) : column(storage_persistence_type::queryScope, p_SizeAllocatedByte)
@@ -116,13 +136,16 @@ namespace morphstore {
         column<TFormat> & operator =(column<TFormat> &&) = delete;
         
         virtual ~column() {
-            #ifdef MSV_NO_SELFMANAGED_MEMORY
-            free(m_DataUnaligned);
-            #else
-            if( m_PersistenceType == storage_persistence_type::globalScope ) {
-               general_memory_manager::get_instance( ).deallocate( m_Data );
+            /// free data array if this column is not virtual
+            if(!is_virtual) {
+                #ifdef MSV_NO_SELFMANAGED_MEMORY
+                free(m_DataUnaligned);
+                #else
+                if( m_PersistenceType == storage_persistence_type::globalScope ) {
+                   general_memory_manager::get_instance( ).deallocate( m_Data );
+                }
+                #endif
             }
-            #endif
         }
       
         inline voidptr_t get_data() const {
@@ -165,6 +188,10 @@ namespace morphstore {
         
         inline void set_meta_data(size_t p_CountValues, size_t p_SizeUsedByte) {
             set_meta_data(p_CountValues, p_SizeUsedByte, 0);
+        }
+        
+        column<TFormat> * deconst() const {
+            return const_cast<column<TFormat>*>(this);
         }
         
         // The following utility functions for working with the subdivision of
@@ -311,6 +338,13 @@ namespace morphstore {
         }
     };
     
+    /// type_str specialization for PartitionedColumn
+    template< typename...Args >
+    struct type_str<column<Args...>> {
+        static std::string apply() {
+            return "column<" + type_str<Args...>::apply() + ">";
+        }
+    };
     
 }
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_H

@@ -16,13 +16,20 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#ifndef MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H
+#define MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
+#include <core/operators/reference/select.h>
+#include <core/operators/reference/project.h>
+#include <core/operators/reference/group_first.h>
+#include <core/operators/reference/agg_sum_grouped.h>
+#include <core/operators/reference/agg_sum_all.h>
+#include <core/operators/reference/calc_uncompr.h>
+#include <core/operators/reference/agg_sum_compr_iterator.h>
+#include <core/operators/reference/group_next.h>
+#include <core/operators/reference/intersect.h>
+#include <core/operators/reference/join_uncompr.h>
+#include <core/operators/reference/merge.h>
 
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+
+#endif //MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H

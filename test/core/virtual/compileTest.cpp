@@ -15,14 +15,12 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
+#include <forward>
+#include <interfaces>
+#include <stdlibs>
 
-#ifndef MORPHSTORE_ABRIDGE_STORAGE_H
-#define MORPHSTORE_ABRIDGE_STORAGE_H
+#include "compileTest.h"
 
-#include "core/storage/column.h"
-#include "core/storage/column_gen.h"
-#include <core/storage/Partitioner.h>
-#include "core/storage/VirtualColumn.h"
-#include "core/storage/PartitionedColumn.h"
-
-#endif // MORPHSTORE_ABRIDGE_STORAGE_H
+void someUselessFunction(){
+    std::cout << "Why did you call me??" << std::endl;
+}

@@ -27,6 +27,8 @@
 #ifndef MSV_CXX_ATTRIBUTE_PPUNUSED
 #  if defined(__clang__) || defined(__GNUC__)
 #     define MSV_CXX_ATTRIBUTE_PPUNUSED __attribute__((unused))
+#  else
+#     define MSV_CXX_ATTRIBUTE_PPUNUSED
 #  endif
 #endif
 

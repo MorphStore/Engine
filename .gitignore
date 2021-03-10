@@ -12,3 +12,7 @@ Dockerfile
 doc/doxygen/latex
 doc/doxygen/html
 output/
+/doc/doxygen/style/main.css.map
+/doc/doxygen/tmp/firstrun
+/doc/doxygen/errors.txt
+/config

@@ -33,5 +33,8 @@
 
 /// data structures
 #include <vector>
+#include <tuple>
+
+#include <exception>
 
 #endif //MORPHSTORE_STDLIBS_H

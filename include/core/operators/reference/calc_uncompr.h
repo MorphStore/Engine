@@ -73,7 +73,7 @@ struct calc_binary_t<
         uncompr_f,
         uncompr_f,
         uncompr_f
-> {
+> : Executable {
     static
     const column<uncompr_f> * apply(
             const column<uncompr_f> * const inDataLCol,

@@ -54,6 +54,7 @@ namespace virtuallib {
 //			    threads[threadIdx] = new std::thread(lambda, output, 3 );
 //			    threads[threadIdx] = new std::thread(lambda, output, args ... );
 			}
+			
 			/// wait for threads to finish
 			for(uint16_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
 				threads[threadIdx]->join();

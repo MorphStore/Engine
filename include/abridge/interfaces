@@ -19,12 +19,22 @@
 #ifndef MORPHSTORE_INTERFACES_H
 #define MORPHSTORE_INTERFACES_H
 
+#define USE_CONCEPTS
 
 #include <interface/core/storage/IStorage.h>
 #include <interface/core/storage/IPartitioner.h>
 
 #include <interface/core/morphing/IFormat.h>
+#include <interface/core/operators/IOperator.h>
+
+#include <interface/core/virtual/IExecutable.h>
 
 #include <interface/core/IArithmetic.h>
+#include <interface/core/IOperatorInput.h>
+#include <interface/core/IOperatorOutput.h>
+
+#include <interface/vector/IVectorExtension.h>
+#include <interface/vector/IVectorBuilder.h>
+
 
 #endif //MORPHSTORE_INTERFACES_H

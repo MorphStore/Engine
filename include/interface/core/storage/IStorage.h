@@ -25,8 +25,48 @@ namespace morphstore {
     /// Forward declaration of class Storage in <core/storage/Storage.h>
     class Storage;
     
-    template<class TStorage>
-    concept IStorage = std::is_base_of<Storage, TStorage>::value;
+    template<typename TStorage>
+    struct is_storage {
+        static constexpr bool value = std::is_base_of<Storage, typename std::remove_const<TStorage>::type>::value;
+    };
+    template<typename TStorage>
+    struct is_storage_ptr {
+        static constexpr bool value = std::is_pointer<TStorage>::value and is_storage<typename std::remove_pointer<TStorage>::type>::value;
+    };
+    
+    
+    #ifdef USE_CONCEPTS
+    
+        template<class TStorage>
+        concept IStorage = is_storage<TStorage>::value;
+        template<class TStorage>
+        concept IStoragePtr = is_storage_ptr<TStorage>::value;
+//
+        
+    #else
+      
+        #define IStorage typename
+      
+    #endif
+    
+    
+    
+    
+    template<typename TArithmeitc>
+    struct is_arithmetic_ptr {
+        static constexpr bool value = std::is_pointer<TArithmeitc>::value and std::is_arithmetic<typename std::remove_pointer<TArithmeitc>::type>::value;
+    };
+    
+    #ifdef USE_CONCEPTS
+    
+        template<class TArithmeitc>
+        concept IArithmeticPtr = morphstore::is_arithmetic_ptr<TArithmeitc>::value;
+        
+    #else
+      
+        #define IArithmeticPtr typename
+        
+    #endif
     
 } // namespace
 
