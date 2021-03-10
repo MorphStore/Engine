@@ -53,6 +53,16 @@
 #  include <vector/simd/neon/primitives/manipulate_neon.h>
 #endif
 
+#ifdef __CUDACC__
+#  include <vector/gpu/primitives/calc_gpu.h>
+#  include <vector/gpu/primitives/compare_gpu.h>
+#  include <vector/gpu/primitives/create_gpu.h>
+#  include <vector/gpu/primitives/extract_gpu.h>
+#  include <vector/gpu/primitives/io_gpu.h>
+#  include <vector/gpu/primitives/logic_gpu.h>
+#  include <vector/gpu/primitives/manipulate_gpu.h>
+#endif
+
 #include <vector/scalar/primitives/calc_scalar.h>
 #include <vector/scalar/primitives/compare_scalar.h>
 #include <vector/scalar/primitives/create_scalar.h>

@@ -19,7 +19,7 @@
  * @file vector_extension_names.h
  * @brief A template-based mapping from vector extension structs to string
  * names. Useful especially (and perhaps exclusively) in micro benchmarks.
- * 
+ *
  * There are situations where we cannot accomplish this mapping using macros.
  */
 
@@ -57,7 +57,9 @@ namespace vectorlib {
 #ifdef AVX512
     MAKE_VECTOR_EXTENSION_NAME(avx512<v512<uint64_t>>)
 #endif
-            
+#ifdef __CUDACC__
+    MAKE_VECTOR_EXTENSION_NAME(gpu<v2048<uint64_t>>)
+#endif
 }
 
 #undef MAKE_VECTOR_EXTENSION_NAME
