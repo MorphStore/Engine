@@ -153,9 +153,11 @@ namespace morphstore {
 	 * @param input
 	 * @return
 	 */
+	template<IArithmetic N>
 	MSV_CXX_ATTRIBUTE_PPUNUSED
 	static
-	std::string dotNumber(const std::string & input){
+	std::string dotNumber(N n){
+	    std::string input(strify(n));
 		std::string out;
 		int64_t pos = input.length() - 1;
 		uint8_t interval = 0;
