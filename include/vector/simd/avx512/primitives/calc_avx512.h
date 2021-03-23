@@ -21,6 +21,8 @@
 #include <vector/simd/avx512/extension_avx512.h>
 #include <vector/primitives/calc.h>
 
+#include <core/utils/logger.h>
+
 #include <functional>
 
 namespace vectorlib{
