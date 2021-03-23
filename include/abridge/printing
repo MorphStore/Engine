@@ -16,13 +16,10 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#ifndef MORPHSTORE_INCLUDE_ABRIDGE_PRINTING_H
+#define MORPHSTORE_INCLUDE_ABRIDGE_PRINTING_H
 
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
 
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#include <core/utils/print_columns.h>
+
+#endif //MORPHSTORE_INCLUDE_ABRIDGE_PRINTING_H

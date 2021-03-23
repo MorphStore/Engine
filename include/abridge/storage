@@ -19,6 +19,7 @@
 #ifndef MORPHSTORE_ABRIDGE_STORAGE_H
 #define MORPHSTORE_ABRIDGE_STORAGE_H
 
+#include <core/morphing/format.h>
 #include "core/storage/column.h"
 #include "core/storage/column_gen.h"
 #include <core/storage/Partitioner.h>

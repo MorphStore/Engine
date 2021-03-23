@@ -24,6 +24,7 @@
 
 /// in-/output streams
 #include <iostream>
+#include <iomanip>
 
 /// type support & constraints
 #include <type_traits>
@@ -36,5 +37,6 @@
 #include <tuple>
 
 #include <exception>
+#include <chrono>
 
 #endif //MORPHSTORE_STDLIBS_H

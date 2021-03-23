@@ -16,13 +16,10 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#ifndef MORPHSTORE_INCLUDE_ABRIDGE_MONITOR_H
+#define MORPHSTORE_INCLUDE_ABRIDGE_MONITOR_H
 
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
+#include <core/utils/monitoring/MonitorTask.h>
+#include <core/utils/monitoring/Monitor.h>
 
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#endif //MORPHSTORE_INCLUDE_ABRIDGE_MONITOR_H
