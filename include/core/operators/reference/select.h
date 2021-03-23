@@ -38,7 +38,7 @@
 namespace morphstore {
     
 template<template< class, int > class t_op>
-struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, uncompr_f> {
+struct select_t<vectorlib::scalar<vectorlib::v64<uint64_t>>, t_op, uncompr_f, uncompr_f> : Executable {
     using VectorExtension =  vectorlib::scalar<vectorlib::v64<uint64_t>>;
     static
     const column<uncompr_f> * apply(
