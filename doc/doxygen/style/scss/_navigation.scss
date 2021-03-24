@@ -1,0 +1,75 @@
+//    Created on : 02.03.2018, 13:18:45
+//    Author     : Eric Mier
+
+
+/* Navigation Tree on the left */
+
+
+div#side-nav {
+    z-index: 30;
+    
+    padding: 0 6px 0 0;
+    box-shadow: 0px 0px 7px -1px #000000;
+    > div#nav-tree{
+        display: none;
+        padding-top: 6px;
+        
+        > div#nav-tree-contents {
+            margin: 0px;
+            
+            > ul {
+                > li {
+                    > ul.children_ul {
+                        > li:not(:nth-last-child(n+6)) {
+                            > div.item {
+                                /*divider above Modules tab in navigation tree*/
+                                border-style: dashed;
+                                border-width: 2px 0px 0px 0px;
+                                border-color: rgba(11,69,163,0.4);
+                                /*margin-top: 4px;*/
+                                padding-top: 2px;
+                                padding-bottom: 2px;
+                                margin-bottom: -2px;
+                                
+                            }
+                        }
+                    }
+                }
+                
+                div.selected {
+                    background: $gradient-dark;
+                }
+                
+                div.item:hover {
+                    background-color: #CBCED3;
+                }
+                
+                span.label {
+                    a, a:visited {
+                        color: $link-color;
+                    }
+                    a:visited {
+                        /*color: $link-color-visited2;*/
+                    }
+                    
+                }
+                div#selected {
+                    > .label {
+                        > a, a:hover {
+                            color: $link-color-bright;
+                        }
+                        
+                    }
+                } 
+            }
+        }
+    }
+    /*divider*/
+    div.ui-resizable-e {
+        width: 4px;
+        @extend %bar;
+        border-right: 1px solid $border-dark;
+        border-left: 1px solid $border-dark;
+        /*background: $border-dark;*/
+    }
+}

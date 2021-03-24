@@ -1,0 +1,83 @@
+//    Created on : 02.03.2018, 13:18:35
+//    Author     : Eric Mier
+
+div#nav-path {
+    position: relative;
+    z-index: 90;
+    
+    ul {
+        @extend %bar;
+        border-width: 0px;
+        border-top: solid 1px $border-dark;
+        
+        li.navelem {
+            
+            &:hover {
+                background: $background-image-footer-path, $gradient-dark; 
+
+                background-repeat: no-repeat;
+                background-position: right;
+            }
+            
+            a, a:hover{
+                color: $link-color-bright;
+                text-shadow: 0 1px 1px rgba(0,0,0,0.9);
+            }
+        }
+        li.footer {
+            list-style-type: none;
+            float: right;
+            padding-left: 10px;
+            padding-right: 15px;
+            background-image: none;
+            background-repeat: no-repeat;
+            background-position: right;
+            color: #091835;
+            font-size: 8pt;
+            color: #5F95E8;
+            text-shadow: -1px -1px 1px rgba(30,30,30,1);
+            span:last-child {
+                cursor: progress;
+            }
+            
+            span#Fridolin:hover {
+                cursor: pointer;
+                text-decoration: underline;
+            }
+            
+        }
+    }
+    div#Fridolin {
+        position: absolute;
+        bottom: -55px;
+        bottom: -235px;
+        right: 250px;
+        /*width: 20%;*/
+        /*height: 20%;*/
+        width: 150px;
+        height: 210px;
+        pointer-events: none;
+        display: none;
+        
+        
+        img:first-child {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            left: 0px;
+        }
+        img:nth-child(2) {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            /*top: -120px;*/
+            /*left: 140px;*/
+            top: -70px;
+            left: 98px;
+            display: none;
+            opacity: 0;
+            
+        }
+    }
+}

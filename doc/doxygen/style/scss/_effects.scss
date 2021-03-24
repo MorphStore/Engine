@@ -1,0 +1,12 @@
+//    Created on : 02.03.2018, 13:38:57
+//    Author     : Eric Mier
+
+
+
+h1.glow, h2.glow, h3.glow, h4.glow, h5.glow, h6.glow {
+	text-shadow: 0 0 5px #0000ff;
+}
+h1.glow + div,h2.glow + div,h3.glow + div,h4.glow + div,h5.glow + div,h6.glow + div {
+        box-shadow: 0 0 10px 1px rgba(0,0,255,1) !important;
+        -webkit-box-shadow: 0 0 10px 1px rgba(0,0,255,1) !important;
+}
