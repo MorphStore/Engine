@@ -21,4 +21,7 @@ if( BUILD_ALL OR BUILD_PARALLELIZATION )
     add_executable( meta_operator_prototype_test meta_operator_prototype_test.cpp )
     target_link_libraries( meta_operator_prototype_test PRIVATE "-ldl" )
 
+    add_executable( overhead_benchmark_meta_operator overhead_benchmark_meta_operator.cpp )
+    target_link_libraries( overhead_benchmark_meta_operator PRIVATE "-ldl" )
+
 endif( BUILD_ALL OR BUILD_PARALLELIZATION )
