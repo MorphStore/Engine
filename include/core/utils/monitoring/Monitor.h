@@ -40,20 +40,25 @@ namespace morphstore {
 			Runtime1,
 			Runtime2,
 			Runtime3,
+			Test1,
+			Test2,
+			Test3,
+			Test4,
+			Test5,
 			__end__
 		};
 		
 		class Monitor {
 		  public:
 			Monitor();
-			Monitor(const Monitor & orig);
+			Monitor(const Monitor & orig) = delete;
 			~Monitor() = default;
 			
 			void start(MTask task);
 			void resume(MTask task);
 			void end(MTask task);
+			void reset(MTask task);
 			
-			void transmit(Monitor * target, MTask task);
 			
 			template<class format>
 			uint64_t getDuration(MTask task);
@@ -65,13 +70,6 @@ namespace morphstore {
 			uint64_t getMin(MTask task);
 			template<class format>
 			uint64_t getMax(MTask task);
-			
-			
-			void processTransmitted();
-			nanoseconds averageTransmitted(MTask task);
-			nanoseconds bestTransmitted(MTask task);
-			nanoseconds worstTransmitted(MTask task);
-			std::string getTimes(MTask task);
 			
 			std::unordered_map<MTask, MonitorTask> tasks;
 			std::unordered_map<MTask, MonitorSeries> series;
@@ -144,13 +142,18 @@ namespace morphstore {
 			taskPtr->duration = taskPtr->duration + std::chrono::duration_cast<nanoseconds>(end - taskPtr->begin);
 			taskPtr->active = false;
 		}
-		
-		/**
-		 * Returns the measured time from the most recent measurement.
-		 * @tparam format Wanted format out of std::chrono::[nanoseconds,microseconds,milliseconds,seconds,minutes,hours]
-		 * @param task
-		 * @return
-		 */
+        
+        
+        void Monitor::reset(MTask task) {
+            series[task] = MonitorSeries();
+        }
+        
+        /**
+         * Returns the measured time from the most recent measurement.
+         * @tparam format Wanted format out of std::chrono::[nanoseconds,microseconds,milliseconds,seconds,minutes,hours]
+         * @param task
+         * @return
+         */
 		template<class format>
 		uint64_t Monitor::getDuration(MTask task) {
 			return series[task].get<format>();

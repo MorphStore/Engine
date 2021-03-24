@@ -40,7 +40,7 @@ namespace morphstore {
     
     template<IVectorBuilder TVectorBuilder, IPartitioner TPartitioner, IExecutable TExecutable, IPartitioner TConsolidator>
     class MetaOperator<vv<TVectorBuilder>, TPartitioner, TExecutable, TConsolidator> : public Executable {
-        
+      public:
         /// @todo TOFIX: results in column* instead of PartitionedColumn*, which is needed for Executor<...> or reduce Executor template parameters
         using executableInputList_t = typename unfold_type(TExecutable::apply)::inputType;
         
@@ -48,6 +48,7 @@ namespace morphstore {
 //        using executor = Executor<TVectorBuilder::ctype, TExecutable, executableOutputTypes, executableInputTypes>;
 
         using executor_t = Executor<TVectorBuilder::ctype, TExecutable>;
+        using output_t = PartitionedColumn<TConsolidator, uncompr_f>*;
 
 //        static
 //        void apply(executableInputTypes input){
@@ -55,7 +56,7 @@ namespace morphstore {
 //        }
     
     
-        
+      private:
         template<IStorage TStorage>
         static auto prepare(TStorage * storage){
             /// create a PartitionedColumn from given storage (e.g. column<...>)
@@ -92,7 +93,7 @@ namespace morphstore {
         template<typename...TInputList>
         requires std::is_same<std::tuple<TInputList...>, executableInputList_t>::value
         static
-        void apply(TInputList...inputList){
+        PartitionedColumn<TConsolidator, uncompr_f>* apply(TInputList...inputList){
             /// @todo: create PartitionedColumn from each input .... values?
             
 //            static_assert(
@@ -102,8 +103,8 @@ namespace morphstore {
             
 //            executor::template apply(uint64_t(3), nullptr, uint64_t(5));
 
-            std::cout << "Before prepare: " << (type_str<decltype(inputList)...>::apply()) << std::endl;
-            std::cout << "After prepare: " << (type_str<decltype(prepare(inputList))...>::apply()) << std::endl;
+//            std::cout << "Before prepare: " << (type_str<decltype(inputList)...>::apply()) << std::endl;
+//            std::cout << "After prepare: " << (type_str<decltype(prepare(inputList))...>::apply()) << std::endl;
 //            std::cout << "Executor interface: " << (typestr(executor::template apply<column<uncompr_f>*, uint64_t>)) << std::endl;
 //            std::cout << "Prepare function: " << (typestr(prepare<uint64_t>)) << std::endl;
             
@@ -116,7 +117,7 @@ namespace morphstore {
             /// @todo do things
             
             
-            std::cout << "Size of inputList: " << sizeof...(inputList) << std::endl;
+//            std::cout << "Size of inputList: " << sizeof...(inputList) << std::endl;
             
             
 //            std::cout << "Elements inputList: ";
@@ -133,14 +134,22 @@ namespace morphstore {
 //            std::cout << std::endl;
             
             /// Run Executor
-            auto result_executor = executor_t::apply(
+            std::vector< typename executor_t::output_t * > *
+            result_executor = executor_t::apply(
               size_t(TVectorBuilder::cvalue), /// number of threads to spawn
               prepare(inputList) ... /// prepare each input, depending on its type
               );
+            
+            /// Store result in PartitionedColumn
+            auto result = new PartitionedColumn<TConsolidator, uncompr_f>();
+            for(auto& outputN : *result_executor){
+                result->addPartition(*outputN);
+            }
 //            std::cout << typestr<executor>() << std::endl;
 //            std::cout << demangle(typeid(executor).name()) << std::endl;
 //            std::cout << typeid(executor).name() << std::endl;
             
+            return result;
         }
     };
     

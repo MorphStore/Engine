@@ -33,7 +33,7 @@
 
 #include <core/virtual/MetaOperator.h>
 
-
+#include <printing>
 
 
 
@@ -41,6 +41,7 @@ struct op : Executable {
     static
     uint64_t apply(column<uncompr_f> * const, uint64_t * ){
         std::cout << "called op::apply()" << std::endl;
+        return 0;
     }
 };
 struct op2 : Executable {
@@ -59,9 +60,10 @@ int main() {
     
     /// 2 GB of data
 //    const size_t countValues = 1024 * 1024 / sizeof(uint64_t) * 2 * 1024;
-    const size_t countValues = sizeof(uint64_t) * 2 * 1024;
+//    const size_t countValues = sizeof(uint64_t) * 2 * 1024;
+    const size_t countValues = sizeof(uint64_t) * 2 * 10;
 
-    column<uncompr_f> * const baseCol1 =
+    const column<uncompr_f> * const baseCol1 =
        reinterpret_cast< column<uncompr_f> * >(
           const_cast<column<uncompr_f> * >(
             generate_with_distr(
@@ -72,7 +74,7 @@ int main() {
             )
           )
       );
-    column<uncompr_f> * const baseCol2 =
+    const column<uncompr_f> * const baseCol2 =
        reinterpret_cast< column<uncompr_f> * >(
           const_cast<column<uncompr_f> * >(
             generate_with_distr(
@@ -84,73 +86,61 @@ int main() {
           )
       );
 
+    const uint64_t threadCnt = 2;
 
     using ve = scalar<v64<uint64_t>>;
-    using vve = vv<VectorBuilder<ConcurrentType::STD_THREADS, 4, seq, 1, ve>>;
+    using vve = vv<VectorBuilder<ConcurrentType::STD_THREADS, threadCnt, seq, 1, ve>>;
 
 //    using select_op = select_t<ve, less, uncompr_f, uncompr_f>;
-//
-//    auto partitions = logical_partitioning<vve::base_t>
-//      ::apply(baseCol1->get_data(), countValues, vve::vectorBuilder::cvalue::value);
-//    /// less than 5
-//    auto comparatorValue = new std::vector<uint64_t>(vve::vectorBuilder::cvalue::value, 5);
-//
-//    std::cout << "Pointer: " << (uint64_t*) baseCol1->get_data() << std::endl;
-//    PartitionedColumn<LogicalPartitioner, uncompr_f, uint64_t> PC(baseCol1,4);
-    
-//    std::cout << "input type: " << typestr<unfold_type(op2::apply)::inputType>() << std::endl;
-//    std::cout << "output type: " << typestr<unfold_type(op2::apply)::returnType>() << std::endl;
-//    std::cout << "pack type: " << typestr<pack< typename unfold_type(op2::apply)::returnType >::type>() << std::endl;
 
     // @todo TOFIX: use physical partitioner for consolidation later
 //    MetaOperator<vve, LogicalPartitioner, op2, LogicalPartitioner>::apply(baseCol1, uint64_t(3));
 
     std::cout << typestr(calc_binary_t<std::plus, ve, uncompr_f, uncompr_f, uncompr_f>::apply) << std::endl;
 
-    MetaOperator<vve, LogicalPartitioner, calc_binary_t<std::plus, ve, uncompr_f, uncompr_f, uncompr_f>, LogicalPartitioner>::apply(baseCol1, baseCol2);
-//    std::cout << typestr<decltype(MetaOperator<vve, LogicalPartitioner, op2, LogicalPartitioner>::apply<column<uncompr_f>*, uint64_t>)>() << std::endl;
+    auto presult
+      = MetaOperator<
+          vve,                                                           /// used (virtual) vector extension
+          LogicalPartitioner,                                            /// Partitioner used for partitioning inputs
+          calc_binary_t<std::plus, ve, uncompr_f, uncompr_f, uncompr_f>, /// virtualized executable/operator
+          PhysicalPartitioner                                            /// Partitioner used for consolidating outputs
+          >::apply(baseCol1, baseCol2);
     
+    auto pbase1 = new PartitionedColumn<LogicalPartitioner, uncompr_f>(baseCol1, threadCnt);
+    auto pbase2 = new PartitionedColumn<LogicalPartitioner, uncompr_f>(baseCol2, threadCnt);
+
+    std::cout << "Output column:" << std::endl;
+    for(uint64_t i = 0; i < threadCnt; ++i){
+        std::cout << "Part" << i << ":" << std::endl;
+        std::cout << std::setw(5) << "IN1" << " | " << std::setw(5) << "IN2" << " | " << std::setw(5) << "OUT" << " | " << std::endl;
+        const column<uncompr_f> * pcol = (*presult)[i];
+        const column<uncompr_f> * pb1 = (*pbase1)[i];
+        const column<uncompr_f> * pb2 = (*pbase2)[i];
+        print_columns(pb1, pb2, pcol);
+    }
+    
+    using select_operator = MetaOperator<
+      vve,
+      LogicalPartitioner,
+      select_t<ve, vectorlib::greater, uncompr_f, uncompr_f>,
+      PhysicalPartitioner
+    >;
+    
+//    std::cout << typestr(select_t<ve, vectorlib::less, uncompr_f, uncompr_f>::apply) << std::endl;
+//    std::cout << typestr<select_operator::executableInputList_t>() << std::endl;
+    auto presult_select
+      = select_operator::apply(baseCol1, 70UL, 0UL);
+    
+    std::cout << "Output column:" << std::endl;
+    for(uint64_t i = 0; i < threadCnt; ++i){
+        std::cout << "Part" << i << ":" << std::endl;
+        std::cout << "    " << std::setw(5) << "IN1" << " | " << std::setw(5) << "OUT" << " | " << std::endl;
+        const column<uncompr_f> * pcol = (*presult_select)[i];
+        const column<uncompr_f> * pb1 = (*pbase1)[i];
+        print_columns(pb1, pcol);
+    }
+    
+
     return 0;
-    
-    
-    
-    using function = uint64_t (uint64_t, uint64_t);
-    using function2 = uint64_t (*)(uint64_t, uint64_t);
-    using function3 = decltype(op::apply);
-    using function4 = uint64_t (uint64_t, uint64_t)&;
-    
-    function f1;
-    function2 f2;
-    function3 f3;
-
-//    f2 = op::apply;
-    
-    uint64_t a(3);
-    uint64_t& b = a;
-    uint64_t * c = &a;
-    
-    std::cout << "1 " << typestr<function>() << std::endl;
-    std::cout << "1 " << typestr<decltype(f1)>() << std::endl;
-    std::cout << "2 " << typestr<function2>() << std::endl;
-    std::cout << "2 " << typestr<decltype(f2)>() << std::endl;
-    std::cout << "2 " << typestr(f2) << std::endl;
-    std::cout << "3 " << typestr<function3>() << std::endl;
-    std::cout << "3 " << typestr<decltype(f3)>() << std::endl;
-//    std::cout << "3 " << typestr(f3) << std::endl;
-//    std::cout << "4 " << typestr<function4>() << std::endl;
-    std::cout << "40 " << typestr<decltype(op::apply)>() << std::endl;
-    std::cout << "5 " << typestr<decltype(&op::apply)>() << std::endl;
-    std::cout << "6 " << typestr(op::apply) << std::endl;
-    std::cout << "7 " << typestr<unfold_type(op::apply)::type>() << std::endl;
-
-    std::cout << "8 " << typestr(a) << std::endl;
-    std::cout << "9 " << typestr(b) << std::endl;
-    std::cout << "10 " << typestr(uint64_t(3)) << std::endl;
-    std::cout << "11 " << typestr(c) << std::endl;
-    std::cout << "11 " << typestr<uint64_t*>(c) << std::endl;
-//    std::cout << "11 " << typestr(decltype(c)(c)) << std::endl;
-    
-    std::cout << is_storage<column<uncompr_f>*>::value << std::endl;
-
 }
  

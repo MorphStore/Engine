@@ -22,10 +22,12 @@
 namespace morphstore {
     #ifdef USE_CONCEPTS
         /// Interface for possible input types [executables and arithmetic types]
+        /// @todo test this _v and _t shortcuts
         template< typename TDataType >
         concept IOperatorInput =
           std::is_base_of<Storage, TDataType>::value
-          or std::is_arithmetic<TDataType>::value
+//          or std::is_arithmetic<TDataType>::value
+          or std::is_arithmetic_v<std::remove_pointer_t<TDataType>>
           or morphstore::is_storage_ptr<TDataType>::value
 //          or std::is_arithmetic<typename std::remove_pointer<TDataType>::type>::value;
           or morphstore::is_arithmetic_ptr<TDataType>::value

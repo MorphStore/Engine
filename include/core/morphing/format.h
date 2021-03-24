@@ -34,7 +34,7 @@
 #include <tuple>
 
 #include <cstdint>
-#include <utils>
+//#include <utils>
 
 namespace morphstore {
 
@@ -101,12 +101,6 @@ struct uncompr_f : public format {
     static const size_t m_BlockSize = 1;
 };
 
-template<>
-struct type_str<uncompr_f> {
-    static string apply() {
-        return string("uncompr_f");
-    }
-};
  /**
   * @brief Provides a pessimistic estimation of the maximum possible size (in
   * byte) a column containing the given number of data elements could have when

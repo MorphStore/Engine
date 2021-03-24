@@ -93,31 +93,6 @@ void print_column(const column<uncompr_f> * col){
     
 }
 
-template<typename first, typename ... last>
-size_t get_max_size(first f, last ... l){
-    if constexpr(sizeof...(last) > 1) {
-        return std::max(f->get_count_values(), get_max_size(l...));
-    } else {
-        return f->get_count_values();
-    }
-}
-
-void print_element(size_t index, const column<uncompr_f> * col, size_t width){
-    std::cout << std::setw(width);
-    if(index < col->get_count_values()) {
-        std::cout << ((uint64_t*)col->get_data())[index] << " | ";
-    } else {
-        std::cout << "NaN" << " | ";
-    }
-}
-
-template<typename...TCols>
-void print_columns(TCols...cols){
-    for(size_t i = 0; i < get_max_size(cols...); ++i){
-        (print_element(i, cols, 5), ...);
-        std::cout << std::endl;
-    }
-}
 
 
 int main() {

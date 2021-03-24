@@ -133,136 +133,25 @@ namespace morphstore {
         static_assert(always_false<TInAndOutputTypes...>::value, "Unsupported types");
     };
     
-    
-    
-    template<IExecutable TExecutable, IOperatorOutput ... TOutputTypes, template<typename...> class TOut, IOperatorInput ... TInputTypes, template<typename...> class TIn>
-    class ExecutorCore<TExecutable, TOut<TOutputTypes...>, TIn<TInputTypes...>> {
-      public:
-        static void apply(TOut<TOutputTypes...> ** output, TInputTypes ... inputs){
-            /// @todo
-            *output = new TOut<TOutputTypes...>(TExecutable::apply(inputs...));
-        }
-    };
-    
     template<IExecutable TExecutable, IOperatorInput ... TInputTypes, template<typename...> class TIn>
       requires std::is_same< TIn<TInputTypes...>, typename unfold_type(TExecutable::apply)::inputType >::value
     class ExecutorCore<TExecutable, TIn<TInputTypes...>> {
 //        using output_t = OutputTypes<typename unfold_type(TExecutable::apply)::returnType>;
-        using output_t = typename pack<typename unfold_type(TExecutable::apply)::returnType>::type;
+//        using output_t = typename pack<typename unfold_type(TExecutable::apply)::returnType>::type;
+        using output_t = typename unfold_type(TExecutable::apply)::returnType;
         using input_t = typename unfold_type(TExecutable::apply)::inputType;
       public:
         
         static void apply(output_t ** output, TInputTypes ... inputs){
+//            std::cout << "Run ExecutorCore::apply()" << std::endl;
             *output = new output_t(TExecutable::apply(inputs...));
         }
     };
     
-    template<ConcurrentType Tctype, IExecutable TExecutable, typename ... TInAndOutputTypes>
+    template<ConcurrentType Tctype, IExecutable TExecutable>
     class Executor : public Executable {
-        static_assert(always_false<TInAndOutputTypes...>::value, "Unsupported types");
+        static_assert(always_false<TExecutable>::value, "Unsupported concurrent type");
     };
-    
-    /*
-    template<ConcurrentType Tctype, IExecutable TExecutable, IOperatorOutput TOutput, IOperatorInput TInput>
-    class Executor<Tctype, TExecutable, TOutput, TInput> : public Executable {
-      public:
-        static TOutput apply(TInput input){
-            return TExecutable::apply(input);
-        }
-    };
-
-    template<ConcurrentType Tctype, IExecutable TExecutable, IOperatorOutput ... TOutputTypes, template<typename...> class TOut, IOperatorInput TInput>
-    class Executor<Tctype, TExecutable, TOut<TOutputTypes...>, TInput> : public Executable {
-      public:
-        static TOut<TOutputTypes...> apply(TInput input){
-            return TExecutable::apply(input);
-        }
-    };
-
-    template<ConcurrentType Tctype, IExecutable TExecutable, IOperatorOutput TOutput, IOperatorInput ... TInputTypes, template<typename...> class TIn>
-    class Executor<Tctype, TExecutable, TOutput, TIn<TInputTypes...>> : public Executable {
-      public:
-        static TOutput apply(TInputTypes ... inputs){
-            return TExecutable::apply(inputs...);
-        }
-    };
-    */
-    
-    /// @todo: delete??
-//    template<ConcurrentType Tctype, IExecutable TExecutable, IOperatorOutput ... TOutputTypes, template<typename...> class TOut, IOperatorInput ... TInputTypes, template<typename...> class TIn>
-//    class Executor<Tctype, TExecutable, TOut<TOutputTypes...>, TIn<TInputTypes...>> : public Executable {
-//      public:
-////        static TOut<TOutputTypes...> * apply(TInputTypes ... inputs){
-////            return new TOut<TOutputTypes...>(TExecutable::apply(inputs...));
-////        }
-//    };
-    
-    
-    /// std::thread variant
-    template<
-      IExecutable TExecutable,
-      IOperatorOutput ... TOutputTypes, template<typename...> class TOut,
-      IOperatorInput ... TInputTypes, template<typename...> class TIn>
-    class Executor<ConcurrentType::STD_THREADS, TExecutable, TOut<TOutputTypes...>, TIn<TInputTypes...>> : public Executable {
-      public:
-        static
-//        std::vector< TOut<TOutputTypes...>* >* apply(size_t threadCnt, typename std::remove_reference<TInputTypes>::type ... inputs){
-        std::vector< TOut<TOutputTypes...>* >* apply(size_t threadCnt, TInputTypes ... inputs){
-            /// thread container
-            auto threads = new std::vector<std::thread*>();
-            /// result container
-            auto results = new std::vector< TOut<TOutputTypes...>* >(threadCnt);
-            
-            std::cout << "===== ===== New Executor: ===== =====" << std::endl;
-            /// spawn threads
-            for(size_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
-                TOut<TOutputTypes...>** output = &(results->at(threadIdx));
-                
-                /*
-                std::cout << std::endl << "===== New Thread: =====" << std::endl;
-                std::cout << "Output: ";
-                print_type(output);
-                std::cout << "Inputs:";
-                unpack(print_type(inputs)...);
-                std::cout << "Get from input at position " << threadIdx << ": " << std::endl;
-                print_type(get(inputs, threadIdx)...);
-                
-                std::cout << std::endl << "Calculated output type of operator: " << typeid(decltype(OutputTypes(TExecutable::apply(get(inputs, threadIdx)...)))).name() << std::endl;
-                std::cout << "Input type of operator            : " << typeid(TIn<TInputTypes...>).name() << std::endl;
-                std::cout << "Calculated input type of operator : " << typeid(TIn<decltype(get(inputs, threadIdx))...>).name() << std::endl;
-                std::cout << "Calculated input type of operator : " << typeid(decltype(InputTypes(get(inputs, threadIdx)...))).name() << std::endl<< std::endl;
-                /**/
-                
-//                std::cout << typestr(threadCnt) << std::endl;
-//                std::cout << typestr(inputs...) << std::endl;
-                threads->push_back(new std::thread(
-                    /// lambda function
-//                    __ExecutorLambda<TExecutable, TOut<TOutputTypes...>, TIn<TInputTypes...>>::apply,
-
-                    ExecutorCore<
-                      TExecutable,
-                      decltype(OutputTypes(TExecutable::apply(get(inputs, threadIdx)...))),
-                      decltype(InputTypes(get(inputs, threadIdx)...))
-                      >::apply,
-
-                    /// write address for lambda function result
-                    output,
-                    /// input parameters
-                    get(inputs, threadIdx)...
-                ));
-            }
-            
-            /// wait for threads
-            for(auto& thread : *threads){
-                thread->join();
-                delete thread;
-            }
-            
-            /// finish
-            return results;
-        }
-    };
-    
     
     
     /// std::thread variant
@@ -270,14 +159,14 @@ namespace morphstore {
     class Executor<ConcurrentType::STD_THREADS, TExecutable> : public Executable {
       public:
 //        using outType_t = OutputTypes<typename unfold_type(TExecutable::apply)::returnType>;
-        using outType_t = typename pack<typename unfold_type(TExecutable::apply)::returnType>::type;
+//        using output_t = typename pack<typename unfold_type(TExecutable::apply)::returnType>::type;
+        using output_t = typename unfold_type(TExecutable::apply)::returnType;
         using input_t = typename unfold_type(TExecutable::apply)::inputType;
         
-//        template<IOperatorInput ... TInputTypes>
+//        template<IOperatorInput ... TInputTypes> /// <-- causes g++ compiler error
         template<typename ... TInputTypes>
         static
-//        std::vector< TOut<TOutputTypes...>* >* apply(size_t threadCnt, typename std::remove_reference<TInputTypes>::type ... inputs){
-        std::vector< outType_t* >* apply(size_t threadCnt, TInputTypes ... inputs){
+        std::vector<output_t* >* apply(size_t threadCnt, TInputTypes ... inputs){
             
             /// Check if the indexed access to input arguments (using get(input)) yields the correct object types needed for the Executable.
             /// E.g. get<PartitionedColumn<TFormat,...>(...) yields a column<TFormat>*
@@ -291,81 +180,69 @@ namespace morphstore {
             /// thread container
             auto threads = new std::vector<std::thread*>();
             /// result container
-            auto results = new std::vector< outType_t* >(threadCnt);
+            auto results = new std::vector<output_t* >(threadCnt);
             
-            std::cout << "===== ===== New Executor: ===== =====" << std::endl;
+//            std::cout << "===== ===== New Executor: ===== =====" << std::endl;
             
-            std::cout << "Size of inputs: " << sizeof...(inputs) << std::endl;
+            using core_t = ExecutorCore<TExecutable, input_t>;
+//            const bool advancedDebugOutput = true;
+            const bool advancedDebugOutput = false;
             
+            if constexpr (advancedDebugOutput) {
+                std::cout << "Elements inputList: \n  ";
+                ((std::cout << inputs << ", "), ...);
+                std::cout << " \n  ";
+                ((std::cout << typestr(inputs) << ", "), ...);
+                std::cout << std::endl;
             
-            std::cout << "Elements inputList: ";
-            ((std::cout << inputs << ", "), ...);
-            std::cout << " // ";
-            ((std::cout << typestr(inputs) << ", "), ...);
-            std::cout << std::endl;
-        
-            
-            std::cout << "Types after decay: ";
-            ((std::cout << typestr<typename std::decay<decltype(inputs)>::type>() << ", "), ...);
-            std::cout << std::endl;
-            
-//            using lambda = ExecutorCore<
-//              TExecutable,
-//              decltype(OutputTypes(TExecutable::apply(get(inputs, 0)...))),
-//              decltype(InputTypes(get(inputs, 0)...))
-//              >;
-            using lambda = ExecutorCore<TExecutable, input_t>;
-            outType_t** output__ = &(results->at(0));
-//
-            std::cout << "IsInvocable: " << std::boolalpha;
-            std::cout << std::__is_invocable<
-              decltype(lambda::apply),
-              decltype(output__),
-              decltype(get(inputs,0))...
-              >::value << std::endl;
-////
-            cout << "Type of ExecutorLambda: " << Typestr(lambda::apply) << endl;
-            cout << "Types of Output: " << typestr(output__) << endl;
-            cout << "Types of Inputs: " << typestr(inputs...) << endl;
-            cout << "Types of Inputs after get(inputs): ";
-            ((cout << type_str<decltype(get(inputs, 0))>::apply() << ", "), ...);
-            cout << endl;
-            
-//            return nullptr;/*
-            /// spawn threads
-            for(size_t threadIdx = 0; threadIdx < threadCnt; ++threadIdx){
-                std::cout << "spawn thread " << threadIdx << std::endl;
-                outType_t** output = &(results->at(threadIdx));
                 
-                threads->push_back(new std::thread(
-                    /// lambda function
-//                    __ExecutorLambda<TExecutable, TOut<TOutputTypes...>, TIn<TInputTypes...>>::apply,
-
-                    lambda::apply,
-//                    ExecutorCore<
-//                      TExecutable,
-//                      decltype(OutputTypes(TExecutable::apply(get(inputs, threadIdx)...))),
-//                      decltype(InputTypes(get(inputs, threadIdx)...))
-//                      >::apply,
-
-                    /// write address for lambda function result
-                    output,
-                    /// input parameters
-                    get(inputs, threadIdx)...
-                ));
-                // debug:
-//                threads->at(threadIdx)->join();
+                std::cout << "Input types after decay: \n  ";
+                ((std::cout << typestr<typename std::decay<decltype(inputs)>::type>() << ", "), ...);
+                std::cout << std::endl;
+                
+                output_t** output__ = &(results->at(0));
+                
+                std::cout << "Is the Core::apply Function invocable?: " << std::boolalpha;
+                std::cout << std::__is_invocable<
+                  decltype(core_t::apply),
+                  decltype(output__),
+                  decltype(get(inputs,0))...
+                  >::value << std::endl;
+                cout << "FunctionType of the Core:\n  " << Typestr(core_t::apply) << endl;
+                cout << "Type of the Core Output Buffer:\n  " << typestr(output__) << endl;
+                cout << "Types of Inputs:\n  " << typestr(inputs...) << endl;
+                cout << "Types of Inputs after indexed access (get(inputs)):\n  ";
+                ((cout << type_str<decltype(get(inputs, 0))>::apply() << ", "), ...);
+                cout << endl;
+                
+                return nullptr; /// will result in an error
+            } else {
+    
+                /// spawn threads
+                for (size_t threadIdx = 0; threadIdx < threadCnt; ++ threadIdx) {
+//                    std::cout << "spawn thread " << threadIdx << std::endl;
+                    output_t ** output = &(results->at(threadIdx));
+        
+                    threads->push_back(
+                      new std::thread(
+                        /// core function
+                        core_t::apply,
+                        /// write address for lambda function result
+                        output,
+                        /// input parameters
+                        get(inputs, threadIdx)...
+                      ));
+                }
+    
+                /// wait for threads
+                for (auto & thread : *threads) {
+                    thread->join();
+                    delete thread;
+                }
+    
+                /// finish
+                return results;
             }
-            
-            /// wait for threads
-            for(auto& thread : *threads){
-                thread->join();
-                delete thread;
-            }
-            
-            /// finish
-            return results;
-            /**/
         }
     };
     

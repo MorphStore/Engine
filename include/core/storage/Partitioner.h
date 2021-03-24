@@ -110,7 +110,7 @@ namespace morphstore {
         
         template<IArithmetic TBase, IFormat TFormat, uint64_t alignment = 64>
         static
-        std::vector<column<TFormat>*>* apply(const column<TFormat>* orig, uint64_t partitionCount){
+        std::vector< const column<TFormat>* >* apply(const column<TFormat>* orig, uint64_t partitionCount){
             /// number of values that fit in one aligned chunk
             const uint64_t chunkSize = alignment / sizeof(TBase);
             
@@ -125,7 +125,7 @@ namespace morphstore {
             /// elements per partition
             uint64_t partitionSize = chunkSize * (chunks / partitionCount + ((chunks % partitionCount) ? 1 : 0));
             
-            auto partitionSet = new std::vector<column<TFormat>* >;
+            auto partitionSet = new std::vector< const column<TFormat> * >;
             for(uint64_t i = 0; i < partitionCount; ++i){
                 uint64_t begin = i * partitionSize;
                 uint64_t end = begin + partitionSize;
@@ -152,28 +152,23 @@ namespace morphstore {
         };
     };
 
-    /// to enable LogicalPartitioner<TStorage, TBase>
-    template<IStorage TStorage, IArithmetic TBase, uint64_t alignment = MSV_MEMORY_MANAGER_ALIGNMENT_BYTE>
+    
     class PhysicalPartitioner : Partitioner {
-        //
-    };
-    
-    
-    template<IFormat TFormat, IArithmetic TBase, uint64_t alignment>
-    class PhysicalPartitioner<column<TFormat>, TBase, alignment> : Partitioner {
       public:
         static const Partitioner::PartitioningType partitioningType = Partitioner::PartitioningType::Physical;
         
+        template<IArithmetic TBase, IFormat TFormat, uint64_t alignment = 64>
         static
         std::vector<column<TFormat>*>* apply(column<TFormat>* orig, uint64_t partitionCount){
             /// @todo
         };
         
-        /// @todo invalidate for const column<...>*
+        /// @todo invalidate for const column<...>* ???
         
         static
         column<uncompr_f> * consolidate(std::vector<column<uncompr_f>*>* partitionSet){
             /// @todo
+            return nullptr;
         }
     };
     

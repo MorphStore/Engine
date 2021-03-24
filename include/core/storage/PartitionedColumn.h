@@ -93,7 +93,7 @@ namespace morphstore {
     template<IPartitioner TPartitioner, IFormat TFormat, IArithmetic TBase = uint64_t>
     class PartitionedColumn : public Storage {
       private:
-        std::vector<column<TFormat>*>* partitionSet;
+        std::vector< const column<TFormat>*>* partitionSet;
         void * dataUnaligned;
         voidptr_t data;
         
@@ -112,14 +112,20 @@ namespace morphstore {
             delete prey;
         }
         
-//        PartitionedColumn(column<TFormat> const * noPrey, const uint64_t count) : data(noPrey->m_Data) {
-//            partitionSet = TPartitioner::template apply<TBase>(noPrey, count);
-//            /// take over data ptr (@todo only for logical partitioning, move into partitioner?)
-//            dataUnaligned = noPrey->m_DataUnaligned;
-//        }
+        PartitionedColumn(column<TFormat> const * noPrey, const uint64_t count) : data(noPrey->m_Data) {
+            partitionSet = TPartitioner::template apply<TBase>(noPrey, count);
+            /// take over data ptr (@todo only for logical partitioning, move into partitioner?)
+            dataUnaligned = noPrey->m_DataUnaligned;
+        }
         
         PartitionedColumn() : data(nullptr), dataUnaligned(nullptr) {
-            partitionSet = new std::vector<column<TFormat>*>();
+            partitionSet = new std::vector< const column<TFormat>* >();
+        }
+        
+        ~PartitionedColumn() {
+            for(auto& col : *partitionSet){
+                delete col;
+            }
         }
         
         const column<TFormat>* operator[](size_t index){
@@ -130,7 +136,7 @@ namespace morphstore {
             //?
         }
         
-        void addPartition(column<TFormat>* newPartition){
+        void addPartition(const column<TFormat>* newPartition){
             if constexpr(partitioningType == Partitioner::PartitioningType::Logical){
                 throw std::runtime_error("It is prohibited to add partitions to a logical partitioned column!");
             } else {
