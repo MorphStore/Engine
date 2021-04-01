@@ -37,18 +37,18 @@ int main (){
     //// ======= config ======= ////
     
     /// number of threads
-    const uint64_t threadCnt = 4;
+    const uint64_t threadCnt = 14;
     
     /// numnber of test runs
     const uint64_t numberOfRuns = 10;
     
     /// print the results of ms::operator and metaOperator
-    const bool printResults = true;
+    const bool printResults = false;
     
     /// N GB of data
-//    const size_t countValues = 1024 * 1024 / sizeof(uint64_t) * 1024 * 1;
+    const size_t countValues = 1024 * 1024 / sizeof(uint64_t) * 1024 * 2;
     /// N KB of data
-    const size_t countValues = 1024 / sizeof(uint64_t) * 2;
+//    const size_t countValues = 1024 / sizeof(uint64_t) * 2;
     /// N values per thread
 //    const size_t countValues = threadCnt * 10;
     
@@ -100,6 +100,8 @@ int main (){
     using monitoring::MTask;
     monitoring::Monitor mon;
     
+    std::cout << "Start Benchmark. Number of runs: 10" << std::endl;
+    std::cout << std::endl;
     
     
     /// ====== Calc Operator ====== ///
@@ -119,9 +121,9 @@ int main (){
     std::cout << "done." << std::endl;
     
     std::cout << "Execution time of calc operator: "
-              << "avg: " << dotNumber(mon.getAvg<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
-              << "min: " << dotNumber(mon.getMin<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
-              << "max: " << dotNumber(mon.getMax<std::chrono::nanoseconds>(MTask::Test1)) << " ns "
+              << "mean: " << dotNumber(mon.getMean<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
+              << "min:  " << dotNumber(mon.getMin<std::chrono::nanoseconds> (MTask::Test1)) << " ns / "
+              << "max:  " << dotNumber(mon.getMax<std::chrono::nanoseconds> (MTask::Test1)) << " ns "
               << std::endl;
     
     
@@ -137,9 +139,9 @@ int main (){
     std::cout << "done." << std::endl;
     
     std::cout << "Execution time of meta calc operator: "
-              << "avg: " << dotNumber(mon.getAvg<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
-              << "min: " << dotNumber(mon.getMin<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
-              << "max: " << dotNumber(mon.getMax<std::chrono::nanoseconds>(MTask::Test2)) << " ns "
+              << "mean: " << dotNumber(mon.getMean<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
+              << "min:  " << dotNumber(mon.getMin<std::chrono::nanoseconds> (MTask::Test2)) << " ns / "
+              << "max:  " << dotNumber(mon.getMax<std::chrono::nanoseconds> (MTask::Test2)) << " ns "
               << std::endl;
     
     if constexpr(printResults) {
@@ -157,11 +159,13 @@ int main (){
     
     mon.reset(MTask::Test1);
     mon.reset(MTask::Test2);
+    std::cout << std::endl;
    
     /// ====== Select Operator ====== ///
     column<uncompr_f> const * selectResult = nullptr;
     /// PartitonedColumn<...> *
     select_op_meta::output_t selectMetaResult = nullptr;
+    
     
     /// run select operator
     std::cout << "Run select operator" << std::flush;
@@ -175,9 +179,9 @@ int main (){
     std::cout << "done." << std::endl;
     
     std::cout << "Execution time of select operator: "
-              << "avg: " << dotNumber(mon.getAvg<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
-              << "min: " << dotNumber(mon.getMin<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
-              << "max: " << dotNumber(mon.getMax<std::chrono::nanoseconds>(MTask::Test1)) << " ns "
+              << "mean: " << dotNumber(mon.getMean<std::chrono::nanoseconds>(MTask::Test1)) << " ns / "
+              << "min:  " << dotNumber(mon.getMin<std::chrono::nanoseconds> (MTask::Test1)) << " ns / "
+              << "max:  " << dotNumber(mon.getMax<std::chrono::nanoseconds> (MTask::Test1)) << " ns "
               << std::endl;
     
     
@@ -193,10 +197,13 @@ int main (){
     std::cout << "done." << std::endl;
     
     std::cout << "Execution time of select meta operator: "
-              << "avg: " << dotNumber(mon.getAvg<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
-              << "min: " << dotNumber(mon.getMin<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
-              << "max: " << dotNumber(mon.getMax<std::chrono::nanoseconds>(MTask::Test2)) << " ns "
+              << "mean: " << dotNumber(mon.getMean<std::chrono::nanoseconds>(MTask::Test2)) << " ns / "
+              << "min:  " << dotNumber(mon.getMin<std::chrono::nanoseconds> (MTask::Test2)) << " ns / "
+              << "max:  " << dotNumber(mon.getMax<std::chrono::nanoseconds> (MTask::Test2)) << " ns "
               << std::endl;
+    
+    
+    
     
     if constexpr(printResults) {
         auto select_in = new PartitionedColumn<LogicalPartitioner, uncompr_f>(baseCol1, threadCnt);

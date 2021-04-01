@@ -65,7 +65,7 @@ namespace morphstore {
 			template<class format>
 			std::vector<uint64_t> getAllDurations(MTask task);
 			template<class format>
-			uint64_t getAvg(MTask task);
+			uint64_t getMean(MTask task);
 			template<class format>
 			uint64_t getMin(MTask task);
 			template<class format>
@@ -88,13 +88,27 @@ namespace morphstore {
 			static Monitor * getGlobal();
 			static Monitor * getThreadLocal();
 			
-			static void resetThreadMonitor();
-			static void resetGlobalMonitor();
-			static void resetSubRunMonitor();
+			
+			void transmitTo(Monitor *, MTask);
+			void transmitToGlobal(MTask);
+			
+			template<class format>
+			uint64_t getMeanTransmitted(MTask);
+			template<class format>
+			uint64_t getMinTransmitted(MTask);
+			template<class format>
+			uint64_t getMaxTransmitted(MTask);
+			template<class format>
+			uint64_t getMedianTransmitted(MTask);
+			
+			void resetTransmitted(MTask);
 		  
 		  
 		  private:
 		};
+		
+		Monitor* Monitor::globalMonitor = nullptr;
+		thread_local Monitor* Monitor::threadMonitor = nullptr;
 		
 		Monitor::Monitor() {
 			for (const auto e : {MTask::__begin__, MTask::__end__}) {
@@ -171,7 +185,7 @@ namespace morphstore {
 		}
 		
 		template<class format>
-		uint64_t Monitor::getAvg(MTask task) {
+		uint64_t Monitor::getMean(MTask task) {
 			return series[task].getAvg<format>();
 		}
 		
@@ -184,9 +198,61 @@ namespace morphstore {
 		uint64_t Monitor::getMax(MTask task) {
 			return series[task].getMax<format>();
 		}
-		
-		
-	}
+        
+        Monitor * Monitor::getGlobal() {
+            if(!globalMonitor)
+                globalMonitor = new Monitor();
+            return globalMonitor;
+        }
+        
+        Monitor * Monitor::getThreadLocal() {
+            if(!threadMonitor)
+                threadMonitor = new Monitor();
+            return threadMonitor;
+        }
+        
+        void Monitor::transmitTo(Monitor * target, MTask type) {
+            if(tasks[type].duration.count() > 0) {
+                std::lock_guard<std::mutex> lock(target->monitorLock);
+                target->transmittedTasks[type].push_back(tasks[type]);
+            }
+            
+        }
+        
+        void Monitor::transmitToGlobal(MTask type) {
+            transmitTo(getGlobal(), type);
+        }
+        
+        template< class format >
+        uint64_t Monitor::getMeanTransmitted(MTask type) {
+            std::vector<MonitorTask>& tt = transmittedTasks[type];
+            std::chrono::nanoseconds avgDuration = std::chrono::nanoseconds(0);
+            uint64_t count = 0UL;
+            for(auto& t : tt){
+                avgDuration += t.duration;
+                ++count;
+            }
+            if(count)
+                avgDuration = avgDuration / count;
+            return std::chrono::duration_cast<format>(avgDuration);
+        }
+        
+        template< class format >
+        uint64_t Monitor::getMinTransmitted(MTask type) {
+            std::vector<MonitorTask>& tt = transmittedTasks[type];
+            std::chrono::nanoseconds minDuration = std::chrono::nanoseconds(uint64_t(-1));
+            for(auto& t : tt){
+                if(t.duration < minDuration)
+                    minDuration = t.duration;
+            }
+            return std::chrono::duration_cast<format>(minDuration);
+        }
+        
+        void Monitor::resetTransmitted(MTask type) {
+            transmittedTasks[type].clear();
+        }
+        
+    }
 }
 #endif /* MONITOR_H */
 

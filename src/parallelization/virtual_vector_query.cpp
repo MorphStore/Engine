@@ -190,7 +190,7 @@ int main( void ) {
 	
 	
 	std::cout << "Average duration of agg_sum with " << benchname << ": "
-	          << monBase.getAvg<milliseconds>(MTask::Runtime) << " ms "
+              << monBase.getMean<milliseconds>(MTask::Runtime) << " ms "
 	          << "min: " << monBase.getMin<milliseconds>(MTask::Runtime) << " ms "
 	          << "max: " << monBase.getMax<milliseconds>(MTask::Runtime) << " ms "
 	          << std::endl;
@@ -230,7 +230,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -273,7 +273,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -309,7 +309,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -343,7 +343,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -377,7 +377,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -411,7 +411,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -445,7 +445,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -479,7 +479,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;
@@ -513,7 +513,7 @@ int main( void ) {
             delete filteredData;
 		}
 		std::cout << "Average duration of agg_sum with vv<" << virt::vector_helper_t::size_bit::value << ">: "
-		          << mon.getAvg<milliseconds>(MTask::Runtime) << " ms "
+                  << mon.getMean<milliseconds>(MTask::Runtime) << " ms "
 		          << "min: " << mon.getMin<milliseconds>(MTask::Runtime) << " ms "
 		          << "max: " << mon.getMax<milliseconds>(MTask::Runtime) << " ms "
 		          << std::endl;

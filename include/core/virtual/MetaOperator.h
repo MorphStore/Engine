@@ -45,16 +45,9 @@ namespace morphstore {
         using executableInputList_t = typename unfold_type(TExecutable::apply)::inputType;
         
         using executableOutput_t = typename pack<typename unfold_type(TExecutable::apply)::returnType>::type;
-//        using executor = Executor<TVectorBuilder::ctype, TExecutable, executableOutputTypes, executableInputTypes>;
 
         using executor_t = Executor<TVectorBuilder::ctype, TExecutable>;
         using output_t = PartitionedColumn<TConsolidator, uncompr_f>*;
-
-//        static
-//        void apply(executableInputTypes input){
-////            TExecutable::apply(input);
-//        }
-    
     
       private:
         template<IStorage TStorage>
