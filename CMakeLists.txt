@@ -1,266 +1,107 @@
 cmake_minimum_required( VERSION 3.10 )
 project( MorphStore CXX )
 
-set( CMAKE_CXX_STANDARD 20 )
+########################################################################################################################
+####### include local cmake config #####################################################################################
+########################################################################################################################
+if( NOT EXISTS ${PROJECT_SOURCE_DIR}/local_config.cmake)
+    file(WRITE ${PROJECT_SOURCE_DIR}/local_config.cmake "## This is your local cmake config file, to preset certain cmake variables. Do not upload into the git repository!\n")
+endif()
+include( ${PROJECT_SOURCE_DIR}/local_config.cmake OPTIONAL )
+message( STATUS "You can define your own local cmake options/variables inside the local_config.cmake file in the root directory of the project." )
 
-macro(morph_flag)
-	add_definitions(${ARGN})
-	LIST(APPEND MODULE_FLAGS ${ARGN})
-endmacro(morph_flag)
+########################################################################################################################
+####### set important variables ########################################################################################
+########################################################################################################################
+####### README:
+####### The check if a variable is already defined will enable to import MorphStore as a submodule without overwriting
+####### already set variables
+########################################################################################################################
 
-# Get the current working branch
-execute_process(
-        COMMAND git rev-parse --abbrev-ref HEAD
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_BRANCH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-# Get the latest abbreviated commit hash of the working branch
-execute_process(
-        COMMAND git log -1 --format=%h
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_COMMIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-set( LOG_FILE "recentMorphStoreProjectConf.log" )
-
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-	morph_flag(-g)
-	message(STATUS "MorphStore is configured in DEBUG mode.")
-ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-	morph_flag(-O2)
-	message(STATUS "MorphStore is configured in RELEASE mode.")
-ELSEIF(CMAKE_BUILD_TYPE MATCHES HighPerf)
-	morph_flag(-O3)
-	morph_flag(-flto)
-	message(STATUS "MorphStore is configured in HIGH PERFORMANCE mode.")
-ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
-	message( SEND_ERROR "No known build type specified. Use either Debug, Release or HighPerf" )
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
-
-IF(CSSE)
-	morph_flag(-DSSE)
-	morph_flag(-msse4.2)
-	message(STATUS "SSE4.2 support switched on")
-ENDIF(CSSE)
-
-IF(CAVXTWO)
-  morph_flag(-DSSE)
-	morph_flag(-DAVXTWO)
-	morph_flag(-mavx2)
-	message(STATUS "AVX2 support switched on")
-ENDIF(CAVXTWO)
-
-IF(CAVX512)
-  morph_flag(-DSSE)
-	morph_flag(-DAVX512)
-	morph_flag(-mavx512f)
-	morph_flag(-mavx512pf)
-	morph_flag(-mavx512er)
-	morph_flag(-mavx512cd)
-	morph_flag(-mavx512vl)
-	morph_flag(-DAVXTWO)
-	morph_flag(-mavx2)
-	message(STATUS "AVX512 and AVX2 support switched on")
-ENDIF(CAVX512)
-
-IF(CNEON)
-  morph_flag(-DNEON)
-	morph_flag(-mfpu=neon)
-	morph_flag(-flax-vector-conversions)
-  message(STATUS "NEON support switched on")
-ENDIF(CNEON)
-
-IF(CSVE)
-  morph_flag(-DSVE)
-  morph_flag(-march=armv8-a+sve)
-  message(STATUS "SVE support switched on")
-ELSE()
-  morph_flag(-march=native)
-ENDIF(CSVE)
-
-IF(CRAPL)
-    morph_flag(-DRAPL)
-ENDIF(CRAPL)
-
-IF(CODROID)
-    morph_flag(-DODROID)
-ENDIF(CODROID)
-
-
-# remove build type to allow for custom flag handling
-set(CMAKE_BUILD_TYPE "")
-
-# general compiler settings, meant for all subdirectories and tests
-#morph_flag(-Werror)
-#morph_flag(-pedantic)
-#morph_flag(-Wall)
-morph_flag(-Wextra)
-morph_flag(-Wno-ignored-attributes)
-morph_flag(-Wno-comment)
-morph_flag(-fstack-protector-all)
-morph_flag(-fno-tree-vectorize)
-morph_flag(-fconcepts)
-
-########### <Checking Defines
-set( MorphStoreProjectConf "MorphStore Project Configuration:\n" )
-
-if ( DEFINED NO_SELF_MANAGING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMorphStore uses STANDARD C MALLOC.\n" )
-	morph_flag("-DMSV_NO_SELFMANAGED_MEMORY")
-	set( ignoreMe ${NO_SELF_MANAGING} )
-else ( DEFINED NO_SELF_MANAGING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMorphStore uses its CUSTOM MEMORY MANAGER.\n" )
-	morph_flag("-UMSV_NO_SELFMANAGED_MEMORY")
-endif ( DEFINED NO_SELF_MANAGING )
-
-if ( DEFINED DEBUG_MALLOC )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager calls will be printed to the debug channel.\n" )
-	morph_flag("-DMSV_DEBUG_MALLOC")
-	set( ignoreMe ${DEBUG_MALLOC} )
-else ( DEFINED DEBUG_MALLOC )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager calls are not printed.\n")
-	morph_flag("-UMSV_DEBUG_MALLOC")
-endif ( DEFINED DEBUG_MALLOC )
-
-if ( DEFINED CHECK_LEAKING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager will check for potential leaks.\n" )
-	morph_flag("-DMSV_MEMORY_LEAK_CHECK")
-	set( ignoreMe ${CHECK_LEAKING} )
-else ( DEFINED CHECK_LEAKING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager is oblivious to potential memory leaks.\n" )
-	morph_flag("-UMSV_MEMORY_LEAK_CHECK")
-endif ( DEFINED CHECK_LEAKING )
-
-if ( DEFINED MMGR_ALIGN )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager aligns to ${MMGR_ALIGN} Byte.\n" )
-	morph_flag("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=${MMGR_ALIGN}")
-	set( ignoreMe ${MMGR_ALIGN} )
-else ( DEFINED MMGR_ALIGN )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tMemoryManager align defaults to 64 Byte.\n" )
-	morph_flag("-DMSV_MEMORY_MANAGER_ALIGNMENT_BYTE=64")
-endif ( DEFINED MMGR_ALIGN )
-
-if ( DEFINED NOLOGGING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tLogging is completely disabled.\n")
-	morph_flag("-DMSV_NO_LOG" )
-	set( ignoreMe ${NOLOGGING} )
-else ( DEFINED NOLOGGING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tLogging is set to standard.\n")
-	morph_flag("-UMSV_NO_LOG" )
-endif ( DEFINED NOLOGGING )
-
-if ( DEFINED QMMMES )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager min expand size is set to ${QMMMES}\n" )
-	morph_flag("-DMSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE=${QMMMES}")
-	set( ignoreMe ${QMMMES} )
-else ( DEFINED QMMMES )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager min expand size defaults to 128M.\n" )
-	morph_flag("-UMSV_QUERY_MEMORY_MANAGER_MINIMUM_EXPAND_SIZE")
-endif ( DEFINED QMMMES )
-
-if ( DEFINED QMMIS )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager initial size is set to ${QMMIS}\n" )
-	morph_flag("-DMSV_QUERY_MEMORY_MANAGER_INITIAL_SIZE=${QMMIS}")
-	set( ignoreMe ${QMMIS} )
-else ( DEFINED QMMIS )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager initial size defaults to 128M.\n" )
-	morph_flag("-UMSV_QUERY_MEMORY_MANAGER_INITIAL_SIZE")
-endif ( DEFINED QMMIS )
-
-if ( DEFINED QMMAE )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager is allowed to expand its size.\n" )
-	morph_flag("-DMSV_QUERY_MEMORY_MANAGER_ALLOW_EXPAND")
-	set( ignoreMe ${QMMAE} )
-else ( DEFINED QMMAE )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager is NOT allowed to expand its size.\n" )
-	morph_flag("-UMSV_QUERY_MEMORY_MANAGER_ALLOW_EXPAND")
-endif ( DEFINED QMMAE )
-
-if ( DEFINED QMMIB )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager will initialize buffers after allocation.\n" )
-	morph_flag("-DMSV_QUERY_MEMORY_MANAGER_INITIALIZE_BUFFERS")
-	set( ignoreMe ${QMMIB} )
-else ( DEFINED QMMIB )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tQueryMemoryManager will NOT initialize buffers after allocation.\n" )
-	morph_flag("-UMSV_QUERY_MEMORY_MANAGER_INITIALIZE_BUFFERS")
-endif ( DEFINED QMMIB )
-
-if ( DEFINED ENABLE_MONITORING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tENABLE_MONITORING is set to to TRUE\n" )
-	morph_flag("-DMSV_USE_MONITORING")
-	set( ignoreMe ${ENABLE_MONITORING} )
-else ( DEFINED ENABLE_MONITORING )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tENABLE_MONITORING is set to FALSE\n" )
-	morph_flag("-UMSV_USE_MONITORING")
-endif ( DEFINED ENABLE_MONITORING )
-
-if ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to to TRUE\n" )
-	morph_flag("-DVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
-	set( ignoreMe ${VBP_LIMIT_ROUTINES_FOR_SSB_SF1} )
-else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF1 is set to FALSE\n" )
-	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF1")
-endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF1 )
-
-if ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF100 is set to to TRUE\n" )
-	morph_flag("-DVBP_LIMIT_ROUTINES_FOR_SSB_SF100")
-	set( ignoreMe ${VBP_LIMIT_ROUTINES_FOR_SSB_SF100} )
-else ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tVBP_LIMIT_ROUTINES_FOR_SSB_SF100 is set to FALSE\n" )
-	morph_flag("-UVBP_LIMIT_ROUTINES_FOR_SSB_SF100")
-endif ( DEFINED VBP_LIMIT_ROUTINES_FOR_SSB_SF100 )
-
-if ( DEFINED PROJECT_ASSUME_PREPARED )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tPROJECT_ASSUME_PREPARED is set to to TRUE\n" )
-	morph_flag("-DPROJECT_ASSUME_PREPARED")
-	set( ignoreMe ${PROJECT_ASSUME_PREPARED} )
-else ( DEFINED PROJECT_ASSUME_PREPARED )
-	set( MorphStoreProjectConf "${MorphStoreProjectConf}\tPROJECT_ASSUME_PREPARED is set to FALSE\n" )
-	morph_flag("-UPROJECT_ASSUME_PREPARED")
-endif ( DEFINED PROJECT_ASSUME_PREPARED )
-
-MESSAGE( ${MorphStoreProjectConf} )
-file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
-
-########### Checking Defines />
-
-if ( DEFINED TVL_PATH)
-  include_directories(AFTER ${TVL_PATH}  ${PROJECT_SOURCE_DIR}/include)
-else ( DEFINED TVL_PATH)
-  include_directories(  ${PROJECT_SOURCE_DIR}/include )
-endif( DEFINED TVL_PATH)
-
-morph_flag("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
-morph_flag("-DGIT_BRANCH=${GIT_BRANCH}")
-
-configure_file(
-   ${CMAKE_SOURCE_DIR}/include/core/utils/cmake_template.h.in
-   ${CMAKE_BINARY_DIR}/generated/cmake_template.h
-)
-
-execute_process(
-        COMMAND python3 vbp_routine_gen.py
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/morphing
-        OUTPUT_FILE vbp_routines.h
-        RESULT_VARIABLE retValVBPRoutineGen
-)
-if(retValVBPRoutineGen EQUAL "1")
-    message( FATAL_ERROR "Generation of the routines for vertical bit packing (vbp_l) failed.")
+####### set c++ version
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+	set( CMAKE_CXX_STANDARD 20 )
+elseif(${CMAKE_CXX_STANDARD} LESS 17)
+	message( FATAL_ERROR "Extern defined C++ standard is to old. C++17 or above is required.")
 endif()
 
+####### set root path of MorphStore project
+if(NOT DEFINED MorphStoreRoot)
+	set( MorphStoreRoot ${PROJECT_SOURCE_DIR})
+endif()
+
+####### set path to log file, where the last morphstore config is printed to
+set( LOG_FILE "${MorphStoreRoot}/recentMorphStoreProjectConf.log" )
+
+
+
+########################################################################################################################
+####### import user defined cmake functions ############################################################################
+########################################################################################################################
+####### import function generate_git_hash() // fetches and writes git branch and commit hash into <build_path>/generated/cmake_template.h
+include( ${MorphStoreRoot}/cmake_files/generate_git_hash.cmake )
+
+####### import function generate_vbp_routine_code() // generates code for vertical bit packing algorithms
+include( ${MorphStoreRoot}/cmake_files/generate_vbp_routine_code.cmake )
+
+## @todo throws "fatal: bad object HEAD" when building remote (because git files are not uploaded to server)
+generate_git_hash()
+
+if( NOT EXISTS "${MorphStoreRoot}/include/core/morphing/vbp_routines.h" OR DEFINED REGENERATE_VBP_ROUTINES )
+    generate_vbp_routine_code()
+endif()
+
+
+
+########################################################################################################################
+####### import user defined cmake functions ############################################################################
+########################################################################################################################
+####### README:
+#######
+########################################################################################################################
+
+####### set build type dependend compile options // valid types are: Debug, Release, HighPerf
+include( ${MorphStoreRoot}/cmake_files/build_type.cmake )
+
+####### set vector extension specific compilter options
+include( ${MorphStoreRoot}/cmake_files/vector_extension_options.cmake )
+
+####### set general compilter options
+include( ${MorphStoreRoot}/cmake_files/general_compiler_options.cmake )
+
+####### set further morphstore options
+include( ${MorphStoreRoot}/cmake_files/morphstore_options.cmake )
+
+
+
+
+########################################################################################################################
+####### set include directories ########################################################################################
+########################################################################################################################
+
+####### @todo does this make any sense, when TVL files are still part of the source code!?
+if ( DEFINED TVL_PATH)
+  include_directories(AFTER ${TVL_PATH}  ${PROJECT_SOURCE_DIR}/include)
+else ()
+  include_directories( ${PROJECT_SOURCE_DIR}/include )
+endif()
+
+####### for cmake_template.h containing git info
 include_directories(${CMAKE_BINARY_DIR}/generated)
+
+####### shortcut to include helper
 include_directories(${PROJECT_SOURCE_DIR}/include/abridge)
 
 
-if( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
-    add_subdirectory( src )
-endif( BUILD_ALL OR BUILD_CALIB OR BUILD_EXAMPLES OR BUILD_MICROBMS OR BUILD_SSB )
+########################################################################################################################
+####### traverse through subdirectories ################################################################################
+########################################################################################################################
+add_subdirectory( src )
 
+########################################################################################################################
+####### run tests ######################################################################################################
+########################################################################################################################
+## @todo Rework?
 if ( RUN_CTESTS )
 	MESSAGE( "Running CTest has been enabled" )
 	enable_testing()

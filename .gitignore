@@ -16,3 +16,4 @@ output/
 /doc/doxygen/tmp/firstrun
 /doc/doxygen/errors.txt
 /config
+local_config.cmake

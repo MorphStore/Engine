@@ -1,19 +1,12 @@
 if( BUILD_ALL OR BUILD_PARALLELIZATION )
-#    morph_flag(-DDEBUG)
     add_executable( virtual_vector_query virtual_vector_query.cpp )
     target_link_libraries( virtual_vector_query PRIVATE "-ldl" )
-
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -Og")
-
-    message("Compiler Flags: ${CMAKE_CXX_FLAGS}")
 
     target_sources(virtual_vector_query
         PUBLIC
         ${PROJECT_SOURCE_DIR}/include/core/utils/monitoring/Monitor.h
         ${PROJECT_SOURCE_DIR}/include/core/utils/monitoring/MonitorTask.h
     )
-
-
 
     add_executable( virtual_vector_template_test virtual_vector_template_test.cpp )
     target_link_libraries( virtual_vector_template_test PRIVATE "-ldl" )
@@ -22,6 +15,6 @@ if( BUILD_ALL OR BUILD_PARALLELIZATION )
     target_link_libraries( meta_operator_prototype_test PRIVATE "-ldl" )
 
     add_executable( overhead_benchmark_meta_operator overhead_benchmark_meta_operator.cpp )
-    target_link_libraries( overhead_benchmark_meta_operator PRIVATE "-ldl" )
+    target_link_libraries( overhead_benchmark_meta_operator PUBLIC -ldl -lpthread )
 
 endif( BUILD_ALL OR BUILD_PARALLELIZATION )
