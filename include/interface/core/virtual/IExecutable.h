@@ -25,7 +25,7 @@ namespace morphstore {
     /// Forward declaration of class Executable in <core/virtual/Executable.h>
     class Executable;
     
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
         /// Interface for Partitioner
         template< typename TExecutable >
         concept IExecutable = std::is_base_of<Executable, TExecutable>::value;

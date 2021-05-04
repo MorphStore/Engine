@@ -24,7 +24,7 @@ namespace vectorlib {
     /// Forward declaration of class VectorExtension in <vector/vv/extension_virtual_vector.h>
     class VectorExtension;
     
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
     
         /// Interface for possible vector extensions
         template< typename TVectorExtension >

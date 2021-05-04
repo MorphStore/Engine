@@ -35,7 +35,7 @@ namespace morphstore {
     };
     
     
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
     
         template<class TStorage>
         concept IStorage = is_storage<TStorage>::value;
@@ -57,7 +57,7 @@ namespace morphstore {
         static constexpr bool value = std::is_pointer<TArithmeitc>::value and std::is_arithmetic<typename std::remove_pointer<TArithmeitc>::type>::value;
     };
     
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
     
         template<class TArithmeitc>
         concept IArithmeticPtr = morphstore::is_arithmetic_ptr<TArithmeitc>::value;

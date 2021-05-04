@@ -19,7 +19,6 @@
 #ifndef MORPHSTORE_INTERFACES_H
 #define MORPHSTORE_INTERFACES_H
 
-#define USE_CONCEPTS
 
 #include <interface/core/storage/IStorage.h>
 #include <interface/core/storage/IPartitioner.h>

@@ -20,7 +20,7 @@
 #define MORPHSTORE_INCLUDE_INTERFACE_CORE_IOPERATOROUTPUT_H
 
 namespace morphstore {
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
         /// Interface for possible input types [executables and arithmetic types]
         template< typename TDataType >
         concept IOperatorOutput

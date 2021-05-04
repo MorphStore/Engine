@@ -23,7 +23,7 @@ namespace virtuallib {
 
     /// Forward declaration of class VectorBuilderBase in <vector/vv/extension_virtual_vector.h>
     class VectorBuilderBase;
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
     
         /// Interface for possible vector extensions
         template< typename TVectorBuilder >

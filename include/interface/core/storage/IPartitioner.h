@@ -26,7 +26,7 @@ namespace morphstore {
     /// Forward declaration of class Partitioner in <core/storage/Partitioner.h>
     class Partitioner;
 
-    #ifdef USE_CONCEPTS
+    #ifdef USE_CPP20_CONCEPTS
         /// Interface for Partitioner
         template< typename TPartitioner >
         concept IPartitioner = std::is_base_of<Partitioner, TPartitioner>::value;

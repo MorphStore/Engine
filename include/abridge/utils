@@ -24,5 +24,7 @@
 #include <core/utils/VirtualArray.h>
 #include <core/utils/logger.h>
 #include <core/utils/string_manipulation.h>
+#include <core/utils/system.h>
+
 
 #endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
