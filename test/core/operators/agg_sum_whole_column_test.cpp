@@ -39,9 +39,9 @@ int main( void ) {
     const bool allGood = test_op_1in_1out(
             "Whole-column aggregation(sum)",
             &agg_sum<scalar<v64<uint64_t>>>,
-            make_column({100, 150, 50, 500, 200, 100}),
+            ColumnGenerator::make_column({100, 150, 50, 500, 200, 100}),
             "inDataCol",
-            make_column({1100}),
+            ColumnGenerator::make_column({1100}),
             "outDataCol"
     );
     

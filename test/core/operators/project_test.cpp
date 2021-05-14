@@ -38,11 +38,11 @@ int main( void ) {
     const bool allGood = test_op_2in_1out(
             "Project",
             &project<scalar<v64<uint64_t>>>,
-            make_column({11, 44, 22, 33, 11}),
-            make_column({1, 3, 4}),
+            ColumnGenerator::make_column({11, 44, 22, 33, 11}),
+            ColumnGenerator::make_column({1, 3, 4}),
             "inDataCol",
             "inPosCol",
-            make_column({44, 33, 11}),
+            ColumnGenerator::make_column({44, 33, 11}),
             "outPosCol"
     );
     

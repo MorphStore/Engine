@@ -37,7 +37,7 @@ using namespace morphstore;
 int main( void ) {
     const size_t countValues = 20;
     
-    auto col0 = make_column({2, 3, 5, 7, 11, 13});
+    auto col0 = ColumnGenerator::make_column({2, 3, 5, 7, 11, 13});
     auto col1 = generate_sorted_unique(countValues);
     auto col2 = generate_sorted_unique(countValues, 100 * 1000, 1000);
     auto col3 = generate_with_distr(

@@ -46,11 +46,11 @@ int main(void) {
                     uncompr_f,
                     uncompr_f
             >,
-            make_column({10, 20, 0, 3, 100}),
-            make_column({5, 33, 3, 4, 10}),
+            ColumnGenerator::make_column({10, 20, 0, 3, 100}),
+            ColumnGenerator::make_column({5, 33, 3, 4, 10}),
             "inDataLCol",
             "inDataRCol",
-            make_column({15, 53, 3, 7, 110}),
+            ColumnGenerator::make_column({15, 53, 3, 7, 110}),
             "outDataCol"
     );
     

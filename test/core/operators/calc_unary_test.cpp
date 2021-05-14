@@ -54,9 +54,9 @@ int main(void) {
                     uncompr_f,
                     uncompr_f
             >,
-            make_column({10, 20, 0, 3, 100}),
+            ColumnGenerator::make_column({10, 20, 0, 3, 100}),
             "inDataCol",
-            make_column({15, 25, 5, 8, 105}),
+            ColumnGenerator::make_column({15, 25, 5, 8, 105}),
             "outDataCol"
     );
     

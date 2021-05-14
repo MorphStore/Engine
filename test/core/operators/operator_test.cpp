@@ -77,8 +77,8 @@ int test_select(
             outData.push_back(index);
     }
     
-    const column<uncompr_f> * refInCol  = make_column(inData);
-    const column<uncompr_f> * refOutCol = make_column(outData);
+    const column<uncompr_f> * refInCol  = ColumnGenerator::make_column(inData);
+    const column<uncompr_f> * refOutCol = ColumnGenerator::make_column(outData);
     
 //    info("IN column");
 //    print_columns(print_buffer_base::decimal, refInCol);
@@ -158,9 +158,9 @@ int test_project(
     std::vector<uint64_t> inPos   {   1,     3, 4,      6};
     std::vector<uint64_t> outData {   3,    13, 4,     44};
     
-    const column<uncompr_f> * refInDataCol = make_column(inData);
-    const column<uncompr_f> * refInPosCol  = make_column(inPos);
-    const column<uncompr_f> * refOutCol    = make_column(outData);
+    const column<uncompr_f> * refInDataCol = ColumnGenerator::make_column(inData);
+    const column<uncompr_f> * refInPosCol  = ColumnGenerator::make_column(inPos);
+    const column<uncompr_f> * refOutCol    = ColumnGenerator::make_column(outData);
     
     /// calculate reference select
     project_operator_t reference_project = project<scalar<v64<uint64_t>>,uncompr_f,uncompr_f,uncompr_f>;

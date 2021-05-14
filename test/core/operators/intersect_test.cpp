@@ -38,11 +38,11 @@ int main(void) {
     const bool allGood = test_op_2in_1out_1val(
             "Intersect",
             &intersect_sorted<scalar<v64<uint64_t>>, uncompr_f>,
-            make_column({1, 4, 5, 8, 9, 12}),
-            make_column({1, 6, 8, 12, 15}),
+            ColumnGenerator::make_column({1, 4, 5, 8, 9, 12}),
+            ColumnGenerator::make_column({1, 6, 8, 12, 15}),
             "inPosLCol",
             "inPosRCol",
-            make_column({1, 8, 12}),
+            ColumnGenerator::make_column({1, 8, 12}),
             "outPosCol",
             0 // use pessimistic output size estimation
     );
