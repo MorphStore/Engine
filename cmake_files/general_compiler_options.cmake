@@ -1,8 +1,9 @@
 # general compiler settings, meant for all subdirectories and tests
+function(set_general_compiler_options)
 if(NOT BUILD_TYPE MATCHES Debug)
-    add_compile_options(-Werror)
     add_compile_options(-pedantic)
     add_compile_options(-Wall)
+    add_compile_options(-Werror)
 endif()
 add_compile_options(-Wextra)
 add_compile_options(-Wno-ignored-attributes)
@@ -12,6 +13,8 @@ add_compile_options(-fno-tree-vectorize)
 
 ## enable C++20 concepts
 if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-    add_compile_definitions(USE_CPP20_CONCEPTS)
+#    add_compile_definitions(USE_CPP20_CONCEPTS)
+    ## @todo does not work for prototype (compile flag is not set for target, why?)
     add_compile_options(-fconcepts)
 endif()
+endfunction()

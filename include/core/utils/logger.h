@@ -301,18 +301,35 @@ typedef shell_logger morphstore_logger;
 #  define error(...)
 #  define wtf(...)
 #else
-#  ifdef DEBUG
-#     define trace(...) morphstore::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
-#     define debug(...) morphstore::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
-#  else
-#     define trace(...)
-#     define debug(...)
+    #ifdef DEBUG
+        #ifndef trace
+            #define trace(...) morphstore::morphstore_logger::get_instance( ).log( 0, __FUNCTION__, __VA_ARGS__ )
+        #endif
+        
+        #ifndef debug
+            #define debug(...) morphstore::morphstore_logger::get_instance( ).log( 1, __FUNCTION__, __VA_ARGS__ )
+        #endif
+    #else
+        #ifndef trace
+            #define trace(...)
+        #endif
+        #ifndef debug
+            #define debug(...)
 //#     define info(...)
-#  endif
-#     define info(...) morphstore::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
-#  define warn(...) morphstore::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
-#  define error(...) morphstore::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
-#  define wtf(...) morphstore::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
+        #endif
+    #endif
+    #ifndef info
+        #define info(...) morphstore::morphstore_logger::get_instance( ).log( 2, __FUNCTION__, __VA_ARGS__ )
+    #endif
+    #ifndef warn
+        #define warn(...) morphstore::morphstore_logger::get_instance( ).log( 3, __FUNCTION__, __VA_ARGS__ )
+    #endif
+    #ifndef error
+        #define error(...) morphstore::morphstore_logger::get_instance( ).log( 4, __FUNCTION__, __VA_ARGS__ )
+    #endif
+    #ifndef wtf
+        #define wtf(...) morphstore::morphstore_logger::get_instance( ).log( 5, __FUNCTION__, __VA_ARGS__ )
+    #endif
 #endif
 
 

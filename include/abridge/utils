@@ -19,6 +19,8 @@
 #ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
 #define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
 
+#include <core/utils/preprocessor.h>
+#include <core/utils/helper_types.h>
 #include <core/utils/type_traits.h>
 #include <core/utils/typestr.h>
 #include <core/utils/VirtualArray.h>

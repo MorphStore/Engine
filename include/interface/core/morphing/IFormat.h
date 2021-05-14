@@ -29,8 +29,12 @@ namespace morphstore {
      * Template argument must be derived from class format.
      * @tparam TFormat A class dreived from class format.
      */
-    template<class TFormat>
-    concept IFormat = std::is_base_of<format, TFormat>::value;
+    #ifdef USE_CPP20_CONCEPTS
+        template<class TFormat>
+        concept IFormat = std::is_base_of<format, TFormat>::value;
+    #else
+        #define IFormat typename
+    #endif
     
     
     
