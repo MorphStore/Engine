@@ -42,12 +42,12 @@ int main( void ) {
                     uncompr_f,
                     uncompr_f
             >,
-            make_column({22, 44, 11, 22, 55, 77}),
-            make_column({33, 22, 22, 11}),
+            ColumnGenerator::make_column({22, 44, 11, 22, 55, 77}),
+            ColumnGenerator::make_column({33, 22, 22, 11}),
             "inDataLCol",
             "inDataRCol",
-            make_column({0, 0, 2, 3, 3}),
-            make_column({1, 2, 3, 1, 2}),
+            ColumnGenerator::make_column({0, 0, 2, 3, 3}),
+            ColumnGenerator::make_column({1, 2, 3, 1, 2}),
             "outPosLCol",
             "outPosRCol",
             0 // use pessimistic output size estimation

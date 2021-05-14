@@ -38,12 +38,12 @@ int main(void) {
     const bool allGood = test_op_2in_2out_1val(
             "Binary group",
             &group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>,
-            make_column({0, 0, 1, 0, 2, 1}),
-            make_column({77, 88, 77, 77, 88, 88}),
+            ColumnGenerator::make_column({0, 0, 1, 0, 2, 1}),
+            ColumnGenerator::make_column({77, 88, 77, 77, 88, 88}),
             "inGrCol",
             "inDataCol",
-            make_column({0, 1, 2, 0, 3, 4}),
-            make_column({0, 1, 2, 4, 5}),
+            ColumnGenerator::make_column({0, 1, 2, 0, 3, 4}),
+            ColumnGenerator::make_column({0, 1, 2, 4, 5}),
             "outGrCol",
             "outExtCol",
             0 // use pessimistic output size estimation

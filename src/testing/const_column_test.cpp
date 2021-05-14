@@ -18,7 +18,7 @@
 #include <storage>
 #include <utils>
 #include <printing>
-
+#include <filesystem>
 
 int main(){
     using namespace morphstore;
@@ -48,5 +48,11 @@ int main(){
     
     cout << "baseCol1 |" << endl;
     print_columns<8>(baseCol1);
+
+    cout << testAndCreateDirectory("/home/eric/some/other/sample/path") << endl;
+//    filesystem::path path = filesystem::current_path();
+    filesystem::path path("/home/eric");
+
+    cout << path.string() << endl;
     /**/
 }

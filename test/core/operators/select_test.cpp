@@ -45,9 +45,9 @@ int main( void ) {
                     uncompr_f,
                     uncompr_f
             >,
-            make_column({95, 102, 100, 87, 120}),
+            ColumnGenerator::make_column({95, 102, 100, 87, 120}),
             "inDataCol",
-            make_column({0, 3}),
+            ColumnGenerator::make_column({0, 3}),
             "outPosCol",
             100,
             0 // use pessimistic output size estimation

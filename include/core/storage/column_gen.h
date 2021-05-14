@@ -41,31 +41,34 @@
 #include <vector>
 
 namespace morphstore {
-    
-/**
- * @brief Creates an uncompressed column and copies the contents of the given
- * vector into that column's data buffer. This is a convenience function for
- * creating small toy example columns. To prevent its usage for non-toy
- * examples, it throws an exception if the given vector contains more than 20
- * elements.
- * 
- * @param vec The vector to initialize the column with.
- * @return An uncompressed column containing a copy of the data in the given
- * vector.
- */
-const column<uncompr_f> * make_column(const std::vector<uint64_t> & vec) {
-    const size_t count = vec.size();
-    if(count > 20)
-        throw std::runtime_error(
-                "make_column() is an inefficient convenience function and "
-                "should only be used for very small columns"
-        );
-    const size_t size = count * sizeof(uint64_t);
-    auto resCol = new column<uncompr_f>(size);
-    memcpy(resCol->get_data(), vec.data(), size);
-    resCol->set_meta_data(count, size);
-    return resCol;
-}
+
+    class ColumnGenerator {
+      public:
+        /**
+         * @brief Creates an uncompressed column and copies the contents of the given
+         * vector into that column's data buffer. This is a convenience function for
+         * creating small toy example columns. To prevent its usage for non-toy
+         * examples, it throws an exception if the given vector contains more than 20
+         * elements.
+         *
+         * @param vec The vector to initialize the column with.
+         * @return An uncompressed column containing a copy of the data in the given
+         * vector.
+         */
+        static const column<uncompr_f> *make_column(const std::vector<uint64_t> &vec) {
+            const size_t count = vec.size();
+            if (count > 20)
+                throw std::runtime_error(
+                        "make_column() is an inefficient convenience function and "
+                        "should only be used for very small columns"
+                );
+            const size_t size = count * sizeof(uint64_t);
+            auto resCol = new column<uncompr_f>(size);
+            memcpy(resCol->get_data(), vec.data(), size);
+            resCol->set_meta_data(count, size);
+            return resCol;
+        }
+    };
 
 const column<uncompr_f> * make_column(uint64_t const * const vec, size_t count) {
    if(count > 400)

@@ -40,11 +40,11 @@ int main(void) {
                     scalar<v64<uint64_t>>,
                     uncompr_f
             >,
-            make_column({11, 22, 33, 11, 44, 55}),
-            make_column({22, 22, 33, 44, 33}),
+            ColumnGenerator::make_column({11, 22, 33, 11, 44, 55}),
+            ColumnGenerator::make_column({22, 22, 33, 44, 33}),
             "inDataLCol",
             "inDataRCol",
-            make_column({1, 2, 4}),
+            ColumnGenerator::make_column({1, 2, 4}),
             "outPosLCol",
             0 // use pessimistic output size estimation
     );

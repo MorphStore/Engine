@@ -38,10 +38,10 @@ int main(void) {
     const bool allGood = test_op_1in_2out_1val(
             "Unary group",
             &group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>,
-            make_column({333, 333, 111, 333, 222, 111}),
+            ColumnGenerator::make_column({333, 333, 111, 333, 222, 111}),
             "inDataCol",
-            make_column({0, 0, 1, 0, 2, 1}),
-            make_column({0, 2, 4}),
+            ColumnGenerator::make_column({0, 0, 1, 0, 2, 1}),
+            ColumnGenerator::make_column({0, 2, 4}),
             "outGrCol",
             "outExtCol",
             0 // use pessimistic output size estimation

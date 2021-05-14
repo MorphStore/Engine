@@ -38,11 +38,11 @@ int main( void ) {
     const bool allGood = test_op_2in_1out_1val(
             "Group-Based aggregation(sum)",
             &agg_sum<scalar<v64<uint64_t>>, uncompr_f>,
-            make_column({0, 0, 1, 0, 2, 1}),
-            make_column({100, 150, 50, 500, 200, 100}),
+            ColumnGenerator::make_column({0, 0, 1, 0, 2, 1}),
+            ColumnGenerator::make_column({100, 150, 50, 500, 200, 100}),
             "inGrCol",
             "inDataCol",
-            make_column({750, 150, 200}),
+            ColumnGenerator::make_column({750, 150, 200}),
             "outDataCol",
             3
     );
