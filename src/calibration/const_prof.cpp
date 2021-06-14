@@ -341,7 +341,7 @@ int main(int argc, char ** argv) {
     varex.print_datagen_started();
     // In fact, the data does not matter here, only the number of data elements
     // is relevant.
-    auto origCol = generate_sorted_unique(countValues);
+    auto origCol = ColumnGenerator::generate_sorted_unique(countValues);
     varex.print_datagen_done();
 
     for(int repIdx = 1; repIdx <= countRepetitions; repIdx++)

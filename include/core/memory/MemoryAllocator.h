@@ -16,18 +16,13 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#ifndef QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_MEMORYALLOCATOR_H
+#define QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_MEMORYALLOCATOR_H
 
-#include <core/utils/preprocessor.h>
-#include <core/utils/helper_types.h>
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
-#include <core/utils/system.h>
-#include <core/utils/print_columns.h>
+#include "BaseMemoryAllocator.h"
 
+class MemoryAllocator : public BaseMemoryAllocator {
+    /// inherit default allocation
+};
 
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#endif //QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_MEMORYALLOCATOR_H

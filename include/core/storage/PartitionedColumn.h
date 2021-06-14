@@ -14,7 +14,10 @@
  * You should have received a copy of the GNU General Public License along with this program. *
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
-
+namespace morphstore {
+    template< IPartitioner, IFormat, IArithmetic >
+    class PartitionedColumn;
+}
 
 #ifndef MORPHSTORE_PARTITIONEDCOLUMN_H
 #define MORPHSTORE_PARTITIONEDCOLUMN_H
@@ -89,7 +92,7 @@ namespace morphstore {
 //        }
 //    };
 
-    //// @todo === New Implementation ===
+    //// === New Implementation ===
     template<IPartitioner TPartitioner, IFormat TFormat, IArithmetic TBase = uint64_t>
     class PartitionedColumn : public Storage {
       private:
@@ -154,13 +157,13 @@ namespace morphstore {
     
     
     
-    /// type_str specialization for PartitionedColumn
-    template< typename...Args >
-    struct type_str<PartitionedColumn<Args...>> {
-        static string apply() {
-            return "PartitionedColumn<" + type_str<Args...>::apply() + ">";
-        }
-    };
+//    /// type_str specialization for PartitionedColumn
+//    template< typename...Args >
+//    struct type_str<PartitionedColumn<Args...>> {
+//        static string apply() {
+//            return "PartitionedColumn<" + type_str<Args...>::apply() + ">";
+//        }
+//    };
 
 }
 

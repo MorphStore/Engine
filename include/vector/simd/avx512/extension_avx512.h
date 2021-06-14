@@ -18,7 +18,7 @@
 #include <type_traits>
 #include "immintrin.h"
 
-#include "vector/vector_extension_structs.h"
+//#include "vector/vector_extension_structs.h"
 #include "vector/simd/sse/extension_sse.h"
 #include "vector/simd/avx2/extension_avx2.h"
 

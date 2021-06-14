@@ -311,10 +311,10 @@ int main(void) {
         // --------------------------------------------------------------------
 
         varex.print_datagen_started();
-        auto inDataLCol = generate_sorted_unique_extraction(
+        auto inDataLCol = ColumnGenerator::generate_sorted_unique_extraction(
                 inDataLCount, inDataLKeyCount
         );
-        auto inDataRCol = generate_with_distr(
+        auto inDataRCol = ColumnGenerator::generate_with_distr(
                 inDataRCount,
                 std::uniform_int_distribution<uint64_t>(
                         inDataRUpperHalf ? (inDataLKeyCount / 2) : 0,

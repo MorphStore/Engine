@@ -28,6 +28,7 @@
 #endif
 
 #include <type_traits>
+#include <array>
 
 namespace morphstore {
     
@@ -45,7 +46,7 @@ namespace morphstore {
         template< typename T >
         MSV_CXX_ATTRIBUTE_INLINE MSV_CXX_ATTRIBUTE_CONST
         operator T const *() const {
-            trace("[ VoidPtr Helper ] Implicit cast [ const void * const ] --> [ const ", typeid(T).name(), " * ]");
+//            trace("[ VoidPtr Helper ] Implicit cast [ const void * const ] --> [ const ", typeid(T).name(), " * ]");
             return reinterpret_cast<T const * const >( m_Ptr );
         }
         
@@ -53,7 +54,7 @@ namespace morphstore {
         template< typename T >
         MSV_CXX_ATTRIBUTE_INLINE MSV_CXX_ATTRIBUTE_CONST
         operator T *() const {
-            trace("[ VoidPtr Helper ] Implicit cast [ const void * const ] --> [ ", typeid(T).name(), " * ]");
+//            trace("[ VoidPtr Helper ] Implicit cast [ const void * const ] --> [ ", typeid(T).name(), " * ]");
             return reinterpret_cast<T * >( const_cast< void * >( m_Ptr ));
         }
     };

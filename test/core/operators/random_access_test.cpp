@@ -210,7 +210,7 @@ int main(void) {
         );
         
         varex.print_datagen_started();
-        auto origPosCol = generate_sorted_unique_extraction(
+        auto origPosCol = ColumnGenerator::generate_sorted_unique_extraction(
                 countPosLog, countDataLog
         );
         varex.print_datagen_done();
@@ -292,7 +292,7 @@ int main(void) {
             }
 
             varex.print_datagen_started();
-            auto origDataCol = generate_with_distr(
+            auto origDataCol = ColumnGenerator::generate_with_distr(
                     countDataLog,
                     std::uniform_int_distribution<uint64_t>(
                             0, bitwidth_max<uint64_t>(bw)

@@ -19,17 +19,28 @@
 #ifndef MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H
 #define MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H
 
-#include <core/operators/reference/select.h>
-#include <core/operators/reference/project.h>
-#include <core/operators/reference/group_first.h>
+//#include <core/operators/reference/select.h>
+//#include <core/operators/reference/project.h>
+//#include <core/operators/reference/group_first.h>
 #include <core/operators/reference/agg_sum_grouped.h>
-#include <core/operators/reference/agg_sum_all.h>
-#include <core/operators/reference/calc_uncompr.h>
-#include <core/operators/reference/agg_sum_compr_iterator.h>
-#include <core/operators/reference/group_next.h>
-#include <core/operators/reference/intersect.h>
-#include <core/operators/reference/join_uncompr.h>
-#include <core/operators/reference/merge.h>
+//#include <core/operators/reference/agg_sum_all.h>
+//#include <core/operators/reference/calc_uncompr.h>
+//#include <core/operators/reference/agg_sum_compr_iterator.h>
+//#include <core/operators/reference/group_next.h>
+//#include <core/operators/reference/intersect.h>
+//#include <core/operators/reference/join_uncompr.h>
+//#include <core/operators/reference/merge.h>
+
+#include <core/operators/interfaces/project.h>
+#include <core/operators/interfaces/group_first.h>
+#include <core/operators/interfaces/agg_sum_grouped.h>
+#include <core/operators/interfaces/agg_sum_merge.h>
+
+#include <core/operators/uncompr/agg_sum_merge.h>
+//#include <core/operators/uncompr/agg_sum>
+#include <core/operators/uncompr/group_first.h>
+#include <core/operators/uncompr/project.h>
+
 
 
 #endif //MORPHSTORE_INCLUDE_ABRIDGE_OPERATORS_H

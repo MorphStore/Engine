@@ -54,13 +54,13 @@ using namespace std;
 
 int main(){
     using ve = scalar<v64<uint64_t>>;
-    auto col0 = generate_with_distr(
+    auto col0 = ColumnGenerator::generate_with_distr(
               10000,
               std::uniform_int_distribution<uint64_t>(0, 100),
               false,
               8
             );
-    auto col1 = generate_with_distr(
+    auto col1 = ColumnGenerator::generate_with_distr(
               10000,
               std::uniform_int_distribution<uint64_t>(0, 100),
               false,

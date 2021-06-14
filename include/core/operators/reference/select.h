@@ -35,6 +35,8 @@
 
 #include <cstdint>
 
+#include <core/virtual/Executable.h>
+
 namespace morphstore {
     
 template<template< class, int > class t_op>

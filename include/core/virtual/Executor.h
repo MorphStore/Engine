@@ -27,11 +27,16 @@
 namespace morphstore {
     
     using namespace virtuallib;
-    
+    #ifdef USE_CPP20_CONCEPTS
     template<typename Type>
     concept Is_Pointer = std::is_pointer<Type>::value;
     template<typename Type>
     concept Is_No_Pointer = !std::is_pointer<Type>::value;
+    #else
+      #define Is_Pointer typename
+      #define Is_No_Pointer typename
+    #endif
+    
     
     /// getter for pointer and non-pointer types
     template<size_t index, Is_Pointer Type>

@@ -90,7 +90,7 @@ namespace vectorlib{
          typename neon<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (neon)" );
-         info( "[VECTOR] - vmovn_u64 is called before multiplying -> only the lower 32 bits are processed" );
+//         info( "[VECTOR] - vmovn_u64 is called before multiplying -> only the lower 32 bits are processed" );
          return vmull_u32( vmovn_u64(p_vec1), vmovn_u64(p_vec2)); //TODO Does this really work?
       }
    };

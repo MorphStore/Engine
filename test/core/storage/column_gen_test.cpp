@@ -38,14 +38,14 @@ int main( void ) {
     const size_t countValues = 20;
     
     auto col0 = ColumnGenerator::make_column({2, 3, 5, 7, 11, 13});
-    auto col1 = generate_sorted_unique(countValues);
-    auto col2 = generate_sorted_unique(countValues, 100 * 1000, 1000);
-    auto col3 = generate_with_distr(
+    auto col1 = ColumnGenerator::generate_sorted_unique(countValues);
+    auto col2 = ColumnGenerator::generate_sorted_unique(countValues, 100 * 1000, 1000);
+    auto col3 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(100, 200),
             false
     );
-    auto col4 = generate_with_distr(
+    auto col4 = ColumnGenerator::generate_with_distr(
             countValues,
             std::discrete_distribution<uint64_t>({0, 0, 1, 0, 7, 2}),
             true

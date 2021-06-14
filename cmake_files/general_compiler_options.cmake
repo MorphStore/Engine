@@ -1,5 +1,5 @@
 # general compiler settings, meant for all subdirectories and tests
-function(set_general_compiler_options)
+macro(set_general_compiler_options)
     if(NOT BUILD_TYPE MATCHES Debug)
         add_compile_options(-pedantic)
         add_compile_options(-Wall)
@@ -17,4 +17,4 @@ function(set_general_compiler_options)
         ## @todo does not work for prototype (compile flag is not set for target, why?)
         add_compile_options(-fconcepts)
     endif()
-endfunction()
+endmacro()

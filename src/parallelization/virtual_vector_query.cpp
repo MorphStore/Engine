@@ -80,19 +80,19 @@ int main( void ) {
 //    const size_t countValues = 1024;
 //    const size_t countValues = 256 + 3;
 //    const size_t countValues = 20;
-    const column<uncompr_f> * const  baseCol1 = generate_with_distr(
+    const column<uncompr_f> * const  baseCol1 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(0, 100),
             false,
             8
     );
-    const column<uncompr_f> * const  baseCol2 = generate_with_distr(
+    const column<uncompr_f> * const  baseCol2 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(0, 10),
             false,
             42
     );
-    const column<uncompr_f> * const  baseCol3 = generate_with_distr(
+    const column<uncompr_f> * const  baseCol3 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(0, 10),
             false,

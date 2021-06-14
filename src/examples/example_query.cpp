@@ -100,7 +100,7 @@ int main( void ) {
     const uint64_t minSuppKey = 1 * 1000 * 1000;
     const uint64_t minCustKey = 2 * 1000 * 1000;
     
-    order.suppKey = generate_with_distr(
+    order.suppKey = ColumnGenerator::generate_with_distr(
             orderCount,
             std::uniform_int_distribution<uint64_t>(
                     minSuppKey,
@@ -108,7 +108,7 @@ int main( void ) {
             ),
             false
     );
-    order.custKey = generate_with_distr(
+    order.custKey = ColumnGenerator::generate_with_distr(
             orderCount,
             std::uniform_int_distribution<uint64_t>(
                     minCustKey,
@@ -116,19 +116,19 @@ int main( void ) {
             ),
             false
     );
-    order.partKey = generate_with_distr(
+    order.partKey = ColumnGenerator::generate_with_distr(
             orderCount,
             std::uniform_int_distribution<uint64_t>(0, partCount - 1),
             false
     );
-    order.qty = generate_with_distr(
+    order.qty = ColumnGenerator::generate_with_distr(
             orderCount,
             std::uniform_int_distribution<uint64_t>(10, 100000),
             false
     );
     
-    part.partKey = generate_sorted_unique(partCount);
-    part.weight = generate_with_distr(
+    part.partKey = ColumnGenerator::generate_sorted_unique(partCount);
+    part.weight = ColumnGenerator::generate_with_distr(
             partCount,
             std::uniform_int_distribution<uint64_t>(1000, 5000),
             false

@@ -1,6 +1,8 @@
 cmake_minimum_required( VERSION 3.10 )
 project( MorphStore CXX )
 
+get_directory_property(isSubmodule PARENT_DIRECTORY)
+
 ########################################################################################################################
 ####### include local cmake config #####################################################################################
 ########################################################################################################################
@@ -28,12 +30,16 @@ endif()
 ####### set root path of MorphStore project
 if(NOT DEFINED MorphStoreRoot)
 	set( MorphStoreRoot ${PROJECT_SOURCE_DIR})
-	    set( MorphStoreRoot ${PROJECT_SOURCE_DIR} PARENT_SCOPE)
+    if(isSubmodule)
+        set( MorphStoreRoot ${PROJECT_SOURCE_DIR} PARENT_SCOPE)
+    endif()
 endif()
 
 ####### set path to log file, where the last morphstore config is printed to
 set( LOG_FILE "${MorphStoreRoot}/recentMorphStoreProjectConf.log" )
-set( LOG_FILE "${MorphStoreRoot}/recentMorphStoreProjectConf.log" PARENT_SCOPE )
+if(isSubmodule)
+    set( LOG_FILE "${MorphStoreRoot}/recentMorphStoreProjectConf.log" PARENT_SCOPE )
+endif()
 
 
 
@@ -111,6 +117,8 @@ if ( RUN_CTESTS )
       add_subdirectory( test )
   endif( CTEST_ALL OR CTEST_VECTOR OR CTEST_UTILS OR CTEST_STORAGE OR CTEST_PERSISTENCE OR CTEST_OPERATORS OR CTEST_MORPHING OR CTEST_MEMORY OR CTEST_VIRTUAL )
 endif( RUN_CTESTS )
+
+message("CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
 ####### print include directories
 #get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)

@@ -42,4 +42,6 @@
 #include <exception>
 #include <chrono>
 
+#include <cstring>
+
 #endif //MORPHSTORE_STDLIBS_H

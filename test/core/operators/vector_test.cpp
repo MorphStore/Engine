@@ -46,9 +46,9 @@ void init_data( column< uncompr_f > * const dataColumn ) {
 
 int main( void ) {
     column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-    const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT+1,1,1);
+    const column< uncompr_f > * testDataColumnSorted = ColumnGenerator::generate_sorted_unique(TEST_DATA_COUNT+1,1,1);
     init_data(testDataColumn);
-    const column< uncompr_f > * testDataColumnSorted2 = generate_sorted_unique(TEST_DATA_COUNT+15,5,3);
+    const column< uncompr_f > * testDataColumnSorted2 = ColumnGenerator::generate_sorted_unique(TEST_DATA_COUNT+15,5,3);
 
     std::cout << "Start scalar aggregation...\n";
     auto sum_aggscalar_result=agg_sum<scalar<v64<uint64_t>>>( testDataColumn );//Do aggregation

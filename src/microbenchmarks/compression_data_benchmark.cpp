@@ -294,7 +294,7 @@ protected:
     const column<uncompr_f> * generate_internal(
             size_t p_CountValues, bool p_IsSorted
     ) {
-        return generate_with_distr<t_distr>(
+        return ColumnGenerator::generate_with_distr<t_distr>(
                 p_CountValues, m_Distr, p_IsSorted
         );
     }

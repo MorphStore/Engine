@@ -16,18 +16,22 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#ifndef QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_BASEMEMORYALLOCATOR_H
+#define QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_BASEMEMORYALLOCATOR_H
 
-#include <core/utils/preprocessor.h>
-#include <core/utils/helper_types.h>
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
-#include <core/utils/system.h>
-#include <core/utils/print_columns.h>
+#include <stdlibs>
+
+class BaseMemoryAllocator {
+    using pointer = void*;
+  public:
+    virtual pointer allocate(std::size_t size){
+        return malloc(size);
+    }
+    
+    virtual void deallocate (pointer p, std::size_t size){
+        free(p);
+    }
+};
 
 
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#endif //QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_BASEMEMORYALLOCATOR_H

@@ -20,26 +20,31 @@
  * @brief This file implements the column, the key component to store data in morph store.
  * @todo Which headers should be included to use the memory manager here?
  */
+ 
+//namespace morphstore {
+//    template< IFormat TFormat >
+//    class column;
+//}
 
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
+#include <forward>
+#include <stdlibs>
 #include <core/storage/column_helper.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
 #include <core/morphing/morph_batch.h>
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
+#include <core/memory/DefaultAllocator.h>
+#include <thread/ThreadManager.h>
 
-#include <type_traits>
 
-#include <cstring>
-
-#include <stdlibs>
-#include <forward>
 #include "Storage.h"
+#include "core/memory/MemoryManager.h"
 
-#include <utils>
+//#include <utils>
 
 namespace morphstore {
     
@@ -57,13 +62,17 @@ namespace morphstore {
      */
     template< IFormat TFormat >
     class column : public Storage {
+        using base_t = column<TFormat>;
+        /// Memory allocator for data array.
       public:
         using format = TFormat;
       private:
         
         /// befriend Partitioned Column
-        template<IPartitioner, IFormat, IArithmetic>
-        friend class PartitionedColumn;
+//        template< IPartitioner, IFormat, IArithmetic >
+//        friend class PartitionedColumn;
+        /// befirend NumaColumnGenerator to enable correct numa aware memory allocation
+        friend class NumaColumnGenerator;
       protected:
         /// Stores meta data of column (value count, bytes used, compressed bytes used).
         column_meta_data m_MetaData;
@@ -72,6 +81,7 @@ namespace morphstore {
         /// Pointer to (possibly unaligned) allocated memory.
         /// This pointer is used to create an aligned data pointer within the allocated memory.
         void * m_DataUnaligned;
+        size_t dataSize = 0;
         #endif
         
         /// (64bit) Aligned data pointer.
@@ -91,7 +101,11 @@ namespace morphstore {
             m_PersistenceType{p_PersistenceType},
             m_IsPreparedForRndAccess(false),
             #ifdef MSV_NO_SELFMANAGED_MEMORY
-            m_DataUnaligned{malloc(get_size_with_alignment_padding(p_SizeAllocatedByte))},
+            /// original:
+//            m_DataUnaligned{malloc(get_size_with_alignment_padding(p_SizeAllocatedByte))},
+            /// new with allocator:
+            dataSize(get_size_with_alignment_padding(p_SizeAllocatedByte)),
+            m_DataUnaligned{MemoryManager::staticAllocate( get_size_with_alignment_padding(p_SizeAllocatedByte) )},
             m_Data{create_aligned_ptr(m_DataUnaligned)}
             #else
             m_Data{
@@ -100,7 +114,9 @@ namespace morphstore {
                : malloc( p_SizeAllocatedByte )
             }
             #endif
-            { /* ... */ };
+        {
+//            memset(m_DataUnaligned, 0, p_SizeAllocatedByte);
+        };
         
       protected:
         /**
@@ -139,7 +155,8 @@ namespace morphstore {
             /// free data array if this column is not virtual
             if(!is_virtual) {
                 #ifdef MSV_NO_SELFMANAGED_MEMORY
-                free(m_DataUnaligned);
+//                free(m_DataUnaligned);
+                MemoryManager::staticDeallocate((uint8_t*) m_DataUnaligned, dataSize);
                 #else
                 if( m_PersistenceType == storage_persistence_type::globalScope ) {
                    general_memory_manager::get_instance( ).deallocate( m_Data );
@@ -322,29 +339,38 @@ namespace morphstore {
         // Creates a global scoped column. Intended for base data.
         static column<TFormat> * create_global_column(size_t p_SizeAllocByte) {
             return new
-              (
-                #ifdef MSV_NO_SELFMANAGED_MEMORY
-                malloc(sizeof(column<TFormat>))
-                #else
-                general_memory_manager::get_instance( ).allocate(
-                   sizeof( column< F > )
-                )
-                #endif
-              )
+//              (
+//                #ifdef MSV_NO_SELFMANAGED_MEMORY
+//                malloc(sizeof(column<TFormat>))
+//                #else
+//                general_memory_manager::get_instance( ).allocate(
+//                   sizeof( column< F > )
+//                )
+//                #endif
+//              )
               column(
               storage_persistence_type::globalScope,
               p_SizeAllocByte
             );
         }
+        
+        void* operator new(size_t size){
+            return MemoryManager::staticAllocate(sizeof(base_t));
+        }
+        
+        void operator delete(void * p){
+            MemoryManager::staticDeallocate(p, sizeof(base_t));
+        }
+        
     };
     
-    /// type_str specialization for PartitionedColumn
-    template< typename...Args >
-    struct type_str<column<Args...>> {
-        static std::string apply() {
-            return "column<" + type_str<Args...>::apply() + ">";
-        }
-    };
+//    /// type_str specialization for PartitionedColumn
+//    template< typename...Args >
+//    struct type_str<column<Args...>> {
+//        static std::string apply() {
+//            return "column<" + type_str<Args...>::apply() + ">";
+//        }
+//    };
     
 }
 #endif //MORPHSTORE_CORE_STORAGE_COLUMN_H

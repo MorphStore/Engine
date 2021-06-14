@@ -412,7 +412,7 @@ std::tuple<const column<uncompr_f> *, uint64_t, uint64_t> generate_col(
             isSorted, mainMin, mainMax, outlierMin, outlierMax, outlierShare
     ) = param;
     
-    auto col= generate_with_outliers_and_selectivity(
+    auto col= ColumnGenerator::generate_with_outliers_and_selectivity(
             inDataCount,
             mainMin, mainMax, selectivity,
             outlierMin, outlierMax, outlierShare,

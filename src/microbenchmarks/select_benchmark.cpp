@@ -292,7 +292,7 @@ int main(void) {
                 const size_t countMatches = static_cast<size_t>(
                         static_cast<float>(countValues) * selectivity
                 );
-                auto origCol = generate_exact_number(
+                auto origCol = ColumnGenerator::generate_exact_number(
                         countValues,
                         countMatches,
                         pred,

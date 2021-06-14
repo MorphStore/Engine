@@ -20,11 +20,13 @@
 #define MORPHSTORE_INCLUDE_CORE_UTILS_PRINT_COLUMNS_H
 
 #include <stdlibs>
-#include <storage>
+//#include <storage>
+#include "core/storage/column.h"
 
 namespace morphstore {
     
     template< typename first, typename ... last >
+    static
     size_t get_max_size(first f, last ... l) {
         if constexpr(sizeof...(last) > 1) {
             return std::max(f->get_count_values(), get_max_size(l...));
@@ -34,34 +36,71 @@ namespace morphstore {
     }
     
     template< uint64_t width = 5 >
-    void print_element(size_t index, const column <uncompr_f> * col) {
-        std::cout << std::setw(width);
+    static
+    std::string print_element(size_t index, const column <uncompr_f> * col) {
+        std::stringstream out;
+        out << std::setw(width);
         if (index < col->get_count_values()) {
-            std::cout << ((uint64_t *) col->get_data())[index] << " | ";
+            out << ((uint64_t *) col->get_data())[index] << " | ";
         } else {
-            std::cout << " " << " | ";
+            out << " " << " | ";
         }
+        return out.str();
     }
     
-    template< uint64_t width = 5, typename...TCols >
-    void print_columns(uint64_t& offset, TCols...cols) {
+    template< uint64_t width = 5, IStoragePtr...TCols >
+    static
+    void print_columns(uint64_t offset, TCols...cols) {
+//        for (size_t i = 0; i < get_max_size(cols...); ++ i) {
+//            std::cout << std::setw(4) << offset << "/" << std::setw(4) << i << ": ";
+//            (print_element<width>(i, cols), ...);
+//            std::cout << std::endl;
+//            ++offset;
+//        }
+        std::stringstream out;
+        
+        /// header
+        out << "Line:";
+        for(size_t i = 0; i < sizeof...(TCols); ++i){
+            out << " col" << std::setw(width - 3) << i << " |";
+        }
+        out << "\n";
+        
+        /// data
         for (size_t i = 0; i < get_max_size(cols...); ++ i) {
-            std::cout << std::setw(4) << offset << "/" << std::setw(4) << i << ": ";
-            (print_element<width>(i, cols), ...);
-            std::cout << std::endl;
-            ++offset;
+            /// line number
+            out << std::setw(4) << (i+offset) << ": ";
+            /// print n-th row of each column
+            (out << ... << print_element<width>(i, cols));
+            out << "\n";
         }
+        /// print to cout
+        std::cout << out.str() << std::flush;
     }
     
-    template< uint64_t width = 5, typename...TCols >
+    template< uint64_t width = 5, IStoragePtr...TCols >
+    static
     void print_columns(TCols...cols) {
-        for (size_t i = 0; i < get_max_size(cols...); ++ i) {
-            std::cout << std::setw(4) << i << ": ";
-            (print_element<width>(i, cols), ...);
-            std::cout << std::endl;
+        std::stringstream out;
+        
+        /// header
+        out << "Line:";
+        for(size_t i = 0; i < sizeof...(TCols); ++i){
+            out << " col" << std::setw(width - 3) << i << " |";
         }
+        out << "\n";
+        
+        /// data
+        for (size_t i = 0; i < get_max_size(cols...); ++ i) {
+            /// line number
+            out << std::setw(4) << i << ": ";
+            /// print n-th row of each column
+            (out << ... << print_element<width>(i, cols));
+            out << "\n";
+        }
+        /// print to cout
+        std::cout << out.str() << std::flush;
     }
-    
 }
 
 #endif //MORPHSTORE_INCLUDE_CORE_UTILS_PRINT_COLUMNS_H

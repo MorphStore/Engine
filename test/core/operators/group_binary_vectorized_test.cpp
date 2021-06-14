@@ -19,7 +19,7 @@ int main( void ) {
    using namespace morphstore;
    using namespace vectorlib;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-   const column< uncompr_f > * testDataColumnSorted1 = generate_with_distr(
+   const column< uncompr_f > * testDataColumnSorted1 = ColumnGenerator::generate_with_distr(
       TEST_DATA_COUNT,
       std::uniform_int_distribution<uint64_t>(
          1,
@@ -27,7 +27,7 @@ int main( void ) {
       ),
       false
    );
-   const column< uncompr_f > * testDataColumnSorted2 = generate_with_distr(
+   const column< uncompr_f > * testDataColumnSorted2 = ColumnGenerator::generate_with_distr(
       TEST_DATA_COUNT,
       std::uniform_int_distribution<uint64_t>(
          1,
