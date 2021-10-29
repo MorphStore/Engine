@@ -43,6 +43,8 @@ def generateComprSwitch(bws):
     for idx, bw in enumerate(bws):
         n = int(COUNT_BITS / bw)
         print("        case {:> 2}: // n = {:> 2}, b = {:> 2}".format(idx, n, bw))
+        if idx == len(bws) - 1:
+            print("        default: // To avoid compiler warnings about res potentially being uninitialized.")
         print("            res = unrolled_packing_{}_{}x{}bit<t_ve>(p_InBase); break;".format(COUNT_BITS, n, bw))
     print("    }")
     print("    store<t_ve, iov::ALIGNED, vector_size_bit::value>(p_OutBase, res);")
@@ -64,6 +66,8 @@ def generateDecomprSwitch(bws):
     for idx, bw in enumerate(bws):
         n = int(COUNT_BITS / bw)
         print("        case {:> 2}: // n = {:> 2}, b = {:> 2}".format(idx, n, bw))
+        if idx == len(bws) - 1:
+            print("        default: // To avoid compiler warnings about res potentially being uninitialized.")
         print("            unrolled_unpacking_{}_{}x{}bit<t_ve>(comprBlock, p_OutBase); break;".format(COUNT_BITS, n, bw))
     print("    }")
     print("}")
@@ -91,6 +95,8 @@ def generateDecomprAndProcessSwitch(bws):
     for idx, bw in enumerate(bws):
         n = int(COUNT_BITS / bw)
         print("        case {:> 2}: // n = {:> 2}, b = {:> 2}".format(idx, n, bw))
+        if idx == len(bws) - 1:
+            print("        default: // To avoid compiler warnings about res potentially being uninitialized.")
         print("            unrolled_unpacking_and_processing_{}_{}x{}bit<t_ve, t_op_vector, t_extra_args ...>(comprBlock, p_State); break;".format(COUNT_BITS, n, bw))
     print("    }")
     print("}")
