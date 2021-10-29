@@ -132,7 +132,7 @@ namespace morphstore {
          * of effective bits.
          */
         size_t get_bw_hist(unsigned p_Bw) const {
-            if(p_Bw < 1 || p_Bw > std::numeric_limits<uint64_t>::max())
+            if(p_Bw < 1 || p_Bw > std::numeric_limits<uint64_t>::digits)
                 throw std::runtime_error("the bit width must be in [1, 64");
             return m_BwHist[p_Bw - 1];
         }
