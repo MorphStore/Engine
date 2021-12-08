@@ -32,6 +32,7 @@
 //#include <core/operators/reference/merge.h>
 
 #include <core/operators/interfaces/project.h>
+#include <core/operators/interfaces/select.h>
 #include <core/operators/interfaces/group_first.h>
 #include <core/operators/interfaces/agg_sum_grouped.h>
 #include <core/operators/interfaces/agg_sum_merge.h>
@@ -40,6 +41,7 @@
 //#include <core/operators/uncompr/agg_sum>
 #include <core/operators/uncompr/group_first.h>
 #include <core/operators/uncompr/project.h>
+#include <core/operators/uncompr/select.h>
 
 
 
