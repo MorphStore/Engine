@@ -267,7 +267,7 @@ int main(int argc, char ** argv) {
             }
 
             varex.print_datagen_started();
-            auto origCol = generate_with_distr(
+            auto origCol = ColumnGenerator::generate_with_distr(
                     countValues,
                     std::uniform_int_distribution<uint64_t>(
                             bitwidth_min<uint64_t>(bw), bitwidth_max<uint64_t>(bw)

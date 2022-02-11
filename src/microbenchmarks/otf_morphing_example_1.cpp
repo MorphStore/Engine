@@ -646,7 +646,7 @@ int main(void) {
 
         varex.print_datagen_started();
 
-        const column<uncompr_f> * inDataCol = generate_exact_number(
+        const column<uncompr_f> * inDataCol = ColumnGenerator::generate_exact_number(
                 countValues, static_cast<size_t>(sel * countValues), 0, 7, false
         );
         varex.print_datagen_done();

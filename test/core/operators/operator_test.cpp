@@ -275,7 +275,7 @@ int main( void ) {
     uint64_t checksum = 0;
     
     const column<uncompr_f> * const baseCol1
-      = generate_with_distr(
+      = ColumnGenerator::generate_with_distr(
         columnSize,
         std::uniform_int_distribution<uint64_t>(0, 1),
         false,

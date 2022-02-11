@@ -141,9 +141,9 @@ int main( void ) {
         
         // Generate the data.
         varex_ej.print_datagen_started();
-        auto inDataColLeft = generate_sorted_unique(inDataCountLeft, 1, 1);
+        auto inDataColLeft = ColumnGenerator::generate_sorted_unique(inDataCountLeft, 1, 1);
         
-        auto inDataColRight = generate_sorted_unique(inDataCountRight, 1, matches);
+        auto inDataColRight = ColumnGenerator::generate_sorted_unique(inDataCountRight, 1, matches);
         
         varex_ej.print_datagen_done();
         
@@ -175,9 +175,9 @@ int main( void ) {
         
         // Generate the data.
         varex_sj.print_datagen_started();
-        auto inDataColLeft = generate_sorted_unique(inDataCountLeft, 1, 1);
+        auto inDataColLeft = ColumnGenerator::generate_sorted_unique(inDataCountLeft, 1, 1);
         
-        auto inDataColRight = generate_sorted_unique(inDataCountRight, 1, matches);
+        auto inDataColRight = ColumnGenerator::generate_sorted_unique(inDataCountRight, 1, matches);
         
         varex_sj.print_datagen_done();
         

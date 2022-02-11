@@ -336,7 +336,7 @@ std::tuple<
 
     const uint64_t inDataMaxVal = std::max(inDataMainMax, inDataOutlierMax);
 
-    auto inDataCol = generate_with_outliers_and_selectivity(
+    auto inDataCol = ColumnGenerator::generate_with_outliers_and_selectivity(
             inDataCount,
             inDataMainMin, inDataMainMax,
             0,
@@ -353,7 +353,7 @@ std::tuple<
 //            inPosMaxVal = inPosCount - 1;
 //        }
 //        else {
-            inPosCol = generate_sorted_unique_extraction(
+            inPosCol = ColumnGenerator::generate_sorted_unique_extraction(
                     inPosCount, inDataCount
             );
             inPosMaxVal = inDataCount - 1;
@@ -361,7 +361,7 @@ std::tuple<
     }
     else {
         // Case B
-        inPosCol = generate_with_distr(
+        inPosCol = ColumnGenerator::generate_with_distr(
                 inPosCount,
                 std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
                 false

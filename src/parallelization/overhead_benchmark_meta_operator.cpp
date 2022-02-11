@@ -68,10 +68,10 @@ int main (){
     std::cout << " (" << dotNumber(countValues) << " values) .." << std::flush;
     
     const column<uncompr_f> * const baseCol1
-      = generate_with_distr(countValues, std::uniform_int_distribution<uint64_t>(0, 100), false, 8);
+      = ColumnGenerator::generate_with_distr(countValues, std::uniform_int_distribution<uint64_t>(0, 100), false, 8);
     std::cout << ".." << std::flush;
     const column<uncompr_f> * const baseCol2
-      = generate_with_distr(countValues, std::uniform_int_distribution<uint64_t>(0, 100), false, 9);
+      = ColumnGenerator::generate_with_distr(countValues, std::uniform_int_distribution<uint64_t>(0, 100), false, 9);
     std::cout << " done." << std::endl;
     
     /// define vector extension

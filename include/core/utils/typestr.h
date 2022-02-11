@@ -27,37 +27,39 @@
   #include <cstdlib>
   #include <memory>
   #include <cxxabi.h>
-
-std::string demangle(const char* name) {
-    
-    int status = -4; // some arbitrary value to eliminate the compiler warning
-    
-    // enable c++11 by passing the flag -std=c++11 to g++
-    std::unique_ptr<char, void(*)(void*)> res {
-      abi::__cxa_demangle(name, NULL, NULL, &status),
-      std::free
-    };
-    
-    return (status==0) ? res.get() : name ;
-}
-
-#else
-
-// does nothing if not g++
-    std::string demangle(const char* name) {
-        return name;
-    }
-
 #endif
 
 
 namespace morphstore {
-    using std::string;
+    using string = std::string;
+    class TypeInfo {
+        template<typename ...>
+        friend class type_str;
+        
+        static std::string demangle(const char * name) {
+            #ifdef __GNUG__
+            int status = - 4; // some arbitrary value to eliminate the compiler warning
+            
+            // enable c++11 by passing the flag -std=c++11 to g++
+            std::unique_ptr<char, void (*)(void *)> res{
+              abi::__cxa_demangle(name, NULL, NULL, &status),
+              std::free
+            };
+            
+            return (status == 0) ? res.get() : name;
+            #else
+            return name;
+            #endif
+        }
+        
+    };
+    
     
     
     /// initial construct
     template< typename...T >
-    struct type_str {};
+    struct type_str {
+    };
     
     /// variadic type list
     template< typename T, typename...Next >
@@ -82,7 +84,7 @@ namespace morphstore {
     struct type_str<T> {
         static string apply() {
 //            return "[" + string(typeid(T).name()) + "]";
-            return "[" + string(demangle(typeid(T).name())) + "]";
+            return "[" + string(TypeInfo::demangle(typeid(T).name())) + "]";
         }
     };
 
@@ -132,7 +134,7 @@ namespace morphstore {
     struct type_str<T<Args...>> {
         static string apply() {
 //            return "[" + string(typeid(T<Args...>).name()) + "]<" + type_str<Args...>::apply() + ">";
-            return "[" + demangle(typeid(T<Args...>).name()) + "]";
+            return "[" + TypeInfo::demangle(typeid(T<Args...>).name()) + "]";
         }
     };
 
@@ -311,17 +313,16 @@ namespace morphstore {
             return string("bool");
         }
     };
-    
-    
 
 
 /// shortcuts
     template< typename...T >
-    string typestr(T&& ...t) {
+    string typestr(T && ...t) {
         return type_str<T ...>::apply();
     }
+    
     template< typename...T >
-    string typestr(T& ...t) {
+    string typestr(T & ...t) {
         return type_str<T ...>::apply();
     }
     /**
@@ -334,7 +335,7 @@ namespace morphstore {
 //    string typestr(T ...t) {
 //        return type_str<T ...>::apply();
 //    }
-
+    
     template< typename...T >
     string typestr() {
         return type_str<T...>::apply();

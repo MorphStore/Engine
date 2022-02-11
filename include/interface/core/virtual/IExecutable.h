@@ -30,7 +30,7 @@ namespace morphstore {
         template< typename TExecutable >
         concept IExecutable = std::is_base_of<Executable, TExecutable>::value;
     #else
-        #define IExectuable typename
+        #define IExecutable typename
     #endif
     
 }

@@ -1,4 +1,9 @@
 function(generate_git_hash)
+
+    if(NOT DEFINED MorphStoreRoot)
+        message( FATAL_ERROR "MorphStoreRoot is not set. generate_git_hash() can not be executed.")
+    endif()
+
     set(GIT_BRANCH unknown PARENT_SCOPE)
     set(GIT_COMMIT_HASH unknown PARENT_SCOPE)
     # Get the current working branch

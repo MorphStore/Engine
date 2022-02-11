@@ -144,12 +144,12 @@ int main( void ) {
         
         // Generate the data.
         varex.print_datagen_started();
-        auto inDataCol = generate_with_distr(
+        auto inDataCol = ColumnGenerator::generate_with_distr(
             inDataCount,
             std::uniform_int_distribution<uint64_t>(100, 200),
             false
         );
-        auto inPosCol = generate_with_distr(
+        auto inPosCol = ColumnGenerator::generate_with_distr(
             inPosCount,
             std::uniform_int_distribution<uint64_t>(0, inDataCount - 1),
             false

@@ -16,18 +16,48 @@
  **********************************************************************************************/
 
 
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#ifndef QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_OPERATORS_AGG_SUM_MERGE_H
+#define QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_OPERATORS_AGG_SUM_MERGE_H
 
-#include <core/utils/preprocessor.h>
-#include <core/utils/helper_types.h>
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
-#include <core/utils/system.h>
-#include <core/utils/print_columns.h>
+#include <core/storage/column.h>
+#include <core/utils/basic_types.h>
 
+#include <tuple>
 
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+namespace morphstore {
+    template<
+      class TVectorExtension,
+      class TOutGroupsF,
+      class TOutSumF,
+      class TInGroupsF,
+      class TInSumF
+    >
+    struct agg_sum_merge_t;
+    
+    
+    template<
+      class TVectorExtension,
+      class TOutGroupsF,
+      class TOutSumF,
+      class TInGroupsF,
+      class TInSumF
+    >
+    const std::tuple<
+      const column <TOutGroupsF> *,
+      const column <TOutSumF> *
+    >
+    agg_sum_merge(
+      column <TInGroupsF> const * const * const in_groups,
+      column <TInSumF>    const * const * const in_sums,
+      const uint64_t partitions
+    ) {
+        return agg_sum_merge_t<
+          TVectorExtension,
+          TOutGroupsF,
+          TOutSumF,
+          TInGroupsF,
+          TInSumF
+        >::apply(in_groups, in_sums, partitions);
+    };
+} /// namespace morphstore
+#endif //QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_OPERATORS_AGG_SUM_MERGE_H

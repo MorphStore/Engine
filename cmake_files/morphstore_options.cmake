@@ -1,5 +1,5 @@
 
-function(set_morphstore_options)
+macro(set_morphstore_options)
 if(DEFINED CRAPL)
     add_compile_definitions(RAPL)
 endif()
@@ -133,4 +133,4 @@ file( WRITE ${LOG_FILE} ${MorphStoreProjectConf} )
 
 ########### Checking Defines />
 
-endfunction()
+endmacro()

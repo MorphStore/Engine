@@ -57,12 +57,12 @@ int main( void ) {
     std::cout.flush();
     
     const size_t countValues = 100 * 1000 * 1000;
-    const column<uncompr_f> * const baseCol1 = generate_with_distr(
+    const column<uncompr_f> * const baseCol1 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(100, 199),
             false
     );
-    const column<uncompr_f> * const baseCol2 = generate_with_distr(
+    const column<uncompr_f> * const baseCol2 = ColumnGenerator::generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(0, 10),
             false

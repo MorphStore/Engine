@@ -20,7 +20,7 @@ int main( void ) {
    using namespace vectorlib;
    std::cout << "Generating..." << std::flush;
    //column< uncompr_f > * testDataColumn = column<uncompr_f>::create_global_column(TEST_DATA_COUNT);
-   const column< uncompr_f > * testDataColumnSorted = generate_sorted_unique(TEST_DATA_COUNT,1,1);
+   const column< uncompr_f > * testDataColumnSorted = ColumnGenerator::generate_sorted_unique(TEST_DATA_COUNT,1,1);
 
 
    const column<uncompr_f> * outGrCol1;
@@ -37,7 +37,7 @@ int main( void ) {
    std::tie(outGrColScalar1, outExtColScalar1) = group<scalar<v64<uint64_t>>, uncompr_f, uncompr_f>( testDataColumnSorted, TEST_DATA_COUNT );
    std::cout << "Done\nGenerating..." << std::flush;
 
-   testDataColumnSorted = generate_with_distr(
+   testDataColumnSorted = ColumnGenerator::generate_with_distr(
       TEST_DATA_COUNT,
       std::uniform_int_distribution<uint64_t>(
          1,

@@ -38,7 +38,7 @@ int main(){
     column<uncompr_f> * const baseCol1 =
        reinterpret_cast< column<uncompr_f> * >(
           const_cast<column<uncompr_f> * >(
-            generate_with_distr(
+            ColumnGenerator::generate_with_distr(
               columnSize,
               std::uniform_int_distribution<uint64_t>(0, 100),
               false,

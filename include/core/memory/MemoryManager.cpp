@@ -15,19 +15,7 @@
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
 
-
-#ifndef MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-#define MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
-
-#include <core/utils/preprocessor.h>
-#include <core/utils/helper_types.h>
-#include <core/utils/type_traits.h>
-#include <core/utils/typestr.h>
-#include <core/utils/VirtualArray.h>
-#include <core/utils/logger.h>
-#include <core/utils/string_manipulation.h>
-#include <core/utils/system.h>
-#include <core/utils/print_columns.h>
-
-
-#endif //MORPHSTORE_INCLUDE_ABRIDGE_UTILS_H
+#include "MemoryManager.h"
+namespace morphstore {
+    MemoryManager * MemoryManager::instance = nullptr;
+}

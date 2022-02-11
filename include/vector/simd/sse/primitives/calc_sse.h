@@ -96,7 +96,7 @@ namespace vectorlib{
          typename sse<v128<uint64_t>>::vector_t const & p_vec2
       ){
          trace( "[VECTOR] - Multiply 64 bit integer values from two registers (sse)" );
-         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
+//         info( "[VECTOR] - _mm_mul_epu32 is called (only the lower 32 bit are actually processed" );
          return _mm_mul_epu32( p_vec1, p_vec2);
       }
    };

@@ -33,6 +33,7 @@ namespace morphstore {
         enum class PartitioningType {
             Logical,
             Physical,
+            NumaPhysical,
             None
         };
         

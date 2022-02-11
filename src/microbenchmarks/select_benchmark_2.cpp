@@ -413,7 +413,7 @@ int main(void) {
 #else
             std::cerr << "generating input data column... ";
 #endif
-            auto inDataCol = generate_with_outliers_and_selectivity(
+            auto inDataCol = ColumnGenerator::generate_with_outliers_and_selectivity(
                     inDataCount,
                     mainMin, mainMax,
                     selectedShare,

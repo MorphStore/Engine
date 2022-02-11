@@ -81,7 +81,7 @@ int main( void ) {
                 const size_t countMatches = static_cast<size_t>(
                         static_cast<float>(inDataCount) * selectivity
                 );
-                auto inDataCol = generate_exact_number(
+                auto inDataCol = ColumnGenerator::generate_exact_number(
                         inDataCount,
                         countMatches,
                         0,
