@@ -11,6 +11,7 @@
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <vector/general_vector_extension.h>
 
 #include <vector/datastructures/hash_based/hash_utils.h>
 #include <vector/datastructures/hash_based/hash_map.h>
@@ -112,7 +113,7 @@ namespace morphstore {
          base_t * outExt = outExtCol->get_data();
 //         base_t * const initOutExt = outExt;
 
-         DataStructure hs( inDataCount );
+         DataStructure hs( outCount );
          size_t const dataVectorCount = inDataCount / vector_element_count::value;
          size_t const dataRemainderCount = inDataCount % vector_element_count::value;
 
@@ -144,6 +145,62 @@ namespace morphstore {
          return std::make_tuple(outGrCol, outExtCol);
       }
    };
+   
+   struct group_first_array_helper_t {
+       static uint64_t groupCount;
+   };
+   
+   template<typename VectorExtension>
+   struct group_first_array_t{
+       static uint64_t groupCount;
+   };
+   
+   template<typename base_t>
+   struct group_first_array_t<vectorlib::scalar<vectorlib::v64<base_t>>>{
+       
+       
+       static std::tuple< column<uncompr_f> *, column<uncompr_f> * >
+       apply(column<uncompr_f> const * const inDataColumn, size_t const outCountEstimate = 0){
+           uint64_t groupCount = group_first_array_helper_t::groupCount;
+           uint64_t currentGroupID = 0;
+           uint64_t notSet = 0xffffffff;
+           
+           const uint64_t inDataCount = inDataColumn->get_count_values();
+           
+           const uint64_t outCount = bool(outCountEstimate) ? (outCountEstimate): inDataCount;
+           auto outGrCol = new column<uncompr_f>(inDataColumn->get_size_used_byte());
+           auto outExtCol = new column<uncompr_f>( outCount * sizeof( uint64_t ) );
+           
+           base_t * inDataPtr = inDataColumn->get_data( );
+           base_t * outGrPtr  = outGrCol->get_data();
+           base_t * outExtPtr = outExtCol->get_data();
+           
+           /// initialize group array
+           uint64_t * groupIDs = new uint64_t[groupCount];
+           for(uint64_t i = 0; i < groupCount; ++i){
+               groupIDs[i] = notSet;
+           }
+           
+           for(uint64_t pos = 0; pos < inDataCount; ++pos){
+               base_t value = inDataPtr[pos];
+               if(groupIDs[value] == notSet){
+                   outExtPtr[currentGroupID] = pos;
+                   groupIDs[value] = currentGroupID++;
+               }
+               outGrPtr[pos] = groupIDs[value];
+           }
+           
+           outGrCol->set_meta_data(inDataCount, inDataCount * sizeof(uint64_t));
+           outExtCol->set_meta_data(currentGroupID, currentGroupID * sizeof(uint64_t));
+           
+           delete[] groupIDs;
+           
+           return std::tuple<column<uncompr_f> *, column<uncompr_f> * >(outGrCol, outExtCol);
+       }
+   };
+   
+   
+   
    
 }
 #endif //MORPHSTORE_CORE_OPERATORS_UNCOMPR_GROUP_FIRST_H
