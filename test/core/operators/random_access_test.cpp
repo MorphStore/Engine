@@ -183,23 +183,12 @@ int main(void) {
     // AVX-512). 20160 == 64 * 9 * 7 * 5.
     const size_t factor = 8 * 20160;
     
-    const size_t countDataLog = round_up_to_multiple(128*1024*1024, factor);
+    const size_t countDataLog = round_up_to_multiple(1000*1000, factor);
     
     std::vector<double> selectivities = {
-        0.0001,
-        0.0003,
-        0.001,
-        0.003,
-        0.01,
-        0.03,
+        0,
         0.1,
-        0.2,
-        0.3,
-        0.4,
         0.5,
-        0.6,
-        0.7,
-        0.8,
         0.9,
         1
     };

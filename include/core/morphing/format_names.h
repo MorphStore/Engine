@@ -66,6 +66,11 @@ namespace morphstore {
     std::string formatName<k_wise_ns_f<t_BlockSizeLog>> = "k_wise_ns_f<" + std::to_string(t_BlockSizeLog) + ">";
 #endif
 
+#ifdef MORPHSTORE_CORE_MORPHING_GROUP_SIMPLE_H
+    template<size_t t_GroupSizeLog, typename t_base_t, size_t t_AlignmentBytes>
+    std::string formatName<group_simple_f<t_GroupSizeLog, t_base_t, t_AlignmentBytes>> = "group_simple_f<" + std::to_string(t_GroupSizeLog) + ">";
+#endif
+
 #ifdef MORPHSTORE_CORE_MORPHING_STATIC_VBP_H
     template<unsigned t_Bw, unsigned t_Step>
     std::string formatName<

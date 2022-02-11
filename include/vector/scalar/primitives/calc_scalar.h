@@ -69,6 +69,18 @@ namespace vectorlib{
       }
    };
    template<>
+   struct hor<scalar<v64<uint64_t>>/*, 64*/> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename scalar<v64<uint64_t>>::base_t
+      apply(
+         typename scalar<v64<uint64_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally or (return value) 64 bit integer values one register (scalar)" );
+         return p_vec1;
+      }
+   };
+   template<>
    struct mul<scalar<v64<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static

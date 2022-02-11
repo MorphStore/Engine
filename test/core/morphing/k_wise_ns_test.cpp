@@ -42,6 +42,7 @@
 using namespace morphstore;
 using namespace vectorlib;
 
+#ifdef SSE
 
 // ****************************************************************************
 // Macros for the variants for variant_executor.
@@ -102,3 +103,8 @@ int main(void) {
     
     return !varex.good();
 }
+#else
+int main() {
+    return 0;
+}
+#endif

@@ -87,6 +87,18 @@ namespace vectorlib{
       }
    };
    template<>
+   struct hor<sse<v128<uint64_t>>, 64> {
+      MSV_CXX_ATTRIBUTE_FORCE_INLINE
+      static
+      typename sse<v128<uint64_t>>::base_t
+      apply(
+         typename sse<v128<uint64_t>>::vector_t const & p_vec1
+      ){
+         trace( "[VECTOR] - Horizontally or 64 bit integer values one register (sse)" );
+         return _mm_extract_epi64(p_vec1, 0) | _mm_extract_epi64(p_vec1, 1);
+      }
+   };
+   template<>
    struct mul<sse<v128<uint64_t>>/*, 64*/> {
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
       static

@@ -52,6 +52,13 @@ namespace morphstore {
             ve::vector_helper_t::element_count::value \
     >)
 
+#define DEFAULT_GROUP_SIMPLE_F(ve) \
+    SINGLE_ARG(group_simple_f< \
+            ve::vector_helper_t::element_count::value, \
+            typename ve::base_t, \
+            ve::vector_helper_t::size_byte::value \
+    >)
+
 #define DEFAULT_DELTA_DYNAMIC_VBP_F(ve) \
     SINGLE_ARG(delta_f< \
             1024, \

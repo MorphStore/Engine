@@ -41,6 +41,7 @@
 #include <core/morphing/delta.h>
 #include <core/morphing/dynamic_vbp.h>
 #include <core/morphing/for.h>
+#include <core/morphing/group_simple.h>
 #include <core/morphing/k_wise_ns.h>
 #include <core/morphing/morph.h>
 #include <core/morphing/static_vbp.h>
@@ -271,6 +272,92 @@ namespace morphstore {
     #undef MAKE_SAFE_MORPH_DYNAMIC_VBP_DECOMPR
 
     // ------------------------------------------------------------------------
+    // Format group_simple_f
+    // ------------------------------------------------------------------------
+    
+    // The group size, base type, and alignment template parameters of the
+    // format group_simple_f correspond to the vector extension that naturally
+    // fits for working with this format.
+    
+    // Compression
+
+    #define MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR(vector_extension) \
+    template<> \
+    struct safe_morph_t< \
+            group_simple_f< \
+                    vector_extension::vector_helper_t::element_count::value, \
+                    vector_extension::base_t, \
+                    vector_extension::vector_helper_t::size_byte::value \
+            >, \
+            uncompr_f \
+    > { \
+        using dst_f = group_simple_f< \
+                vector_extension::vector_helper_t::element_count::value, \
+                vector_extension::base_t, \
+                vector_extension::vector_helper_t::size_byte::value \
+        >; \
+        using src_f = uncompr_f; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vector_extension, dst_f, src_f>(inCol); \
+        } \
+    };
+
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+#endif
+#ifdef AVX512
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+#endif
+
+    #undef MAKE_SAFE_MORPH_GROUP_SIMPLE_COMPR
+
+    // Decompression.
+
+    #define MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR(vector_extension) \
+    template<> \
+    struct safe_morph_t< \
+            uncompr_f, \
+            group_simple_f< \
+                    vector_extension::vector_helper_t::element_count::value, \
+                    vector_extension::base_t, \
+                    vector_extension::vector_helper_t::size_byte::value \
+            > \
+    > { \
+        using dst_f = uncompr_f; \
+        using src_f = group_simple_f< \
+                vector_extension::vector_helper_t::element_count::value, \
+                vector_extension::base_t, \
+                vector_extension::vector_helper_t::size_byte::value \
+        >; \
+         \
+        static \
+        const column<dst_f> * \
+        apply(const column<src_f> * inCol) { \
+            return morph<vector_extension, dst_f, src_f>(inCol); \
+        } \
+    };
+
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR(vectorlib::scalar<vectorlib::v64<uint64_t>>)
+#ifdef SSE
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR(vectorlib::sse<vectorlib::v128<uint64_t>>)
+#endif
+#ifdef AVXTWO
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR(vectorlib::avx2<vectorlib::v256<uint64_t>>)
+#endif
+#ifdef AVX512
+    MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR(vectorlib::avx512<vectorlib::v512<uint64_t>>)
+#endif
+
+    #undef MAKE_SAFE_MORPH_GROUP_SIMPLE_DECOMPR
+
+    // ------------------------------------------------------------------------
     // Format k_wise_ns_f
     // ------------------------------------------------------------------------
             
@@ -325,7 +412,7 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Format delta_f
     // ------------------------------------------------------------------------
-    
+
     // The step template parameter of the format delta_f corresponds to
     // the vector extension that naturally fits for working with this format.
     

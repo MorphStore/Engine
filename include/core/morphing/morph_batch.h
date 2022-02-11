@@ -59,7 +59,7 @@ template<
         class t_vector_extension, class t_dst_f, class t_src_f
 >
 void morph_batch(const uint8_t * & in8, uint8_t * & out8, size_t countLog) {
-    return morph_batch_t<t_vector_extension, t_dst_f, t_src_f>::apply(
+    morph_batch_t<t_vector_extension, t_dst_f, t_src_f>::apply(
             in8, out8, countLog
     );
 }

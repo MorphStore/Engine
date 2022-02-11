@@ -205,7 +205,7 @@ namespace morphstore {
                                     struct column_tuple_deleter<1, t_head_f, t_tail_fs ...> {
                                         static void apply(
                                                 const column<t_head_f> * p_HeadCol,
-                                                const column<t_tail_fs> * ... p_TailCols
+                                                MSV_CXX_ATTRIBUTE_PPUNUSED const column<t_tail_fs> * ... p_TailCols
                                         ) {
                                             if(!std::is_same<t_head_f, uncompr_f>::value)
                                                 delete p_HeadCol;

@@ -45,10 +45,10 @@ using namespace vectorlib;
 void small_example( ) {
     auto origCol = generate_sorted_unique(128);
     auto comprCol = morph<
-            sse<v128<uint64_t>>,
-            static_vbp_f<vbp_l<8, sizeof(__m128i) / sizeof(uint64_t)> >
+            scalar<v64<uint64_t>>,
+            static_vbp_f<vbp_l<8, 1> >
     >(origCol);
-    auto decomprCol = morph<sse<v128<uint64_t>>, uncompr_f>(comprCol);
+    auto decomprCol = morph<scalar<v64<uint64_t>>, uncompr_f>(comprCol);
     
     print_columns(
             print_buffer_base::hexadecimal,
