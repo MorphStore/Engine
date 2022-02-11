@@ -172,6 +172,47 @@ namespace morphstore {
 		return out;
 	}
 	
+	static
+	std::string bytesHumanReadable(uint64_t bytes){
+	    if(bytes < 1024){
+	        return std::to_string(bytes) + " B";
+	    }
+	    bytes /= 1024;
+	    if(bytes < 1024){
+	        return std::to_string(bytes) + " KiB";
+	    }
+	    bytes /= 1024;
+	    if(bytes < 1024){
+	        return std::to_string(bytes) + " MiB";
+	    }
+	    bytes /= 1024;
+	    if(bytes < 1024){
+	        return std::to_string(bytes) + " GiB";
+	    }
+	    bytes /= 1024;
+        return std::to_string(bytes) + " TiB";
+	}
+	
+	
+	MSV_CXX_ATTRIBUTE_PPUNUSED
+	static
+	std::string humanReadable(std::chrono::nanoseconds ns){
+	    double count = ns.count();
+	    if(count < 1000){
+	        return std::to_string(count) + " ns";
+	    }
+	    count /= 1000;
+	    if(count < 1000){
+	        return std::to_string(count) + " us";
+	    }
+	    count /= 1000;
+	    if(count < 1000){
+	        return std::to_string(count) + " ms";
+	    }
+	    count /= 1000;
+        return std::to_string(count) + " s";
+	}
+	
 	
 	
 	/**
