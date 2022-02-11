@@ -156,7 +156,7 @@ namespace morphstore {
             if(!is_virtual) {
                 #ifdef MSV_NO_SELFMANAGED_MEMORY
 //                free(m_DataUnaligned);
-                MemoryManager::staticDeallocate((uint8_t*) m_DataUnaligned, dataSize);
+                MemoryManager::staticDeallocate(m_DataUnaligned, dataSize);
                 #else
                 if( m_PersistenceType == storage_persistence_type::globalScope ) {
                    general_memory_manager::get_instance( ).deallocate( m_Data );

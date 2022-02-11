@@ -65,8 +65,10 @@ namespace morphstore {
             return getInstance()->allocate(size);
         }
         
-        static void staticDeallocate(pointer p, std::size_t size){
-            getInstance()->deallocate(p, size);
+        template<typename ptr>
+        static void staticDeallocate(ptr& p, std::size_t size){
+            getInstance()->deallocate((pointer) p, size);
+            p = nullptr;
         }
     };
     
