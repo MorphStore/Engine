@@ -26,6 +26,7 @@
 #include <operators>
 #include <storage>
 #include <printing>
+#include <core/utils/monitoring/CSVWriter.h>
 
 
 #include <core/virtual/MetaOperator.h>
