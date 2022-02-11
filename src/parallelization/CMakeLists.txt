@@ -17,4 +17,6 @@ if( BUILD_ALL OR BUILD_PARALLELIZATION )
     add_executable( overhead_benchmark_meta_operator overhead_benchmark_meta_operator.cpp )
     target_link_libraries( overhead_benchmark_meta_operator PUBLIC -ldl -lpthread )
 
+else( BUILD_ALL OR BUILD_PARALLELIZATION )
+    message(">> Set CMake variable BUILD_PARALLELIZATION to build parallelization targets")
 endif( BUILD_ALL OR BUILD_PARALLELIZATION )

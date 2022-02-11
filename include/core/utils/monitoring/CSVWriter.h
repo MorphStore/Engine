@@ -14,31 +14,18 @@
  * You should have received a copy of the GNU General Public License along with this program. *
  * If not, see <http://www.gnu.org/licenses/>.                                                *
  **********************************************************************************************/
- 
-#include <iostream>
 
-#include <core/utils/logger.h>
-/// primitives
-#include <vector/vector_extension_structs.h>
-#include <vector/vector_primitives.h>
+#include <stdlibs>
 
-using namespace morphstore;
-using namespace vectorlib;
-using namespace virtuallib;
+#ifndef MORPHSTORE_CSVWRITER_H
+#define MORPHSTORE_CSVWRITER_H
+namespace morphstore {
+    class CSVWriter {
+//        fstream file;
+      public:
+        CSVWriter(std::string pathToFile){
 
-int main() {
-
-    using baseVectorExtension = avx512<v512<int32_t>>;
-    
-    using vv_core     = vv<VectorBuilder<ConcurrentType::OPEN_MP, 1, seq, 1, baseVectorExtension> >;
-    using vv_batch    = vv<VectorBuilder<ConcurrentType::OPEN_MP, 1, seq, 1, vv_core            > >;
-    using vv_operator = vv<VectorBuilder<ConcurrentType::OPEN_MP, 1, seq, 1, vv_batch           > >;
-
-    
-    std::cout << "Base Type [Base]:     " << typeid(baseVectorExtension::base_t).name() << std::endl;
-    std::cout << "Base Type [Core]:     " << typeid(vv_core::base_t).name()             << std::endl;
-    std::cout << "Base Type [Batch]:    " << typeid(vv_batch::base_t).name()            << std::endl;
-    std::cout << "Base Type [Operator]: " << typeid(vv_operator::base_t).name()         << std::endl;
-    
-    
+        }
+    };
 }
+#endif //MORPHSTORE_CSVWRITER_H
