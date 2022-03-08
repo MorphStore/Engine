@@ -1,0 +1,136 @@
+/**********************************************************************************************
+ * Copyright (C) 2019 by MorphStore-Team                                                      *
+ *                                                                                            *
+ * This file is part of MorphStore - a compression aware vectorized column store.             *
+ *                                                                                            *
+ * This program is free software: you can redistribute it and/or modify it under the          *
+ * terms of the GNU General Public License as published by the Free Software Foundation,      *
+ * either version 3 of the License, or (at your option) any later version.                    *
+ *                                                                                            *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;  *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  *
+ * See the GNU General Public License for more details.                                       *
+ *                                                                                            *
+ * You should have received a copy of the GNU General Public License along with this program. *
+ * If not, see <http://www.gnu.org/licenses/>.                                                *
+ **********************************************************************************************/
+
+/**
+ * @file select_pl_uncompr.h
+ * @brief General vectorized select-operator using position-lists as intermediates (instead of BM).
+ */
+
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_PL_UNCOMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_PL_UNCOMPR_H
+
+#include <core/utils/preprocessor.h>
+#include <vector/vector_extension_structs.h>
+#include <vector/vector_primitives.h>
+#include <core/morphing/intermediates/position_list.h>
+
+namespace morphstore {
+
+    using namespace vectorlib;
+    template<class VectorExtension,  template< class, int > class Operator>
+    struct select_processing_unit {
+        IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE
+        static
+                vector_mask_t
+        apply(
+                vector_t const p_DataVector,
+        vector_t const p_PredicateVector
+        ) {
+            return Operator<VectorExtension,VectorExtension::vector_helper_t::granularity::value>::apply(
+                    p_DataVector,
+                    p_PredicateVector
+            );
+        }
+    };
+
+    template<class VectorExtension,  template< class, int > class Operator>
+    struct select_batch {
+        IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
+                base_t const *& p_DataPtr,
+                base_t const p_Predicate,
+                base_t *& p_OutPtr,
+                size_t const p_Count,
+                int startid = 0
+        ) {
+            vector_t const predicateVector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(p_Predicate);
+            vector_t positionVector = vectorlib::set_sequence<VectorExtension, vector_base_t_granularity::value>(startid,1);
+            vector_t const addVector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(vector_element_count::value);
+            for(size_t i = 0; i < p_Count; ++i) {
+                vector_t dataVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
+                vector_mask_t resultMask =
+                        select_processing_unit<VectorExtension,Operator>::apply(
+                                dataVector,
+                                predicateVector
+                        );
+                vectorlib::compressstore<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, positionVector, resultMask);
+                positionVector = vectorlib::add<VectorExtension, vector_base_t_granularity::value>::apply(positionVector,addVector);
+
+                //p_OutPtr += __builtin_popcount( resultMask );
+                p_OutPtr += vectorlib::count_matches<VectorExtension>::apply( resultMask );
+                p_DataPtr += vector_element_count::value;
+            }
+        }
+    };
+
+    template<class VectorExtension, template< class, int > class Operator>
+    struct select_t {
+        IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static
+                column< position_list_f<uncompr_f> > const *
+        apply(
+                column< uncompr_f > const * const p_DataColumn,
+        base_t const p_Predicate,
+        const size_t outPosCountEstimate = 0
+        ) {
+
+            size_t const inDataCount = p_DataColumn->get_count_values();
+            base_t const * inDataPtr = p_DataColumn->get_data( );
+            size_t const sizeByte =
+                    bool(outPosCountEstimate)
+                    ? (outPosCountEstimate * sizeof(base_t))
+                    : p_DataColumn->get_size_used_byte();
+
+            auto outDataCol = new column< position_list_f<uncompr_f> >(sizeByte);
+            base_t * outDataPtr = outDataCol->get_data( );
+            base_t * const outDataPtrOrigin = const_cast< base_t * const >(outDataPtr);
+
+            size_t const vectorCount = inDataCount / vector_element_count::value;
+            size_t const remainderCount = inDataCount % vector_element_count::value;
+
+
+            select_batch<VectorExtension, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, vectorCount);
+
+            select_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount,vectorCount*vector_element_count::value);
+
+            size_t const outDataCount = outDataPtr - outDataPtrOrigin;
+
+            outDataCol->set_meta_data(outDataCount, outDataCount*sizeof(base_t));
+
+            return outDataCol;
+        }
+    };
+
+    template<
+            template< class, int > class Operator, class t_vector_extension, class t_out_IR_f, class t_in_data_f,
+            typename std::enable_if_t<
+                    // check if t_out_IR_f is an uncompressed position-list to instantiate the right operator according to its underlying IR
+                    std::is_same< t_out_IR_f, position_list_f<uncompr_f> >::value
+            ,int> = 0
+    >
+    column<t_out_IR_f> const *
+    select(
+            column< uncompr_f > const * const p_DataColumn,
+            typename t_vector_extension::vector_helper_t::base_t const p_Predicate,
+            const size_t outPosCountEstimate = 0
+    ){
+        return select_t<t_vector_extension, Operator>::apply(p_DataColumn,p_Predicate,outPosCountEstimate);
+    }
+}
+
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_SELECT_PL_UNCOMPR_H
