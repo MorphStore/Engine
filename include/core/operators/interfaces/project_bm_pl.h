@@ -25,7 +25,7 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_BM_PL_H
 
 #include <core/storage/column.h>
-#include <core/morphing/intermediates/ir_transformations.h>
+#include <core/morphing/intermediates/transformations.h>
 
 #include <type_traits>
 
