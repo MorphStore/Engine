@@ -48,40 +48,40 @@ namespace morphstore {
         const column< bitmap_f<uncompr_f> > * const inBmRCol,
         const size_t outBmCountEstimate
     ) {
-    const uint64_t * inBmL = inBmLCol->get_data();
-    const uint64_t * inBmR = inBmRCol->get_data();
-    const uint64_t * const endInBmL = inBmL + inBmLCol->get_count_values();
-    const uint64_t * const endInBmR = inBmR + inBmRCol->get_count_values();
+        const uint64_t * inBmL = inBmLCol->get_data();
+        const uint64_t * inBmR = inBmRCol->get_data();
+        const uint64_t * const endInBmL = inBmL + inBmLCol->get_count_values();
+        const uint64_t * const endInBmR = inBmR + inBmRCol->get_count_values();
 
-    // If no estimate is provided: Pessimistic allocation size (for
-    // uncompressed data), reached only if all positions in the smaller input
-    // column are contained in the larger input column as well.
-    auto outBmCol = new column< bitmap_f<uncompr_f> >(
-            bool(outBmCountEstimate)
-            // use given estimate
-            ? (outBmCountEstimate * sizeof(uint64_t))
-            // use pessimistic estimate
-            : std::min(
-                    inBmLCol->get_size_used_byte(),
-                    inBmRCol->get_size_used_byte()
-            )
-    );
+        // If no estimate is provided: Pessimistic allocation size (for
+        // uncompressed data), reached only if all positions in the smaller input
+        // column are contained in the larger input column as well.
+        auto outBmCol = new column< bitmap_f<uncompr_f> >(
+                bool(outBmCountEstimate)
+                // use given estimate
+                ? (outBmCountEstimate * sizeof(uint64_t))
+                // use pessimistic estimate
+                : std::min(
+                        inBmLCol->get_size_used_byte(),
+                        inBmRCol->get_size_used_byte()
+                )
+        );
 
-    uint64_t * outBm = outBmCol->get_data();
-    const uint64_t * const initoutBm = outBm;
+        uint64_t * outBm = outBmCol->get_data();
+        const uint64_t * const initoutBm = outBm;
 
-    while(inBmL < endInBmL && inBmR < endInBmR) {
-        // logical AND-operation between the two bitmap encoded words
-        *outBm = *inBmL & *inBmR;
-        outBm++;
-        inBmL++;
-        inBmR++;
-    }
+        while(inBmL < endInBmL && inBmR < endInBmR) {
+            // logical AND-operation between the two bitmap encoded words
+            *outBm = *inBmL & *inBmR;
+            outBm++;
+            inBmL++;
+            inBmR++;
+        }
 
-    const size_t outBmCount = outBm - initoutBm;
-    outBmCol->set_meta_data(outBmCount, outBmCount * sizeof(uint64_t));
+        const size_t outBmCount = outBm - initoutBm;
+        outBmCol->set_meta_data(outBmCount, outBmCount * sizeof(uint64_t));
 
-    return outBmCol;
+        return outBmCol;
     }
 }
 
