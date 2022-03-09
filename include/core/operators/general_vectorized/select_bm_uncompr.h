@@ -49,7 +49,7 @@ namespace morphstore {
         }
 
         /** @brief To ensure that we eventually store a bitmap (e.g. processing only < 64 elements),
-         *         this function needs to called before the operator has finished its processing.
+         *         this function needs to be called before the operator has finished its processing.
          */
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static void done(uint64_t *& p_OutPtr, bitmap_processing_state_t & p_bm_state) {
             // if there is still a word > 0 or if word=0 with bitPos > 0 -> store the word
@@ -73,7 +73,8 @@ namespace morphstore {
         ) {
             vector_t const predicateVector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(
                     p_Predicate);
-            // init local values from global bm-state
+
+            // init start values from global bitmap processing state
             base_t bitPos = p_bm_ps_state.m_bitPos;
             base_t word = p_bm_ps_state.m_active_word;
 
@@ -95,8 +96,8 @@ namespace morphstore {
                 }
 
                 // add resulting mask to current word:
-                // shift resulting bitmap by bitPos bits, then OR with current word
-                // if resultMask == 0 we can skip it
+                // shift resulting bitmap by bitPos-bits, then OR with current word to add stuff
+                // (if resultMask == 0 we can skip it)
                 if(resultMask){
                     p_bm_ps_state.m_active_word |= (base_t) resultMask << p_bm_ps_state.m_bitPos;
                 }

@@ -20,6 +20,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	#FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operation_summation_test_app )
 	#FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/random_access_test_app )
 
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/intersect_bm_test_app )
+
 	IF(CAVXTWO OR CAVX512)
 		#FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_benchmark_test_app )
 		#FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/operations_vector_test_app )
@@ -47,6 +49,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_executable( select_position_list_test_app select_pl_test.cpp)
 	#add_executable( operation_summation_test_app summation_test.cpp )
 	#add_executable( random_access_test_app random_access_test.cpp )
+
+	add_executable( intersect_bm_test_app intersect_bm_test.cpp)
 
 	IF(CAVXTWO  OR CAVX512)
 		#add_executable( project_benchmark_test_app project_benchmark_test.cpp )
@@ -150,6 +154,11 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	#)
 	#target_link_libraries( random_access_test_app PRIVATE "-ldl" )
 
+	target_compile_options( intersect_bm_test_app PRIVATE
+			# space to add custom flags for THIS SPECIFIC TARGET
+			)
+	target_link_libraries( intersect_bm_test_app PRIVATE "-ldl" )
+
 	IF(CAVXTWO  OR CAVX512)
 		#target_compile_options( project_benchmark_test_app PRIVATE
 		# space to add custom flags for THIS SPECIFIC TARGET
@@ -202,6 +211,8 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 
 	#add_test( operation_summation_test operation_summation_test_app )
 	#add_test( random_access_test random_access_test_app )
+
+	add_test( intersect_bm_test intersect_bm_test_app )
 
 	IF(CAVXTWO  OR CAVX512)
 		#add_test( project_benchmark_test project_benchmark_test_app )

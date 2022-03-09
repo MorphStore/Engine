@@ -45,7 +45,7 @@
 
 #include <core/utils/printing.h>
 
-#define TEST_DATA_COUNT 1000
+#define TEST_DATA_COUNT 65
 
 using namespace morphstore;
 using namespace vectorlib;
