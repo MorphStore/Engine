@@ -42,13 +42,13 @@ int main(void) {
      *          This test generates two bitmaps, intersects them, and verifies the result.
      */
 
-    const uint64_t unset = std::numeric_limits<uint64_t>::min();
-    const uint64_t set = std::numeric_limits<uint64_t>::max();
+    const uint64_t allUnset = std::numeric_limits<uint64_t>::min();
+    const uint64_t allSet = std::numeric_limits<uint64_t>::max();
 
     // ********************** (1) intersection test **********************
     // inColL -> all bits set; inColR -> all bits unset => intersection-result = all bits unset
-    auto inColL_1 = make_column({  set,   set,   set,   set,   set});
-    auto inColR_1 = make_column({unset, unset, unset, unset, unset});
+    auto inColL_1 = make_column({  allSet,   allSet,   allSet,   allSet,   allSet});
+    auto inColR_1 = make_column({allUnset, allUnset, allUnset, allUnset, allUnset});
 
     auto inBmLCol_1 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColL_1);
     auto inBmRCol_1 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColR_1);
@@ -72,8 +72,8 @@ int main(void) {
 
     // ********************** (2) intersection test **********************
     // inColL and inColR consists of alternating words in which all bits are set or unset => intersection-result = all bits unset
-    auto inColL_2 = make_column({  set, unset,   set, unset,   set});
-    auto inColR_2 = make_column({unset,   set, unset,   set, unset});
+    auto inColL_2 = make_column({  allSet, allUnset,   allSet, allUnset,   allSet});
+    auto inColR_2 = make_column({allUnset,   allSet, allUnset,   allSet, allUnset});
 
     auto inBmLCol_2 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColL_2);
     auto inBmRCol_2 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColR_2);
@@ -97,8 +97,8 @@ int main(void) {
 
     // ********************** (3) intersection test **********************
     // in inColL and inColR are all bits set => intersection-result = all bits set
-    auto inColL_3 = make_column({set, set, set, set, set});
-    auto inColR_3 = make_column({set, set, set, set, set});
+    auto inColL_3 = make_column({allSet, allSet, allSet, allSet, allSet});
+    auto inColR_3 = make_column({allSet, allSet, allSet, allSet, allSet});
 
     auto inBmLCol_3 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColL_3);
     auto inBmRCol_3 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColR_3);

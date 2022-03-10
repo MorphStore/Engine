@@ -55,8 +55,11 @@ namespace morphstore {
             class t_out_IR_f,
             class t_in_IR_l_f,
             class t_in_IR_r_f,
-            // enable if both IR_in are actual IRs and they have the same structure
-            typename std::enable_if_t<is_same_underlying_IR_t<t_in_IR_l_f, t_in_IR_r_f>::value ,int> = 0
+            // enable if input IRs and output IR have same underlying IR-type, i.e. PL or BM
+            typename std::enable_if_t<
+                    is_same_underlying_IR_t<t_in_IR_l_f, t_in_IR_r_f>::value &&
+                    is_same_underlying_IR_t<t_in_IR_l_f, t_out_IR_f>::value
+            ,int> = 0
     >
     const column<t_out_IR_f> *
     intersect_sorted(

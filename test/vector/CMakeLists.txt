@@ -25,6 +25,8 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/select_sum_query_bitmask_SIMD_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/simple_query_compr_SIMD_app )
 
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/intersect_bm_test_app )
+
 	#	add_executable( vector_test_app main.cpp )
 	#	add_executable( agg_sum_app operators/agg_sum_whole_column_test.cpp )
 	#	add_executable( hash_set_app operators/hash_set_test.cpp )
@@ -48,8 +50,10 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	add_executable( project_pl_uncompr_app operators/project_pl_uncompr_test.cpp)
 	add_executable( project_pl_compr_app operators/project_pl_compr_test.cpp)
 
-	add_executable( select_sum_query_bitmask_SIMD_app operators/select_sum_query_bm_SIMD.cpp)
-	add_executable( simple_query_compr_SIMD_app operators/simple_query_bm_pl_compr_test.cpp)
+	#add_executable( select_sum_query_bitmask_SIMD_app operators/select_sum_query_bm_SIMD.cpp)
+	#add_executable( simple_query_compr_SIMD_app operators/simple_query_bm_pl_compr_test.cpp)
+
+	add_executable( intersect_bm_test_app operators/intersect_bm_test.cpp)
 
 	#	target_compile_options( vector_test_app PRIVATE
 	#		# space to add custom flags for THIS SPECIFIC TARGET
@@ -152,15 +156,20 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 			)
 	target_link_libraries( project_pl_compr_app PRIVATE "-ldl" )
 
-	target_compile_options( select_sum_query_bitmask_SIMD_app PRIVATE
+	#target_compile_options( select_sum_query_bitmask_SIMD_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
-			)
-	target_link_libraries( select_sum_query_bitmask_SIMD_app PRIVATE "-ldl" )
+	#		)
+	#target_link_libraries( select_sum_query_bitmask_SIMD_app PRIVATE "-ldl" )
 
-	target_compile_options( simple_query_compr_SIMD_app PRIVATE
+	#target_compile_options( simple_query_compr_SIMD_app PRIVATE
+			# space to add custom flags for THIS SPECIFIC TARGET
+	#		)
+	#target_link_libraries( simple_query_compr_SIMD_app PRIVATE "-ldl" )
+
+	target_compile_options( intersect_bm_test_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
 			)
-	target_link_libraries( simple_query_compr_SIMD_app PRIVATE "-ldl" )
+	target_link_libraries( intersect_bm_test_app PRIVATE "-ldl" )
 
 	#	add_test( vector_test vector_test_app )
 	#	add_test( agg_sum_vectorized_test agg_sum_app )
@@ -185,6 +194,8 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	add_test( project_pl_uncompr_test project_pl_uncompr_app )
 	add_test( project_pl_compr_test project_pl_compr_app )
 
-	add_test( select_sum_query_bitmask_SIMD_test select_sum_query_bitmask_SIMD_app )
-	add_test( simple_query_compr_SIMD_test simple_query_compr_SIMD_app )
+	#add_test( select_sum_query_bitmask_SIMD_test select_sum_query_bitmask_SIMD_app )
+	#add_test( simple_query_compr_SIMD_test simple_query_compr_SIMD_app )
+
+	add_test( intersect_bm_test intersect_bm_test_app )
 endif()

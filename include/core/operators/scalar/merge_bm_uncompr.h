@@ -53,7 +53,7 @@ namespace morphstore {
                 const column< bitmap_f<uncompr_f> > * const inBmLCol,
                 const column< bitmap_f<uncompr_f> > * const inBmRCol
         ) {
-            // differentiate the bitmaps according to their sizes
+            // differentiate the input bitmaps according to their sizes
             const column< bitmap_f<uncompr_f> > * smallerBmCol;
             const column< bitmap_f<uncompr_f> > * largerBmCol;
             if(inBmLCol->get_size_used_byte() < inBmRCol->get_size_used_byte()) {

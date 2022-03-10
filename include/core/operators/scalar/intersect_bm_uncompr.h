@@ -53,9 +53,7 @@ namespace morphstore {
         const uint64_t * const endInBmL = inBmL + inBmLCol->get_count_values();
         const uint64_t * const endInBmR = inBmR + inBmRCol->get_count_values();
 
-        // If no estimate is provided: Pessimistic allocation size (for
-        // uncompressed data), reached only if all positions in the smaller input
-        // column are contained in the larger input column as well.
+        // if no estimation is given, use the smaller input bitmap size
         auto outBmCol = new column< bitmap_f<uncompr_f> >(
                 bool(outBmCountEstimate)
                 // use given estimate

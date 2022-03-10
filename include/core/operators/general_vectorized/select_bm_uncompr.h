@@ -163,7 +163,7 @@ namespace morphstore {
             typename std::enable_if_t<
                     // check if t_out_IR_f is an uncompressed bitmap to instantiate the right operator according to its underlying IR
                     std::is_same< t_out_IR_f, bitmap_f<uncompr_f> >::value
-    ,int> = 0
+            ,int> = 0
     >
     column<t_out_IR_f> const *
     select(

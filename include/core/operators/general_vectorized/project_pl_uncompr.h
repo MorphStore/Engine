@@ -76,7 +76,7 @@ namespace morphstore {
                 column<uncompr_f> const *
         apply(
                 column< uncompr_f > const * const p_DataColumn,
-        column< position_list_f<uncompr_f> > const * const p_PosColumn
+                column< position_list_f<uncompr_f> > const * const p_PosColumn
         ) {
             size_t const inPosCount = p_PosColumn->get_count_values();
             size_t const inUsedBytes = p_PosColumn->get_size_used_byte();
