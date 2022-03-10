@@ -87,18 +87,19 @@ set_morphstore_options()
 ####### set include directories ########################################################################################
 ########################################################################################################################
 
-####### @todo does this make any sense, when TVL files are still part of the source code!?
+set(INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
+
 if ( DEFINED TVL_PATH)
-  include_directories(AFTER ${TVL_PATH}  ${PROJECT_SOURCE_DIR}/include)
+  include_directories(AFTER ${TVL_PATH} ${INCLUDE_DIRECTORIES})
 else ()
-  include_directories( ${PROJECT_SOURCE_DIR}/include )
+  include_directories(${INCLUDE_DIRECTORIES}/)
 endif()
 
 ####### for cmake_template.h containing git info
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
 ####### shortcut to include helper
-include_directories(${PROJECT_SOURCE_DIR}/include/abridge)
+include_directories(src/abridge)
 
 
 ########################################################################################################################

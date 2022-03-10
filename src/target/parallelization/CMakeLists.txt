@@ -4,8 +4,8 @@ if( BUILD_ALL OR BUILD_PARALLELIZATION )
 
     target_sources(virtual_vector_query
         PUBLIC
-            ../../../include/core/utils/monitoring/Monitor.h
-            ../../../include/core/utils/monitoring/MonitorTask.h
+            ../../core/utils/monitoring/Monitor.h
+            ../../core/utils/monitoring/MonitorTask.h
     )
 
     add_executable( virtual_vector_template_test virtual_vector_template_test.cpp)

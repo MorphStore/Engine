@@ -34,7 +34,7 @@ function(generate_git_hash)
 
     ####### This copies the current git branch and commit hash into a header file for usage inside c++
     configure_file(
-       ${MorphStoreRoot}/include/core/utils/cmake_template.h.in
+       ${MorphStoreRoot}/src/core/utils/cmake_template.h.in
        ${CMAKE_BINARY_DIR}/generated/cmake_template.h
     )
 endfunction()
