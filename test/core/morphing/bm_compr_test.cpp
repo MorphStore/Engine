@@ -114,5 +114,5 @@ int main(void) {
     const bool allGood_4 =
             memcmp(uncompr_1->get_data(), uncompr_2->get_data(), (int)(TEST_DATA_COUNT*8));
 
-    return allGood_1 && allGood_2 && allGood_3 && allGood_4;
+    return allGood_1 || allGood_2 || allGood_3 || allGood_4;
 }
