@@ -39,7 +39,7 @@ int main(void) {
 
     /**
      *  @brief: Testing merge-operator for bitmaps to enable execution of multidimensional boolean queries.
-     *          This test generates two bitmaps, merges them, and verifies the result.
+     *          This test generates two bitmaps, merges them, and verifies the result + size.s
      */
 
     const uint64_t allUnset = std::numeric_limits<uint64_t>::min();
@@ -64,11 +64,13 @@ int main(void) {
     // check if all bits are set
     bool allGood_1 = false;
     uint64_t * ptr_1 = merge_1->get_data();
-    size_t count_1 = inColL_1->get_count_values();
+    size_t count_1 = merge_1->get_count_values();
     while(count_1--){
         if(!*ptr_1) allGood_1 = true;
         ptr_1++;
     }
+    // check size
+    if(merge_1->get_count_values() != inColL_1->get_count_values() ) allGood_1 = true;
 
     // ********************** (2) merge test **********************
     // inColL and inColR consists of alternating words in which all bits are set or unset => merge-result = all bits set
@@ -89,11 +91,13 @@ int main(void) {
     // check if all bits are unset & size equal to min. inCol
     bool allGood_2 = false;
     uint64_t * ptr_2 = merge_2->get_data();
-    size_t count_2 = inColL_2->get_count_values();
+    size_t count_2 = merge_2->get_count_values();
     while(count_2--){
         if(!*ptr_2) allGood_2 = true;
         ptr_2++;
     }
+    // check size
+    if(merge_2->get_count_values() != inColL_2->get_count_values() ) allGood_2 = true;
 
     // ********************** (3) merge test **********************
     // in inColL and inColR are all bits unset => merge-result = all bits unset
@@ -114,14 +118,16 @@ int main(void) {
     // check if all bits are unset & size equal to min. inCol
     bool allGood_3 = false;
     uint64_t * ptr_3 = merge_3->get_data();
-    size_t count_3 = inColL_3->get_count_values();
+    size_t count_3 = merge_3->get_count_values();
     while(count_3--){
         if(*ptr_3) allGood_3 = true;
         ptr_3++;
     }
+    // check size
+    if(merge_3->get_count_values() != inColL_3->get_count_values() ) allGood_3 = true;
 
     // ********************** (4) merge test **********************
-    // two input bimtaps of different lengths -> output has to be the same as the larger one
+    // two input bitmaps of different lengths -> output has to be the same as the larger one
     // + the resulting bits are exactly the same as the larger ones, i.e. between end of small and to the end of largest
     auto inColL_4 = make_column({allSet, allSet, allSet, allSet, allSet, allUnset, allUnset, allUnset});
     auto inColR_4 = make_column({allSet, allSet, allSet, allSet, allSet});
@@ -151,6 +157,10 @@ int main(void) {
         if(*ptr_4) allGood_4 = true;
         ptr_4++;
     }
+    // check size: has to be the same as larger bitmap, i.e. inColL_4
+    if(merge_4->get_count_values() != inColL_4->get_count_values() ) allGood_4 = true;
 
-    return allGood_1 & allGood_2 && allGood_3 && allGood_4;
+    //print_columns(print_buffer_base::decimal, merge_4, "merge_4");
+
+    return allGood_1 || allGood_2 || allGood_3 || allGood_4;
 }

@@ -39,7 +39,7 @@ int main(void) {
 
     /**
      *  @brief: Testing intersect-operator for bitmaps to enable execution of multidimensional boolean queries.
-     *          This test generates two bitmaps, intersects them, and verifies the result.
+     *          This test generates two bitmaps, intersects them, and verifies the result + size.
      */
 
     const uint64_t allUnset = std::numeric_limits<uint64_t>::min();
@@ -64,11 +64,13 @@ int main(void) {
     // check if all bits are unset & size equal to min. inCol
     bool allGood_1 = false;
     uint64_t * ptr_1 = intersection_1->get_data();
-    size_t count_1 = inColL_1->get_count_values();
+    size_t count_1 = intersection_1->get_count_values();
     while(count_1--){
         if(*ptr_1) allGood_1 = true;
         ptr_1++;
     }
+    // check size
+    if(intersection_1->get_count_values() != inColL_1->get_count_values() ) allGood_1 = true;
 
     // ********************** (2) intersection test **********************
     // inColL and inColR consists of alternating words in which all bits are set or unset => intersection-result = all bits unset
@@ -89,15 +91,17 @@ int main(void) {
     // check if all bits are unset & size equal to min. inCol
     bool allGood_2 = false;
     uint64_t * ptr_2 = intersection_2->get_data();
-    size_t count_2 = inColL_2->get_count_values();
+    size_t count_2 = intersection_2->get_count_values();
     while(count_2--){
         if(*ptr_2) allGood_2 = true;
         ptr_2++;
     }
+    // check size
+    if(intersection_2->get_count_values() != inColL_2->get_count_values() ) allGood_2 = true;
 
     // ********************** (3) intersection test **********************
-    // in inColL and inColR are all bits set => intersection-result = all bits set
-    auto inColL_3 = make_column({allSet, allSet, allSet, allSet, allSet});
+    // in inColL and inColR are all bits set => intersection-result = all bits set + different lengths
+    auto inColL_3 = make_column({allSet, allSet, allSet, allSet, allSet, allSet, allSet, allSet});
     auto inColR_3 = make_column({allSet, allSet, allSet, allSet, allSet});
 
     auto inBmLCol_3 = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(inColL_3);
@@ -114,11 +118,13 @@ int main(void) {
     // check if all bits are set & size equal to min. inCol
     bool allGood_3 = false;
     uint64_t * ptr_3 = intersection_3->get_data();
-    size_t count_3 = inColL_3->get_count_values();
+    size_t count_3 = intersection_3->get_count_values();
     while(count_3--){
         if(!*ptr_3) allGood_3 = true;
         ptr_3++;
     }
+    // check if size is equal to smaller bitmap, i.e. inColR_3
+    if(intersection_3->get_count_values() != inColR_3->get_count_values() ) allGood_3 = true;
 
-    return allGood_1 & allGood_2 && allGood_3;
+    return allGood_1 || allGood_2 || allGood_3;
 }

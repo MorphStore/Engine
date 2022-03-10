@@ -16,24 +16,26 @@
  **********************************************************************************************/
 
 /**
- * @file intersect_bm_uncompr.h
- * @brief General vectorized intersect-operator using bitmaps.
+ * @file merge_bm_uncompr.h
+ * @brief General vectorized merge-operator using bitmaps.
  */
 
-#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_INTERSECT_BM_UNCOMPR_H
-#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_INTERSECT_BM_UNCOMPR_H
+#ifndef MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_MERGE_BM_UNCOMPR_H
+#define MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_MERGE_BM_UNCOMPR_H
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 #include <core/morphing/intermediates/representation.h>
 
 #include <core/utils/preprocessor.h>
-#include <core/operators/interfaces/intersect_bm_pl.h>
+#include <core/operators/interfaces/merge_bm_pl.h>
+
+#include <cstring>
 
 namespace morphstore {
 
     template<class VectorExtension>
-    struct intersect_bm_batch {
+    struct merge_bm_batch {
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
@@ -47,11 +49,11 @@ namespace morphstore {
                 vector_t bmSmallerVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_BmPtrSmaller);
                 vector_t bmLargerVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_BmPtrLarger);
 
-                // execute bitwise logical AND-operation
-                vector_t intersectionVector = bitwise_and<VectorExtension>(bmSmallerVector, bmLargerVector);
+                // execute bitwise logical OR-operation
+                vector_t mergeVector = bitwise_or<VectorExtension>(bmSmallerVector, bmLargerVector);
 
                 // store and increment
-                vectorlib::store<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_OutPtr, intersectionVector);
+                vectorlib::store<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_OutPtr, mergeVector);
                 p_BmPtrSmaller += vector_element_count::value;
                 p_BmPtrLarger += vector_element_count::value;
                 p_OutPtr += vector_element_count::value;
@@ -60,7 +62,7 @@ namespace morphstore {
     };
 
     template<class VectorExtension>
-    struct intersect_bm_t {
+    struct merge_bm_t {
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static
         column< bitmap_f<uncompr_f> > const *
@@ -82,35 +84,43 @@ namespace morphstore {
 
             const base_t * smallerBmPtr = smallerBmCol->get_data();
             const base_t * largerBmPtr = largerBmCol->get_data();
+            //const base_t * const endInBmSmaller = smallerBmPtr + smallerBmCol->get_count_values();
+            const base_t * const endInBmLarger = largerBmPtr + largerBmCol->get_count_values();
 
-            // if no estimation is given, use the smaller input bitmap size for allocation
+            // if no estimation is given, use the larger input bitmap size for allocation
             auto outBmCol = new column< bitmap_f<uncompr_f> >(
                     bool(p_OutPosCountEstimate)
                     // use given estimate
                     ? (p_OutPosCountEstimate * sizeof(base_t))
                     // use pessimistic estimate
                     :
-                    smallerBmCol->get_size_used_byte()
+                    largerBmCol->get_size_used_byte()
             );
 
             base_t * outBmPtr = outBmCol->get_data( );
             base_t * const outBmPtrOrigin = const_cast< base_t * const >(outBmPtr);
 
+            // we process the smaller part first
             size_t const vectorCount = smallerBmCol->get_count_values() / vector_element_count::value;
             size_t const remainderCount = smallerBmCol->get_count_values() % vector_element_count::value;
 
-            intersect_bm_batch<VectorExtension>::apply(smallerBmPtr, largerBmPtr, outBmPtr, vectorCount);
+            merge_bm_batch<VectorExtension>::apply(smallerBmPtr, largerBmPtr, outBmPtr, vectorCount);
 
-            intersect_bm_batch<scalar<v64<uint64_t>>>::apply(smallerBmPtr, largerBmPtr, outBmPtr, remainderCount);
+            merge_bm_batch<scalar<v64<uint64_t>>>::apply(smallerBmPtr, largerBmPtr, outBmPtr, remainderCount);
+
+            // memcpy() remaining bits from larger bitmap to output bitmap (if there is any count left)
+            if(largerBmPtr < endInBmLarger){
+                const size_t remainingCount = endInBmLarger - largerBmPtr;
+                std::memcpy(outBmPtr, largerBmPtr, remainingCount * sizeof(base_t));
+                outBmPtr += remainingCount;
+            }
 
             size_t const outDataCount = outBmPtr - outBmPtrOrigin;
-
             outBmCol->set_meta_data(outDataCount, outDataCount * sizeof(base_t) );
 
             return outBmCol;
         }
     };
-
 
     template<
             class VectorExtension,
@@ -125,13 +135,13 @@ namespace morphstore {
             ,int> = 0
     >
     column< bitmap_f<uncompr_f>  > const *
-    intersect_sorted(
+    merge_sorted(
             column< bitmap_f<uncompr_f>  > const * const p_Data1Column,
             column< bitmap_f<uncompr_f>  > const * const p_Data2Column,
             const size_t p_OutPosCountEstimate = 0
     ) {
-        return intersect_bm_t<VectorExtension>::apply(p_Data1Column,p_Data2Column,p_OutPosCountEstimate);
+        return merge_bm_t<VectorExtension>::apply(p_Data1Column,p_Data2Column,p_OutPosCountEstimate);
     }
 }
 
-#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_INTERSECT_BM_UNCOMPR_H
+#endif //MORPHSTORE_CORE_OPERATORS_GENERAL_VECTORIZED_MERGE_BM_UNCOMPR_H

@@ -32,6 +32,7 @@
 #include <vector/scalar/extension_scalar.h>
 
 #include <cstdint>
+#include <cstring>
 
 namespace morphstore {
 
@@ -84,13 +85,12 @@ namespace morphstore {
                 largerBmPtr++;
             }
 
-            // finally, process the (smallest - largest) bits -> if there is any difference
-            // just copy the bits in output bitmap
-            // TODO: we could use memcpy() here to optimize this
-            while(largerBmPtr < endInBmLarger){
-                *outBm = *largerBmPtr;
-                outBm++;
-                largerBmPtr++;
+            // finally, process the remaining bits from larger bitmap -> if there is any difference
+            // just copy the bits from the larger bitmap (remaining bit) into the output bitmap
+            if(largerBmPtr < endInBmLarger){
+                const size_t remainingCount = endInBmLarger - largerBmPtr;
+                std::memcpy(outBm, largerBmPtr, remainingCount * sizeof(uint64_t));
+                outBm += remainingCount;
             }
 
             const size_t outBmCount = outBm - initoutBm;

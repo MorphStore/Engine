@@ -16,8 +16,8 @@
  **********************************************************************************************/
 
 /**
- * @file intersect_bm_test.h
- * @brief Small test for vectorized intersect-operator using bitmaps.
+ * @file merge_bm_test.h
+ * @brief Small test for vectorized merge-operator using bitmaps.
  */
 
 // This must be included first to allow compilation.
@@ -42,7 +42,7 @@
 #include <vector/simd/sse/primitives/compare_sse.h>
 #include <vector/simd/sse/primitives/manipulate_sse.h>
 
-#include <core/operators/general_vectorized/intersect_bm_uncompr.h>
+#include <core/operators/general_vectorized/merge_bm_uncompr.h>
 
 #include <core/utils/printing.h>
 
@@ -53,57 +53,58 @@ int main( void ) {
     using namespace vectorlib;
 
     /**
-     *  @brief: Testing vectorized intersect-operator for bitmaps to enable execution of multidimensional boolean queries.
-     *          This test generates two bitmaps, intersects them, and compares the result of AVX and SSE for equality.
+     *  @brief: Testing vectorized merge-operator for bitmaps to enable execution of multidimensional boolean queries.
+     *          This test generates two bitmaps, intersects them, and compares the result of AVX and SSE for equality + size.
      */
 
     const uint64_t allUnset = std::numeric_limits<uint64_t>::min();
     const uint64_t allSet = std::numeric_limits<uint64_t>::max();
 
-    // test column in which all bits are set + different length (larger one)
+    // test column in which all bits are set + smaller one
     auto testDataColumnSorted =
             generate_exact_number(
-                TEST_DATA_COUNT * 10,
-                TEST_DATA_COUNT * 10,
-                allSet,
-                allUnset,
-                true
+                    TEST_DATA_COUNT / 2,
+                    TEST_DATA_COUNT / 2,
+                    allSet,
+                    allUnset,
+                    true
             );
-    // test column in which all bits are unset (smaller one)
+    // test column in which all bits are unset + larger one (i.e. the result has the same size as this one)
     auto testDataColumnSorted2 =
             generate_exact_number(
-                TEST_DATA_COUNT,
-                TEST_DATA_COUNT,
-                allUnset,
-                allSet,
-                true
+                    TEST_DATA_COUNT,
+                    TEST_DATA_COUNT,
+                    allUnset,
+                    allSet,
+                    true
             );
 
-    auto largerBitmap_allSet = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(testDataColumnSorted);
-    auto smallerBitmap_allUnSet = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(testDataColumnSorted2);
+    auto smallerBitmap_allSet = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(testDataColumnSorted);
+    auto largerBitmap_allUnSet = reinterpret_cast< const column< bitmap_f<uncompr_f> > * >(testDataColumnSorted2);
 
-    // result of intersection is ALL BITS UNSET, i.e. TEST_DATA_COUNT x uint64_t elements with value 0
+    // result of union/merge is: first (TEST_DATA_COUNT / 2)-1 bits are set, the remaining is unset
     auto result =
-            intersect_sorted<
+            merge_sorted<
                 avx2<v256<uint64_t>>,
                 bitmap_f<uncompr_f>,
                 bitmap_f<uncompr_f>,
                 bitmap_f<uncompr_f>
-            >( largerBitmap_allSet, smallerBitmap_allUnSet );
+            >( smallerBitmap_allSet, largerBitmap_allUnSet );
 
     auto result1 =
-            intersect_sorted<
+            merge_sorted<
                 sse<v128<uint64_t>>,
                 bitmap_f<uncompr_f>,
                 bitmap_f<uncompr_f>,
                 bitmap_f<uncompr_f>
-            >( largerBitmap_allSet, smallerBitmap_allUnSet );
+            >( smallerBitmap_allSet, largerBitmap_allUnSet );
 
-    //print_columns(print_buffer_base::decimal, result, "result");
+    //print_columns(print_buffer_base::decimal, result, "AVX");
+    //print_columns(print_buffer_base::decimal, result1, "SSE");
 
-    // check if results are the same + check length of any according to smaller input bitmap
+    // check if both results are the same + length same as larger bitmap count, i.e. TEST_DATA_COUNT
     bool allGood = memcmp(result->get_data(),result1->get_data(), result1->get_count_values()*8 );
-    if(result->get_count_values() != smallerBitmap_allUnSet->get_count_values()) allGood = true;
+    if(result->get_count_values() != largerBitmap_allUnSet->get_count_values()) allGood = true;
 
     return allGood;
 }
