@@ -31,7 +31,7 @@
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
-#include <core/morphing/intermediates/transformations.h>
+#include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
@@ -39,8 +39,8 @@
 #include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
 
+#include <core/utils/printing.h>
 #include <iostream>
-#include <type_traits>
 
 #define TEST_DATA_COUNT 1000
 
@@ -62,23 +62,28 @@ int main(void) {
 
     auto pl_uncompr_1 = reinterpret_cast< const column< position_list_f<uncompr_f> > * >(
             generate_sorted_unique(TEST_DATA_COUNT,0,1)
+            //make_column({63, 128, 999, 40003})
     );
+
+    //print_columns(print_buffer_base::decimal, pl_uncompr_1, "pl_uncompr_1");
 
     // ***** (1) morph: position_list_1 -> bitmap_1 *****
     auto bm_uncompr_1 =
-            morph_t<
+            transform_IR<
                 avx2<v256<uint64_t>>,
                 bitmap_f<>,
                 position_list_f<>
-            >::apply(pl_uncompr_1);
+            >(pl_uncompr_1);
+
+    //print_columns(print_buffer_base::decimal, bm_uncompr_1, "bm_uncompr_1");
 
     // ***** (2) morph: bitmap_1 -> position_list_2 *****
     auto pl_uncompr_2 =
-            morph_t<
+            transform_IR<
                 avx2<v256<uint64_t>>,
                 position_list_f<>,
                 bitmap_f<>
-            >::apply(bm_uncompr_1);
+            >(bm_uncompr_1);
 
     // ***** (3) compare: position_list_1 == position_list_2 ? *****
     const bool allGood =
