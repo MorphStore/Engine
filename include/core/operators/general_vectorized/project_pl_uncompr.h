@@ -27,7 +27,6 @@
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
-#include <core/morphing/intermediates/transformations.h>
 #include <core/morphing/intermediates/position_list.h>
 
 namespace morphstore {

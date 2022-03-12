@@ -50,15 +50,13 @@ namespace morphstore {
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countLog,
-                uint64_t startingPos = 0
+                base_t startingPos = 0
         ) {
             const base_t * p_BmPtr = reinterpret_cast<const base_t *>(in8);
             base_t * p_OutPtr = reinterpret_cast<base_t *>(out8);
 
-            base_t cur_pos = startingPos;
-
             // base vector that contains starting positions
-            vector_t baseVec = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(cur_pos);
+            vector_t baseVec = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(startingPos);
             // vector to increment base vector if current bitmap word is zero (skipping)
             vector_t add_v_base_t_granularity = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(
                     vector_base_t_granularity::value);
@@ -74,7 +72,7 @@ namespace morphstore {
                 // check if current bitmap word is zero (if so, we can simply skip)
                 if(word) {
                     // iterate through bitmap word in vector_element_count-steps,
-                    // e.g. if word size is 64-bit and SIMD-vector_element_count is 4 => 16 iterations
+                    // e.g. if word size is 64-bit and SIMD-vector_element_count is 4, we have 16 iterations
                     for(size_t j = 0; j < ( vector_base_t_granularity::value / vector_element_count::value) ; ++j){
 
                         // TODO: do we get more performance if we process 2 nibbles of sub_word concurrently ?
@@ -102,10 +100,8 @@ namespace morphstore {
                             // increment baseVec for next iteration
                             baseVec = vectorlib::add<VectorExtension>::apply(baseVec, add_v_element_count);
 
-                            // store resulting positions to output-pointer
-                            // problem here: we always store numbers, advance is the value that increments the pointer
-                            // TODO: possible optimization: check if advance != 0 -> then store something
-                            // use vectorlib::iov::UNALIGNED -> otherwise Segmentation Fault (alignment issues)
+                            // store resulting positions to output pointer
+                            // note: use vectorlib::iov::UNALIGNED => otherwise Segmentation Fault (alignment issues)
                             vectorlib::store<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, vec_pos);
 
                             // increment pointer according to the number of set bits from advance ("popcount")

@@ -28,7 +28,7 @@
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
-#include <core/morphing/intermediates/transformations.h>
+#include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 #include <core/morphing/intermediates/bitmap.h>
 
 namespace morphstore {
@@ -74,36 +74,60 @@ namespace morphstore {
                 column<uncompr_f> const *
         apply(
                 column< uncompr_f > const * const p_DataColumn,
-        column< bitmap_f<uncompr_f> > const * const p_bitmapCol
+                column< bitmap_f<uncompr_f> > const * const p_bitmapCol
         ) {
             base_t const * inDataPtr = p_DataColumn->get_data( );
+            base_t const * inBmPtr = p_bitmapCol->get_data();
+            size_t const inBmCount = p_bitmapCol->get_count_values();
 
-            /* General processing:
-             * 1) Morph bitmap -> position list (extra step) TODO: how to directly project from bitmap?
-             * 2) Actual vectorized project operation using decoded position columns
-             * 3) Return materialized columns
-             * */
+            // intermediate pos-list that holds bitmap set bits for further processing
+            // pessimistic allocation (every bit set)
+            auto inPosCol = new column< position_list_f<> >(
+                    inBmCount * vector_base_t_granularity::value * sizeof(base_t)
+            );
+            base_t * inPosPtr = inPosCol->get_data( );
 
-            // @todo: Think about an efficient allocation from bitmaps
-            //        -> For now using pessimistic allocation, i.e. every bit is set
-            //        -> Note: this currently leads to segFaults as we stre too many stuff
-            // Step 1)
-            auto outPosCol = morph_t<VectorExtension, position_list_f<>, bitmap_f<> >::apply(p_bitmapCol);
-
-
-            // Step 2)
-            size_t const vectorCount = outPosCol->get_count_values() / vector_element_count::value;
-            size_t const remainderCount = outPosCol->get_count_values() % vector_element_count::value;
-            auto outDataCol = new column<uncompr_f>(outPosCol->get_size_used_byte());
+            // pessimistic allocation: every bit in bitmap is set (currently there is no metadata to get total popcount)
+            auto outDataCol = new column<uncompr_f>(
+                    inBmCount * vector_base_t_granularity::value * sizeof(base_t)
+            );
             base_t * outDataPtr = outDataCol->get_data( );
+            const base_t * const initOutDataPtr = outDataPtr;
 
-            base_t const * inPosPtr = outPosCol->get_data( );
+            // iterate through input bitmap, i.e. bitmap-encoded-64-bit words
+            for(size_t i = 0; i < inBmCount; ++i) {
+                // current address of posPtr (to calculate number of positions)
+                base_t const * cur_PosPtr = inPosPtr;
 
-            // actual projecting with position-list-columns
-            project_bm_batch<VectorExtension>::apply(inDataPtr, inPosPtr, outDataPtr, vectorCount);
-            project_bm_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>>::apply(inDataPtr, inPosPtr, outDataPtr, remainderCount);
+                // re-interpreting casts, as the transform_IR-operator work with uint8_t pointers (like morph-operator)
+                const uint8_t * inBm8 = reinterpret_cast<const uint8_t *>(inBmPtr);
+                uint8_t * inPos8 = reinterpret_cast<uint8_t *>(inPosPtr);
 
-            outDataCol->set_meta_data(outPosCol->get_count_values(), outPosCol->get_size_used_byte());
+                // get positions
+                transform_IR_batch_t<VectorExtension, position_list_f<>, bitmap_f<> >::apply(
+                        inBm8,
+                        inPos8,
+                        1,
+                        i*vector_base_t_granularity::value
+                );
+
+                base_t * inPos64 = reinterpret_cast<base_t *>(inPos8);
+
+                // calculate the number of positions, from previous transformation
+                size_t const numberPositions = inPos64 - cur_PosPtr;
+
+                size_t const vectorCount = numberPositions / vector_element_count::value;
+                size_t const remainderCount = numberPositions % vector_element_count::value;
+
+                // actual projection using position-list
+                project_bm_batch<VectorExtension>::apply(inDataPtr, cur_PosPtr, outDataPtr, vectorCount);
+                project_bm_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>>::apply(inDataPtr, cur_PosPtr, outDataPtr, remainderCount);
+
+                ++inBmPtr;
+            }
+
+            size_t const outDataCount = outDataPtr - initOutDataPtr;
+            outDataCol->set_meta_data(outDataCount, outDataCount * sizeof(base_t));
 
             return outDataCol;
         }
@@ -120,7 +144,7 @@ namespace morphstore {
             ,int> = 0
     >
     column<uncompr_f> const * project_bm(
-            column< uncompr_f >        const * const p_Data1Column,
+            column< uncompr_f > const * const p_Data1Column,
             column< t_in_IR_f > const * const inBmCol
     ){
             return project_bm_t<t_vector_extension>::apply(p_Data1Column,inBmCol);
