@@ -52,58 +52,72 @@ namespace morphstore {
                 size_t countLog,
                 uint64_t startingPos = 0
         ) {
-            (void) startingPos; // TODO
-
             const base_t * p_BmPtr = reinterpret_cast<const base_t *>(in8);
             base_t * p_OutPtr = reinterpret_cast<base_t *>(out8);
 
-            vector_t baseVec = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(0);
+            base_t cur_pos = startingPos;
+
+            // base vector that contains starting positions
+            vector_t baseVec = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(cur_pos);
+            // vector to increment base vector if current bitmap word is zero (skipping)
             vector_t add_v_base_t_granularity = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(
                     vector_base_t_granularity::value);
+            // vector to increment within a word according to a SIMD's vector_element_count
             vector_t add_v_element_count = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(vector_element_count::value);
+            // specific vector mask to get sub-word within a word
             const base_t mask = bitmap_lookup_tables<vector_element_count::value, base_t>::mask;
 
             for(size_t i = 0; i < countLog; ++i) {
                 // get current encoded bitmap word
                 base_t word = p_BmPtr[i];
 
-                if(!word){
-                    // word is 0 -> skip
-                    baseVec = vectorlib::add<VectorExtension>::apply(baseVec, add_v_base_t_granularity);
-                }
-                else
-                {
+                // check if current bitmap word is zero (if so, we can simply skip)
+                if(word) {
+                    // iterate through bitmap word in vector_element_count-steps,
+                    // e.g. if word size is 64-bit and SIMD-vector_element_count is 4 => 16 iterations
                     for(size_t j = 0; j < ( vector_base_t_granularity::value / vector_element_count::value) ; ++j){
 
-                        // TODO: more performance if we process 2 nibbles of sub_word concurrently ?
-                        //  + Think about a vectorized version, i.e. do not materialize the whole bitmap column into
-                        //    posCol, instead just pass a sub set... like decompress_and_process_batch<...> does
+                        // TODO: do we get more performance if we process 2 nibbles of sub_word concurrently ?
                         base_t sub_word = word & mask;
                         word >>= vector_element_count::value;
 
                         if(sub_word){
-                            vector_t vec_pos = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(
-                                    bitmap_lookup_tables<vector_element_count::value, base_t>::get_positions(sub_word - 1) // -1 because no entry for 0 in lookupTables ("one index before actual number")
-                            );
+                            // load positions from bit sequence accord. to static lookup-tables
+                            vector_t vec_pos =
+                                    vectorlib::load<
+                                        VectorExtension,
+                                        vectorlib::iov::ALIGNED,
+                                        vector_size_bit::value
+                                    >(bitmap_lookup_tables<vector_element_count::value, base_t>::get_positions(
+                                            sub_word - 1 // -1 because no entry for 0 in lookupTables ("one index before actual number")
+                                    ));
 
+                            // get number of set bits in sub word:
                             //const base_t advance = __builtin_popcountll(sub_word);
-                            // possible optimization: static lookup table for advance-value that returns number of matches
+                            // potential optimization: use static lookup tables for advance-value that returns number of matches
                             const base_t advance = vectorlib::count_matches<VectorExtension>::apply(sub_word);
 
+                            // increment baseVec by positions from vec_pos to get current positions of set bits
                             vec_pos = vectorlib::add<VectorExtension>::apply(baseVec, vec_pos);
+                            // increment baseVec for next iteration
                             baseVec = vectorlib::add<VectorExtension>::apply(baseVec, add_v_element_count);
 
+                            // store resulting positions to output-pointer
+                            // problem here: we always store numbers, advance is the value that increments the pointer
+                            // TODO: possible optimization: check if advance != 0 -> then store something
                             // use vectorlib::iov::UNALIGNED -> otherwise Segmentation Fault (alignment issues)
                             vectorlib::store<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, vec_pos);
-                            // increment pointer according to the number of set bits from popcount
+
+                            // increment pointer according to the number of set bits from advance ("popcount")
                             p_OutPtr += advance;
-                        }
-                        else
-                        {
+                        } else {
                             // sub_word is 0 -> skip
                             baseVec = vectorlib::add<VectorExtension>::apply(baseVec, add_v_element_count);
                         }
                     }
+                } else {
+                    // whole bm-word is zero => skip by incrementing baseVec
+                    baseVec = vectorlib::add<VectorExtension>::apply(baseVec, add_v_base_t_granularity);
                 }
             }
             out8 = reinterpret_cast<uint8_t *>(p_OutPtr);
@@ -135,25 +149,32 @@ namespace morphstore {
 
                 uint64_t trailingZeros = 0ULL;
 
-                while(bm_word) {
-                    // count trailing zeros
-                    trailingZeros = __builtin_ctzll(bm_word);
-                    cur_pos += trailingZeros;
+                // check if current bitmap word is zero
+                if(bm_word) {
+                    // if not, process as long as it is not zero
+                    while(bm_word) {
+                        // count trailing zeros
+                        trailingZeros = __builtin_ctzll(bm_word);
+                        cur_pos += trailingZeros;
 
-                    // insert position value
-                    *p_OutPtr = cur_pos;
+                        // insert position value
+                        *p_OutPtr = cur_pos;
 
-                    // increment variables
-                    p_OutPtr++;
-                    cur_pos++;
-                    trailingZeros++;
+                        // increment variables
+                        p_OutPtr++;
+                        cur_pos++;
+                        trailingZeros++;
 
-                    // shift trailingZeros-bits out of the current word
-                    // shifting it by more than or equal to 64 results in undefined behavior -> manually setting it to 0
-                    // e.g. when uint64_t n = 2^63 -> binary = 10.......00 -> trailingZeros = 63, gets incremented then 64
-                    bm_word = (trailingZeros ^ wordBitSize) ?
-                            bm_word >> trailingZeros :
-                            0;
+                        // shift trailingZeros-bits out of the current word:
+                        // shifting it by more than or equal to 64 results in undefined behavior => manually setting it to 0
+                        // e.g. when uint64_t n = 2^63 -> binary = 10.......00 -> trailingZeros = 63, gets incremented then 64
+                        bm_word = (trailingZeros ^ wordBitSize) ?
+                                  bm_word >> trailingZeros :
+                                  0;
+                    }
+                } else {
+                    // if zero, update cur_pos
+                    cur_pos += wordBitSize;
                 }
             }
             out8 = reinterpret_cast<uint8_t *>(p_OutPtr);

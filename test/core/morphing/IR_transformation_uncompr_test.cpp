@@ -62,7 +62,6 @@ int main(void) {
 
     auto pl_uncompr_1 = reinterpret_cast< const column< position_list_f<uncompr_f> > * >(
             generate_sorted_unique(TEST_DATA_COUNT,0,1)
-            //make_column({63, 128, 999, 40003})
     );
 
     //print_columns(print_buffer_base::decimal, pl_uncompr_1, "pl_uncompr_1");
@@ -70,7 +69,7 @@ int main(void) {
     // ***** (1) morph: position_list_1 -> bitmap_1 *****
     auto bm_uncompr_1 =
             transform_IR<
-                avx2<v256<uint64_t>>,
+                scalar<v64<uint64_t>>,
                 bitmap_f<>,
                 position_list_f<>
             >(pl_uncompr_1);
