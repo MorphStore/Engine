@@ -38,7 +38,7 @@ namespace morphstore {
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         MSV_CXX_ATTRIBUTE_FORCE_INLINE static vector_t apply(
                 base_t const * p_DataPtr,
-        vector_t p_PosVector
+                vector_t p_PosVector
         ) {
             return (vectorlib::gather<VectorExtension, vector_size_bit::value, sizeof(base_t)>(p_DataPtr, p_PosVector));
         }
@@ -80,12 +80,12 @@ namespace morphstore {
             base_t const * inBmPtr = p_bitmapCol->get_data();
             size_t const inBmCount = p_bitmapCol->get_count_values();
 
-            // intermediate pos-list that holds bitmap set bits for further processing
-            // pessimistic allocation (every bit set)
+            // intermediate column that holds the positions of one bitmap encoded word, used when iterating through bm-words;
+            // one bitmap-word can hold up to vector_base_t_granularity::value-positions, e.g. uint64_t => 64 positions
             auto inPosCol = new column< position_list_f<> >(
-                    inBmCount * vector_base_t_granularity::value * sizeof(base_t)
+                    vector_base_t_granularity::value * sizeof(base_t)
             );
-            base_t * inPosPtr = inPosCol->get_data( );
+            base_t * const initInPosPtr = inPosCol->get_data();
 
             // pessimistic allocation: every bit in bitmap is set (currently there is no metadata to get total popcount)
             auto outDataCol = new column<uncompr_f>(
@@ -94,35 +94,40 @@ namespace morphstore {
             base_t * outDataPtr = outDataCol->get_data( );
             const base_t * const initOutDataPtr = outDataPtr;
 
-            // iterate through input bitmap, i.e. bitmap-encoded-64-bit words
+            // iterate through input bitmap word-by-word, i.e. bitmap-encoded-64-bit words (word-granularity)
             for(size_t i = 0; i < inBmCount; ++i) {
-                // current address of posPtr (to calculate number of positions)
-                base_t const * cur_PosPtr = inPosPtr;
+                // check if bitmap encoded word is 0 -> if so, skip
+                if(*inBmPtr) {
+                    // re-interpreting casts, as the transform_IR-operator work with uint8_t pointers (like morph-operator)
+                    const uint8_t * inBm8 = reinterpret_cast<const uint8_t *>(inBmPtr);
+                    // starting point of intermediate pos.-list
+                    uint8_t * inPos8 = reinterpret_cast<uint8_t *>(initInPosPtr);
 
-                // re-interpreting casts, as the transform_IR-operator work with uint8_t pointers (like morph-operator)
-                const uint8_t * inBm8 = reinterpret_cast<const uint8_t *>(inBmPtr);
-                uint8_t * inPos8 = reinterpret_cast<uint8_t *>(inPosPtr);
+                    // get positions of current bitmap encoded word
+                    transform_IR_batch_t<VectorExtension, position_list_f<>, bitmap_f<> >::apply(
+                            inBm8,
+                            inPos8,
+                            1, // we only process one word
+                            i*vector_base_t_granularity::value
+                    );
 
-                // get positions
-                transform_IR_batch_t<VectorExtension, position_list_f<>, bitmap_f<> >::apply(
-                        inBm8,
-                        inPos8,
-                        1,
-                        i*vector_base_t_granularity::value
-                );
+                    // re-cast to base_t alignment
+                    base_t const * const inPosEnd = reinterpret_cast<base_t const * const>(inPos8);
 
-                base_t * inPos64 = reinterpret_cast<base_t *>(inPos8);
+                    // calculate the number of positions, from previous transformation
+                    size_t const numberPositions = inPosEnd - initInPosPtr;
 
-                // calculate the number of positions, from previous transformation
-                size_t const numberPositions = inPos64 - cur_PosPtr;
+                    size_t const vectorCount = numberPositions / vector_element_count::value;
+                    size_t const remainderCount = numberPositions % vector_element_count::value;
 
-                size_t const vectorCount = numberPositions / vector_element_count::value;
-                size_t const remainderCount = numberPositions % vector_element_count::value;
+                    // tmp-pointer which is used in project_bm<> (to avoid that initInPosPtr gets increment or modified)
+                    base_t const * inPosPtr_tmp = initInPosPtr;
 
-                // actual projection using position-list
-                project_bm_batch<VectorExtension>::apply(inDataPtr, cur_PosPtr, outDataPtr, vectorCount);
-                project_bm_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>>::apply(inDataPtr, cur_PosPtr, outDataPtr, remainderCount);
-
+                    // actual projection using position-list
+                    project_bm_batch<VectorExtension>::apply(inDataPtr, inPosPtr_tmp, outDataPtr, vectorCount);
+                    project_bm_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>>::apply(inDataPtr, inPosPtr_tmp, outDataPtr, remainderCount);
+                }
+                // get next bitmap word
                 ++inBmPtr;
             }
 

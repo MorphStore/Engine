@@ -312,7 +312,7 @@ namespace morphstore {
     // Compressed IR-Transformation (column-level)
     // ************************************************************************
 
-    // TODO: write code + enable testing
+    // TODO: write code + enable testing (see test: simple_query_bm_pl_compr_test.cpp)
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_INTERMEDIATES_TRANSFORMATIONS_TRANSFORMATION_ALGORITHMS_H
