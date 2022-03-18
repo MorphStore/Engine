@@ -62,7 +62,13 @@ namespace morphstore {
 
         static const size_t m_BlockSize = t_inner_f::m_BlockSize;
 
+        // workaround for outer-type deduction, more precisely to get the underlying IR, used in representation.h
         static const intermediate_type ir_type = {intermediate_type::bitmap};
+
+        // Generally used in write_iterator to allocate transformation buffer (see write_iterator_IR.h):
+        // if every bit is set (pessimistic), 1 bitmap word can generate 64 positions => 32 * 64 * sizeof(uint64_t) = 16ki bytes (Lx-cache-resident)
+        // -> we currently process 2048 elements in batches
+        static const size_t trans_buf_cnt = 32;
     };
 
     // ------------------------------------------------------------------------

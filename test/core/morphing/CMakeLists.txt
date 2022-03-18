@@ -8,6 +8,8 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/bitmask_morph_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/position_list_morph_test_app )
 
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/morphing/write_iterator_IR_test_app )
+
 	#add_executable( delta_test_app delta_test.cpp )
 	#add_executable( group_simple_test_app group_simple_test.cpp )
 	#add_executable( k_wise_ns_test_app k_wise_ns_test.cpp )  #
@@ -16,6 +18,8 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	#add_executable( IR_transformation_compr_test_app IR_transformation_compr_test.cpp)
 	add_executable( bitmask_morph_test_app bm_compr_test.cpp)
 	add_executable( position_list_morph_test_app pl_compr_test.cpp)
+
+	add_executable( write_iterator_IR_test_app write_iterator_IR_test.cpp)
 
 	#target_compile_options( delta_test_app PRIVATE
 	# space to add custom flags for THIS SPECIFIC TARGET
@@ -42,6 +46,10 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 			# space to add custom flags for THIS SPECIFIC TARGET
 	)
 
+	target_compile_options( write_iterator_IR_test_app PRIVATE
+			# space to add custom flags for THIS SPECIFIC TARGET
+	)
+
 	#target_link_libraries( delta_test_app PRIVATE "-ldl" )
 	#target_link_libraries( group_simple_test_app PRIVATE "-ldl" )
 	#target_link_libraries( k_wise_ns_test_app PRIVATE "-ldl" )
@@ -51,6 +59,8 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	target_link_libraries( bitmask_morph_test_app PRIVATE "-ldl" )
 	target_link_libraries( position_list_morph_test_app PRIVATE "-ldl" )
 
+	target_link_libraries( write_iterator_IR_test_app PRIVATE "-ldl" )
+
 	#add_test( delta_test delta_test_app )
 	#add_test( group_simple_test group_simple_test_app )
 	#add_test( k_wise_ns_test k_wise_ns_test_app )
@@ -59,4 +69,6 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	#add_test( IR_transformation_compr_test IR_transformation_compr_test_app )
 	add_test( bitmask_morph_test bitmask_morph_test_app )
 	add_test( position_list_morph_test position_list_morph_test_app )
+
+	add_test( write_iterator_IR_test write_iterator_IR_test_app )
 endif()

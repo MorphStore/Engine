@@ -29,9 +29,8 @@
 // @todo Include this as soon as the interfaces are harmonized.
 //#include <core/operators/interfaces/select.h>
 #include <core/memory/management/utils/alignment_helper.h>
-#include <core/morphing/intermediates/position_list.h>
 #include <core/morphing/format.h>
-#include <core/morphing/write_iterator.h>
+#include <core/morphing/write_iterator_IR.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -55,7 +54,9 @@ namespace morphstore {
 #else
             class t_compare,
 #endif
-            class t_out_f
+            class t_out_f,
+            class t_IR_dst_f,
+            class t_IR_src_f
     >
     struct select_processing_unit_wit {
         using t_ve = t_vector_extension;
@@ -65,7 +66,8 @@ namespace morphstore {
             const vector_t m_Predicate;
             vector_t m_Pos;
             const vector_t m_Inc;
-            selective_write_iterator<t_ve, t_out_f> m_Wit;
+            // selective write-iterator including IR-transformation
+            selective_write_iterator_IR<t_ve, t_out_f, t_IR_dst_f, t_IR_src_f> m_Wit;
 
             state_t(base_t p_Predicate, uint8_t * p_Out, base_t p_Pos) :
                     m_Predicate(vectorlib::set1<t_ve, vector_base_t_granularity::value>(p_Predicate)),
@@ -82,6 +84,9 @@ namespace morphstore {
 #endif
             if(mask) p_State.m_Wit.write(p_State.m_Pos, mask);
             p_State.m_Pos = vectorlib::add<t_ve>::apply(p_State.m_Pos, p_State.m_Inc);
+
+            // update internal state of write-iterator for IR-transformation (if any)
+            p_State.m_Wit.update();
         }
     };
 
@@ -89,14 +94,22 @@ namespace morphstore {
     template<
             template<class, int> class t_compare,
             class t_vector_extension,
-            class t_out_IR_f,
+            class t_IR_dst_f,
             class t_in_data_f,
             typename std::enable_if_t<
-                    // check if t_out_IR_f is a position-list to instantiate the right operator according to its underlying IR
-                    morphstore::is_position_list_t< t_out_IR_f >::value
-                    ,int> = 0
+                    // check if t_IR_dst_f is an IR-type to enable this
+                    morphstore::is_intermediate_representation_t< t_IR_dst_f >::value
+            ,int> = 0
     >
     struct select_pl_wit_t {
+        // write iterators currently work only on uncompressed IRs -> fetch the underlying data structure
+        using t_IR_dest_uncompr =
+                typename std::conditional<
+                        morphstore::is_bitmap_t<t_IR_dst_f>::value,
+                        bitmap_f<>,
+                        position_list_f<>
+                >::type;
+        using t_IR_src_uncompr = position_list_f<>;
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
@@ -105,7 +118,7 @@ namespace morphstore {
         using t_compare_special_sc = t_compare<vectorlib::scalar<vectorlib::v64<uint64_t>>, vectorlib::scalar<vectorlib::v64<uint64_t>>::vector_helper_t::granularity::value>;
 #endif
 
-        static const column< t_out_IR_f > *
+        static const column< t_IR_dst_f > *
         apply(
                 const column<t_in_data_f> * const inDataCol,
                 const uint64_t val,
@@ -121,12 +134,13 @@ namespace morphstore {
 
             const size_t inCountLogCompr = inDataCol->get_count_values_compr();
 
-            auto outPosCol = new column< t_out_IR_f >(
+            // TODO: think about clever allocation (independet from underlying IR data structue)
+            auto outPosCol = new column< t_IR_dst_f >(
                     bool(outPosCountEstimate)
                     // use given estimate
-                    ? get_size_max_byte_any_len< typename t_out_IR_f::t_inner_f >(outPosCountEstimate)
+                    ? get_size_max_byte_any_len< typename t_IR_dst_f::t_inner_f >(outPosCountEstimate)
                     // use pessimistic estimate
-                    : get_size_max_byte_any_len< typename t_out_IR_f::t_inner_f >(inDataCountLog)
+                    : get_size_max_byte_any_len< typename t_IR_dst_f::t_inner_f >(inDataCountLog)
             );
             uint8_t * outPos = outPosCol->get_data();
             const uint8_t * const initOutPos = outPos;
@@ -136,9 +150,11 @@ namespace morphstore {
             // The state of the selective_write_iterator for the compressed output.
             typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
-                    t_ve, t_compare, typename t_out_IR_f::t_inner_f
+                    t_ve, t_compare, typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #else
-                    t_ve, t_compare_special_ve, typename t_out_IR_f::t_inner_f
+                    t_ve, t_compare_special_ve, typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #endif
             >::state_t witComprState(val, outPos, 0);
 
@@ -153,7 +169,9 @@ namespace morphstore {
 #else
                     t_compare_special_ve,
 #endif
-                    typename t_out_IR_f::t_inner_f
+                    typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr,
+                    t_IR_src_uncompr
             >::apply(
                     inData, inCountLogCompr, witComprState
             );
@@ -188,7 +206,9 @@ namespace morphstore {
 #else
                         t_compare_special_ve,
 #endif
-                        typename t_out_IR_f::t_inner_f
+                        typename t_IR_dst_f::t_inner_f,
+                        t_IR_dest_uncompr,
+                        t_IR_src_uncompr
                 >::apply(
                         inData, convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte), witComprState
                 );
@@ -211,11 +231,13 @@ namespace morphstore {
                     // uncompressed output.
                     typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
-                    scalar<v64<uint64_t>>, t_compare, uncompr_f
+                    scalar<v64<uint64_t>>, t_compare, uncompr_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #else
-                    scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f
-                                                                 #endif
-                                                                 >::state_t witUncomprState(
+                    scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
+#endif
+                     >::state_t witUncomprState(
                             val,
                             outAppendUncompr,
                             inCountLogCompr + inDataSizeUncomprVecByte / sizeof(base_t)
@@ -224,7 +246,7 @@ namespace morphstore {
                     // Processing of the input column's uncompressed scalar rest
                     // part using scalar instructions, uncompressed output.
                     decompress_and_process_batch<
-                    scalar<v64<uint64_t>>,
+                            scalar<v64<uint64_t>>,
                             uncompr_f,
                             select_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
@@ -232,8 +254,10 @@ namespace morphstore {
 #else
                             t_compare_special_sc,
 #endif
-uncompr_f
->::apply(inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState);
+                            uncompr_f,
+                            t_IR_dest_uncompr,
+                            t_IR_src_uncompr
+                    >::apply(inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState);
 
                     // Finish the output column's uncompressed rest part.
                     std::tie(

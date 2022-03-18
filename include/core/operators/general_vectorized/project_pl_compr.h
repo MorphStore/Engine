@@ -28,7 +28,7 @@
 
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
-#include <core/morphing/write_iterator.h>
+#include <core/morphing/write_iterator_IR.h>
 #include <core/morphing/intermediates/position_list.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
@@ -47,14 +47,17 @@ namespace morphstore {
     template<
             class t_vector_extension,
             class t_out_data_f,
-            class t_in_data_f
+            class t_in_data_f,
+            class t_IR_dst_f,
+            class t_IR_src_f
     >
     struct project_processing_unit_wit {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
         struct state_t {
-            nonselective_write_iterator<t_ve, t_out_data_f> m_Wit;
+            // nonselective write-iterator including IR-transformation
+            nonselective_write_iterator_IR<t_ve, t_out_data_f, t_IR_dst_f, t_IR_src_f> m_Wit;
             typename random_read_access<t_ve, t_in_data_f>::type m_Rra; // uses gather-instruction on uncompr_f so far
 
             state_t(uint8_t * p_OutData, const base_t * p_InData) : m_Wit(p_OutData), m_Rra(p_InData) {}
@@ -64,6 +67,9 @@ namespace morphstore {
                 vector_t p_Data, state_t & p_State
         ) {
             p_State.m_Wit.write(p_State.m_Rra.get(p_Data));
+
+            // update internal state of write-iterator for IR-transformation (if any)
+            p_State.m_Wit.update();
         }
     };
 
@@ -71,12 +77,23 @@ namespace morphstore {
             class t_vector_extension,
             class t_out_data_f,
             class t_in_data_f,
-            class t_in_IR_f,
+            class t_IR_dst_f,
+            class t_IR_src_f,
             typename std::enable_if_t<
-                    morphstore::is_position_list_t< t_in_IR_f >::value
-                    ,int> = 0
+                    // check if t_IR_dst_f is an IR-type & t_IR_src_f is a position-list
+                    morphstore::is_intermediate_representation_t< t_IR_dst_f >::value &&
+                    morphstore::is_position_list_t< t_IR_src_f >::value
+            ,int> = 0
     >
     struct project_pl_wit_t {
+        // write iterators currently work only on uncompressed IRs -> fetch the underlying data structure
+        using t_IR_dest_uncompr =
+                typename std::conditional<
+                        morphstore::is_bitmap_t<t_IR_dst_f>::value,
+                        bitmap_f<>,
+                        position_list_f<>
+                >::type;
+        using t_IR_src_uncompr = position_list_f<>;
         using t_ve = t_vector_extension;
 
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
@@ -84,7 +101,7 @@ namespace morphstore {
         static const column<t_out_data_f> *
         apply(
                 const column<t_in_data_f> * const inDataCol,
-                const column<t_in_IR_f> * const inPosCol
+                const column<t_IR_src_f> * const inPosCol
         ) {
             using namespace vectorlib;
 
@@ -131,17 +148,21 @@ namespace morphstore {
             typename project_processing_unit_wit<
                     t_ve,
                     t_out_data_f,
-                    t_in_data_f
+                    t_in_data_f,
+                    t_IR_dest_uncompr,
+                    t_IR_src_uncompr
             >::state_t witComprState(outData, inData);
 
             // Processing of the input IR column's compressed part using the
             // specified vector extension, compressed output.
             decompress_and_process_batch<
                     t_ve,
-                    typename t_in_IR_f::t_inner_f,
+                    typename t_IR_src_f::t_inner_f,
                     project_processing_unit_wit,
                     t_out_data_f,
-                    t_in_data_f
+                    t_in_data_f,
+                    t_IR_dest_uncompr,
+                    t_IR_src_uncompr
             >::apply(
                     inPos, inPosCountLogCompr, witComprState
             );
@@ -174,7 +195,9 @@ namespace morphstore {
                         uncompr_f,
                         project_processing_unit_wit,
                         t_out_data_f,
-                        t_in_data_f
+                        t_in_data_f,
+                        t_IR_dest_uncompr,
+                        t_IR_src_uncompr
                 >::apply(
                         inPos, convert_size<uint8_t, uint64_t>(inPosSizeUncomprVecByte), witComprState
                 );
@@ -238,12 +261,12 @@ namespace morphstore {
                     // necessarily scalar and writes to the temporary output
                     // buffer.
                     typename project_processing_unit_wit<
-                            t_ve, uncompr_f, t_in_data_f
+                            t_ve, uncompr_f, t_in_data_f, t_IR_dest_uncompr, t_IR_src_uncompr
                     >::state_t witUncomprState(tmpOut, inData);
 
                     // Call the core operator directly.
                     project_processing_unit_wit<
-                            t_ve, uncompr_f, t_in_data_f
+                            t_ve, uncompr_f, t_in_data_f, t_IR_dest_uncompr, t_IR_src_uncompr
                     >::apply(
                             load<
                                     t_ve, iov::ALIGNED, vector_size_bit::value

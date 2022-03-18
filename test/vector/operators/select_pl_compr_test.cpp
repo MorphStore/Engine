@@ -111,6 +111,8 @@ int main( void ) {
                 delta
             >::apply(inCol_delta, predicate);
 
+    //print_columns(print_buffer_base::decimal, result_compr, "result_compr");
+
     // (4) Compare results
     const bool allGood =
             memcmp(result_compr->get_data(),result_uncompr->get_data(),result_uncompr->get_count_values()*8);

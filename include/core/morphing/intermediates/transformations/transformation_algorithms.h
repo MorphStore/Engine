@@ -50,7 +50,7 @@ namespace morphstore {
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countLog,
-                base_t startingPos = 0
+                const base_t startingPos
         ) {
             const base_t * p_BmPtr = reinterpret_cast<const base_t *>(in8);
             base_t * p_OutPtr = reinterpret_cast<base_t *>(out8);
@@ -128,7 +128,7 @@ namespace morphstore {
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countLog,
-                uint64_t startingPos = 0
+                const uint64_t startingPos
         ) {
             using scalar_type = typename scalar<v64<uint64_t>>::vector_t;
 
@@ -188,7 +188,7 @@ namespace morphstore {
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countLog,
-                uint64_t startingPos = 0
+                const uint64_t startingPos
         ) {
             // just call the scalar version as we do not yet support vectorized processing here
             transform_IR_batch< scalar<v64<uint64_t>>, bitmap_f<>, position_list_f<> >(
@@ -199,17 +199,18 @@ namespace morphstore {
 
     // position_list (src) -> bitmap (dest)
     // full template specialization for scalar processing
+    // Important assumption: out8 is already filled with 0-elements (we just set the bits at specific offsets)
     template<>
     struct transform_IR_batch_t<scalar<v64<uint64_t>>, bitmap_f<>, position_list_f<> > {
         static void apply(
                 const uint8_t * & in8,
                 uint8_t * & out8,
                 size_t countLog,
-                uint64_t startingPos = 0
+                const uint64_t startingPos
         ) {
             using scalar_type = typename scalar<v64<uint64_t>>::vector_t;
 
-            // to satisfy compiler unused error: just ignort startingPos as this is not relevant for PL->BM
+            // to satisfy compiler unused error: just ignore startingPos as this is not relevant for PL->BM
             (void) startingPos;
 
             const scalar_type * p_inPos = reinterpret_cast<const scalar_type *>(in8);
@@ -299,7 +300,7 @@ namespace morphstore {
 
             // IR-transformation
             transform_IR_batch<t_vector_extension, bitmap_f<>, position_list_f<> >(
-                    in8, out8, countLog
+                    in8, out8, countLog, 0
             );
 
             outBm->set_meta_data(bm_count, bm_count * sizeof(base_t));

@@ -18,7 +18,8 @@
 /**
  * @file write_iterator_IR.h
  * @brief Interfaces and default implementations for
- *              (1) handling IR-transformations and
+ *              (1) handling IR-transformations
+ *                                  +
  *              (2) writing data to a column in any format.
  *
  *        General remark: The query operators are implemented against the interfaces
@@ -37,11 +38,11 @@
  *        which works for all formats.
  *
  *        Generally default implementation of write_iterator_base_IR uses 3 buffers internally:
-     *        (1) IR-Collection-Buffer:     collects results from vector-register layer (t_op<>) +
-     *                                      executes IR-transformation to IR-Transformation-Buffer, if capacity reached
-     *        (2) IR-Transformation-Buffer: contains uncompressed IR-transformed data +
-     *                                      copies elements to Morph-Buffer, executes compress_buffer() of Morph-Buffer
-     *        (3) Morph-Buffer:             compresses data to output-column in any format
+ *          (1) IR-Collection-Buffer:     collects results from vector-register layer (t_op<>) +
+ *                                        executes IR-transformation to IR-Transformation-Buffer, if capacity reached
+ *          (2) IR-Transformation-Buffer: contains uncompressed IR-transformed data +
+ *                                        copies elements to Morph-Buffer, executes compress_buffer() of Morph-Buffer
+ *          (3) Morph-Buffer:             compresses data to output-column in any format
  *
  */
 
@@ -141,7 +142,7 @@ namespace morphstore {
         // #valid-elements that need to be transformed  in IR-Collection-Buffer, incremented in write()-function of the specific selective- & nonselective write iterators
         size_t m_IR_Coll_Count;
 
-        // this variable gets incremented in increment_count_IR_Trans() every time t_op<> executes its apply(), i.e. its specific processing unit
+        // this variable gets incremented in update() every time t_op<> executes its apply(), i.e. its specific processing unit
         size_t currentProcessingCount;
 
         void reset_IR_buffers(){
@@ -384,7 +385,7 @@ namespace morphstore {
          *        whenever a resulting mask is calculated, more specifically in
          *        t_op_vector<t_ve, t_extra_args ...>::apply() at the very end.
          */
-         void increment_count_IR_Trans() {
+         void update() {
              // increment count by the number of processed elements, i.e. number of bits in the resultMask of an operator
             currentProcessingCount += vector_element_count::value;
 

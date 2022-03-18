@@ -29,9 +29,8 @@
 // @todo Include this as soon as the interfaces are harmonized.
 //#include <core/operators/interfaces/select.h>
 #include <core/memory/management/utils/alignment_helper.h>
-#include <core/morphing/intermediates/bitmap.h>
 #include <core/morphing/format.h>
-#include <core/morphing/write_iterator.h>
+#include <core/morphing/write_iterator_IR.h>
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
@@ -55,7 +54,9 @@ namespace morphstore {
 #else
             class t_compare,
 #endif
-            class t_out_f
+            class t_out_f,
+            class t_IR_dst_f,
+            class t_IR_src_f
     >
     struct select_processing_unit_wit {
         using t_ve = t_vector_extension;
@@ -71,7 +72,8 @@ namespace morphstore {
             const vector_t m_Predicate;
             const vector_mask_t m_write_mask = 1; // we just want to store the first word in the vector
             vector_t m_bitmap;
-            selective_write_iterator<t_ve, t_out_f> m_Wit;
+            // selective write-iterator including IR-transformation
+            selective_write_iterator_IR<t_ve, t_out_f, t_IR_dst_f, t_IR_src_f> m_Wit;
             bitmap_processing_state_t m_bm_ps_state;
 
             state_t(base_t p_Predicate, uint8_t * p_Out, bitmap_processing_state_t & p_bm_ps_state) :
@@ -120,6 +122,9 @@ namespace morphstore {
             p_State.m_bm_ps_state.m_bitPos = (p_State.m_bm_ps_state.m_bitPos + vector_element_count::value)
                                              % vector_base_t_granularity::value;
             if(p_State.m_bm_ps_state.firstRun) p_State.m_bm_ps_state.firstRun = false; // mark the first processing run
+
+            // update internal state of write-iterator for IR-transformation (if any)
+            p_State.m_Wit.update();
         }
     };
 
@@ -127,14 +132,22 @@ namespace morphstore {
     template<
             template<class, int> class t_compare,
             class t_vector_extension,
-            class t_out_IR_f,
+            class t_IR_dst_f,
             class t_in_data_f,
             typename std::enable_if_t<
-                    // check if t_out_IR_f is a bitmap to instantiate the right operator according to its underlying IR
-                    morphstore::is_bitmap_t< t_out_IR_f >::value
-                    ,int> = 0
+                    // check if t_IR_dst_f is an IR-type to enable this
+                    morphstore::is_intermediate_representation_t< t_IR_dst_f >::value
+            ,int> = 0
     >
     struct select_bm_wit_t {
+        // write iterators currently work only on uncompressed IRs -> fetch the underlying data structure
+        using t_IR_dest_uncompr =
+                typename std::conditional<
+                        morphstore::is_bitmap_t<t_IR_dst_f>::value,
+                        bitmap_f<>,
+                        position_list_f<>
+                >::type;
+        using t_IR_src_uncompr = bitmap_f<>;
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
@@ -143,7 +156,7 @@ namespace morphstore {
         using t_compare_special_sc = t_compare<vectorlib::scalar<vectorlib::v64<uint64_t>>, vectorlib::scalar<vectorlib::v64<uint64_t>>::vector_helper_t::granularity::value>;
 #endif
 
-        static const column< t_out_IR_f > *
+        static const column< t_IR_dst_f > *
         apply(
                 const column<t_in_data_f> * const inDataCol,
                 const uint64_t val
@@ -158,11 +171,16 @@ namespace morphstore {
 
             const size_t inCountLogCompr = inDataCol->get_count_values_compr();
 
-            // number of columns needed to encode bitmaps -> pessimistic (all bits are set, and 1 word store's base_t elements)
-            const size_t outBmCountEstimate = round_up_div(inDataCountLog, vector_base_t_granularity::value);
+            // if output IR-type is a position-list, we need another allocation strategy than for bitmaps
+            const size_t outCount =
+                    (morphstore::is_bitmap_t<t_IR_dst_f>::value)
+                    ?
+                    round_up_div(inDataCountLog, vector_base_t_granularity::value) // pessimistic (all bits are set, and 1 word store's base_t elements)
+                    :
+                    inDataCountLog; // pessimistic
 
-            auto outCol = new column< t_out_IR_f >(
-                    get_size_max_byte_any_len< typename t_out_IR_f::t_inner_f >(outBmCountEstimate)
+            auto outCol = new column< t_IR_dst_f >(
+                    get_size_max_byte_any_len< typename t_IR_dst_f::t_inner_f >(outCount)
             );
             uint8_t * outPos = outCol->get_data();
             const uint8_t * const initOut = outPos;
@@ -175,9 +193,11 @@ namespace morphstore {
             // The state of the selective_write_iterator for the compressed output.
             typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
-                    t_ve, t_compare, typename t_out_IR_f::t_inner_f
+                    t_ve, t_compare, typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #else
-                    t_ve, t_compare_special_ve, typename t_out_IR_f::t_inner_f
+                    t_ve, t_compare_special_ve, typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #endif
             >::state_t witComprState(val, outPos, bm_ps_state);
 
@@ -192,7 +212,9 @@ namespace morphstore {
 #else
                     t_compare_special_ve,
 #endif
-                    typename t_out_IR_f::t_inner_f
+                    typename t_IR_dst_f::t_inner_f,
+                    t_IR_dest_uncompr,
+                    t_IR_src_uncompr
             >::apply(
                     inData, inCountLogCompr, witComprState
             );
@@ -231,7 +253,9 @@ namespace morphstore {
 #else
                         t_compare_special_ve,
 #endif
-                        typename t_out_IR_f::t_inner_f
+                        typename t_IR_dst_f::t_inner_f,
+                        t_IR_dest_uncompr,
+                        t_IR_src_uncompr
                 >::apply(
                         inData, convert_size<uint8_t, uint64_t>(inDataSizeUncomprVecByte), witComprState
                 );
@@ -260,11 +284,13 @@ namespace morphstore {
                     // uncompressed output.
                     typename select_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
-                    scalar<v64<uint64_t>>, t_compare, uncompr_f
+                    scalar<v64<uint64_t>>, t_compare, uncompr_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
 #else
-                    scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f
-                                                                 #endif
-                                                                 >::state_t witUncomprState(
+                    scalar<v64<uint64_t>>, t_compare_special_sc, uncompr_f,
+                    t_IR_dest_uncompr, t_IR_src_uncompr
+#endif
+                    >::state_t witUncomprState(
                             val,
                             outAppendUncompr,
                             witComprState.m_bm_ps_state // pass witComprState's prev. bm-state (otherwise starting from 0 again)
@@ -281,8 +307,10 @@ namespace morphstore {
 #else
                             t_compare_special_sc,
 #endif
-uncompr_f
->::apply(inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState);
+                            uncompr_f,
+                            t_IR_dest_uncompr,
+                            t_IR_src_uncompr
+                    >::apply(inData, convert_size<uint8_t, uint64_t>(inSizeScalarRemainderByte), witUncomprState);
 
                     // eventually store bitmap word
                     witUncomprState.done();

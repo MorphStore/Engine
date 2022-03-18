@@ -51,7 +51,7 @@ namespace morphstore {
         /** @brief To ensure that we eventually store a bitmap (e.g. processing only < 64 elements),
          *         this function needs to be called before the operator has finished its processing.
          */
-        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void done(uint64_t *& p_OutPtr, bitmap_processing_state_t & p_bm_state) {
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE static void lastStore(uint64_t *& p_OutPtr, bitmap_processing_state_t & p_bm_state) {
             // if there is still a word > 0 or if word=0 with bitPos > 0 -> store the word
             if(p_bm_state.m_active_word || p_bm_state.m_bitPos) {
                 *p_OutPtr = p_bm_state.m_active_word;
@@ -74,9 +74,7 @@ namespace morphstore {
             vector_t const predicateVector = vectorlib::set1<VectorExtension, vector_base_t_granularity::value>(
                     p_Predicate);
 
-            // init start values from global bitmap processing state
-            base_t bitPos = p_bm_ps_state.m_bitPos;
-            base_t word = p_bm_ps_state.m_active_word;
+            // TODO: is it more efficient if we fetch values form bm-state into local variables instead of always calling the state ??
 
             for (size_t i = 0; i < p_Count; ++i) {
 
@@ -116,15 +114,16 @@ namespace morphstore {
                 column< bitmap_f<uncompr_f> > const *
         apply(
                 column< uncompr_f > const * const p_DataColumn,
-        base_t const p_Predicate
+                base_t const p_Predicate
         ) {
 
             size_t const inDataCount = p_DataColumn->get_count_values();
             base_t const * inDataPtr = p_DataColumn->get_data( );
 
-            // number of columns needed to encode bitmaps -> pessimistic
+            // number of columns needed to encode data into base_t-words within bitmap - assuming every bit is set (pessimistic)
             const size_t outBmCountEstimate = round_up_div(inDataCount, vector_base_t_granularity::value);
 
+            // pessimistic allocation
             auto outDataCol = new column< bitmap_f<uncompr_f> >(
                     outBmCountEstimate * sizeof(base_t)
             );
@@ -143,7 +142,7 @@ namespace morphstore {
             select_bm_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount, bm_ps_state);
 
             // Eventually store bitmap-encoded word (e.g. if we process < 64 elements)
-            select_processing_unit<VectorExtension, Operator>::done(outDataPtr, bm_ps_state);
+            select_processing_unit<VectorExtension, Operator>::lastStore(outDataPtr, bm_ps_state);
 
             size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 
