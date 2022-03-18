@@ -78,11 +78,10 @@ namespace morphstore {
     template<
             class t_vector_extension,
             class t_format,
-            class t_IR_dst_f = uncompr_f, // By default, we set them to uncompr_f, so that we can leave it out (blank),
-            class t_IR_src_f = uncompr_f, //  + IR transformations are always done on uncompressed data
+            class t_IR_dst_f,
+            class t_IR_src_f,
             typename std::enable_if_t<
-                    // enable only if (both formats == uncompr_f) OR (both are IR-types)
-                    (std::is_same<t_IR_src_f, uncompr_f>::value && std::is_same<t_IR_dst_f, uncompr_f>::value) || // to support existing implementations
+                    // enable only if both are IR-types
                     (is_intermediate_representation_t<t_IR_src_f>::value && is_intermediate_representation_t<t_IR_dst_f>::value)
             , int> = 0
     >
@@ -101,19 +100,10 @@ namespace morphstore {
 
         // IR-Transformation-Buffer total count
         // In general, buffer can hold up to 2048 uncompressed data elements (internal Lx-cache-resident buffer of 16ki bytes)
-        // For uncompr_, we assume position-list, i.e. 2048
-        static const size_t m_IR_Trans_CountBuffer =
-                (std::is_same<t_IR_dst_f, uncompr_f>::value) ?
-                2048
-                :
-                t_IR_dst_f::trans_buf_cnt;
+        static const size_t m_IR_Trans_CountBuffer = t_IR_dst_f::trans_buf_cnt;
 
         // IR-Collection-Buffer total count (internal Lx-cache-resident buffer of 16ki bytes)
-        static const size_t m_IR_Coll_CountBuffer =
-                (std::is_same<t_IR_src_f, uncompr_f>::value) ?
-                2048
-                :
-                t_IR_src_f::trans_buf_cnt;
+        static const size_t m_IR_Coll_CountBuffer = t_IR_src_f::trans_buf_cnt;
 
         // max. #elements used as upper bound to trigger transform_IR_buffer() -> "We always process 2048 elements until we transform the buffer"
         static const size_t totalProcessingCount = 2048;
@@ -427,11 +417,10 @@ namespace morphstore {
     template<
             class t_vector_extension,
             class t_format,
-            class t_IR_dst_f = uncompr_f,
-            class t_IR_src_f = uncompr_f,
+            class t_IR_dst_f,
+            class t_IR_src_f,
             typename std::enable_if_t<
-                    // enable only if (both formats == uncompr_f) OR (both are IR-types)
-                    (std::is_same<t_IR_src_f, uncompr_f>::value && std::is_same<t_IR_dst_f, uncompr_f>::value) || // to support existing implementations
+                    // enable only if both are IR-types
                     (is_intermediate_representation_t<t_IR_src_f>::value && is_intermediate_representation_t<t_IR_dst_f>::value)
             , int> = 0
 
@@ -500,11 +489,10 @@ namespace morphstore {
     template<
             class t_vector_extension,
             class t_format,
-            class t_IR_dst_f = uncompr_f,
-            class t_IR_src_f = uncompr_f,
+            class t_IR_dst_f,
+            class t_IR_src_f,
             typename std::enable_if_t<
-                    // enable only if (both formats == uncompr_f) OR (both are IR-types)
-                    (std::is_same<t_IR_src_f, uncompr_f>::value && std::is_same<t_IR_dst_f, uncompr_f>::value) || // to support existing implementations
+                    // enable only if both are IR-types
                     (is_intermediate_representation_t<t_IR_src_f>::value && is_intermediate_representation_t<t_IR_dst_f>::value)
             , int> = 0
     >

@@ -117,11 +117,8 @@ namespace morphstore {
             class t_IR_src_f,
             typename std::enable_if_t<
                     // enable only if src & dest are IR-types, i.e. position_list_f<> and bitmap_f<>
-                    (is_intermediate_representation_t<t_IR_src_f>::value &&
-                    is_intermediate_representation_t<t_IR_dst_f>::value)
-                    ||
-                    // special case to support uncompr_f, assuming position-list (support existing implementation) TODO: remove this later
-                    (std::is_same<t_IR_src_f, uncompr_f>::value && std::is_same<t_IR_dst_f, uncompr_f>::value)
+                    is_intermediate_representation_t<t_IR_src_f>::value &&
+                    is_intermediate_representation_t<t_IR_dst_f>::value
             , int> = 0
     >
     struct transform_IR_batch_t {
@@ -190,29 +187,6 @@ namespace morphstore {
             out8 += sizeByte;
         };
     };
-
-    /**
-     * @brief Special Partial specialization for transforming from uncompr_f<> to uncompr_f<>.
-     *        This is used in write_iterator_IR.h to support existing implementation.
-     *
-     *        Note: When uncompr_f is used in this template, we assume that the data elements are postions
-     *              in a position-list, i.e. uint64_t numbers.
-     *
-     */
-    template<class t_vector_extension>
-    struct transform_IR_batch_t<t_vector_extension, uncompr_f, uncompr_f> {
-        static void apply(
-                const uint8_t * & in8,
-                uint8_t * & out8,
-                size_t countLog,
-                const uint64_t startingPos
-        ) {
-            transform_IR_batch_t<t_vector_extension, position_list_f<>, position_list_f<> >::apply(
-                    in8, out8, countLog, startingPos
-            );
-        };
-    };
-
 }
 
 #endif //MORPHSTORE_CORE_MORPHING_INTERMEDIATES_TRANSFORMATIONS_INTERFACES_H
