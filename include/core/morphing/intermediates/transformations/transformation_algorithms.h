@@ -92,7 +92,7 @@ namespace morphstore {
 
                             // get number of set bits in sub word:
                             //const base_t advance = __builtin_popcountll(sub_word);
-                            // potential optimization: use static lookup tables for advance-value that returns number of matches
+                            // potential optimization: use static lookup tables for advance-value that returns number of matches (see: https://github.com/gingi/fastbit/blob/master/src/bitvector64.h#L449)
                             const base_t advance = vectorlib::count_matches<VectorExtension>::apply(sub_word);
 
                             // increment baseVec by positions from vec_pos to get current positions of set bits
