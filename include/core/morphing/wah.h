@@ -18,7 +18,6 @@
 /**
  * @file wah.h
  * @brief 32-bit Word-Aligned Hybrid (WAH) compression format for bitmaps. Generally 32-bit encoding + RLE encoding.
- *        Note: The compress- & decompress-algorithm process uint64_t words.
  *
  *        TODO: write_iterator_base with special compress_batch() + decompress_and_process_batch + add 64-bit support
  */
@@ -148,9 +147,11 @@ namespace morphstore {
         }
 
         // this function flushes remaining 1-Fills & 0-Fill (if any)
-        static void lastCall(uint32_t *& outBase32, wah32_processing_state_t & wahProcessingState) {
+        static void done(uint8_t * & outBase8, wah32_processing_state_t & wahProcessingState) {
+            uint32_t *outBase32 = reinterpret_cast<uint32_t *>(outBase8);
             flushOnes(outBase32, wahProcessingState.numberOnes);
             flushZeros(outBase32, wahProcessingState.numberZeros);
+
         }
 
         static void apply(
@@ -196,10 +197,6 @@ namespace morphstore {
                     addLiteral(outBase32, currentNumber);
                 }
             }
-            // eventually flush remaining zeros and ones
-            // TODO: this should be removed and add to last call in write_iterator -> now for testing purposes here..
-            lastCall(outBase32, wahProcessingState);
-
             out8 = reinterpret_cast<uint8_t *>(outBase32);
         }
     };
@@ -220,6 +217,8 @@ namespace morphstore {
         ) {
             wah32_processing_state_t wahProcessingState(0,0);
             compress_batch_with_state_t<t_ve>::apply(in8, out8, countInBase64, wahProcessingState);
+            // eventually flush remaining zeros and ones
+            compress_batch_with_state_t<t_ve>::done(out8, wahProcessingState);
         }
     };
 
@@ -269,8 +268,8 @@ namespace morphstore {
             uint32_t *out32 = reinterpret_cast<uint32_t *>(out8);
 
             // tmp-buffer => if this buffer is full, we flush it to the output, and reset buffer to beginning => to avoid overflow
-            // buffer is initialized with 0s (we shift 31-bit chunks into it) => static allocation 3100 x 32-bit = 12 kiB
-            const size_t elementCount = 3100;
+            // buffer is initialized with 0s (we shift 31-bit chunks into it) => static allocation 310 x 32-bit = 1240 byte
+            const size_t elementCount = 310;
             uint32_t tmp[elementCount] = { };
             // index to track the capacity within tmp-buffer
             size_t tmp_curPos = 0;

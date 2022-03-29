@@ -52,10 +52,10 @@ using namespace vectorlib;
 int main(void) {
 
     /** General idea:
-     *                 (1) Generate uncompressed bitmap
-     *                 (2) morph: uncompressed BM to wah_f (compression)
-     *                 (3) morph: wah_f compressed BM to uncompr_f (decompression)
-     *                 (4) compare results 1 + 3 (equal)
+     *                 (1) Generate a uncompressed bitmap
+     *                 (2) morph: uncompressed-bm to wah_f (compression)
+     *                 (3) morph: wah_f-compressed-bm to uncompr_f (decompression)
+     *                 (4) compare results 1 + 3 (equality)
      */
     // ------------------------------------------------------------------------
     // (1) Uncompressed Bitmap-Data Generation
