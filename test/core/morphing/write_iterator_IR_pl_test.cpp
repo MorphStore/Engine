@@ -18,7 +18,7 @@
 /**
  * @file write_iterator_IR_pl_test.cpp
  * @brief Testing write_iterator_IR implementation that introduces intermediate
- *        representation transformations (IR-Transformations) in the outputside-buffer-layer.
+ *        representation transformations (IR-Transformations) in the output-side-buffer-layer.
  *
  *        Test specifically for PL-transformations, i.e. where position_list_f is src-format.
  *

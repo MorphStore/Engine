@@ -134,7 +134,7 @@ namespace morphstore {
 
             const size_t inCountLogCompr = inDataCol->get_count_values_compr();
 
-            // TODO: think about clever allocation (independet from underlying IR data structue)
+            // TODO: think about clever allocation (independent from underlying IR data structure)
             auto outPosCol = new column< t_IR_dst_f >(
                     bool(outPosCountEstimate)
                     // use given estimate

@@ -16,13 +16,11 @@
  **********************************************************************************************/
 
 /**
- * @file write_iterator_IR_bm_test.cpp
- * @brief Testing write_iterator_IR implementation that introduces intermediate
- *        representation transformations (IR-Transformations) in the output-side-buffer-layer.
+ * @file write_iterator_IR_wah_compr_test.cpp
+ * @brief Special test for WAH-format's write_iterator_IR implementation which is used to compress bitmaps.
+
  *
- *        Test specifically for BM-transformations, i.e. where bitmap_f is src-format.
- *
- *        For more details, see /core/morphing/write_iterator_IR.h.
+ *        For more details, see sequential write section in core/morphing/wah.h
  *
  */
 
@@ -33,22 +31,20 @@
 #include <core/utils/printing.h>
 #include <core/utils/basic_types.h>
 
-#include <core/morphing/write_iterator_IR.h>
-#include <core/morphing/intermediates/transformations/transformation_algorithms.h>
-
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>
 #include <vector/simd/avx2/primitives/io_avx2.h>
 #include <vector/simd/avx2/primitives/create_avx2.h>
 #include <vector/simd/avx2/primitives/compare_avx2.h>
 
-#include <core/operators/general_vectorized/select_bm_compr.h>
-#include <core/operators/general_vectorized/select_pl_uncompr.h>
+#include <core/operators/general_vectorized/select_pl_compr.h>
+#include <core/operators/general_vectorized/select_bm_uncompr.h>
+#include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 
+#include <core/morphing/wah.h>
 #include <core/morphing/uncompr.h>
 
 #include <iostream>
-#include <type_traits>
 
 #define TEST_DATA_COUNT 1000
 
@@ -57,16 +53,12 @@ using namespace vectorlib;
 
 int main(void) {
 
-    /** General idea: Always execute 2 select-queries with uncompressed output
-     *                (1) using vectorized-BM-compressed-operator
-     *                (2) using vectorized-PL-uncompressed-operator
-     *
-     *                => Finally, compare results to see if transformation is done correctly within write_iterator
-     *
-     *                This process is repeated for the following internal IR-transformation cases:
-     *                  (i)  bitmaps -> position-list
-     *                  (ii) bitmaps -> bitmaps
-     *
+    /** PoC for WAH - write_iterator_IR:
+     *                 (1) Generate a uncompressed bitmap data
+     *                 (2) Compressed position-list select-operator that outputs an WAH-compressed bitmap (includes IR-transformation)
+     *                 (3) Uncompressed bitmap select-operator with same predicate evaluation as (2)
+     *                 (4) Decompression of (2): WAH-bitmap to uncompressed-bitmap
+     *                 (5) Verify results: (3) == (4)
      */
 
     const uint64_t predicate = 250;
@@ -83,49 +75,42 @@ int main(void) {
     );
     std::cout << "Done...\n";
 
-    // **************************** (i) bitmaps -> position-list ****************************
-    auto result_compr_1 =
-            select_bm_wit_t<
-                greater,
+    // (2) position-list SELECT-operator with compressed-WAH-bitmap as output
+    auto result_compr =
+            select_pl_wit_t<
+                less,
                 avx2<v256<uint64_t>>,
-                position_list_f<uncompr_f>,
+                bitmap_f<wah_f>,
                 uncompr_f
             >::apply(inCol, predicate);
 
-    auto result_uncompr_1=
+    // (3) additional uncompressed result to verify output later on
+    auto result_uncompr=
             morphstore::select<
-                greater,
-                avx2<v256<uint64_t>>,
-                position_list_f<uncompr_f>,
-                uncompr_f
-            >(inCol, predicate);
-
-    //print_columns(print_buffer_base::binary, result_compr_1, "result_compr");
-    //print_columns(print_buffer_base::binary, result_uncompr_1, "result_uncompr");
-
-    const bool allGood_1 =
-            memcmp(result_compr_1->get_data(), result_uncompr_1->get_data(), result_uncompr_1->get_count_values()*8);
-
-    // **************************** (ii) bitmaps -> bitmaps ****************************
-    auto result_compr_2 =
-            select_bm_wit_t<
-                greater,
+                less,
                 avx2<v256<uint64_t>>,
                 bitmap_f<uncompr_f>,
                 uncompr_f
-            >::apply(inCol, predicate);
+            >(inCol, predicate);
 
-    // to avoid redefinition errors when including select_bm_uncompr.h, we simply transform result_uncompr_1 to a bitmap for comparison
-    // In general, it is bad to add another component (IR_transformation_algorithms) as this increases dependencies... but for now simplest way
-    auto result_uncompr_2 =
-            transform_IR<
+    //print_columns(print_buffer_base::decimal, result_uncompr, "result_uncompr");
+
+    //print_columns(print_buffer_base::decimal, result_compr, "result_compr");
+
+    // (4) decompress WAH-bitmap
+    auto bm_decompr =
+            morph_t<
                 avx2<v256<uint64_t>>,
-                bitmap_f<>,
-                position_list_f<>
-            >(result_uncompr_1);
+                bitmap_f<uncompr_f>,
+                bitmap_f<wah_f>
+            >::apply(result_compr);
 
-    const bool allGood_2 =
-            memcmp(result_compr_2->get_data(), result_uncompr_2->get_data(), result_uncompr_2->get_count_values()*8);
+    //print_columns(print_buffer_base::decimal, bm_decompr, "bm_decompr");
 
-    return allGood_1 || allGood_2;
+    const bool allGood =
+            memcmp(result_uncompr->get_data(), bm_decompr->get_data(), (int)(result_uncompr->get_count_values()*8)); //returns zero if all bytes match
+
+    return allGood;
+
+    return 0;
 }
