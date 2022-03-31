@@ -485,7 +485,8 @@ namespace morphstore {
             class t_vector_extension,
             class t_IR_dst_f,
             class t_IR_src_f
-            // Comment-out the enable_if<...> as this leads to 'error: default template arguments may not be used in partial specializations' -> TODO: fix this
+            // Comment-out the enable_if<...> as this leads to 'error: default template arguments may not be used in partial specializations'
+            // This is so far no problem, as the intermediate check for src/dest-formats is done at the column-level...
             /*typename std::enable_if_t<
                     // enable only if both are IR-types
                     (is_intermediate_representation_t<t_IR_src_f>::value && is_intermediate_representation_t<t_IR_dst_f>::value)

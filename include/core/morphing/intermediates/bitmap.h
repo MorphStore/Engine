@@ -33,6 +33,11 @@
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
 
+// define alignment for vector-processing (avoid SegFaults)
+#if defined(__GNUC__)
+#define ALIGNED(x) __attribute__ ((aligned(x)))
+#endif
+
 namespace morphstore {
 
     using namespace vectorlib;
@@ -231,7 +236,7 @@ namespace morphstore {
     template <>
     struct bitmap_lookup_tables<2, uint64_t>{
         static const uint64_t mask = 0x0000000000000003;
-        static constexpr uint64_t lookup_table[3][2] = {
+        static constexpr uint64_t lookup_table[3][2] ALIGNED(64) = {
             { 0, 0 }, // (01)
             { 1, 0 }, // (10)
             { 0, 1 }, // (11)
@@ -248,7 +253,7 @@ namespace morphstore {
     template <>
     struct bitmap_lookup_tables<4, uint64_t>{
         static const uint64_t mask = 0x000000000000000F;
-        static constexpr uint64_t lookup_table[15][4] = {
+        static constexpr uint64_t lookup_table[15][4] ALIGNED(64) = {
             { 0, 0, 0, 0 }, // 0x1 (0001)
             { 1, 0, 0, 0 }, // 0x2 (0010)
             { 0, 1, 0, 0 }, // 0x3 (0011)
@@ -277,7 +282,7 @@ namespace morphstore {
     template <>
     struct bitmap_lookup_tables<8, uint64_t>{
         static const uint64_t mask = 0x00000000000000FF;
-        static constexpr uint64_t lookup_table[255][8] = {
+        static constexpr uint64_t lookup_table[255][8] ALIGNED(64) = {
             { 0, 0, 0, 0, 0, 0, 0, 0 }, /* 0x01 (00000001) */
             { 1, 0, 0, 0, 0, 0, 0, 0 }, /* 0x02 (00000010) */
             { 0, 1, 0, 0, 0, 0, 0, 0 }, /* 0x03 (00000011) */
