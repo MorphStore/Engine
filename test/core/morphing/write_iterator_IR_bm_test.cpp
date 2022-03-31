@@ -69,6 +69,7 @@ int main(void) {
      *
      */
 
+    using processingStyle = avx2<v256<uint64_t>>;
     const uint64_t predicate = 250;
 
     // (1) Generate uncompressed base data
@@ -87,7 +88,7 @@ int main(void) {
     auto result_compr_1 =
             select_bm_wit_t<
                 greater,
-                avx2<v256<uint64_t>>,
+                processingStyle,
                 position_list_f<uncompr_f>,
                 uncompr_f
             >::apply(inCol, predicate);
@@ -95,7 +96,7 @@ int main(void) {
     auto result_uncompr_1=
             morphstore::select<
                 greater,
-                avx2<v256<uint64_t>>,
+                processingStyle,
                 position_list_f<uncompr_f>,
                 uncompr_f
             >(inCol, predicate);
@@ -110,7 +111,7 @@ int main(void) {
     auto result_compr_2 =
             select_bm_wit_t<
                 greater,
-                avx2<v256<uint64_t>>,
+                processingStyle,
                 bitmap_f<uncompr_f>,
                 uncompr_f
             >::apply(inCol, predicate);
@@ -119,7 +120,7 @@ int main(void) {
     // In general, it is bad to add another component (IR_transformation_algorithms) as this increases dependencies... but for now simplest way
     auto result_uncompr_2 =
             transform_IR<
-                avx2<v256<uint64_t>>,
+                processingStyle,
                 bitmap_f<>,
                 position_list_f<>
             >(result_uncompr_1);
