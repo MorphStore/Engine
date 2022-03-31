@@ -62,16 +62,10 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
-        // TODO: We actually just store the bitmap non-selectivity, but at the moment there is no support for
-        //       just storing a base_t element (nonselective's write() needs a vector_t p_Data as input).
-        //       Instead of implementing another write function, we just use a selective_write_iterator with a mask
-        //       to store the first element in vector_t ('workaround').
-        //       -> In the future, we should add a function in nonselective_write_iterator that also accepts just base_t elements when filling the buffer.
-        //          -> OR: fill vector register until its capacity is reached (e.g. 4-64 bitmap words in avx2), then use nonselective's write()
         struct state_t {
             const vector_t m_Predicate;
             const vector_mask_t m_write_mask = 1; // we just want to store the first word in the vector
-            vector_t m_bitmap;
+            base_t m_bitmap;
             // selective write-iterator including IR-transformation
             selective_write_iterator_IR<t_ve, t_out_f, t_IR_dst_f, t_IR_src_f> m_Wit;
             bitmap_processing_state_t m_bm_ps_state;
@@ -87,9 +81,9 @@ namespace morphstore {
             MSV_CXX_ATTRIBUTE_FORCE_INLINE void done() {
                 // if there is still a word > 0 or if word=0 with bitPos > 0 -> store the word
                 if(m_bm_ps_state.m_active_word || m_bm_ps_state.m_bitPos) {
-                    m_bitmap = vectorlib::set1<t_ve, vector_base_t_granularity::value>(
-                            m_bm_ps_state.m_active_word);
-                    m_Wit.write(m_bitmap, m_write_mask, 1);
+                    m_bitmap = m_bm_ps_state.m_active_word;
+
+                    m_Wit.write_bitmap_word(m_bitmap);
                 }
             }
         };
@@ -101,18 +95,7 @@ namespace morphstore {
 #else
             vector_mask_t resultMask = t_compare::apply(p_Data, p_State.m_Predicate);
 #endif
-            // (2) Check if we are still in the current word boundary of base_t (e.g. uint64_t has 64 as boundary)
-            if(!p_State.m_bm_ps_state.m_bitPos && !p_State.m_bm_ps_state.firstRun) {
-                // Reached the boundary -> load word into bitmap vector, write vector to selective_write_iterator, update word and bitPos
-                p_State.m_bitmap = vectorlib::set1<t_ve, vector_base_t_granularity::value>(
-                        p_State.m_bm_ps_state.m_active_word);
-                p_State.m_Wit.write(p_State.m_bitmap, p_State.m_write_mask, 1);
-
-                p_State.m_bm_ps_state.m_active_word = 0;
-                p_State.m_bm_ps_state.m_bitPos = 0;
-            }
-
-            // add resulting mask to current word: shift resulting bitmap by bitPos bits, then OR with current word
+            // (2) add resulting mask to current word: shift resulting bitmap by bitPos bits, then OR with current word
             // if resultMask == 0 we can skip it
             if(resultMask) {
                 p_State.m_bm_ps_state.m_active_word |= (base_t) resultMask << p_State.m_bm_ps_state.m_bitPos;
@@ -121,9 +104,18 @@ namespace morphstore {
             // (3) Update bitPos index and firstRun flag
             p_State.m_bm_ps_state.m_bitPos = (p_State.m_bm_ps_state.m_bitPos + vector_element_count::value)
                                              % vector_base_t_granularity::value;
-            if(p_State.m_bm_ps_state.firstRun) p_State.m_bm_ps_state.firstRun = false; // mark the first processing run
 
-            // update internal state of write-iterator for IR-transformation (if any)
+            // (4) Check if we are still in the current word boundary of base_t (e.g. uint64_t has 64 as boundary)
+            if(!p_State.m_bm_ps_state.m_bitPos) {
+                // Reached the boundary -> load word into bitmap vector, write vector to selective_write_iterator, update word and bitPos
+                p_State.m_bitmap = p_State.m_bm_ps_state.m_active_word;
+                p_State.m_Wit.write_bitmap_word(p_State.m_bitmap);
+
+                p_State.m_bm_ps_state.m_active_word = 0;
+                p_State.m_bm_ps_state.m_bitPos = 0;
+            }
+
+            // update internal state of write-iterator for IR-transformation
             p_State.m_Wit.update();
         }
     };
@@ -221,7 +213,6 @@ namespace morphstore {
 
             if(inDataSizeComprByte == inDataSizeUsedByte) {
                 // If the input column has no uncompressed rest part, we are done.
-
                 // Eventually store bitmap-encoded word (e.g. if we process < 64 elements)
                 witComprState.done();
 
@@ -278,6 +269,7 @@ namespace morphstore {
                 outCountLog = witComprState.m_Wit.get_count_values();
 
                 if(inSizeScalarRemainderByte) {
+
                     // If there is such an uncompressed scalar rest.
 
                     // The state of the selective write_iterator for the
@@ -299,7 +291,7 @@ namespace morphstore {
                     // Processing of the input column's uncompressed scalar rest
                     // part using scalar instructions, uncompressed output.
                     decompress_and_process_batch<
-                    scalar<v64<uint64_t>>,
+                            scalar<v64<uint64_t>>,
                             uncompr_f,
                             select_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS

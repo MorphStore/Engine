@@ -50,7 +50,7 @@
 #include <iostream>
 #include <type_traits>
 
-#define TEST_DATA_COUNT 1000
+#define TEST_DATA_COUNT 100*100
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -100,8 +100,8 @@ int main(void) {
                 uncompr_f
             >(inCol, predicate);
 
-    //print_columns(print_buffer_base::binary, result_compr_1, "result_compr");
-    //print_columns(print_buffer_base::binary, result_uncompr_1, "result_uncompr");
+    //print_columns(print_buffer_base::decimal, result_compr_1, "result_compr");
+    //print_columns(print_buffer_base::decimal, result_uncompr_1, "result_uncompr");
 
     const bool allGood_1 =
             memcmp(result_compr_1->get_data(), result_uncompr_1->get_data(), result_uncompr_1->get_count_values()*8);

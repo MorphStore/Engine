@@ -190,10 +190,10 @@ namespace morphstore {
 
         uint64_t m_active_word; // current encoded word within the bitmap (64-bit integer)
         uint64_t m_bitPos; // current bit-position in m_active_word -> to know where to proceed
-        bool firstRun; // flag to mark the first processing run, otherwise we store a '0' in the output-column at the beginning
 
-        bitmap_processing_state_t(uint64_t p_word, uint64_t p_bitPos) : m_active_word(p_word), m_bitPos(p_bitPos) {
-            firstRun = true;
+        bitmap_processing_state_t(uint64_t p_word, uint64_t p_bitPos) : m_active_word(p_word), m_bitPos(p_bitPos)
+        {
+            //
         };
     };
 

@@ -86,13 +86,6 @@ namespace morphstore {
                                 predicateVector
                         );
 
-                // if we reach the boundary of base_t => store word in column, increment pointer & reset word
-                if(!p_bm_ps_state.m_bitPos && !p_bm_ps_state.firstRun) {
-                    *p_OutPtr = p_bm_ps_state.m_active_word;
-                    p_OutPtr++;
-                    p_bm_ps_state.m_active_word = 0;
-                }
-
                 // add resulting mask to current word:
                 // shift resulting bitmap by bitPos-bits, then OR with current word to add stuff
                 // (if resultMask == 0 we can skip it)
@@ -100,9 +93,17 @@ namespace morphstore {
                     p_bm_ps_state.m_active_word |= (base_t) resultMask << p_bm_ps_state.m_bitPos;
                 }
 
+                // update bit-position in current word
                 p_bm_ps_state.m_bitPos = (p_bm_ps_state.m_bitPos + vector_element_count::value) % vector_base_t_granularity::value;
+
+                // if we reach the boundary of base_t => store word in column, increment pointer & reset word
+                if(!p_bm_ps_state.m_bitPos) {
+                    *p_OutPtr = p_bm_ps_state.m_active_word;
+                    p_OutPtr++;
+                    p_bm_ps_state.m_active_word = 0;
+                }
+
                 p_DataPtr += vector_element_count::value;
-                if(p_bm_ps_state.firstRun) p_bm_ps_state.firstRun = false; // mark the first processing run
             }
         }
     };

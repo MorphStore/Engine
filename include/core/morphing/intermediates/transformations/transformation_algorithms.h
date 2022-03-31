@@ -208,24 +208,20 @@ namespace morphstore {
                 size_t countLog,
                 const uint64_t startingPos
         ) {
-            using scalar_type = typename scalar<v64<uint64_t>>::vector_t;
-
-            // to satisfy compiler unused error: just ignore startingPos as this is not relevant for PL->BM
-            (void) startingPos;
-
-            const scalar_type * p_inPos = reinterpret_cast<const scalar_type *>(in8);
-            scalar_type * p_OutBm = reinterpret_cast<scalar_type *>(out8);
+            const uint64_t * p_inPos = reinterpret_cast<const uint64_t *>(in8);
+            uint64_t * p_OutBm = reinterpret_cast<uint64_t *>(out8);
             const size_t wordBitSize = sizeof(uint64_t) << 3;
 
             for(size_t i = 0; i < countLog; ++i) {
                 // get current rid
-                const scalar_type rid = p_inPos[i];
+                const uint64_t rid = p_inPos[i];
 
                 // get the index within the total bitmap (bitmap consists of 64-bit words)
-                const scalar_type bm_index = rid / wordBitSize;
+                // Important: we need to subtract the startinPos from rid (otherwise p_OutBm[bm_index] results in SegFault error)
+                const uint64_t bm_index = (rid - startingPos) / wordBitSize;
 
                 // get the offset within the bitmap encoded word
-                const scalar_type word_index = rid & (wordBitSize-1);
+                const uint64_t word_index = rid & (wordBitSize-1);
 
                 // set bit at calculated position
                 p_OutBm[bm_index] |= 1ULL << word_index;

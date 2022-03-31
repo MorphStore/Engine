@@ -50,7 +50,7 @@
 #include <iostream>
 #include <type_traits>
 
-#define TEST_DATA_COUNT 1000
+#define TEST_DATA_COUNT 100*100
 
 using namespace morphstore;
 using namespace vectorlib;

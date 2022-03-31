@@ -99,7 +99,7 @@ namespace morphstore {
         );
 
         // IR-Transformation-Buffer total count
-        // In general, buffer can hold up to 2048 uncompressed data elements (internal Lx-cache-resident buffer of 16ki bytes)
+        // In general, buffer can hold up to 2048 uncompressed 64-bit data elements (internal Lx-cache-resident buffer of 16ki bytes)
         static const size_t m_IR_Trans_CountBuffer = t_IR_dst_f::trans_buf_cnt;
 
         // IR-Collection-Buffer total count (internal Lx-cache-resident buffer of 16ki bytes)
@@ -107,7 +107,7 @@ namespace morphstore {
 
         // max. #elements used as upper bound to trigger transform_IR_buffer() -> "We always process 2048 elements until we transform the buffer"
         static const size_t totalProcessingCount = 2048;
-    private:
+    protected://private:
         // Morph-Buffer allocation with some extra space to allow overflows
         MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_Morph_StartBuffer[
                 m_Morph_CountBuffer + vector_element_count::value - 1
@@ -129,7 +129,7 @@ namespace morphstore {
         // IR-Collection-Buffer current-pointer
         base_t * m_IR_Coll_Buffer_CurPtr;
 
-        // #valid-elements that need to be transformed  in IR-Collection-Buffer, incremented in write()-function of the specific selective- & nonselective write iterators
+        // #valid-elements (64-bit) that need to be transformed  in IR-Collection-Buffer, incremented in write()-function of the specific selective- & nonselective write iterators
         size_t m_IR_Coll_Count;
 
         // this variable gets incremented in update() every time t_op<> executes its apply(), i.e. its specific processing unit
@@ -152,7 +152,7 @@ namespace morphstore {
                     morphBuffer8, m_Morph_Out, m_Morph_CountBuffer
             );
             size_t overflow = m_Morph_Buffer_CurPtr - m_Morph_Buffer_EndPtr;
-            memcpy(m_Morph_StartBuffer, m_Morph_Buffer_EndPtr, overflow * sizeof(base_t));
+            std::memcpy(m_Morph_StartBuffer, m_Morph_Buffer_EndPtr, overflow * sizeof(base_t));
             m_Morph_Buffer_CurPtr = m_Morph_StartBuffer + overflow;
             m_Morph_Count += m_Morph_CountBuffer;
         }
@@ -171,6 +171,7 @@ namespace morphstore {
             const uint8_t * transBuffer8 = reinterpret_cast<uint8_t *>(
                     m_IR_Trans_StartBuffer
             );
+
             // starting point in Morphing-Buffer using uint8_t*
             uint8_t * morphBuffer8 = reinterpret_cast<uint8_t *>(
                     m_Morph_Buffer_CurPtr
@@ -178,7 +179,8 @@ namespace morphstore {
 
             // calculate remaining count in Morph-Buffer
             size_t remainingMorphCount64 = m_Morph_Buffer_EndPtr - m_Morph_Buffer_CurPtr;
-            // cast count to uin8_t -> we are processing uint8_t-pointers in memcpy() + numberElementsToInsert is also uint8 ocunts
+
+            // cast count to uin8_t -> we are processing uint8_t-pointers in memcpy() + numberElementsToInsert is also uint8 counts
             size_t remainingMorphCount8 = convert_size<uint64_t, uint8_t>(remainingMorphCount64);
 
             // check if we overflow or exactly reach capacity of Morph-Buffer, if so trigger compress_buffer()
@@ -189,8 +191,11 @@ namespace morphstore {
                 // fill Morph-Buffer with remainingMorphCount8 elements
                 std::memcpy(morphBuffer8, transBuffer8, remainingMorphCount8);
 
+                morphBuffer8 += remainingMorphCount8;
                 // update IR-Trans-pointer
                 transBuffer8 += remainingMorphCount8;
+
+                m_Morph_Buffer_CurPtr = reinterpret_cast<uint64_t *>(morphBuffer8);
 
                 // now, Morph-Buffer is full -> compress
                 compress_buffer();
@@ -202,6 +207,8 @@ namespace morphstore {
 
                 // insert remaining overflowCount8 elements from IR-Transformation-Buffer into Morph-Buffer
                 std::memcpy(morphBuffer8, transBuffer8, overflowCount8);
+                morphBuffer8 += overflowCount8;
+                transBuffer8 += overflowCount8;
             } else {
                 // no overflow -> just insert
                 std::memcpy(morphBuffer8, transBuffer8, numberElementsToInsert);
@@ -232,7 +239,7 @@ namespace morphstore {
                     m_IR_Trans_StartBuffer
             );
 
-            // tmp-pointer used in transform_IR_batch_t (gets incremented)
+            // tmp-pointer used in transform_IR_batch_t (gets incremented in transform_IR_batch_t<..>)
             uint8_t * tmpTransBuffer8 = reinterpret_cast<uint8_t *>(
                     m_IR_Trans_StartBuffer
             );
@@ -242,10 +249,11 @@ namespace morphstore {
                     collBuffer8, tmpTransBuffer8, m_IR_Coll_Count, m_IR_Trans_StartingPos
             );
 
+
             // Calculate #elements that need to be inserted into Morph-Buffer
             // PL->BM: insert the whole IR-Transformation-Buffer, i.e. 32 x 64-bit-words
             // BM->PL: check where the current pointer in IR-Transformation-Buffer and calculate difference to beginning
-            const size_t numberElementsToInsert =
+            const size_t numberElementsToInsertBytes =
                     (std::is_same<t_IR_dst_f, bitmap_f<> >::value) ?
                         // if this is the last execution, we have to calculate the remaining bm-words from currentProcessingCount
                         (lastExecution) ?
@@ -256,10 +264,10 @@ namespace morphstore {
                     (tmpTransBuffer8 - startTransBuffer8); // for PL as dest., we calculate the difference as it is not guaranteed that buffer is full
 
             // insert transformed elements into Morph-Buffer
-            insert_into_morph_buffer(numberElementsToInsert);
+            insert_into_morph_buffer(numberElementsToInsertBytes);
 
             // update m_IR_Trans_StartingPos: we processed 2048 (valid or not), need this as new starting point for BM->PL transformation
-            m_IR_Trans_StartingPos += 2048;
+            m_IR_Trans_StartingPos += totalProcessingCount;
 
             // reset stuff
             reset_IR_buffers();
@@ -306,7 +314,6 @@ namespace morphstore {
          *    more data elements.
          */
         std::tuple<size_t, uint8_t *, uint8_t *> done() {
-
             // execute last transformation before last morphing
             this->IR_trans_done();
 
@@ -438,6 +445,9 @@ namespace morphstore {
             //
         }
 
+        /**
+         * @brief Selective write function for position-lists.
+         */
         MSV_CXX_ATTRIBUTE_FORCE_INLINE void write(
                 vector_t p_Data, vector_mask_t p_Mask, uint8_t p_MaskPopCount
         ) {
@@ -449,6 +459,16 @@ namespace morphstore {
             this->m_IR_Coll_Buffer_CurPtr += p_MaskPopCount;
             // update m_IR_Coll_Count:
             this->m_IR_Coll_Count += p_MaskPopCount;
+        }
+
+        /**
+         * @brief Sequentially store bitmap encoded words into the IR-Collection-Buffer.
+         *        Usage in compr. bm-operators.
+         */
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write_bitmap_word(base_t bm_word){
+            *(this->m_IR_Coll_Buffer_CurPtr) = bm_word;
+            ++this->m_IR_Coll_Buffer_CurPtr;
+            this->m_IR_Coll_Count++;
         }
 
         /**
@@ -529,6 +549,16 @@ namespace morphstore {
             this->m_IR_Coll_Buffer_CurPtr += vector_element_count::value;
             // update m_IR_Coll_Count:
             this->m_IR_Coll_Count += vector_element_count::value;
+        }
+
+        /**
+         * @brief Sequentially store bitmap encoded words into the IR-Collection-Buffer.
+         *        Usage in compr. bm-operators.
+         */
+        MSV_CXX_ATTRIBUTE_FORCE_INLINE void write_bitmap_word(base_t bm_word){
+            *(this->m_IR_Coll_Buffer_CurPtr) = bm_word;
+            ++this->m_IR_Coll_Buffer_CurPtr;
+            ++this->m_IR_Coll_Count;
         }
     };
 }
