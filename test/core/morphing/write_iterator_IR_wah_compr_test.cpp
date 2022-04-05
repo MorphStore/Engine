@@ -46,29 +46,29 @@
 
 #include <iostream>
 
-#define TEST_DATA_COUNT 1000
+    #define TEST_DATA_COUNT 1000*1500
 
 using namespace morphstore;
 using namespace vectorlib;
 
 int main(void) {
 
-    /** PoC for WAH - write_iterator_IR:
+    /**         PoC for WAH - write_iterator_IR:
      *                 (1) Generate a uncompressed bitmap data
-     *                 (2) Compressed position-list select-operator that outputs an WAH-compressed bitmap (includes IR-transformation)
+     *                 (2) Compressed position-list select-operator that outputs a WAH-compressed bitmap (includes IR-transformation)
      *                 (3) Uncompressed bitmap select-operator with same predicate evaluation as (2)
      *                 (4) Decompression of (2): WAH-bitmap to uncompressed-bitmap
      *                 (5) Verify results: (3) == (4)
      */
 
-    const uint64_t predicate = 250;
+    const uint64_t predicate = 33333;
 
     // (1) Generate uncompressed base data
     std::cout << "Generating..." << std::flush;
     auto inCol = generate_with_distr(
             TEST_DATA_COUNT,
             std::uniform_int_distribution<uint64_t>(
-                    0,
+                    1,
                     TEST_DATA_COUNT - 1
             ),
             false
@@ -78,7 +78,7 @@ int main(void) {
     // (2) position-list SELECT-operator with compressed-WAH-bitmap as output
     auto result_compr =
             select_pl_wit_t<
-                less,
+                greater,
                 avx2<v256<uint64_t>>,
                 bitmap_f<wah_f>,
                 uncompr_f
@@ -87,15 +87,11 @@ int main(void) {
     // (3) additional uncompressed result to verify output later on
     auto result_uncompr=
             morphstore::select<
-                less,
+                greater,
                 avx2<v256<uint64_t>>,
                 bitmap_f<uncompr_f>,
                 uncompr_f
             >(inCol, predicate);
-
-    //print_columns(print_buffer_base::decimal, result_uncompr, "result_uncompr");
-
-    //print_columns(print_buffer_base::decimal, result_compr, "result_compr");
 
     // (4) decompress WAH-bitmap
     auto bm_decompr =
@@ -105,12 +101,9 @@ int main(void) {
                 bitmap_f<wah_f>
             >::apply(result_compr);
 
-    //print_columns(print_buffer_base::decimal, bm_decompr, "bm_decompr");
-
+    // (5) Validate decompressed == uncompressed ?
     const bool allGood =
             memcmp(result_uncompr->get_data(), bm_decompr->get_data(), (int)(result_uncompr->get_count_values()*8)); //returns zero if all bytes match
 
     return allGood;
-
-    return 0;
 }

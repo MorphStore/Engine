@@ -107,7 +107,7 @@ namespace morphstore {
 
         // max. #elements used as upper bound to trigger transform_IR_buffer() -> "We always process 2048 elements until we transform the buffer"
         static const size_t totalProcessingCount = 2048;
-    protected://private:
+    private:
         // Morph-Buffer allocation with some extra space to allow overflows
         MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_Morph_StartBuffer[
                 m_Morph_CountBuffer + vector_element_count::value - 1

@@ -143,7 +143,7 @@ namespace morphstore {
                     : get_size_max_byte_any_len< typename t_IR_dst_f::t_inner_f >(inDataCountLog)
             );
             uint8_t * outPos = outPosCol->get_data();
-            const uint8_t * const initOutPos = outPos;
+            //const uint8_t * const initOutPos = outPos;
             size_t outCountLog;
             size_t outSizeComprByte;
 
@@ -269,7 +269,7 @@ namespace morphstore {
 
             // Finish the output column.
             outPosCol->set_meta_data(
-                    outCountLog, outPos - initOutPos, outSizeComprByte
+                    outCountLog, /*outPos - initOutPos,*/ outSizeComprByte
             );
 
             return outPosCol;

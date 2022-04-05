@@ -35,7 +35,6 @@
 #include <vector/vector_primitives.h>
 #include <vector/vector_extension_structs.h>
 
-#include <iostream>
 #include <cstring>
 
 namespace morphstore {
@@ -54,13 +53,26 @@ namespace morphstore {
     };
 
 
-    // global wah-processing state
+    /**
+     * @brief Global WAH32-processing-state to track important information which enables the batch-processing
+     *        to be stateless.
+     *
+     */
     struct wah32_processing_state_t {
-        size_t numberOnes;
-        size_t numberZeros;
-        //uint32_t activeWord; TODO: add?
+        size_t numberOnes; // counter for one-bits
+        size_t numberZeros; // counter for zero-bits
+        uint32_t startingIndex; // where we start from (bit-position)
+        size_t remainderBits; // for remainder bits between batch-processing (used in write_iterator)
+        uint32_t remainderWord; // for batch-processing in write_iterator
+        int bufferSizeIn32BitWords; // used to track the buffer size for modulo operations (only used in write_iterator)
 
-        wah32_processing_state_t(size_t ones, size_t zeros) : numberOnes(ones), numberZeros(zeros)
+        // constructor
+        wah32_processing_state_t(int bufferSizeIn32BitWords = -1) : // bufferSizeIn32BitWords = -1 is used if we have a sequential processing, i.e. without write_iterator
+            numberOnes(0),
+            numberZeros(0),
+            startingIndex(0),
+            remainderBits(0),
+            bufferSizeIn32BitWords(bufferSizeIn32BitWords)
         {
         }
 
@@ -92,15 +104,36 @@ namespace morphstore {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
+        // this function returns the last k-bits for remainder-part
+        static uint32_t get_remaining_k_bits(size_t startingIndex, const size_t k, const uint32_t *& inBase32, const int modulo){
+            // Using 64-bit words to shift overlapping stuff in first half & second half
+            uint32_t result = 0;
+            // index in bitmap of 32-bit words, the i-th 32-bit word...
+            size_t index = (modulo == -1) ?
+                           startingIndex / 32
+                                          :
+                           (startingIndex / 32) % modulo;// special case for write_iterator where the buffer size is limited;
+
+            // get value and increment index
+            result |= (inBase32[index] << (31 - k));
+
+            // fetch all bits expect MSB
+            return (result & wah32_processing_state_t::ALL_ONES);
+        }
+
         // this function returns the following 31-bits from a pointer using a starting index
-        static uint32_t getNext(size_t startingIndex, const uint32_t *& inBase32, const uint32_t *& endInBase32){
+        static uint32_t get_next_31_bits(size_t startingIndex, const uint32_t *& inBase32, const uint32_t *& endInBase32, const int modulo){
             // Using 64-bit words to shift overlapping stuff in first half & second half
             uint64_t result = 0;
             uint64_t l1 = 0;
             uint64_t l2 = 0;
             uint64_t l = 0;
-            // index in bitmap of 32-bit words, the i-th 32-bit word...
-            size_t index = startingIndex / 32;
+            // index in bitmap of 32-bit words, when processing using a write_iterator, we have to keep the tmp-bufferSize in mind (modulo operation)
+            size_t index = (modulo == -1) ?
+                    startingIndex / 32
+                    :
+                    (startingIndex / 32) % modulo;// special case for write_iterator where the buffer size is limited;
+
             // offset within current 32-bit word
             const size_t offset = startingIndex % 32;
 
@@ -117,13 +150,13 @@ namespace morphstore {
         }
 
         // function adds literal to output and increments pointer
-        static void addLiteral(uint32_t *& outBase32, uint32_t number){
+        static void add_literal(uint32_t *& outBase32, uint32_t number){
             *outBase32 = number;
             ++outBase32;
         }
 
         // this function creates a 1-fill word and appends it to the output
-        static void flushOnes(uint32_t *& outBase32, size_t & counter){
+        static void flush_ones(uint32_t *& outBase32, size_t & counter){
             if(counter > 0){
                 // 1-Fill = 11.. .... + counter
                 uint32_t one_fill = wah32_processing_state_t::ONE_FILL_HEADER_MASK + counter;
@@ -136,7 +169,7 @@ namespace morphstore {
         }
 
         // this function creates a 0-fill word and appends it to the output
-        static void flushZeros(uint32_t *& outBase32, size_t & counter){
+        static void flush_zeros(uint32_t *& outBase32, size_t & counter){
             if(counter > 0){
                 // 0-Fill = 10.. .... + counter
                 uint32_t zero_fill = wah32_processing_state_t::ZERO_FILL_HEADER_MASK + counter;
@@ -148,11 +181,11 @@ namespace morphstore {
             }
         }
 
-        // this function flushes remaining 1-Fills & 0-Fill (if any)
+        // this function flushes remaining 1-Fills & 0-Fill (if any) -> call this at the very end of WAH compression
         static void done(uint8_t * & outBase8, wah32_processing_state_t & wahProcessingState) {
             uint32_t *outBase32 = reinterpret_cast<uint32_t *>(outBase8);
-            flushOnes(outBase32, wahProcessingState.numberOnes);
-            flushZeros(outBase32, wahProcessingState.numberZeros);
+            flush_ones(outBase32, wahProcessingState.numberOnes);
+            flush_zeros(outBase32, wahProcessingState.numberZeros);
             outBase8 = reinterpret_cast<uint8_t *>(outBase32);
         }
 
@@ -167,38 +200,92 @@ namespace morphstore {
             const uint32_t *endInBase32 = inBase32 + countInBase32;
             uint32_t *outBase32 = reinterpret_cast<uint32_t *>(out8);
 
+            // we iterate through a portion of bits from the input uncompressed bitmap
+            const size_t totalCountInBits = countInBase32 * 32 + wahProcessingState.remainderBits;
+            // check if we have some remainder part
+            const bool remainderPart = (totalCountInBits % 31 == 0) ? false : true;
+            const size_t countInBits = (remainderPart) ? ((totalCountInBits / 31) * 31) : totalCountInBits;
+
+            uint32_t start = wahProcessingState.startingIndex;
+            const uint32_t end = start + countInBits;
+            const int bufferSizeIn32BitWords = wahProcessingState.bufferSizeIn32BitWords;
+
+            // Process remainder from prev. iteration, if any...
+            if(wahProcessingState.remainderBits) {
+                // get word
+                uint32_t prevRemainderWord = wahProcessingState.remainderWord;
+                // update start (index)
+                start += wahProcessingState.remainderBits;
+
+                uint32_t shiftWord = inBase32[0] >> (wahProcessingState.remainderBits+1);
+                // OR together
+                uint32_t result = (prevRemainderWord | shiftWord);
+
+                // update start
+                start += (32 - wahProcessingState.remainderBits - 1);
+                if (result == 0) {
+                    // case (2) all zeros
+                    ++wahProcessingState.numberZeros;
+                    // write 1-Fills (if any) to output
+                    flush_ones(outBase32, wahProcessingState.numberOnes);
+                } else if (result == wah32_processing_state_t::ALL_ONES) {
+                    // case (3) all ones
+                    ++wahProcessingState.numberOnes;
+                    // write 0-Fills (if any) to output
+                    flush_zeros(outBase32, wahProcessingState.numberZeros);
+                } else {
+                    // case (4) literals
+                    flush_ones(outBase32, wahProcessingState.numberOnes);
+                    flush_zeros(outBase32, wahProcessingState.numberZeros);
+                    add_literal(outBase32, result);
+                }
+            }
+
             // General processing:
             //  (1) take 31 bits from input
             //  (2) if all zero (0-fill) -> increment zero-counter, flush ones
             //  (3) if all ones (1-fill) -> increment ones-counter, flush zeros
             //  (4) else literal         -> flush ones, flush zeros, add literal
 
-            // we iterate through a portion of bits from the input uncompressed bitmap (which is encoded in 64-bit words)
-            const size_t countInBits = countInBase32 << 5;
+            for (uint32_t i = start; i < end;) {
 
-            for (size_t i = 0; i < countInBits;) {
                 // (1) get next 31-bits
-                uint32_t currentNumber = getNext(i, inBase32, endInBase32);
-                // increment counter
-                i += 31;
+                uint32_t currentNumber = get_next_31_bits(i, inBase32, endInBase32, bufferSizeIn32BitWords);
 
                 if (currentNumber == 0) {
                     // case (2) all zeros
                     ++wahProcessingState.numberZeros;
                     // write 1-Fills (if any) to output
-                    flushOnes(outBase32, wahProcessingState.numberOnes);
+                    flush_ones(outBase32, wahProcessingState.numberOnes);
                 } else if (currentNumber == wah32_processing_state_t::ALL_ONES) {
                     // case (3) all ones
                     ++wahProcessingState.numberOnes;
                     // write 0-Fills (if any) to output
-                    flushZeros(outBase32, wahProcessingState.numberZeros);
+                    flush_zeros(outBase32, wahProcessingState.numberZeros);
                 } else {
                     // case (4) literals
-                    flushOnes(outBase32, wahProcessingState.numberOnes);
-                    flushZeros(outBase32, wahProcessingState.numberZeros);
-                    addLiteral(outBase32, currentNumber);
+                    flush_ones(outBase32, wahProcessingState.numberOnes);
+                    flush_zeros(outBase32, wahProcessingState.numberZeros);
+                    add_literal(outBase32, currentNumber);
                 }
+
+                // increment counter
+                i += 31;
             }
+
+            // update wah processing state
+            if(remainderPart) wahProcessingState.remainderBits = totalCountInBits - countInBits;
+            wahProcessingState.startingIndex = end;
+
+            // remainder part: get number from last bits and store them for next batch-processing
+            if(wahProcessingState.remainderBits) {
+                uint32_t currentNumber = get_remaining_k_bits(
+                        wahProcessingState.startingIndex,wahProcessingState.remainderBits, inBase32, bufferSizeIn32BitWords
+                );
+                // store remainder word
+                wahProcessingState.remainderWord = currentNumber;
+            }
+
             out8 = reinterpret_cast<uint8_t *>(outBase32);
         }
     };
@@ -217,7 +304,9 @@ namespace morphstore {
                 uint8_t * & out8,
                 size_t countInBase64
         ) {
-            wah32_processing_state_t wahProcessingState(0,0);
+            // init wah processing state
+            wah32_processing_state_t wahProcessingState;
+            // actual compression
             wah_compress_batch_with_state_t<t_ve>::apply(in8, out8, countInBase64, wahProcessingState);
             // eventually flush remaining zeros and ones
             wah_compress_batch_with_state_t<t_ve>::done(out8, wahProcessingState);
@@ -367,6 +456,13 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Compression
     // ------------------------------------------------------------------------
+    /**
+     * @brief WAH-Compression (column-level)
+     *
+     * Important notice: Output count, i.e. col->get_count_values() returns number of 32-bit words
+     *                      as we process WAH using 32-bit.
+     *
+     */
     template<
             class t_vector_extension
     >
@@ -416,6 +512,12 @@ namespace morphstore {
     // ------------------------------------------------------------------------
     // Decompression
     // ------------------------------------------------------------------------
+    /**
+     * @brief WAH-Decompression (column-level)
+     *
+     * Important notice: Output count, i.e. col->get_count_values() returns number of 64-bit words.
+     *
+     */
     template<
             class t_vector_extension
     >
@@ -497,7 +599,7 @@ namespace morphstore {
             wah_f,
             t_IR_dst_f,
             t_IR_src_f
-        > {
+    > {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
@@ -508,9 +610,7 @@ namespace morphstore {
         const uint8_t * const m_Morph_InitOut;
     public:
         // Morph-Buffer total count using 64-bit words
-        static const size_t m_Morph_CountBuffer = round_up_to_multiple(
-                t_format::m_BlockSize, 2048
-        );
+        static const size_t m_Morph_CountBuffer = 2048;
 
         // IR-Transformation-Buffer total count
         // In general, buffer can hold up to 2048 uncompressed data elements (internal Lx-cache-resident buffer of 16ki bytes)
@@ -523,7 +623,7 @@ namespace morphstore {
         static const size_t totalProcessingCount = 2048;
     private:
         // Morph-Buffer allocation with some extra space to allow overflows
-        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value) base_t m_Morph_StartBuffer[
+        MSV_CXX_ATTRIBUTE_ALIGNED(vector_size_byte::value)base_t m_Morph_StartBuffer[
                 m_Morph_CountBuffer + vector_element_count::value - 1
         ];
         size_t m_Morph_Count;
@@ -569,10 +669,10 @@ namespace morphstore {
             wah_compress_batch_with_state_t<t_ve>::apply(
                     morphBuffer8, m_Morph_Out, m_Morph_CountBuffer, wahProcessingState
             );
-            size_t overflow = m_Morph_Buffer_CurPtr - m_Morph_Buffer_EndPtr;
-            memcpy(m_Morph_StartBuffer, m_Morph_Buffer_EndPtr, overflow * sizeof(base_t));
-            m_Morph_Buffer_CurPtr = m_Morph_StartBuffer + overflow;
-            m_Morph_Count += convert_size<uint64_t, uint32_t>(m_Morph_CountBuffer);
+            //size_t overflow = m_Morph_Buffer_CurPtr - m_Morph_Buffer_EndPtr;
+            //memcpy(m_Morph_StartBuffer, m_Morph_Buffer_EndPtr, overflow * sizeof(base_t));
+            m_Morph_Buffer_CurPtr = m_Morph_StartBuffer; // reset pointer
+            //m_Morph_Count += convert_size<uint64_t, uint32_t>(m_Morph_CountBuffer);
         }
 
         /**
@@ -665,19 +765,19 @@ namespace morphstore {
             // BM->PL: check where the current pointer in IR-Transformation-Buffer and calculate difference to beginning
             const size_t numberElementsToInsert =
                     (std::is_same<t_IR_dst_f, bitmap_f<> >::value) ?
-                        // if this is the last execution, we have to calculate the remaining bm-words from currentProcessingCount
-                        (lastExecution) ?
-                            round_up_div(currentProcessingCount, vector_base_t_granularity::value) * sizeof(base_t) // only remaining bm-elements
-                            :
-                            (bitmap_f<>::trans_buf_cnt * sizeof(base_t)) // whole buffer in uint8
-                    :
+                    // if this is the last execution, we have to calculate the remaining bm-words from currentProcessingCount
+                    (lastExecution) ?
+                    round_up_div(currentProcessingCount, vector_base_t_granularity::value) * sizeof(base_t) // only remaining bm-elements
+                                    :
+                    (bitmap_f<>::trans_buf_cnt * sizeof(base_t)) // whole buffer in uint8
+                                                                   :
                     (tmpTransBuffer8 - startTransBuffer8); // for PL as dest., we calculate the difference as it is not guaranteed that buffer is full
 
             // insert transformed elements into Morph-Buffer
             insert_into_morph_buffer(numberElementsToInsert);
 
             // update m_IR_Trans_StartingPos: we processed 2048 (valid or not), need this as new starting point for BM->PL transformation
-            m_IR_Trans_StartingPos += 2048;
+            m_IR_Trans_StartingPos += totalProcessingCount;
 
             // reset stuff
             reset_IR_buffers();
@@ -690,7 +790,8 @@ namespace morphstore {
                 m_Morph_InitOut(m_Morph_Out),
                 m_Morph_Count(0),
                 m_IR_Trans_StartingPos(0),
-                wahProcessingState( wah32_processing_state_t(0,0) ),
+                // init wahProcessingState with 4096 bufferSize (2048 x 64-bit words == 4096 x 32-bit words) --> WAH 32-bit processing
+                wahProcessingState( wah32_processing_state_t(4096) ),
                 m_Morph_Buffer_CurPtr(m_Morph_StartBuffer),
                 m_Morph_Buffer_EndPtr(m_Morph_StartBuffer + m_Morph_CountBuffer ),
                 m_IR_Coll_Buffer_CurPtr(m_IR_Coll_StartBuffer),
@@ -725,7 +826,6 @@ namespace morphstore {
          *    more data elements.
          */
         std::tuple<size_t, uint8_t *, uint8_t *> done() {
-
             // execute last transformation before last morphing
             this->IR_trans_done();
 
