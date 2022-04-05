@@ -46,7 +46,7 @@
 
 #include <iostream>
 
-    #define TEST_DATA_COUNT 1000*1500
+    #define TEST_DATA_COUNT 1000*150
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -57,7 +57,7 @@ int main(void) {
      *                 (1) Generate a uncompressed bitmap data
      *                 (2) Compressed position-list select-operator that outputs a WAH-compressed bitmap (includes IR-transformation)
      *                 (3) Uncompressed bitmap select-operator with same predicate evaluation as (2)
-     *                 (4) Decompression of (2): WAH-bitmap to uncompressed-bitmap
+     *                 (4) Compress (3) using morph_operator
      *                 (5) Verify results: (3) == (4)
      */
 
@@ -84,7 +84,7 @@ int main(void) {
                 uncompr_f
             >::apply(inCol, predicate);
 
-    // (3) additional uncompressed result to verify output later on
+    // (3) additional uncompressed result to verify output for morph_t in step (4)
     auto result_uncompr=
             morphstore::select<
                 greater,
@@ -93,17 +93,17 @@ int main(void) {
                 uncompr_f
             >(inCol, predicate);
 
-    // (4) decompress WAH-bitmap
-    auto bm_decompr =
+    // (4) compress bitmap-column to WAH using morph-operator (sequentially processes input without break)
+    auto bm_compr =
             morph_t<
                 avx2<v256<uint64_t>>,
-                bitmap_f<uncompr_f>,
-                bitmap_f<wah_f>
-            >::apply(result_compr);
+                bitmap_f<wah_f>,
+                bitmap_f<uncompr_f>
+            >::apply(result_uncompr);
 
-    // (5) Validate decompressed == uncompressed ?
+    // (5) Validate write-iterator-compressed == morph-compressed ?
     const bool allGood =
-            memcmp(result_uncompr->get_data(), bm_decompr->get_data(), (int)(result_uncompr->get_count_values()*8)); //returns zero if all bytes match
+            memcmp(result_compr->get_data(), bm_compr->get_data(), (int)(bm_compr->get_count_values()/4)); //returns zero if all bytes match
 
     return allGood;
 }
