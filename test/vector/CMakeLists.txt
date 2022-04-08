@@ -23,7 +23,6 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/project_pl_compr_app )
 
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/select_sum_query_bitmask_SIMD_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/simple_query_compr_SIMD_app )
 
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/intersect_bm_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/merge_bm_test_app )
@@ -42,20 +41,19 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	#	add_executable( group_unary_app operators/group_unary_test.cpp )
 	#	add_executable( group_binary_app operators/group_binary_test.cpp )
 
-	add_executable( select_bm_uncompr_app operators/select_bm_uncompr_test.cpp)
-	add_executable( select_bm_compr_app operators/select_bm_compr_test.cpp)
-	add_executable( select_pl_uncompr_app operators/select_pl_uncompr_test.cpp)
-	add_executable( select_pl_compr_app operators/select_pl_compr_test.cpp)
+	add_executable( select_bm_uncompr_app operators/DA_bitmap_IR/select_bm_uncompr_test.cpp)
+	add_executable( select_bm_compr_app operators/DA_bitmap_IR/select_bm_compr_test.cpp)
+	add_executable( select_pl_uncompr_app operators/DA_bitmap_IR/select_pl_uncompr_test.cpp)
+	add_executable( select_pl_compr_app operators/DA_bitmap_IR/select_pl_compr_test.cpp)
 
-	add_executable( project_bm_uncompr_app operators/project_bm_uncompr_test.cpp)
-	add_executable( project_pl_uncompr_app operators/project_pl_uncompr_test.cpp)
-	add_executable( project_pl_compr_app operators/project_pl_compr_test.cpp)
+	add_executable( project_bm_uncompr_app operators/DA_bitmap_IR/project_bm_uncompr_test.cpp)
+	add_executable( project_pl_uncompr_app operators/DA_bitmap_IR/project_pl_uncompr_test.cpp)
+	add_executable( project_pl_compr_app operators/DA_bitmap_IR/project_pl_compr_test.cpp)
 
-	#add_executable( select_sum_query_bitmask_SIMD_app operators/select_sum_query_bm_SIMD.cpp)
-	#add_executable( simple_query_compr_SIMD_app operators/simple_query_bm_pl_compr_test.cpp)
+	add_executable( select_sum_query_bitmask_SIMD_app operators/DA_bitmap_IR/select_sum_query_bm_SIMD.cpp)
 
-	add_executable( intersect_bm_test_app operators/intersect_bm_test.cpp)
-	add_executable( merge_bm_test_app operators/merge_bm_test.cpp)
+	add_executable( intersect_bm_test_app operators/DA_bitmap_IR/intersect_bm_test.cpp)
+	add_executable( merge_bm_test_app operators/DA_bitmap_IR/merge_bm_test.cpp)
 
 	#	target_compile_options( vector_test_app PRIVATE
 	#		# space to add custom flags for THIS SPECIFIC TARGET
@@ -158,15 +156,10 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 			)
 	target_link_libraries( project_pl_compr_app PRIVATE "-ldl" )
 
-	#target_compile_options( select_sum_query_bitmask_SIMD_app PRIVATE
+	target_compile_options( select_sum_query_bitmask_SIMD_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
-	#		)
-	#target_link_libraries( select_sum_query_bitmask_SIMD_app PRIVATE "-ldl" )
-
-	#target_compile_options( simple_query_compr_SIMD_app PRIVATE
-			# space to add custom flags for THIS SPECIFIC TARGET
-	#		)
-	#target_link_libraries( simple_query_compr_SIMD_app PRIVATE "-ldl" )
+			)
+	target_link_libraries( select_sum_query_bitmask_SIMD_app PRIVATE "-ldl" )
 
 	target_compile_options( intersect_bm_test_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
@@ -201,8 +194,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	add_test( project_pl_uncompr_test project_pl_uncompr_app )
 	add_test( project_pl_compr_test project_pl_compr_app )
 
-	#add_test( select_sum_query_bitmask_SIMD_test select_sum_query_bitmask_SIMD_app )
-	#add_test( simple_query_compr_SIMD_test simple_query_compr_SIMD_app )
+	add_test( select_sum_query_bitmask_SIMD_test select_sum_query_bitmask_SIMD_app )
 
 	add_test( intersect_bm_test intersect_bm_test_app )
 	add_test( merge_bm_test merge_bm_test_app )

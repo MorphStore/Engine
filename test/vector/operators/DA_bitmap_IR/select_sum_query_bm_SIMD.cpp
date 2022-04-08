@@ -18,7 +18,7 @@
 /**
  * @file select_sum_query_bm_SIMD.cpp
  * @brief A little example query with a selection on one column and a sum on
- * another column using bitmap processing and SIMD. -> vectorized version of select_sum_query_bm
+ * another column using bitmap processing and SIMD.
  */
 
 #include <core/memory/mm_glob.h>
@@ -56,7 +56,7 @@ int main( void ) {
     std::cout << "Base data generation started... ";
     std::cout.flush();
 
-    const size_t countValues = 100 * 1000 * 1000;
+    const size_t countValues = 1000 * 1000;
     const column<uncompr_f> * const baseCol1 = generate_with_distr(
             countValues,
             std::uniform_int_distribution<uint64_t>(100, 199),

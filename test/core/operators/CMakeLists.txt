@@ -12,7 +12,6 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_bitmask_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_position_list_test_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/project_mixed_IR_test_app )
 
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/select_test_app )
 	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/core/operators/select_bitmask_test_app )
@@ -42,17 +41,16 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	#add_executable( left_semi_nto1_nested_loop_join_test_app left_semi_nto1_nested_loop_join_test.cpp )
 	#add_executable( merge_test_app merge_test.cpp )
 	add_executable( project_test_app project_test.cpp )
-	add_executable( project_bitmask_test_app project_bm_test.cpp)
-	add_executable( project_position_list_test_app project_pl_test.cpp)
-	add_executable( project_mixed_IR_test_app project_bm_pl_test.cpp)
+	add_executable( project_bitmask_test_app DA_bitmap_IR/project_bm_test.cpp)
+	add_executable( project_position_list_test_app DA_bitmap_IR/project_pl_test.cpp)
 	add_executable( select_test_app select_test.cpp )
-	add_executable( select_bitmask_test_app select_bm_test.cpp)
-	add_executable( select_position_list_test_app select_pl_test.cpp)
+	add_executable( select_bitmask_test_app DA_bitmap_IR/select_bm_test.cpp)
+	add_executable( select_position_list_test_app DA_bitmap_IR/select_pl_test.cpp)
 	#add_executable( operation_summation_test_app summation_test.cpp )
 	#add_executable( random_access_test_app random_access_test.cpp )
 
-	add_executable( intersect_bm_test_app intersect_bm_test.cpp)
-	add_executable( merge_bm_test_app merge_bm_test.cpp)
+	add_executable( intersect_bm_test_app DA_bitmap_IR/intersect_bm_test.cpp)
+	add_executable( merge_bm_test_app DA_bitmap_IR/merge_bm_test.cpp)
 
 	IF(CAVXTWO  OR CAVX512)
 		#add_executable( project_benchmark_test_app project_benchmark_test.cpp )
@@ -120,11 +118,6 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 			# space to add custom flags for THIS SPECIFIC TARGET
 			)
 	target_link_libraries( project_bitmask_test_app PRIVATE "-ldl" )
-
-	target_compile_options( project_mixed_IR_test_app PRIVATE
-			# space to add custom flags for THIS SPECIFIC TARGET
-			)
-	target_link_libraries( project_mixed_IR_test_app PRIVATE "-ldl" )
 
 	target_compile_options( project_position_list_test_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
@@ -210,7 +203,6 @@ if ( CTEST_ALL OR CTEST_OPERATORS )
 	add_test( project_test project_test_app )
 	add_test( project_bitmask_test project_bitmask_test_app )
 	add_test( project_position_list_test project_position_list_test_app )
-	add_test( project_mixed_IR_test project_mixed_IR_test_app )
 
 	add_test( select_test select_test_app )
 	add_test( select_bitmask_test select_bitmask_test_app )

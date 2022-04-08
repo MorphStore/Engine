@@ -18,16 +18,16 @@ if ( CTEST_ALL OR CTEST_MORPHING )
 	#add_executable( group_simple_test_app group_simple_test.cpp )
 	#add_executable( k_wise_ns_test_app k_wise_ns_test.cpp )  #
 	#add_executable( vbp_test_app vbp_test.cpp )
-	add_executable( IR_transformation_uncompr_test_app IR_transformation_uncompr_test.cpp)
+	add_executable( IR_transformation_uncompr_test_app DA_bitmap_IR/IR_transformation_uncompr_test.cpp)
 	#add_executable( IR_transformation_compr_test_app IR_transformation_compr_test.cpp)
-	add_executable( bitmask_morph_test_app bm_compr_test.cpp)
-	add_executable( position_list_morph_test_app pl_compr_test.cpp)
+	add_executable( bitmask_morph_test_app DA_bitmap_IR/bm_compr_test.cpp)
+	add_executable( position_list_morph_test_app DA_bitmap_IR/pl_compr_test.cpp)
 
-	add_executable( write_iterator_IR_pl_test_app write_iterator_IR_pl_test.cpp)
-	add_executable( write_iterator_IR_bm_test_app write_iterator_IR_bm_test.cpp)
-	add_executable( write_iterator_IR_wah_compr_test_app write_iterator_IR_wah_compr_test.cpp)
+	add_executable( write_iterator_IR_pl_test_app DA_bitmap_IR/write_iterator_IR_pl_test.cpp)
+	add_executable( write_iterator_IR_bm_test_app DA_bitmap_IR/write_iterator_IR_bm_test.cpp)
+	add_executable( write_iterator_IR_wah_compr_test_app DA_bitmap_IR/write_iterator_IR_wah_compr_test.cpp)
 
-	add_executable( wah_bm_test_app wah_bm_test.cpp)
+	add_executable( wah_bm_test_app DA_bitmap_IR/wah_bm_test.cpp)
 
 	#target_compile_options( delta_test_app PRIVATE
 	# space to add custom flags for THIS SPECIFIC TARGET

@@ -25,7 +25,7 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_PROJECT_BM_PL_H
 
 #include <core/storage/column.h>
-#include <core/morphing/intermediates/transformations.h>
+#include <core/morphing/intermediates/representation.h>
 
 #include <type_traits>
 
@@ -41,13 +41,9 @@ namespace morphstore {
             class t_vector_extension,
             class t_out_data_f,
             class t_in_data_f,
-            class t_in_IR_actual_f,
-            class t_in_IR_expected_f = t_in_IR_actual_f,
+            class t_in_IR_f,
             // enable if actual- & expected-IR-template-parameters are IR-types
-            typename std::enable_if_t<
-                    is_intermediate_representation_t<t_in_IR_actual_f>::value &&
-                    is_intermediate_representation_t<t_in_IR_expected_f>::value
-                    ,int> = 0
+            typename std::enable_if_t< is_intermediate_representation_t<t_in_IR_f>::value,int> = 0
     >
     struct project_t {
         /**
@@ -72,7 +68,7 @@ namespace morphstore {
         const column<t_out_data_f> *
         apply(
                 const column<t_in_data_f> * const inDataCol,
-                const column<t_in_IR_actual_f> * const inPosCol_actual
+                const column<t_in_IR_f> * const inPosCol
         ) = delete;
     };
 
@@ -90,36 +86,18 @@ namespace morphstore {
             class t_vector_extension,
             class t_out_data_f,
             class t_in_data_f,
-            class t_in_IR_actual_f,
-            class t_in_IR_expected_f = t_in_IR_actual_f, // default
+            class t_in_IR_f,
             // enable if actual- & expected-IR-template-parameters are IR-types
-            typename std::enable_if_t<
-                    is_intermediate_representation_t<t_in_IR_actual_f>::value &&
-                    is_intermediate_representation_t<t_in_IR_expected_f>::value
-                    ,int> = 0
+            typename std::enable_if_t<is_intermediate_representation_t<t_in_IR_f>::value,int> = 0
     >
     const column<t_out_data_f> *
     project(
             const column<t_in_data_f> * const inDataCol,
-            const column<t_in_IR_actual_f> * const inPosCol_actual
+            const column<t_in_IR_f> * const inPosCol
     ) {
-        // TODO: think about moving transformation out of operator to keep it simple and just instantiating according to acutal IR-type
-        // Transforms input-column, if IR-types are different
-        const column<t_in_IR_expected_f> * inPosCol_expected =
-                ( !is_same_underlying_IR_t< t_in_IR_actual_f, t_in_IR_expected_f >::value )
-                ?
-                morph_t<
-                vectorlib::scalar<vectorlib::v64<uint64_t>>,
-                        t_in_IR_expected_f,
-                        t_in_IR_actual_f
-                        >::apply(inPosCol_actual)
-                :
-                // else: copy pointer (+recast) to expected column type
-                reinterpret_cast<const column<t_in_IR_expected_f> *>(inPosCol_actual);
-
-        return project_t<t_vector_extension, t_out_data_f, t_in_data_f, t_in_IR_expected_f>::apply(
+        return project_t<t_vector_extension, t_out_data_f, t_in_data_f, t_in_IR_f>::apply(
                 inDataCol,
-                inPosCol_expected
+                inPosCol
         );
     }
 

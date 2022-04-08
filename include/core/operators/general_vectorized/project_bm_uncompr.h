@@ -31,6 +31,8 @@
 #include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 #include <core/morphing/intermediates/bitmap.h>
 
+#include <iostream>
+
 namespace morphstore {
 
     template<class VectorExtension>
@@ -60,7 +62,7 @@ namespace morphstore {
                                 p_DataPtr,
                                 posVector
                         );
-                vectorlib::store<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_OutPtr, lookupVector);
+                vectorlib::store<VectorExtension, vectorlib::iov::UNALIGNED, vector_size_bit::value>(p_OutPtr, lookupVector);
                 p_PosPtr += vector_element_count::value;
                 p_OutPtr += vector_element_count::value;
             }
@@ -125,6 +127,7 @@ namespace morphstore {
 
                     // actual projection using position-list
                     project_bm_batch<VectorExtension>::apply(inDataPtr, inPosPtr_tmp, outDataPtr, vectorCount);
+                    // we use only scalar processing here:
                     project_bm_batch<vectorlib::scalar<vectorlib::v64<uint64_t>>>::apply(inDataPtr, inPosPtr_tmp, outDataPtr, remainderCount);
                 }
                 // get next bitmap word

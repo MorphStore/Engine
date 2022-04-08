@@ -26,7 +26,7 @@
 
 #include <core/storage/column.h>
 #include <core/utils/basic_types.h>
-#include <core/morphing/intermediates/transformations.h>
+#include <core/morphing/intermediates/representation.h>
 
 #include <cstdint>
 

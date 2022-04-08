@@ -46,7 +46,7 @@
 
 #include <iostream>
 
-    #define TEST_DATA_COUNT 1000*150
+#define TEST_DATA_COUNT 1000*150
 
 using namespace morphstore;
 using namespace vectorlib;
