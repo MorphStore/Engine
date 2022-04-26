@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file pl_morph_test.cpp
+ * @file pl_compr_test.cpp
  * @brief Small test of compression/decompression of position-lists.
  *
  */

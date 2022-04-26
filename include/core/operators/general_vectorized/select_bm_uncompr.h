@@ -32,7 +32,7 @@ namespace morphstore {
 
     using namespace vectorlib;
     template<class VectorExtension,  template< class, int > class Operator>
-    struct select_processing_unit {
+    struct select_bm_processing_unit {
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
 
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -81,7 +81,7 @@ namespace morphstore {
                 vector_t dataVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(
                         p_DataPtr);
                 vector_mask_t resultMask =
-                        select_processing_unit<VectorExtension, Operator>::apply(
+                        select_bm_processing_unit<VectorExtension, Operator>::apply(
                                 dataVector,
                                 predicateVector
                         );
@@ -143,7 +143,7 @@ namespace morphstore {
             select_bm_batch<scalar<v64<uint64_t>>, Operator>::apply(inDataPtr, p_Predicate, outDataPtr, remainderCount, bm_ps_state);
 
             // Eventually store bitmap-encoded word (e.g. if we process < 64 elements)
-            select_processing_unit<VectorExtension, Operator>::lastStore(outDataPtr, bm_ps_state);
+            select_bm_processing_unit<VectorExtension, Operator>::lastStore(outDataPtr, bm_ps_state);
 
             size_t const outDataCount = outDataPtr - outDataPtrOrigin;
 

@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file project_pl_test.h
+ * @file project_pl_uncompr_test.cpp
  * @brief Test for vectorized project operator using position-lists
  * @todo TODOS?
  */

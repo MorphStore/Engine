@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file merge_bm_test.h
+ * @file merge_bm_test.cpp
  * @brief Small test for vectorized merge-operator using bitmaps.
  */
 

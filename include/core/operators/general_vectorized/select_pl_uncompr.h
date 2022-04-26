@@ -32,7 +32,7 @@ namespace morphstore {
 
     using namespace vectorlib;
     template<class VectorExtension,  template< class, int > class Operator>
-    struct select_processing_unit {
+    struct select_pl_processing_unit {
         IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
         MSV_CXX_ATTRIBUTE_FORCE_INLINE
         static
@@ -64,7 +64,7 @@ namespace morphstore {
             for(size_t i = 0; i < p_Count; ++i) {
                 vector_t dataVector = vectorlib::load<VectorExtension, vectorlib::iov::ALIGNED, vector_size_bit::value>(p_DataPtr);
                 vector_mask_t resultMask =
-                        select_processing_unit<VectorExtension,Operator>::apply(
+                        select_pl_processing_unit<VectorExtension,Operator>::apply(
                                 dataVector,
                                 predicateVector
                         );
@@ -85,8 +85,8 @@ namespace morphstore {
                 column< position_list_f<uncompr_f> > const *
         apply(
                 column< uncompr_f > const * const p_DataColumn,
-        base_t const p_Predicate,
-        const size_t outPosCountEstimate = 0
+                base_t const p_Predicate,
+                const size_t outPosCountEstimate = 0
         ) {
 
             size_t const inDataCount = p_DataColumn->get_count_values();

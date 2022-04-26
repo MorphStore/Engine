@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file project_bm_test.h
+ * @file project_bm_uncompr_test.cpp
  * @brief Test for vectorized project operator using bitmaps.
  * @todo TODOS?
  */

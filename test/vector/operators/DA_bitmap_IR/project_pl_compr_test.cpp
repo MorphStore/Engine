@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file project_pl_compr_test.h
+ * @file project_pl_compr_test.cpp
  * @brief Test for vectorized project operator using compressed position-lists and compressed input.
  *        => Generally to test decompress_and_process_batch with position_list_f<> as format
  *

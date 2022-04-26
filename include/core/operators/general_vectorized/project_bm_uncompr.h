@@ -31,8 +31,6 @@
 #include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 #include <core/morphing/intermediates/bitmap.h>
 
-#include <iostream>
-
 namespace morphstore {
 
     template<class VectorExtension>

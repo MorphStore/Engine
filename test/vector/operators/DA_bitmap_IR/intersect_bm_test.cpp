@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file intersect_bm_test.h
+ * @file intersect_bm_test.cpp
  * @brief Small test for vectorized intersect-operator using bitmaps.
  */
 
