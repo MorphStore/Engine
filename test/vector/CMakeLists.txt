@@ -26,7 +26,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 
 	#	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/intersect_bm_test_app )
 	#	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/merge_bm_test_app )
-	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/micro_benchmark_1_app )
+	FILE( REMOVE ${CMAKE_BINARY_DIR}/test/vector/micro_benchmark_1_scalar_app )
 
 
 	#	add_executable( vector_test_app main.cpp )
@@ -57,7 +57,7 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	#	add_executable( intersect_bm_test_app operators/DA_bitmap_IR/intersect_bm_test.cpp)
 	#	add_executable( merge_bm_test_app operators/DA_bitmap_IR/merge_bm_test.cpp)
 
-	add_executable( micro_benchmark_1_app operators/DA_bitmap_IR/micro_benchmark_1_scalar.cpp)
+	add_executable( micro_benchmark_1_scalar_app operators/DA_bitmap_IR/micro_benchmark_1_scalar.cpp)
 
 	#	target_compile_options( vector_test_app PRIVATE
 	#		# space to add custom flags for THIS SPECIFIC TARGET
@@ -175,10 +175,10 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	#			)
 	#	target_link_libraries( merge_bm_test_app PRIVATE "-ldl" )
 
-	target_compile_options( micro_benchmark_1_app PRIVATE
+	target_compile_options( micro_benchmark_1_scalar_app PRIVATE
 			# space to add custom flags for THIS SPECIFIC TARGET
 		)
-	target_link_libraries( micro_benchmark_1_app PRIVATE "-ldl" )
+	target_link_libraries( micro_benchmark_1_scalar_app PRIVATE "-ldl" )
 
 	#	add_test( vector_test vector_test_app )
 	#	add_test( agg_sum_vectorized_test agg_sum_app )
@@ -208,5 +208,5 @@ if ( CTEST_ALL OR CTEST_VECTOR )
 	#	add_test( intersect_bm_test intersect_bm_test_app )
 	#	add_test( merge_bm_test merge_bm_test_app )
 
-	Add_test( micro_benchmark_1 micro_benchmark_1_app )
+	add_test( micro_benchmark_1_scalar micro_benchmark_1_scalar_app )
 endif()
