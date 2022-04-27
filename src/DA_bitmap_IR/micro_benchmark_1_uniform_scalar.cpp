@@ -46,8 +46,9 @@ using namespace vectorlib;
 using namespace std::chrono;
 
 // function to ensure that the cache is flushed
-void clear_cache(const size_t size) {
-    std::vector<int> clear = std::vector<int>();
+void clear_cache() {
+    size_t elements = 128100; // 1024 KB -> 128000 x 64-bit elements
+    std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(size, 42);
     for (size_t i = 0; i < clear.size(); i++) {
         clear[i] += 1;
@@ -61,9 +62,6 @@ int main( void ) {
     // + no collision handling, just skipping if the selectivity key already exists TODO: add collision-handling?
     std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> position_list_results;
     std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> bitmap_results;
-
-    // number elements to flush cache in clear_cache:
-    const size_t cacheElements = 10 * 1000 * 1000;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -84,7 +82,7 @@ int main( void ) {
         // ********************************* POSITION-LIST *********************************
 
         // clear cache before measurement
-        clear_cache(cacheElements); // around 8 MB of data
+        clear_cache();
 
         auto pl_start = high_resolution_clock::now();
 
@@ -112,7 +110,7 @@ int main( void ) {
         // ********************************* BITMAP *********************************
 
         // clear cache before measurement
-        clear_cache(cacheElements); // around 8 MB of data
+        clear_cache();
 
         auto bm_start = high_resolution_clock::now();
 
