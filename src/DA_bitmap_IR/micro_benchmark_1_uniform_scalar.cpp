@@ -47,7 +47,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    size_t elements = 128100; // 1024 KB -> 128000 x 64-bit elements
+    size_t elements = 128100; // server cache = 1024 KB-> 128000 | my cache = 3072 KB -> 384000
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -60,8 +60,8 @@ int main( void ) {
 
     // hash map for results: for each intermediate data structure: key = selectivity, value = pair(store execution time in ms, memory footprint in bytes)
     // + no collision handling, just skipping if the selectivity key already exists TODO: add collision-handling?
-    std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> position_list_results;
-    std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> bitmap_results;
+    std::unordered_map<double, std::pair<std::chrono::duration<float, std::nano>, size_t>> position_list_results;
+    std::unordered_map<double, std::pair<std::chrono::duration<float, std::nano>, size_t>> bitmap_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -96,11 +96,11 @@ int main( void ) {
                 >(inCol, i);
 
         auto pl_end = high_resolution_clock::now();
-        auto pl_exec_time = duration_cast<milliseconds>(pl_end - pl_start);
+        auto pl_exec_time = duration_cast<nanoseconds>(pl_end - pl_start);
         auto pl_used_bytes = pl_result->get_size_used_byte();
 
         // calculate selectivity
-        double selectivity = (double)pl_result->get_count_values() / (double)TEST_DATA_COUNT;
+        double selectivity = static_cast<double>(pl_result->get_count_values()) / static_cast<double>(TEST_DATA_COUNT);
 
         // store results for position-list
         if(position_list_results.count(selectivity) == 0){ // store only, if the selectivity does not exist so far...
@@ -124,7 +124,7 @@ int main( void ) {
                 >(inCol, i);
 
         auto bm_end = high_resolution_clock::now();
-        auto bm_exec_time = duration_cast<milliseconds>(bm_end - bm_start);
+        auto bm_exec_time = duration_cast<nanoseconds>(bm_end - bm_start);
         auto bm_used_bytes = bm_result->get_size_used_byte();
 
         // store results for position-list
@@ -139,7 +139,7 @@ int main( void ) {
     mapStream.open("micro_benchmark_1_uniform_scalar.csv");
 
     mapStream << "PL: " << "\n";
-    mapStream << "\"selectivity\",\"execution time (ms)\",\"memory (B)\"" << "\n";
+    mapStream << "\"selectivity\",\"execution time (ns)\",\"memory (B)\"" << "\n";
     for(auto& element : position_list_results){
         mapStream << element.first
                   << "," << element.second.first.count()
@@ -148,7 +148,7 @@ int main( void ) {
     }
     mapStream << "\"endOfPositionListResults\"\n";
     mapStream << "BM: " << "\n";
-    mapStream << "\"selectivity\",\"execution time (ms)\",\"memory (B)\"" << "\n";
+    mapStream << "\"selectivity\",\"execution time (ns)\",\"memory (B)\"" << "\n";
     for(auto& element : bitmap_results){
         mapStream << element.first
                   << "," << element.second.first.count()
