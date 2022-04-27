@@ -146,6 +146,7 @@ buildCalibration="-DBUILD_CALIB=False"
 buildExamples="-DBUILD_EXAMPLES=False"
 buildMicroBms="-DBUILD_MICROBMS=False"
 buildSSB="-DBUILD_SSB=False"
+buildDAMicroBms="-DBUILD_DA_MICROBMS=False"
 avx512="-DCAVX512=False"
 avxtwo="-DCAVXTWO=False"
 sse4="-DCSSE=False"
@@ -321,6 +322,10 @@ case $key in
         sve="-DCSVE=True"
 	shift # past argument
 	;;
+	-bDAMbm|--buildDAMicroBms)
+  buildDAMicroBms="-DBUILD_DA_MICROBMS=True"
+  shift # past argument
+  ;;
 	-tVt|--testVectoring)
 	runCtest=true
 	testVectors="-DCTEST_VECTOR=True"
@@ -394,7 +399,7 @@ if [ "$runCtest" = true ] ; then
 else
 	addTests="-DRUN_CTESTS=False"
 fi
-addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB"
+addBuilds="$buildAll $buildCalibration $buildExamples $buildMicroBms $buildSSB $buildDAMicroBms"
 
 set -e # Abort the build if any of the following commands fails.
 mkdir -p build

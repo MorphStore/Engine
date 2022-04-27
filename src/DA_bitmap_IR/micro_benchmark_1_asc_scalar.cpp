@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_1_sortedUnique_scalar.h
+ * @file micro_benchmark_1_asc_scalar.h
  * @brief Experimental Evaluation:
  *              (1) Simple Selection Query:
  *                  - Base data: values between 0 and TEST_DATA_COUNT-1 => sorted + unique => ASC

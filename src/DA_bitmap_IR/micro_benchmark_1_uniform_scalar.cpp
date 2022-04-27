@@ -37,10 +37,10 @@
 #include <vector>
 #include <chrono>
 #include <cstdlib>
-#include <map>
+#include <unordered_map>
 #include <fstream>
 
-#define TEST_DATA_COUNT 1000 * 1000
+#define TEST_DATA_COUNT 100//0 * 1000
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -57,13 +57,13 @@ void clear_cache(const size_t size) {
 
 int main( void ) {
 
-    // result maps: for each intermediate data structure: key = selectivity, value = pair(store execution time in ms, memory footprint in bytes)
-    // important: no collision handling, just overwrite if we get the same selectivity again TODO: add collision-handling?
-    std::map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> position_list_results;
-    std::map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> bitmap_results;
+    // hash map for results: for each intermediate data structure: key = selectivity, value = pair(store execution time in ms, memory footprint in bytes)
+    // + no collision handling, just skipping if the selectivity key already exists TODO: add collision-handling?
+    std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> position_list_results;
+    std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> bitmap_results;
 
     // number elements to flush cache in clear_cache:
-    const size_t cacheElements = 10 * 1000 * 1000;
+    const size_t cacheElements = 10;// * 1000 * 1000;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -104,7 +104,9 @@ int main( void ) {
         double selectivity = (double)pl_result->get_count_values() / (double)TEST_DATA_COUNT;
 
         // store results for position-list
-        position_list_results.insert({selectivity, {pl_exec_time, pl_used_bytes}});
+        if(position_list_results.count(selectivity) == 0){ // store only, if the selectivity does not exist so far...
+            position_list_results.insert({selectivity, {pl_exec_time, pl_used_bytes}});
+        }
 
         // ********************************* BITMAP *********************************
 
@@ -127,30 +129,32 @@ int main( void ) {
         auto bm_used_bytes = bm_result->get_size_used_byte();
 
         // store results for position-list
-        bitmap_results.insert({selectivity, {bm_exec_time, bm_used_bytes}});
+        if(bitmap_results.count(selectivity) == 0) { // store only, if the selectivity does not exist so far...
+            bitmap_results.insert({selectivity, {bm_exec_time, bm_used_bytes}});
+        }
     }
 
     // --------------- (3) Write results to file ---------------
+    // store results of each IR as triple (selectivity, time in ms, memory in B) in csv
     std::ofstream mapStream;
-    mapStream.open("micro_benchmark_1_uniform_scalar.txt");
+    mapStream.open("micro_benchmark_1_uniform_scalar.csv");
 
-    mapStream << "Position-List: " << "\n";
-    std::map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>>::iterator it_pl;
-    for(it_pl = position_list_results.begin(); it_pl != position_list_results.end(); it_pl++){
-        mapStream << "select. = " << (*it_pl).first
-                  << ": exec.(ms) = " << (*it_pl).second.first.count()
-                  << ", memory(B) = " << (*it_pl).second.second
-                  << "\n";
+    mapStream << "PL: " << "\n";
+    for(auto& element : position_list_results){
+        mapStream << element.first
+                  << "," << element.second.first.count()
+                  << "," << element.second.second
+                  << ",";
     }
-    mapStream << "Bitmap: " << "\n";
-    std::map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>>::iterator it_bm;
-    for(it_bm = bitmap_results.begin(); it_bm != bitmap_results.end(); it_bm++){
-        mapStream << "selectivity = " << (*it_bm).first
-                  << ": exec. (ms) = " << (*it_bm).second.first.count()
-                  << ", memory (B) = " << (*it_bm).second.second
-                  << "\n";
+    mapStream << "end\n";
+    mapStream << "BM: " << "\n";
+    for(auto& element : bitmap_results){
+        mapStream << element.first
+                  << "," << element.second.first.count()
+                  << "," << element.second.second
+                  << ",";
     }
-
+    mapStream << "end\n";
     mapStream.close();
 
     return 0;
