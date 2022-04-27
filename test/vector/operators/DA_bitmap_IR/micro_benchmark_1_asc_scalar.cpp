@@ -16,11 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_1.h
+ * @file micro_benchmark_1_sortedUnique_scalar.h
  * @brief Experimental Evaluation:
- *              (1) Simple Selection Query (Point Query):
+ *              (1) Simple Selection Query:
+ *                  - Base data: values between 0 and TEST_DATA_COUNT-1 => sorted + unique => ASC
  *                  - Selectivity variation between 0 and 1 (using 0.1 steps)
- *                  - Bitmap vs. Position-List
+ *                  - Compare: Bitmap vs. Position-List
+ *                  - Results are written to: micro_benchmark_1_asc_scalar_results.txt
  */
 
 // This must be included first to allow compilation.
@@ -32,15 +34,13 @@
 #include <core/operators/general_vectorized/select_bm_uncompr.h>
 #include <core/operators/general_vectorized/select_pl_uncompr.h>
 
-#include <core/utils/printing.h>
-
 #include <vector>
 #include <chrono>
 #include <cstdlib>
 #include <map>
 #include <fstream>
 
-#define TEST_DATA_COUNT 1000*100
+#define TEST_DATA_COUNT 1000 * 1000
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -120,11 +120,10 @@ int main( void ) {
         // store result in map
         bitmap_results.insert({s, {exec_time, used_bytes}});
     }
-    //print_columns(print_buffer_base::decimal, result_pl, "result_pl with selectivity");
 
     // --------------- (3) Write results to file ---------------
     std::ofstream mapStream;
-    mapStream.open("micro_benchmark_1_scalar_results.txt");
+    mapStream.open("micro_benchmark_1_asc_scalar.txt");
 
     mapStream << "Position-List: " << "\n";
     std::map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>>::iterator it_pl;
