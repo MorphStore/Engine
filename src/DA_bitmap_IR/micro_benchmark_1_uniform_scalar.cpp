@@ -36,7 +36,6 @@
 
 #include <vector>
 #include <chrono>
-#include <cstdlib>
 #include <unordered_map>
 #include <fstream>
 
@@ -48,11 +47,12 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache(const size_t size) {
-    uint64_t *tmp = new uint64_t[size];
-    for(size_t i = 0; i < size; i++)
-    {
-        tmp[i] = rand();
+    std::vector<int> clear = std::vector<int>();
+    clear.resize(size, 42);
+    for (size_t i = 0; i < clear.size(); i++) {
+        clear[i] += 1;
     }
+    clear.resize(0);
 }
 
 int main( void ) {
@@ -79,7 +79,7 @@ int main( void ) {
 
     // for each 100th data point in TEST_DATA_COUNT:
     // exec. less-than selection, calculate selectivity + store measurement results for each IR
-    for(auto i = 0; i < TEST_DATA_COUNT; i+=100){
+    for(auto i = 0; i < TEST_DATA_COUNT+1; i+=100){
 
         // ********************************* POSITION-LIST *********************************
 
