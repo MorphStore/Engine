@@ -40,7 +40,7 @@
 #include <unordered_map>
 #include <fstream>
 
-#define TEST_DATA_COUNT 100//0 * 1000
+#define TEST_DATA_COUNT 1000 * 1000
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -63,7 +63,7 @@ int main( void ) {
     std::unordered_map<double, std::pair<std::chrono::duration<float, std::milli>, size_t>> bitmap_results;
 
     // number elements to flush cache in clear_cache:
-    const size_t cacheElements = 10;// * 1000 * 1000;
+    const size_t cacheElements = 10 * 1000 * 1000;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -77,8 +77,9 @@ int main( void ) {
 
     // --------------- (2) Selection operation ---------------
 
-    // for each data point in TEST_DATA_COUNT: exec. less-than selection, calculate selectivity + store measurement results for each IR
-    for(auto i = 1; i < TEST_DATA_COUNT+1; ++i){
+    // for each 100th data point in TEST_DATA_COUNT:
+    // exec. less-than selection, calculate selectivity + store measurement results for each IR
+    for(auto i = 0; i < TEST_DATA_COUNT; i+=100){
 
         // ********************************* POSITION-LIST *********************************
 
@@ -140,21 +141,23 @@ int main( void ) {
     mapStream.open("micro_benchmark_1_uniform_scalar.csv");
 
     mapStream << "PL: " << "\n";
+    mapStream << "\"selectivity\",\"execution time (ms)\",\"memory (B)\"" << "\n";
     for(auto& element : position_list_results){
         mapStream << element.first
                   << "," << element.second.first.count()
                   << "," << element.second.second
-                  << ",";
+                  << "\n";
     }
-    mapStream << "end\n";
+    mapStream << "\"endOfPositionListResults\"\n";
     mapStream << "BM: " << "\n";
+    mapStream << "\"selectivity\",\"execution time (ms)\",\"memory (B)\"" << "\n";
     for(auto& element : bitmap_results){
         mapStream << element.first
                   << "," << element.second.first.count()
                   << "," << element.second.second
-                  << ",";
+                  << "\n";
     }
-    mapStream << "end\n";
+    mapStream << "endOfBitmapResults\n";
     mapStream.close();
 
     return 0;
