@@ -49,7 +49,7 @@ using namespace std::chrono;
 void clear_cache() {
     size_t elements = 128100; // 1024 KB -> 128000 x 64-bit elements
     std::vector<uint64_t> clear = std::vector<uint64_t>();
-    clear.resize(size, 42);
+    clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
         clear[i] += 1;
     }
