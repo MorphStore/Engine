@@ -16,13 +16,13 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_1_uniform_scalar.h
+ * @file micro_benchmark_1_uniform_avx2.h
  * @brief Experimental Evaluation:
  *              (1) Simple Selection Query:
  *                  - Base data: uniform distribution with values 0 and TEST_DATA_COUNT-1
  *                  - Selectivity variation between 0 and 1
  *                  - Compare: Bitmap vs. Position-List
- *                  - Results are written to: micro_benchmark_1_uniform_scalar.csv
+ *                  - Results are written to: micro_benchmark_1_uniform_avx2.csv
  */
 
 // This must be included first to allow compilation.
@@ -31,6 +31,13 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
+
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/compare_avx2.h>
+
 #include <core/operators/general_vectorized/select_bm_uncompr.h>
 #include <core/operators/general_vectorized/select_pl_uncompr.h>
 
@@ -66,8 +73,8 @@ void clear_cache() {
 
 int main( void ) {
 
-    // scalar-processing:
-    using processingStyle = scalar<v64<uint64_t>>;
+    // avx2-processing:
+    using processingStyle = avx2<v256<uint64_t>>;
 
     // hash map for results: for each intermediate data structure: key = selectivity, value = pair(store execution time in ms, memory footprint in bytes)
     // + no collision handling, just skipping if the selectivity key already exists TODO: add collision-handling?
@@ -152,7 +159,7 @@ int main( void ) {
     // --------------- (3) Write results to file ---------------
     // store results of each IR as triple (selectivity, time in ms, memory in B) in csv
     std::ofstream mapStream;
-    mapStream.open("micro_benchmark_1_uniform_scalar.csv");
+    mapStream.open("micro_benchmark_1_uniform_avx2.csv");
 
     mapStream << "PL: " << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\",\"memory (B)\"" << "\n";
