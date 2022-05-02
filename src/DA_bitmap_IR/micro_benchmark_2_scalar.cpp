@@ -80,7 +80,8 @@ int main( void ) {
     using processingStyle = scalar<v64<uint64_t>>;
 
     // hash map to store measurements: key = bit density; value = pair of {execution time, pair of{uncompressed_size, compressed_size}}
-    std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_results;
+    std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_compression_results;
+    std::unordered_map<double, std::chrono::microseconds> wah_decompression_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -150,34 +151,43 @@ int main( void ) {
                 * 1000.0) / 1000.0;
         */
         // store results to hash map
-        if(wah_results.count(bit_density) == 0) {
-            wah_results.insert({bit_density, {bm_compr_exec_time, {bm_uncompr_used_bytes, bm_compr_used_bytes}}});
+        if(wah_compression_results.count(bit_density) == 0) {
+            wah_compression_results.insert({bit_density, {bm_compr_exec_time, {bm_uncompr_used_bytes, bm_compr_used_bytes}}});
         }
+
+        // --------------- (4) WAH-Decompression ---------------
+
+        // clear cache before measurement
+        clear_cache();
+
+        auto bm_decompr_start = high_resolution_clock::now();
+
+        // decompress WAH-bitmap
+        auto bm_decompr =
+                morph_t<
+                    processingStyle,
+                    bitmap_f<uncompr_f>,
+                    bitmap_f<wah_f>
+                >::apply(bm_compr);
+
+        auto bm_decompr_end = high_resolution_clock::now();
+        auto bm_decompr_exec_time = duration_cast<microseconds>(bm_decompr_end - bm_decompr_start);
+
+        // store results to hash map
+        if(wah_decompression_results.count(bit_density) == 0) {
+            wah_decompression_results.insert({bit_density, bm_decompr_exec_time});
+        }
+        (void)bm_decompr; // to satisfy compiler error 'unused variable'
     }
 
-    //print_columns(print_buffer_base::decimal, bm_compr, "bm_compr");
+    // --------------- (5) Write results to file ---------------
 
-    // ------------------------------------------------------------------------
-    // (3) Decompression
-    // ------------------------------------------------------------------------
-/*
-    // decompress WAH-bitmap
-    auto bm_decompr =
-            morph_t<
-                avx2<v256<uint64_t>>,
-                bitmap_f<uncompr_f>,
-                bitmap_f<wah_f>
-            >::apply(bm_compr);
-
-    print_columns(print_buffer_base::decimal, bm_decompr, "bm_decompr");
-*/
-    // --------------- (4) Write results to file ---------------
     std::ofstream mapStream;
     mapStream.open("micro_benchmark_2_uniform_scalar.csv");
 
     mapStream << "\"WAH-Compression:\"" << "\n";
     mapStream << "\"bit density\",\"execution time (μs)\",\"uncompressed_size (B)\",\"compressed_size (B)\"" << "\n";
-    for(auto& element : wah_results){
+    for(auto& element : wah_compression_results){
         mapStream << element.first
                   << "," << element.second.first.count()
                   << "," << element.second.second.first
@@ -185,6 +195,16 @@ int main( void ) {
                   << "\n";
     }
     mapStream << "\"endOfWAHResults\"\n";
+
+    mapStream << "\"WAH-Decompression:\"" << "\n";
+    mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
+    for(auto& element : wah_decompression_results){
+        mapStream << element.first
+                  << "," << element.second.count()
+                  << "\n";
+    }
+    mapStream << "\"endOfWAHResults\"\n";
+
     mapStream.close();
 
     return 0;
