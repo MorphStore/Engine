@@ -194,7 +194,7 @@ int main( void ) {
                   << "," << element.second.second.second
                   << "\n";
     }
-    mapStream << "\"endOfWAHResults\"\n";
+    mapStream << "\"endOfWahCompressionResults\"\n";
 
     mapStream << "\"WAH-Decompression:\"" << "\n";
     mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
@@ -203,7 +203,7 @@ int main( void ) {
                   << "," << element.second.count()
                   << "\n";
     }
-    mapStream << "\"endOfWAHResults\"\n";
+    mapStream << "\"endOfWahDecompressionResults\"\n";
 
     mapStream.close();
 
