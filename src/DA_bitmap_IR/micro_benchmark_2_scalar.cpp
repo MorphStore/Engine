@@ -54,7 +54,7 @@
 //#define TEST_DATA_COUNT 1000 * 10
 
 // server:
-#define TEST_DATA_COUNT 100 * 1000 * 1000
+#define TEST_DATA_COUNT  100 * 1000 * 1000
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -79,8 +79,8 @@ int main( void ) {
     // scalar-processing:
     using processingStyle = scalar<v64<uint64_t>>;
 
-    // hash map to store measurements: key = bit density; value = pair of {execution time, compression ratio}
-    std::unordered_map<double, std::pair<std::chrono::microseconds , double>> wah_results;
+    // hash map to store measurements: key = bit density; value = pair of {execution time, pair of{uncompressed_size, compressed_size}}
+    std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -95,7 +95,7 @@ int main( void ) {
     // for each i-th data point in TEST_DATA_COUNT: exec. less-than selection, calculate bit density + store measurement results
     //size_t steps = 100;
     // server:
-    size_t steps = 1000;
+    size_t steps = 1000000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
         // --------------- (2) Selection operation ---------------
@@ -145,13 +145,13 @@ int main( void ) {
         // calculate compressed output
         auto bm_compr_used_bytes = bm_compr->get_size_used_byte();
         // compression ratio = uncompressed_size / compressed_size => round up to 3 dec. places
-        double compression_ratio = std::ceil(
+        /*double compression_ratio = std::ceil(
                 (static_cast<double>(bm_uncompr_used_bytes) / static_cast<double>(bm_compr_used_bytes))
                 * 1000.0) / 1000.0;
-
+        */
         // store results to hash map
         if(wah_results.count(bit_density) == 0) {
-            wah_results.insert({bit_density, {bm_compr_exec_time, compression_ratio}});
+            wah_results.insert({bit_density, {bm_compr_exec_time, {bm_uncompr_used_bytes, bm_compr_used_bytes}}});
         }
     }
 
@@ -176,11 +176,12 @@ int main( void ) {
     mapStream.open("micro_benchmark_2_uniform_scalar.csv");
 
     mapStream << "\"WAH-Compression:\"" << "\n";
-    mapStream << "\"bit density\",\"execution time (μs)\",\"compression ratio\"" << "\n";
+    mapStream << "\"bit density\",\"execution time (μs)\",\"uncompressed_size (B)\",\"compressed_size (B)\"" << "\n";
     for(auto& element : wah_results){
         mapStream << element.first
                   << "," << element.second.first.count()
-                  << "," << element.second.second
+                  << "," << element.second.second.first
+                  << "," << element.second.second.second
                   << "\n";
     }
     mapStream << "\"endOfWAHResults\"\n";
