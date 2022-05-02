@@ -145,8 +145,9 @@ int main( void ) {
 
         // calculate compressed output
         auto bm_compr_used_bytes = bm_compr->get_size_used_byte();
+        /*
         // compression ratio = uncompressed_size / compressed_size => round up to 3 dec. places
-        /*double compression_ratio = std::ceil(
+        double compression_ratio = std::ceil(
                 (static_cast<double>(bm_uncompr_used_bytes) / static_cast<double>(bm_compr_used_bytes))
                 * 1000.0) / 1000.0;
         */
@@ -156,11 +157,11 @@ int main( void ) {
         }
 
         // --------------- (4) WAH-Decompression ---------------
-
+        /*
         // clear cache before measurement
         clear_cache();
 
-        /*auto bm_decompr_start = high_resolution_clock::now();
+        auto bm_decompr_start = high_resolution_clock::now();
 
         // decompress WAH-bitmap
         auto bm_decompr =
@@ -177,7 +178,8 @@ int main( void ) {
         if(wah_decompression_results.count(bit_density) == 0) {
             wah_decompression_results.insert({bit_density, bm_decompr_exec_time});
         }
-        (void)bm_decompr; // to satisfy compiler error 'unused variable'*/
+        (void)bm_decompr; // to satisfy compiler error 'unused variable'
+         */
     }
 
     // --------------- (5) Write results to file ---------------
@@ -196,14 +198,16 @@ int main( void ) {
     }
     mapStream << "\"endOfWahCompressionResults\"\n";
 
-   /* mapStream << "\"WAH-Decompression:\"" << "\n";
+   /*
+    mapStream << "\"WAH-Decompression:\"" << "\n";
     mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
     for(auto& element : wah_decompression_results){
         mapStream << element.first
                   << "," << element.second.count()
                   << "\n";
     }
-    mapStream << "\"endOfWahDecompressionResults\"\n";*/
+    mapStream << "\"endOfWahDecompressionResults\"\n";
+    */
 
     mapStream.close();
 
