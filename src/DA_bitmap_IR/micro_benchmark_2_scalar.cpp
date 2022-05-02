@@ -51,7 +51,7 @@
 #include <cmath>
 
 // local:
-//#define TEST_DATA_COUNT 1000 * 1000
+//#define TEST_DATA_COUNT 1000 * 10
 
 // server:
 #define TEST_DATA_COUNT 100 * 1000 * 1000
@@ -79,8 +79,8 @@ int main( void ) {
     // scalar-processing:
     using processingStyle = scalar<v64<uint64_t>>;
 
-    // hash map to store measurements: key = bit density; value = pair of {execution time, compressed output}
-    std::unordered_map<double, std::pair<std::chrono::microseconds , size_t>> wah_results;
+    // hash map to store measurements: key = bit density; value = pair of {execution time, compression ratio}
+    std::unordered_map<double, std::pair<std::chrono::microseconds , double>> wah_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -93,9 +93,9 @@ int main( void ) {
     );
 
     // for each i-th data point in TEST_DATA_COUNT: exec. less-than selection, calculate bit density + store measurement results
-    size_t steps = 1000;
+    //size_t steps = 100;
     // server:
-    //size_t steps = 1000;
+    size_t steps = 1000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
         // --------------- (2) Selection operation ---------------
@@ -176,7 +176,7 @@ int main( void ) {
     mapStream.open("micro_benchmark_2_uniform_scalar.csv");
 
     mapStream << "\"WAH-Compression:\"" << "\n";
-    mapStream << "\"bit density\",\"execution time (μs)\",\"memory (B)\"" << "\n";
+    mapStream << "\"bit density\",\"execution time (μs)\",\"compression ratio\"" << "\n";
     for(auto& element : wah_results){
         mapStream << element.first
                   << "," << element.second.first.count()
