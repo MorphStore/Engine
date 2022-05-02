@@ -81,7 +81,7 @@ int main( void ) {
 
     // hash map to store measurements: key = bit density; value = pair of {execution time, pair of{uncompressed_size, compressed_size}}
     std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_compression_results;
-    std::unordered_map<double, std::chrono::microseconds> wah_decompression_results;
+    //std::unordered_map<double, std::chrono::microseconds> wah_decompression_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -160,7 +160,7 @@ int main( void ) {
         // clear cache before measurement
         clear_cache();
 
-        auto bm_decompr_start = high_resolution_clock::now();
+        /*auto bm_decompr_start = high_resolution_clock::now();
 
         // decompress WAH-bitmap
         auto bm_decompr =
@@ -177,7 +177,7 @@ int main( void ) {
         if(wah_decompression_results.count(bit_density) == 0) {
             wah_decompression_results.insert({bit_density, bm_decompr_exec_time});
         }
-        (void)bm_decompr; // to satisfy compiler error 'unused variable'
+        (void)bm_decompr; // to satisfy compiler error 'unused variable'*/
     }
 
     // --------------- (5) Write results to file ---------------
@@ -196,14 +196,14 @@ int main( void ) {
     }
     mapStream << "\"endOfWahCompressionResults\"\n";
 
-    mapStream << "\"WAH-Decompression:\"" << "\n";
+   /* mapStream << "\"WAH-Decompression:\"" << "\n";
     mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
     for(auto& element : wah_decompression_results){
         mapStream << element.first
                   << "," << element.second.count()
                   << "\n";
     }
-    mapStream << "\"endOfWahDecompressionResults\"\n";
+    mapStream << "\"endOfWahDecompressionResults\"\n";*/
 
     mapStream.close();
 
