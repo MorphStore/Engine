@@ -24,7 +24,7 @@
  *                      (1) PL -> BM
  *                      (2) BM -> PL
  *                  - Measure execution time + memory footprint
- *                  - Results are written to: micro_benchmark_3_asc_scalar.csv
+ *                  - Results are written to: micro_benchmark_3_uniform_sorted_unique_scalar.csv
  */
 
 // This must be included first to allow compilation.
@@ -83,11 +83,11 @@ int main( void ) {
     std::unordered_map<double, std::pair<std::chrono::microseconds , size_t>> ir_transformation_bm_to_pl_results;
 
     for(auto selectivity : selectivities) {
+
+        // --------------- (1) Generate test data ---------------
         const size_t countPosLog = static_cast<size_t>(
                 TEST_DATA_COUNT * selectivity
         );
-
-        // --------------- (1) Generate test data ---------------
         // uniform distributed + unique + sorted ASC (to simulate a position-list as intermediate)
         auto inPosCol = reinterpret_cast< const column< position_list_f<uncompr_f> > * >(
                 generate_sorted_unique_extraction(countPosLog, TEST_DATA_COUNT)
@@ -112,9 +112,7 @@ int main( void ) {
         auto plToBm_used_bytes = plToBmCol->get_size_used_byte();
 
         // store results for position-list
-        if(ir_transformation_pl_to_bm_results.count(selectivity) == 0){ // store only, if the selectivity does not exist so far...
-            ir_transformation_pl_to_bm_results.insert({selectivity, {plToBm_exec_time, plToBm_used_bytes}});
-        }
+        ir_transformation_pl_to_bm_results.insert({selectivity, {plToBm_exec_time, plToBm_used_bytes}});
 
         // --------------- (3) IR-Transformation: BM -> PL ---------------
 
@@ -135,9 +133,7 @@ int main( void ) {
         auto bmToPl_used_bytes = bmToPlCol->get_size_used_byte();
 
         // store results for position-list
-        if(ir_transformation_bm_to_pl_results.count(selectivity) == 0){ // store only, if the selectivity does not exist so far...
-            ir_transformation_bm_to_pl_results.insert({selectivity, {bmToPl_exec_time, bmToPl_used_bytes}});
-        }
+        ir_transformation_bm_to_pl_results.insert({selectivity, {bmToPl_exec_time, bmToPl_used_bytes}});
     }
 
     // --------------- (3) Write results to file ---------------
@@ -145,7 +141,7 @@ int main( void ) {
     std::ofstream mapStream;
     mapStream.open("micro_benchmark_3_uniform_sorted_unique_scalar.csv");
 
-    mapStream << "\"PlToBm:\"" << "\n";
+    mapStream << "\"PL2BM scalar:\"" << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\",\"memory (B)\"" << "\n";
     for(auto& element : ir_transformation_pl_to_bm_results){
         mapStream << element.first
@@ -153,8 +149,8 @@ int main( void ) {
                   << "," << element.second.second
                   << "\n";
     }
-    mapStream << "\"endOfPlToBmResults\"\n";
-    mapStream << "\"BmToPl:\"" << "\n";
+    mapStream << "\"endOfPL2BMResults\"\n";
+    mapStream << "\"BM2PL scalar:\"" << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\",\"memory (B)\"" << "\n";
     for(auto& element : ir_transformation_bm_to_pl_results){
         mapStream << element.first
@@ -162,7 +158,7 @@ int main( void ) {
                   << "," << element.second.second
                   << "\n";
     }
-    mapStream << "\"endOfBmToPlResults\"\n";
+    mapStream << "\"endOfBM2PLResults\"\n";
     mapStream.close();
 
     return 0;
