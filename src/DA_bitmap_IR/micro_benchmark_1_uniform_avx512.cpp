@@ -137,7 +137,7 @@ int main( void ) {
 
         auto bm_start = high_resolution_clock::now();
 
-        // position-list select-operator
+        // bitmap select-operator
         auto bm_result =
                 morphstore::select<
                     less,
@@ -150,7 +150,7 @@ int main( void ) {
         auto bm_exec_time = duration_cast<microseconds>(bm_end - bm_start);
         auto bm_used_bytes = bm_result->get_size_used_byte();
 
-        // store results for position-list
+        // store results for bitmap
         if(bitmap_results.count(selectivity) == 0) { // store only, if the selectivity does not exist so far...
             bitmap_results.insert({selectivity, {bm_exec_time, bm_used_bytes}});
         }
@@ -161,7 +161,7 @@ int main( void ) {
     std::ofstream mapStream;
     mapStream.open("micro_benchmark_1_uniform_avx512.csv");
 
-    mapStream << "PL: " << "\n";
+    mapStream << "\"PL:\"" << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\",\"memory (B)\"" << "\n";
     for(auto& element : position_list_results){
         mapStream << element.first
@@ -170,7 +170,7 @@ int main( void ) {
                   << "\n";
     }
     mapStream << "\"endOfPositionListResults\"\n";
-    mapStream << "BM: " << "\n";
+    mapStream << "\"BM:\"" << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\",\"memory (B)\"" << "\n";
     for(auto& element : bitmap_results){
         mapStream << element.first
@@ -178,7 +178,7 @@ int main( void ) {
                   << "," << element.second.second
                   << "\n";
     }
-    mapStream << "endOfBitmapResults\n";
+    mapStream << "\"endOfBitmapResults\"\n";
     mapStream.close();
 
     return 0;
