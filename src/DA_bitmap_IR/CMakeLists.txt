@@ -62,4 +62,11 @@ if ( BUILD_ALL OR BUILD_DA_MICROBMS)
             )
     target_link_libraries( micro_benchmark_4_uniform_sorted_unique_avx512 PRIVATE "-ldl" )
 
+    # ---------------- MICRO BENCHMARK 5 -------------------
+
+    add_executable( micro_benchmark_5_uniform_scalar micro_benchmark_5_uniform_scalar.cpp)
+    target_compile_options( micro_benchmark_5_uniform_scalar PRIVATE
+            $<$<CONFIG:DEBUG>:-DDEBUG>
+            )
+    target_link_libraries( micro_benchmark_5_uniform_scalar PRIVATE "-ldl" )
 endif()

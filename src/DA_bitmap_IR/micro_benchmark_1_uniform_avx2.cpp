@@ -31,6 +31,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
+#include <core/morphing/intermediates/bitmap.h>
+#include <core/morphing/intermediates/position_list.h>
 
 #include <vector/simd/avx2/extension_avx2.h>
 #include <vector/simd/avx2/primitives/calc_avx2.h>

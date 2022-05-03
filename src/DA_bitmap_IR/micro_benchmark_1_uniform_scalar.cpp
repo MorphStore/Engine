@@ -31,6 +31,9 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
+#include <core/morphing/intermediates/bitmap.h>
+#include <core/morphing/intermediates/position_list.h>
+
 #include <core/operators/general_vectorized/select_bm_uncompr.h>
 #include <core/operators/general_vectorized/select_pl_uncompr.h>
 

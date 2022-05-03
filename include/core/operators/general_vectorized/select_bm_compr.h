@@ -58,7 +58,7 @@ namespace morphstore {
             class t_IR_dst_f,
             class t_IR_src_f
     >
-    struct select_processing_unit_wit {
+    struct select_bm_processing_unit_wit {
         using t_ve = t_vector_extension;
         IMPORT_VECTOR_BOILER_PLATE(t_ve)
 
@@ -183,7 +183,7 @@ namespace morphstore {
             bitmap_processing_state_t bm_ps_state(0,0);
 
             // The state of the selective_write_iterator for the compressed output.
-            typename select_processing_unit_wit<
+            typename select_bm_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                     t_ve, t_compare, typename t_IR_dst_f::t_inner_f,
                     t_IR_dest_uncompr, t_IR_src_uncompr
@@ -198,7 +198,7 @@ namespace morphstore {
             decompress_and_process_batch<
                     t_ve,
                     t_in_data_f,
-                    select_processing_unit_wit,
+                    select_bm_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                     t_compare,
 #else
@@ -238,7 +238,7 @@ namespace morphstore {
                 decompress_and_process_batch<
                         t_ve,
                         uncompr_f,
-                        select_processing_unit_wit,
+                        select_bm_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                         t_compare,
 #else
@@ -274,7 +274,7 @@ namespace morphstore {
 
                     // The state of the selective write_iterator for the
                     // uncompressed output.
-                    typename select_processing_unit_wit<
+                    typename select_bm_processing_unit_wit<
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                     scalar<v64<uint64_t>>, t_compare, uncompr_f,
                     t_IR_dest_uncompr, t_IR_src_uncompr
@@ -293,7 +293,7 @@ namespace morphstore {
                     decompress_and_process_batch<
                             scalar<v64<uint64_t>>,
                             uncompr_f,
-                            select_processing_unit_wit,
+                            select_bm_processing_unit_wit,
 #ifdef COMPARE_OP_AS_TEMPLATE_CLASS
                             t_compare,
 #else

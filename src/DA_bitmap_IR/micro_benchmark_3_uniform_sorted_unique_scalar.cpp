@@ -33,8 +33,8 @@
 #include <core/morphing/format.h>
 #include <core/storage/column.h>
 #include <core/storage/column_gen.h>
-#include <core/morphing/wah.h>
-#include <core/utils/printing.h>
+#include <core/morphing/intermediates/bitmap.h>
+#include <core/morphing/intermediates/position_list.h>
 
 #include <core/morphing/intermediates/transformations/transformation_algorithms.h>
 
