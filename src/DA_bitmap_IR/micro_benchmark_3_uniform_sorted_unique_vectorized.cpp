@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_3_uniform_sorted_vectorized.h
+ * @file micro_benchmark_3_uniform_sorted_vectorized.cpp
  * @brief Experimental Evaluation:
  *              (3) Intermediate Representation (IR) - Transformation: only BM -> PL vectorized
  *                  - Base data: uniform + unique + sorted ASC integers (64-bit) with values 0 and TEST_DATA_COUNT-1
@@ -80,7 +80,7 @@ void clear_cache() {
 
 int main( void ) {
 
-    // scalar-processing:
+    // processing styles:
     using scalar = scalar<v64<uint64_t>>;
     using avx2 = avx2<v256<uint64_t>>;
     using avx512 = avx512<v512<uint64_t>>;

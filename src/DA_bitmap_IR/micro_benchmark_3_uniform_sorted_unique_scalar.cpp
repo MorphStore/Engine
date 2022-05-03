@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_3_uniform_sorted_scalar.h
+ * @file micro_benchmark_3_uniform_sorted_unique_scalar.cpp
  * @brief Experimental Evaluation:
  *              (3) Intermediate Representation (IR) - Transformations:
  *                  - Base data: uniform + unique + sorted ASC integers (64-bit) with values 0 and TEST_DATA_COUNT-1

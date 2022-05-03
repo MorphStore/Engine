@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_1_uniform_scalar.h
+ * @file micro_benchmark_1_uniform_scalar.cpp
  * @brief Experimental Evaluation:
  *              (1) Simple Selection Query:
  *                  - Base data: uniform distribution with values 0 and TEST_DATA_COUNT-1

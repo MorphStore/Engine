@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_2_scalar.h
+ * @file micro_benchmark_2_uniform_scalar.cpp
  * @brief Experimental Evaluation:
  *              (2) WAH Compression / Decompression:
  *                  - Base data: uniform distribution with values 0 and TEST_DATA_COUNT-1
