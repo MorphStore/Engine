@@ -20,7 +20,7 @@
  * @brief Experimental Evaluation:
  *              (5) Unified Processing Approach: Simple query
  *                  - Base data: uniform distribution with values 0 and TEST_DATA_COUNT-1
- *                  - Query: SELECT SUM(baseCol2) WHERE baseCol1 = 150
+ *                  - Query: SELECT SUM(baseCol2) WHERE baseCol1 < i
  *                  - Measure execution time with
  *                      (1) Query with selection using only position-list processing
  *                      (2) Query with selection using bitmap processing + position-list as output] => internal transformation
@@ -76,7 +76,7 @@ void clear_cache() {
 
 int main( void ) {
 // ****************************************************************************
-// * Query: SELECT SUM(baseCol2) WHERE baseCol1 < 150
+// * Query: SELECT SUM(baseCol2) WHERE baseCol1 < i
 // ****************************************************************************
 
     // scalar processing style
@@ -114,7 +114,7 @@ int main( void ) {
 
         auto pl_start = high_resolution_clock::now();
 
-        // Positions fulfilling "baseCol1 < 150"
+        // Positions fulfilling "baseCol1 < i"
         auto i1_pl =
                 select_pl_wit_t<
                     less,
@@ -123,7 +123,7 @@ int main( void ) {
                     uncompr_f
                 >::apply(baseCol1, i);
 
-        // Data elements of "baseCol2" fulfilling "baseCol1 < 150"
+        // Data elements of "baseCol2" fulfilling "baseCol1 < i"
         auto i1_pl_cast = reinterpret_cast< const column< uncompr_f > * >(i1_pl);
         auto i2_pl =
                 my_project_wit_t<
@@ -133,7 +133,7 @@ int main( void ) {
                         uncompr_f
                 >::apply(baseCol2, i1_pl_cast);
 
-        // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < 150"
+        // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < i"
         auto i3_pl = agg_sum<processingStyle, uncompr_f>(i2_pl);
 
         auto pl_end = high_resolution_clock::now();
@@ -157,7 +157,7 @@ int main( void ) {
 
         auto bm_start = high_resolution_clock::now();
 
-        // Positions fulfilling "baseCol1 < 150"
+        // Positions fulfilling "baseCol1 < i"
         auto i1_bm =
                 select_bm_wit_t<
                     less,
@@ -166,7 +166,7 @@ int main( void ) {
                     uncompr_f
                 >::apply(baseCol1, i);
 
-        // Data elements of "baseCol2" fulfilling "baseCol1 < 150"
+        // Data elements of "baseCol2" fulfilling "baseCol1 < i"
         auto i1_bm_cast = reinterpret_cast< const column< uncompr_f > * >(i1_bm);
         auto i2_bm =
                 my_project_wit_t<
@@ -176,7 +176,7 @@ int main( void ) {
                         uncompr_f
                 >::apply(baseCol2, i1_bm_cast);
 
-        // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < 150"
+        // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < i"
         auto i3_bm = agg_sum<processingStyle, uncompr_f>(i2_bm);
 
         auto bm_end = high_resolution_clock::now();
