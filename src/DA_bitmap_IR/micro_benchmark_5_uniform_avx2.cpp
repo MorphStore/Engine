@@ -16,7 +16,7 @@
  **********************************************************************************************/
 
 /**
- * @file micro_benchmark_5_uniform_scalar.cpp
+ * @file micro_benchmark_5_uniform_avx2.cpp
  * @brief Experimental Evaluation:
  *              (5) Unified Processing Approach: Simple query
  *                  - Base data: uniform distribution with values 0 and TEST_DATA_COUNT-1
@@ -24,7 +24,7 @@
  *                  - Measure execution time with
  *                      (1) Query with selection using only position-list processing
  *                      (2) Query with selection using bitmap processing + position-list as output] => internal transformation
- *                  - Results are written to: micro_benchmark_5_uniform_scalar.csv
+ *                  - Results are written to: micro_benchmark_5_uniform_avx2.csv
  */
 
 // This must be included first to allow compilation.
@@ -38,6 +38,12 @@
 #include <core/morphing/intermediates/position_list.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+
+#include <vector/simd/avx2/extension_avx2.h>
+#include <vector/simd/avx2/primitives/calc_avx2.h>
+#include <vector/simd/avx2/primitives/io_avx2.h>
+#include <vector/simd/avx2/primitives/create_avx2.h>
+#include <vector/simd/avx2/primitives/compare_avx2.h>
 
 #include <core/operators/general_vectorized/agg_sum_compr.h>
 #include <core/operators/general_vectorized/project_compr.h>
@@ -79,8 +85,8 @@ int main( void ) {
 // * Query: SELECT SUM(baseCol2) WHERE baseCol1 < 150
 // ****************************************************************************
 
-    // scalar processing style
-    using processingStyle = scalar<v64<uint64_t>>;
+    // vectorized processing style
+    using processingStyle = avx2<v256<uint64_t>>;
 
     // --------------- (1) Generate test data ---------------
 
@@ -127,10 +133,10 @@ int main( void ) {
         auto i1_pl_cast = reinterpret_cast< const column< uncompr_f > * >(i1_pl);
         auto i2_pl =
                 my_project_wit_t<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >::apply(baseCol2, i1_pl_cast);
 
         // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < 150"
@@ -159,11 +165,11 @@ int main( void ) {
 
         // Positions fulfilling "baseCol1 < 150"
         auto i1_bm =
-                select_bm_wit_t<
-                    less,
-                    processingStyle,
-                    position_list_f<uncompr_f>, // internal IR-transformation to position-list
-                    uncompr_f
+                     select_bm_wit_t<
+                     less,
+                processingStyle,
+                position_list_f<uncompr_f>, // internal IR-transformation to position-list
+                uncompr_f
                 >::apply(baseCol1, i);
 
         // Data elements of "baseCol2" fulfilling "baseCol1 < 150"
@@ -192,7 +198,7 @@ int main( void ) {
 
     // --------------- (3) Write results to file ---------------
     std::ofstream mapStream;
-    mapStream.open("micro_benchmark_5_uniform_scalar.csv");
+    mapStream.open("micro_benchmark_5_uniform_avx2.csv");
 
     mapStream << "\"Query_Without_Transformation:\"" << "\n";
     mapStream << "\"selectivity\",\"execution time (μs)\"" << "\n";

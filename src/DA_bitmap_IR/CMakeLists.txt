@@ -69,4 +69,10 @@ if ( BUILD_ALL OR BUILD_DA_MICROBMS)
             $<$<CONFIG:DEBUG>:-DDEBUG>
             )
     target_link_libraries( micro_benchmark_5_uniform_scalar PRIVATE "-ldl" )
+
+    add_executable( micro_benchmark_5_uniform_avx2 micro_benchmark_5_uniform_avx2.cpp)
+    target_compile_options( micro_benchmark_5_uniform_avx2 PRIVATE
+            $<$<CONFIG:DEBUG>:-DDEBUG>
+            )
+    target_link_libraries( micro_benchmark_5_uniform_avx2 PRIVATE "-ldl" )
 endif()
