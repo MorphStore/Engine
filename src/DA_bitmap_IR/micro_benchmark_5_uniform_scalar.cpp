@@ -106,7 +106,7 @@ int main( void ) {
     // for each i-th data point in TEST_DATA_COUNT: execute query, calculate selectivity + store measurement results for each IR
     //size_t steps = 100;
     // server:
-    size_t steps = 1000;
+    size_t steps = 1000000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
         // ******************* (2) Query execution using POSITION-LIST select-operator (no transformation) *******************
