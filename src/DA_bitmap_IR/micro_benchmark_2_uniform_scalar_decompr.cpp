@@ -82,8 +82,8 @@ int main( void ) {
     using processingStyle = scalar<v64<uint64_t>>;
 
     // hash map to store measurements: key = bit density; value = pair of {execution time, pair of{uncompressed_size, compressed_size}}
-    std::unordered_map<double, std::pair<std::chrono::nanoseconds , std::pair<size_t, size_t>>> wah_compression_results;
-    std::unordered_map<double, std::chrono::nanoseconds> wah_decompression_results;
+    std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_compression_results;
+    std::unordered_map<double, std::chrono::microseconds> wah_decompression_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -143,7 +143,7 @@ int main( void ) {
                 >::apply(bm_uncompr);
 
         auto bm_compr_end = high_resolution_clock::now();
-        auto bm_compr_exec_time = duration_cast<nanoseconds>(bm_compr_end - bm_compr_start);
+        auto bm_compr_exec_time = duration_cast<microseconds>(bm_compr_end - bm_compr_start);
 
         // calculate compressed output
         auto bm_compr_used_bytes = bm_compr->get_size_used_byte();
@@ -173,7 +173,7 @@ int main( void ) {
                 >::apply(bm_compr);
 
         auto bm_decompr_end = high_resolution_clock::now();
-        auto bm_decompr_exec_time = duration_cast<nanoseconds>(bm_decompr_end - bm_decompr_start);
+        auto bm_decompr_exec_time = duration_cast<microseconds>(bm_decompr_end - bm_decompr_start);
 
         // store results to hash map
         if(wah_decompression_results.count(bit_density) == 0) {
@@ -188,7 +188,7 @@ int main( void ) {
     mapStream.open("micro_benchmark_2_uniform_scalar.csv");
 
     mapStream << "\"WAH-Compression:\"" << "\n";
-    mapStream << "\"bit density\",\"execution time (ns)\",\"uncompressed_size (B)\",\"compressed_size (B)\"" << "\n";
+    mapStream << "\"bit density\",\"execution time (μs)\",\"uncompressed_size (B)\",\"compressed_size (B)\"" << "\n";
     for(auto& element : wah_compression_results){
         mapStream << element.first
                   << "," << element.second.first.count()
@@ -199,7 +199,7 @@ int main( void ) {
     mapStream << "\"endOfWahCompressionResults\"\n";
 
     mapStream << "\"WAH-Decompression:\"" << "\n";
-    mapStream << "\"bit density\",\"execution time (ns)\"" << "\n";
+    mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
     for(auto& element : wah_decompression_results){
         mapStream << element.first
                << "," << element.second.count()
