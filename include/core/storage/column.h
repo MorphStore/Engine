@@ -29,8 +29,8 @@
 #ifndef MORPHSTORE_CORE_STORAGE_COLUMN_H
 #define MORPHSTORE_CORE_STORAGE_COLUMN_H
 
-#include <forward>
-#include <stdlibs>
+#include <abridge/forward>
+#include <abridge/stdlibs>
 #include <core/storage/column_helper.h>
 #include <core/memory/management/utils/alignment_helper.h>
 #include <core/morphing/format.h>
@@ -38,7 +38,6 @@
 #include <core/utils/basic_types.h>
 #include <core/utils/helper_types.h>
 #include <core/memory/DefaultAllocator.h>
-#include <thread/ThreadManager.h>
 
 
 #include "Storage.h"
