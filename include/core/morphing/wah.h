@@ -539,7 +539,7 @@ namespace morphstore {
             // TODO: pessimistic allocation is hard since we can not estimate how many bits are outputted...
             //      => for now we simply use a large number -> REMOVE THIS
             auto outCol = new column<uncompr_f>(
-                    150 * 1000 * 1000 * sizeof(uint64_t) // for evaluating 100 x 10^6 elements
+                    10 * 1000 * 1000 * sizeof(uint64_t) // for evaluating 10 x 10^6 elements
             );
 
             const uint8_t* in8 = inCol->get_data();
