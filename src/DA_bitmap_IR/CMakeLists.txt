@@ -28,6 +28,12 @@ if ( BUILD_ALL OR BUILD_DA_MICROBMS)
             )
     target_link_libraries( micro_benchmark_2_uniform_scalar PRIVATE "-ldl" )
 
+    add_executable( micro_benchmark_2_uniform_scalar_decompr micro_benchmark_2_uniform_scalar_decompr.cpp)
+    target_compile_options( micro_benchmark_2_uniform_scalar_decompr PRIVATE
+            $<$<CONFIG:DEBUG>:-DDEBUG>
+            )
+    target_link_libraries( micro_benchmark_2_uniform_scalar_decompr PRIVATE "-ldl" )
+
     # ---------------- MICRO BENCHMARK 3 -------------------
 
     add_executable( micro_benchmark_3_uniform_sorted_scalar micro_benchmark_3_uniform_sorted_unique_scalar.cpp)
