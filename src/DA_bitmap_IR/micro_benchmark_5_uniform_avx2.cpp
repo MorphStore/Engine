@@ -56,9 +56,6 @@
 #include <fstream>
 #include <cmath>
 
-// local:
-//#define TEST_DATA_COUNT 1000
-
 // server:
 #define TEST_DATA_COUNT  100 * 1000 * 1000
 
@@ -68,10 +65,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    // local cache: 3072 KB
-    //size_t elements = 400 * 1000;
-    // server cache: 1024 KB
-    size_t elements = 10 * 1000 * 1000;
+    size_t elements = TEST_DATA_COUNT;
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -110,8 +104,6 @@ int main( void ) {
     std::unordered_map<double, std::chrono::microseconds> query_bm_transformation_results; // includes transformation
 
     // for each i-th data point in TEST_DATA_COUNT: execute query, calculate selectivity + store measurement results for each IR
-    //size_t steps = 100;
-    // server:
     size_t steps = 1000000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
@@ -165,21 +157,21 @@ int main( void ) {
 
         // Positions fulfilling "baseCol1 < i"
         auto i1_bm =
-                     select_bm_wit_t<
-                     less,
-                processingStyle,
-                position_list_f<uncompr_f>, // internal IR-transformation to position-list
-                uncompr_f
+                select_bm_wit_t<
+                    less,
+                    processingStyle,
+                    position_list_f<uncompr_f>, // internal IR-transformation from bitmap to position-list
+                    uncompr_f
                 >::apply(baseCol1, i);
 
         // Data elements of "baseCol2" fulfilling "baseCol1 < i"
         auto i1_bm_cast = reinterpret_cast< const column< uncompr_f > * >(i1_bm);
         auto i2_bm =
                 my_project_wit_t<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >::apply(baseCol2, i1_bm_cast);
 
         // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < i"

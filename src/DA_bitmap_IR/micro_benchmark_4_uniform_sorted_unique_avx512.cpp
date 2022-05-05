@@ -56,9 +56,6 @@
 #include <fstream>
 #include <cmath>
 
-// local:
-//#define TEST_DATA_COUNT 1000
-
 // server:
 #define TEST_DATA_COUNT  100 * 1000 * 1000
 
@@ -68,10 +65,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    // local cache: 3072 KB
-    //size_t elements = 400 * 1000;
-    // server cache: 1024 KB
-    size_t elements = 10 * 1000 * 1000;
+    size_t elements = TEST_DATA_COUNT;
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -116,10 +110,10 @@ int main( void ) {
         // intersection:
         auto intersect_pl =
                 intersect_sorted<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >( plCol_1, plCol_2 );
 
         auto intersect_pl_end = high_resolution_clock::now();
@@ -137,10 +131,10 @@ int main( void ) {
         // union:
         auto union_pl =
                 merge_sorted<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >( plCol_1, plCol_2 );
 
         auto union_pl_end = high_resolution_clock::now();
@@ -156,17 +150,17 @@ int main( void ) {
         auto plCol_1_cast = reinterpret_cast<const column< position_list_f<uncompr_f> > *>(plCol_1);
         auto bmCol_1 =
                 transform_IR<
-                        processingStyle,
-                        bitmap_f<>,
-                        position_list_f<>
+                    processingStyle,
+                    bitmap_f<>,
+                    position_list_f<>
                 >(plCol_1_cast);
 
         auto plCol_2_cast = reinterpret_cast<const column< position_list_f<uncompr_f> > *>(plCol_2);
         auto bmCol_2 =
                 transform_IR<
-                        processingStyle,
-                        bitmap_f<>,
-                        position_list_f<>
+                    processingStyle,
+                    bitmap_f<>,
+                    position_list_f<>
                 >(plCol_2_cast);
 
         // reset cache before measurement
@@ -176,11 +170,11 @@ int main( void ) {
 
         // intersection:
         auto intersect_bm =
-                     intersect_sorted<
-                     processingStyle,
-                bitmap_f<uncompr_f>,
-                bitmap_f<uncompr_f>,
-                bitmap_f<uncompr_f>
+                intersect_sorted<
+                    processingStyle,
+                    bitmap_f<uncompr_f>,
+                    bitmap_f<uncompr_f>,
+                    bitmap_f<uncompr_f>
                 >( bmCol_1, bmCol_2 );
 
         auto intersect_bm_end = high_resolution_clock::now();
@@ -197,11 +191,11 @@ int main( void ) {
 
         // union:
         auto union_bm =
-                     merge_sorted<
-                     processingStyle,
-                bitmap_f<uncompr_f>,
-                bitmap_f<uncompr_f>,
-                bitmap_f<uncompr_f>
+                merge_sorted<
+                    processingStyle,
+                    bitmap_f<uncompr_f>,
+                    bitmap_f<uncompr_f>,
+                    bitmap_f<uncompr_f>
                 >( bmCol_1, bmCol_2 );
 
         auto union_bm_end = high_resolution_clock::now();

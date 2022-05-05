@@ -52,11 +52,8 @@
 #include <fstream>
 #include <cmath>
 
-// local:
-//#define TEST_DATA_COUNT 1000 * 10
-
 // server:
-#define TEST_DATA_COUNT  100 * 1000
+#define TEST_DATA_COUNT 100 * 1000
 
 using namespace morphstore;
 using namespace vectorlib;
@@ -64,10 +61,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    // local cache: 3072 KB
-    //size_t elements = 400 * 1000;
-    // server cache: 1024 KB
-    size_t elements = 10 * 1000 * 1000;
+    size_t elements = 100 * 1000 * 1000;
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -96,8 +90,6 @@ int main( void ) {
     );
 
     // for each i-th data point in TEST_DATA_COUNT: exec. less-than selection, calculate bit density + store measurement results
-    //size_t steps = 100;
-    // server:
     size_t steps = 1000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
@@ -185,7 +177,7 @@ int main( void ) {
     // --------------- (5) Write results to file ---------------
 
     std::ofstream mapStream;
-    mapStream.open("micro_benchmark_2_uniform_scalar.csv");
+    mapStream.open("micro_benchmark_2_uniform_scalar_decompr.csv");
 
     mapStream << "\"WAH-Compression:\"" << "\n";
     mapStream << "\"bit density\",\"execution time (μs)\",\"uncompressed_size (B)\",\"compressed_size (B)\"" << "\n";

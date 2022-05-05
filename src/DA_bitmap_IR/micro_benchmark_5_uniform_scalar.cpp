@@ -50,9 +50,6 @@
 #include <fstream>
 #include <cmath>
 
-// local:
-//#define TEST_DATA_COUNT 1000
-
 // server:
 #define TEST_DATA_COUNT  100 * 1000 * 1000
 
@@ -62,10 +59,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    // local cache: 3072 KB
-    //size_t elements = 400 * 1000;
-    // server cache: 1024 KB
-    size_t elements = 10 * 1000 * 1000;
+    size_t elements = TEST_DATA_COUNT;
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -127,10 +121,10 @@ int main( void ) {
         auto i1_pl_cast = reinterpret_cast< const column< uncompr_f > * >(i1_pl);
         auto i2_pl =
                 my_project_wit_t<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >::apply(baseCol2, i1_pl_cast);
 
         // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < i"
@@ -170,10 +164,10 @@ int main( void ) {
         auto i1_bm_cast = reinterpret_cast< const column< uncompr_f > * >(i1_bm);
         auto i2_bm =
                 my_project_wit_t<
-                        processingStyle,
-                        uncompr_f,
-                        uncompr_f,
-                        uncompr_f
+                    processingStyle,
+                    uncompr_f,
+                    uncompr_f,
+                    uncompr_f
                 >::apply(baseCol2, i1_bm_cast);
 
         // Sum over the data elements of "baseCol2" fulfilling "baseCol1 < i"

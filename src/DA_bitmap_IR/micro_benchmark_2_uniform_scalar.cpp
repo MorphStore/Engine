@@ -52,9 +52,6 @@
 #include <fstream>
 #include <cmath>
 
-// local:
-//#define TEST_DATA_COUNT 1000 * 10
-
 // server:
 #define TEST_DATA_COUNT  100 * 1000 * 1000
 
@@ -64,10 +61,7 @@ using namespace std::chrono;
 
 // function to ensure that the cache is flushed
 void clear_cache() {
-    // local cache: 3072 KB
-    //size_t elements = 400 * 1000;
-    // server cache: 1024 KB
-    size_t elements = 10 * 1000 * 1000;
+    size_t elements = TEST_DATA_COUNT;
     std::vector<uint64_t> clear = std::vector<uint64_t>();
     clear.resize(elements, 42);
     for (size_t i = 0; i < clear.size(); i++) {
@@ -83,7 +77,6 @@ int main( void ) {
 
     // hash map to store measurements: key = bit density; value = pair of {execution time, pair of{uncompressed_size, compressed_size}}
     std::unordered_map<double, std::pair<std::chrono::microseconds , std::pair<size_t, size_t>>> wah_compression_results;
-    //std::unordered_map<double, std::chrono::microseconds> wah_decompression_results;
 
     // --------------- (1) Generate test data ---------------
     auto inCol = generate_with_distr(
@@ -96,8 +89,6 @@ int main( void ) {
     );
 
     // for each i-th data point in TEST_DATA_COUNT: exec. less-than selection, calculate bit density + store measurement results
-    //size_t steps = 100;
-    // server:
     size_t steps = 1000000;
     for(auto i = 0; i < TEST_DATA_COUNT+1; i += steps){
 
@@ -147,41 +138,11 @@ int main( void ) {
 
         // calculate compressed output
         auto bm_compr_used_bytes = bm_compr->get_size_used_byte();
-        /*
-        // compression ratio = uncompressed_size / compressed_size => round up to 3 dec. places
-        double compression_ratio = std::ceil(
-                (static_cast<double>(bm_uncompr_used_bytes) / static_cast<double>(bm_compr_used_bytes))
-                * 1000.0) / 1000.0;
-        */
+
         // store results to hash map
         if(wah_compression_results.count(bit_density) == 0) {
             wah_compression_results.insert({bit_density, {bm_compr_exec_time, {bm_uncompr_used_bytes, bm_compr_used_bytes}}});
         }
-
-        // --------------- (4) WAH-Decompression ---------------
-        /*
-        // clear cache before measurement
-        clear_cache();
-
-        auto bm_decompr_start = high_resolution_clock::now();
-
-        // decompress WAH-bitmap
-        auto bm_decompr =
-                morph_t<
-                    processingStyle,
-                    bitmap_f<uncompr_f>,
-                    bitmap_f<wah_f>
-                >::apply(bm_compr);
-
-        auto bm_decompr_end = high_resolution_clock::now();
-        auto bm_decompr_exec_time = duration_cast<microseconds>(bm_decompr_end - bm_decompr_start);
-
-        // store results to hash map
-        if(wah_decompression_results.count(bit_density) == 0) {
-            wah_decompression_results.insert({bit_density, bm_decompr_exec_time});
-        }
-        (void)bm_decompr; // to satisfy compiler error 'unused variable'
-         */
     }
 
     // --------------- (5) Write results to file ---------------
@@ -199,18 +160,6 @@ int main( void ) {
                   << "\n";
     }
     mapStream << "\"endOfWahCompressionResults\"\n";
-
-   /*
-    mapStream << "\"WAH-Decompression:\"" << "\n";
-    mapStream << "\"bit density\",\"execution time (μs)\"" << "\n";
-    for(auto& element : wah_decompression_results){
-        mapStream << element.first
-                  << "," << element.second.count()
-                  << "\n";
-    }
-    mapStream << "\"endOfWahDecompressionResults\"\n";
-    */
-
     mapStream.close();
 
     return 0;
