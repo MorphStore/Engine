@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_IPARTITIONER_H
 #define MORPHSTORE_IPARTITIONER_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 namespace morphstore {
     

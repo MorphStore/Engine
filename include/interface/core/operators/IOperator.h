@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_INCLUDE_INTERFACE_CORE_OPERATORS_IOPERATOR_H
 #define MORPHSTORE_INCLUDE_INTERFACE_CORE_OPERATORS_IOPERATOR_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 namespace morphstore {
     

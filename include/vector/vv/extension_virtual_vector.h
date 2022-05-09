@@ -20,9 +20,9 @@
 #define MORPHSTORE_EXTENSION_VIRTUAL_VECTOR_H
 
 //#include <cstdint>
-#include <stdlibs>
-#include <interfaces>
-#include <vectorExtensions>
+#include <abridge/stdlibs>
+#include <abridge/interfaces>
+#include <abridge/vectorExtensions>
 
 namespace virtuallib {
 	using namespace vectorlib;

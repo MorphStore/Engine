@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_INCLUDE_CORE_MEMORY_COLUMNALLOCATOR_H
 #define MORPHSTORE_INCLUDE_CORE_MEMORY_COLUMNALLOCATOR_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 namespace morphstore {
     

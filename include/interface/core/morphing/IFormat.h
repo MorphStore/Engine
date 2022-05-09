@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_FORMAT_INTERFACES_H
 #define MORPHSTORE_FORMAT_INTERFACES_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 namespace morphstore {
     /// Forward declaration of class format in <core/morphing/format.h>

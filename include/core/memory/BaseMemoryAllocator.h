@@ -19,7 +19,7 @@
 #ifndef QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_BASEMEMORYALLOCATOR_H
 #define QUEUEBENCHMARK_INCLUDE_MORPHSTORE_INCLUDE_CORE_MEMORY_BASEMEMORYALLOCATOR_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 class BaseMemoryAllocator {
     using pointer = void*;

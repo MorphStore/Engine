@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_STORAGE_INTERFACES_H
 #define MORPHSTORE_STORAGE_INTERFACES_H
 
-#include <stdlibs>
+#include <abridge/stdlibs>
 
 namespace morphstore {
     /// Forward declaration of class Storage in <core/storage/Storage.h>

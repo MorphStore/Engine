@@ -19,7 +19,7 @@
 #ifndef MORPHSTORE_FORWARD_H
 #define MORPHSTORE_FORWARD_H
 
-#include <interfaces>
+#include <abridge/interfaces>
 
 namespace morphstore {
     /// storage
