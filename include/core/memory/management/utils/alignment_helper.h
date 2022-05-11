@@ -10,6 +10,9 @@
 
 #include <core/utils/logger.h>
 #include <core/utils/preprocessor.h>
+#include <core/utils/helper.h>
+
+using namespace morphstore;
 
 #ifndef MSV_MEMORY_MANAGER_ALIGNMENT_BYTE
 #  define MSV_MEMORY_MANAGER_ALIGNMENT_BYTE 64_B

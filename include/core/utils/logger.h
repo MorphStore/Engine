@@ -24,7 +24,7 @@
 #ifndef MORPHSTORE_CORE_UTILS_LOGGER_H
 #define MORPHSTORE_CORE_UTILS_LOGGER_H
 
-#include "cmake_template.h"
+#include "cmake_template.h.in"
 
 #include <core/memory/stl_wrapper/ostream.h>
 
