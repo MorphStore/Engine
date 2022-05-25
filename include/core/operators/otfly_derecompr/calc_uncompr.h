@@ -80,7 +80,7 @@ namespace morphstore {
       }
    };
 
-template<class VectorExtension, int Granularity, template< class, int > class Operator>
+template<class VectorExtension, int Granularity, template< class > class Operator>
    struct calc_binary_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -90,14 +90,14 @@ template<class VectorExtension, int Granularity, template< class, int > class Op
          vector_t const p_Data1Vector,
          vector_t const p_Data2Vector
       ) {
-         return Operator<VectorExtension,Granularity>::apply(
+         return Operator<VectorExtension>::apply(
             p_Data1Vector,
             p_Data2Vector
          );
       }
    };
 
-template<class VectorExtension, int Granularity, template< class, int > class Operator>
+template<class VectorExtension, int Granularity, template< class> class Operator>
 struct calc_binary_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
@@ -128,8 +128,8 @@ struct calc_binary_batch {
       }
    };
 
-template<class VectorExtension, template< class, int > class Operator>
-struct calc_binary_t {
+template<template< class > class Operator, class VectorExtension>
+struct calc_binary_t<Operator, VectorExtension, uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -164,13 +164,7 @@ struct calc_binary_t {
          return outDataCol;
       }
    };
-   
-    template<template<class,int> class t_binary_op, class VectorExtension, class t_out_data_f, class t_in_data_l_f, class t_in_data_r_f>
-    column<uncompr_f> const *
-    calc_binary(  column< uncompr_f > const * const p_Data1Column,
-         column< uncompr_f > const * const p_Data2Column){
-            return calc_binary_t< VectorExtension,  t_binary_op>::apply(p_Data1Column, p_Data2Column);
-    }
+
    
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
    struct compare_binary_processing_unit {
