@@ -7,6 +7,7 @@
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <core/operators/interfaces/calc.h>
 
 #include <cassert>
 
@@ -46,8 +47,9 @@ namespace morphstore {
       }
    };
 
+   /// @todo Check if functionality with the interface is still assured.
    template<class VectorExtension, template<class> class Comparator>
-   struct calc_unary {
+   struct calc_unary_t <Comparator, VectorExtension, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static
       column<uncompr_f> const *
@@ -77,8 +79,6 @@ namespace morphstore {
          return outDataCol;
       }
    };
-
-
 
 template<class VectorExtension, int Granularity, template< class, int > class Operator>
    struct calc_binary_processing_unit {

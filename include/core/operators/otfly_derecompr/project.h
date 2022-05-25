@@ -31,6 +31,7 @@
 #include <core/utils/basic_types.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <core/operators/interfaces/project.h>
 
 #include <iostream>
 #include <tuple>

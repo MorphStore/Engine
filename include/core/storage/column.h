@@ -39,7 +39,6 @@
 #include <core/utils/helper_types.h>
 #include <core/memory/DefaultAllocator.h>
 
-
 #include "Storage.h"
 #include "core/memory/MemoryManager.h"
 
@@ -52,7 +51,8 @@ namespace morphstore {
      */
     enum class storage_persistence_type {
         globalScope,
-        queryScope
+        queryScope,
+        externalScope
     };
     
     /**
@@ -116,6 +116,20 @@ namespace morphstore {
         {
 //            memset(m_DataUnaligned, 0, p_SizeAllocatedByte);
         };
+
+        /// Constructor of column when used with an external data source, where data is already in memory.
+        /// The data will not be deallocated after destroying the object, if created with this constructor.
+        column(storage_persistence_type p_PersistenceType,
+               size_t p_SizeAllocatedByte,
+               uint64_t const * data
+        ) :
+                m_MetaData{ p_SizeAllocatedByte/sizeof(uint64_t), p_SizeAllocatedByte, 0, p_SizeAllocatedByte },
+                m_Data(data),
+                m_PersistenceType{ p_PersistenceType },
+                m_IsPreparedForRndAccess(false)
+        {
+            //
+        };
         
       protected:
         /**
@@ -139,6 +153,13 @@ namespace morphstore {
         /// Creates an ephemeral column. Intended for intermediate results.
         column(size_t p_SizeAllocatedByte) : column(storage_persistence_type::queryScope, p_SizeAllocatedByte)
         { /* ... */};
+
+        /// Creates an column based on a given pointer to the data. Intended for integration in different frameworks.
+        column ( size_t p_SizeAllocatedByte, uint64_t const * data) : column(
+                storage_persistence_type::externalScope,
+                p_SizeAllocatedByte,
+                data)
+                { /* ... */};
         
         /// <b>Warning</b>: copy constructor is not supported
         column(column<TFormat> const &) = delete;
@@ -155,7 +176,9 @@ namespace morphstore {
             if(!is_virtual) {
                 #ifdef MSV_NO_SELFMANAGED_MEMORY
 //                free(m_DataUnaligned);
-                MemoryManager::staticDeallocate(m_DataUnaligned, dataSize);
+                if (m_PersistenceType != storage_persistence_type::externalScope) {
+                    MemoryManager::staticDeallocate(m_DataUnaligned, dataSize);
+                }
                 #else
                 if( m_PersistenceType == storage_persistence_type::globalScope ) {
                    general_memory_manager::get_instance( ).deallocate( m_Data );
@@ -204,6 +227,10 @@ namespace morphstore {
         
         inline void set_meta_data(size_t p_CountValues, size_t p_SizeUsedByte) {
             set_meta_data(p_CountValues, p_SizeUsedByte, 0);
+        }
+
+        inline void set_persistence_type(storage_persistence_type type) {
+            m_PersistenceType = type;
         }
         
         column<TFormat> * deconst() const {

@@ -40,6 +40,7 @@ namespace morphstore {
     */
    template<
       class t_vector_extension,
+      class dataStructure,
       class t_out_pos_l_f,
       class t_out_pos_r_f,
       class t_in_pos_l_f,
@@ -78,8 +79,10 @@ namespace morphstore {
     * (right) input column. The i-th positions in the two output columns denote
     * one matching pair.
     */
+    /// @todo Check if we can set datastructure like in the Semijoin template.
    template<
       class t_vector_extension,
+      class t_dataStructure,
       class t_out_pos_l_f,
       class t_out_pos_r_f,
       class t_in_pos_l_f,
@@ -97,6 +100,7 @@ namespace morphstore {
       return
          natural_equi_join_t<
             t_vector_extension,
+            t_dataStructure,
             t_out_pos_l_f,
             t_out_pos_r_f,
             t_in_pos_l_f,

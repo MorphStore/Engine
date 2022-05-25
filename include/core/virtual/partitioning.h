@@ -22,7 +22,7 @@
 #include <vector/vv/extension_virtual_vector.h>
 #include <core/storage/column.h>
 
-using namespace morphstore;
+//using namespace morphstore;
 
 namespace virtuallib {
     

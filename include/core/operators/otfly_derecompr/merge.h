@@ -28,6 +28,7 @@
 #include <core/utils/preprocessor.h>
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>
+#include <core/operators/interfaces/merge.h>
 
 #include <cassert>
 

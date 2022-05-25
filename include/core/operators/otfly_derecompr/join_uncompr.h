@@ -10,7 +10,8 @@
 #include <core/storage/column.h>
 #include <core/morphing/format.h>
 
-#include <core/operators/interfaces/join.h>
+#include <core/operators/interfaces/join_semi_equi.h>
+#include <core/operators/interfaces/join_natural_equi.h>
 
 #include <vector/vector_extension_structs.h>
 #include <vector/vector_primitives.h>

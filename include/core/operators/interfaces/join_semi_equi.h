@@ -23,8 +23,16 @@
 #define MORPHSTORE_CORE_OPERATORS_INTERFACES_JOIN_SEMI_EQUI_H
 
 #include <core/storage/column.h>
+#include <vector/complex/hash.h>
+#include <vector/datastructures/hash_based/strategies/linear_probing.h>
+#include <vector/datastructures/hash_based/hash_utils.h>
+#include <vector/datastructures/hash_based/hash_map.h>
+#include <vector/datastructures/hash_based/hash_set.h>
 
-namespace tuddbs {
+#include <core/utils/basic_types.h>
+
+
+namespace morphstore {
 
    /**
     * @struct semi_equi_join_t
@@ -36,6 +44,7 @@ namespace tuddbs {
     */
    template<
       class t_vector_extension,
+      class t_dataStructure,
       class t_out_pos_f,
       class t_in_pos_l_f,
       class t_in_pos_r_f
@@ -76,11 +85,12 @@ namespace tuddbs {
     */
    template<
       class t_vector_extension,
+      class t_dataStructure,
       class t_out_pos_f,
       class t_in_pos_l_f,
       class t_in_pos_r_f
    >
-   column< t_out_pos_f > const *
+   morphstore::column< t_out_pos_f > const *
    semi_join(
       column< t_in_pos_l_f > const * const p_in_L_pos_column,
       column< t_in_pos_r_f > const * const p_in_R_pos_column,
@@ -95,9 +105,7 @@ namespace tuddbs {
          vectorlib::scalar_key_vectorized_linear_search,
          60
       >,
-      t_out_pos_f,
-      t_in_pos_l_f,
-      t_in_pos_r_f
+      t_out_pos_f, t_in_pos_l_f, t_in_pos_r_f
       >::apply(p_in_L_pos_column,p_in_R_pos_column, p_out_count_estimate);
    }
 }

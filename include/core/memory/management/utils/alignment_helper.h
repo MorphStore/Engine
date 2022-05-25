@@ -12,7 +12,7 @@
 #include <core/utils/preprocessor.h>
 #include <core/utils/helper.h>
 
-using namespace morphstore;
+using morphstore::operator""_B;
 
 #ifndef MSV_MEMORY_MANAGER_ALIGNMENT_BYTE
 #  define MSV_MEMORY_MANAGER_ALIGNMENT_BYTE 64_B

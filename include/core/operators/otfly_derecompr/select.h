@@ -98,7 +98,7 @@ template<class t_vector_extension,
           class t_out_pos_f, 
           class t_in_data_f
           >
-          
+
 struct select_t
 {
     using t_ve = t_vector_extension;
