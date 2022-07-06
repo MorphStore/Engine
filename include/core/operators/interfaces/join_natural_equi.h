@@ -99,8 +99,14 @@ namespace morphstore {
    ) {
       return
          natural_equi_join_t<
-            t_vector_extension,
-            t_dataStructure,
+                 t_vector_extension,
+                 vectorlib::hash_map<
+                         t_vector_extension,
+                         vectorlib::multiply_mod_hash,
+                         vectorlib::size_policy_hash::EXPONENTIAL,
+                         vectorlib::scalar_key_vectorized_linear_search,
+                         60
+                 >,
             t_out_pos_l_f,
             t_out_pos_r_f,
             t_in_pos_l_f,
