@@ -83,11 +83,11 @@ namespace morphstore {
       uncompr_f,
       uncompr_f
    > {
-      using DataStructure = hash_binary_key_map<
+      using DataStructure = vectorlib::hash_binary_key_map<
          VectorExtension,
-         multiply_mod_hash,
-         size_policy_hash::EXPONENTIAL,
-         scalar_key_vectorized_linear_search,
+         vectorlib::multiply_mod_hash,
+         vectorlib::size_policy_hash::EXPONENTIAL,
+         vectorlib::scalar_key_vectorized_linear_search,
          60
       >;
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
