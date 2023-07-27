@@ -80,7 +80,7 @@ namespace morphstore {
       }
    };
 
-template<class VectorExtension, int Granularity, template< class > class Operator>
+template<class VectorExtension, int Granularity, template< class , int> class Operator>
    struct calc_binary_processing_unit {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE
@@ -90,14 +90,14 @@ template<class VectorExtension, int Granularity, template< class > class Operato
          vector_t const p_Data1Vector,
          vector_t const p_Data2Vector
       ) {
-         return Operator<VectorExtension>::apply(
+         return Operator<VectorExtension, Granularity>::apply(
             p_Data1Vector,
             p_Data2Vector
          );
       }
    };
 
-template<class VectorExtension, int Granularity, template< class> class Operator>
+template<class VectorExtension, int Granularity, template< class, int> class Operator>
 struct calc_binary_batch {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static void apply(
@@ -128,7 +128,7 @@ struct calc_binary_batch {
       }
    };
 
-template<template< class > class Operator, class VectorExtension>
+template<template< class, int > class Operator, class VectorExtension>
 struct calc_binary_t<Operator, VectorExtension, uncompr_f, uncompr_f, uncompr_f> {
       IMPORT_VECTOR_BOILER_PLATE(VectorExtension)
       MSV_CXX_ATTRIBUTE_FORCE_INLINE static

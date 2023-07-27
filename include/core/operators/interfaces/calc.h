@@ -65,7 +65,7 @@ struct calc_unary_t {
  * to enable partial template specialization.
  */
 template<
-        template<typename> class t_binary_op,
+        template<class, int> class t_binary_op,
         class t_vector_extension,
         class t_out_data_f,
         class t_in_data_l_f,
@@ -100,7 +100,7 @@ struct calc_binary_t {
  
 
 template<
-        template<typename> class t_binary_op,
+        template<class, int> class t_binary_op,
         class t_vector_extension,
         class t_out_data_f,
         class t_in_data_l_f,
